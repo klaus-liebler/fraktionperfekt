@@ -11,6 +11,9 @@ internal static class SpielEndpunkte
         ["index.html"] = "text/html; charset=utf-8",
         ["spiel.css"] = "text/css; charset=utf-8",
         ["logik.js"] = "text/javascript; charset=utf-8",
+        ["pixel.js"] = "text/javascript; charset=utf-8",
+        ["figuren.js"] = "text/javascript; charset=utf-8",
+        ["szenen.js"] = "text/javascript; charset=utf-8",
         ["darstellung.js"] = "text/javascript; charset=utf-8",
     };
 

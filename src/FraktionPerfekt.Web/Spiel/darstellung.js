@@ -1,305 +1,265 @@
-// Joe & Chani und der Gral der Demokratie – Darstellung, Bedienung (Maus, Touch, Tastatur), Ton und Speicherplätze.
-// Alle Grafik wird hier im Code gezeichnet; keine externen Dateien.
+// Joe & Chani und der Gral der Demokratie – Darstellung im Stil der Point-and-Click-Adventures der frühen 90er:
+// 320×200 Pixel-Art (ganzzahlig hochskaliert), Verbleiste, Satzzeile, Inventar mit Icons, laufende Figuren, Porträts mit
+// Mimik, Dialogauswahl, Irisblende. Tippen = Standardaktion, langes Drücken = Verbmenü.
 (function () {
     'use strict';
-    const S = window.GralSpiel;
-    const B = 960, H = 540;
-    const leinwand = document.getElementById('leinwand');
-    const g = leinwand.getContext('2d');
+    const S = window.GralSpiel, F = window.Figuren, SZ = window.Szenen;
+    const B = SZ.B, H = SZ.H, SKALA = 3;
     const $ = (id) => document.getElementById(id);
-    const textbox = $('textbox'), dialogEl = $('dialog'), menueEl = $('menue'), kontextEl = $('kontext'), titelEl = $('titel');
-    const inventarEl = $('inventar'), figurenEl = $('figuren'), statusEl = $('status');
+    const leinwand = $('leinwand');
+    leinwand.width = B * SKALA; leinwand.height = H * SKALA;
+    const g = leinwand.getContext('2d');
+    const tief = document.createElement('canvas'); tief.width = B; tief.height = H;
+    const t2 = tief.getContext('2d');
+    const textbox = $('textbox'), textEl = $('text'), portraitEl = $('portrait'), dialogEl = $('dialog'), menueEl = $('menue'), kontextEl = $('kontext'), titelEl = $('titel');
+    const inventarEl = $('inventar'), figurenEl = $('figuren'), verbenEl = $('verben'), satzEl = $('satz'), punkteEl = $('punkte');
 
     let speicherObjekt = null;
     try { speicherObjekt = window.localStorage; } catch (_) { speicherObjekt = null; }
     const plaetze = S.speicherplaetze(speicherObjekt || { getItem() { throw new Error('kein Speicher'); }, setItem() { throw new Error('kein Speicher'); }, removeItem() { } });
 
-    let z = null;                 // Spielzustand
-    let warteschlange = [];       // anzuzeigende Textzeilen
-    let danach = null;            // was nach dem Text passiert (Dialog, Minispiel)
-    let mini = null;              // laufendes Minispiel
-    let pausiert = false;
-    let hover = null, auswahl = -1;
-    let reise = null;             // Reiseanimation auf der Karte
-    let letzterOrt = 'buero';
+    let z = null, warteschlange = [], danach = null, mini = null, pausiert = false, hover = null, auswahl = -1, reise = null, letzterOrt = 'buero';
+    let verb = 'gehe', objekt = null;          // gewähltes Verb und Gegenstand („Benutze X mit …“)
+    let blende = null;                          // { t, ziel } Irisblende
+    let zeit = 0;
+    const held = { joe: { x: 40, ziel: 40, blick: 1, schritt: 0 }, chani: { x: 58, ziel: 58, blick: 1, schritt: 0 } };
+    let laufAuftrag = null;                     // wird nach Ankunft ausgeführt
+    let sprecher = null;                        // für Sprechanimation
+    /** Kopie eines (gecachten) Canvas für das DOM – ein Canvas kann nur an einer Stelle hängen. */
+    function kopie(c) { const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; k.getContext('2d').drawImage(c, 0, 0); return k; }
     let ton = true;
     try { ton = window.localStorage.getItem('fp-spiel-ton') !== 'aus'; } catch (_) { ton = true; }
-    let tick = 0;
 
-    // ---------- Ton (WebAudio, erzeugt) ----------
+    // ---------- Ton ----------
     let audio = null;
     function klang(art) {
         if (!ton) { return; }
         try {
             audio = audio || new (window.AudioContext || window.webkitAudioContext)();
             const t = audio.currentTime;
-            const tonfolge = { klick: [[660, 0.05]], erfolg: [[523, 0.1], [659, 0.1], [784, 0.18]], fehler: [[200, 0.15], [150, 0.2]], kartusche: [[90, 0.25]], ende: [[523, 0.15], [659, 0.15], [784, 0.15], [1046, 0.4]] }[art] || [[440, 0.05]];
+            const folge = { klick: [[660, 0.04]], schritt: [[110, 0.02]], erfolg: [[523, 0.09], [659, 0.09], [784, 0.16]], fehler: [[220, 0.12], [165, 0.18]], kartusche: [[80, 0.2], [60, 0.15]], ende: [[523, 0.14], [659, 0.14], [784, 0.14], [1046, 0.4]], blende: [[300, 0.06], [200, 0.08]] }[art] || [[440, 0.05]];
             let start = t;
-            for (const [f, d] of tonfolge) {
+            for (const [f, d] of folge) {
                 const o = audio.createOscillator(), v = audio.createGain();
-                o.type = art === 'kartusche' ? 'sawtooth' : 'square';
-                o.frequency.value = f;
-                v.gain.setValueAtTime(0.06, start);
-                v.gain.exponentialRampToValueAtTime(0.001, start + d);
-                o.connect(v).connect(audio.destination);
-                o.start(start); o.stop(start + d);
-                start += d * 0.9;
+                o.type = art === 'kartusche' ? 'sawtooth' : 'square'; o.frequency.value = f;
+                v.gain.setValueAtTime(art === 'schritt' ? 0.015 : 0.05, start); v.gain.exponentialRampToValueAtTime(0.001, start + d);
+                o.connect(v).connect(audio.destination); o.start(start); o.stop(start + d); start += d * 0.9;
             }
-        } catch (_) { /* ohne Ton weiter */ }
+        } catch (_) { /* ohne Ton */ }
     }
 
-    // ---------- Zeichnen: Grundformen ----------
-    const px = (p) => p * B / 100, py = (p) => p * H / 100;
-    function rechteck(x, y, b, h, f) { g.fillStyle = f; g.fillRect(x, y, b, h); }
-    function kreis(x, y, r, f) { g.fillStyle = f; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
-    function text(t, x, y, groesse, farbe, ausrichtung) {
-        g.fillStyle = farbe || '#fff'; g.font = `${groesse || 16}px "Trebuchet MS", sans-serif`; g.textAlign = ausrichtung || 'left'; g.fillText(t, x, y);
-    }
-    function verlauf(oben, unten) { const v = g.createLinearGradient(0, 0, 0, H); v.addColorStop(0, oben); v.addColorStop(1, unten); g.fillStyle = v; g.fillRect(0, 0, B, H); }
+    // ---------- Verben ----------
+    const VERBEN = [['gehe', 'Gehe zu'], ['ansehen', 'Schau an'], ['nimm', 'Nimm'], ['benutze', 'Benutze'], ['reden', 'Rede mit'], ['gib', 'Gib'], ['f1', ''], ['f2', '']];
+    function verbName(v) { if (v === 'f1' || v === 'f2') { return S.FIGUREN[z.figur].faehigkeiten[v === 'f1' ? 0 : 1]; } return (VERBEN.find((x) => x[0] === v) || ['', ''])[1]; }
 
-    function person(x, y, s, farbe, opts) {
-        const o = opts || {};
-        // Beine, Körper, Kopf
-        rechteck(x - 7 * s, y - 22 * s, 5 * s, 22 * s, o.hose || '#2c3e50');
-        rechteck(x + 2 * s, y - 22 * s, 5 * s, 22 * s, o.hose || '#2c3e50');
-        rechteck(x - 11 * s, y - 52 * s, 22 * s, 32 * s, farbe);
-        kreis(x, y - 62 * s, 10 * s, o.haut || '#f1c27d');
-        if (o.hut) { rechteck(x - 15 * s, y - 70 * s, 30 * s, 4 * s, '#5d4037'); rechteck(x - 9 * s, y - 80 * s, 18 * s, 11 * s, '#6d4c41'); rechteck(x - 9 * s, y - 72 * s, 18 * s, 2 * s, '#3e2723'); }
-        if (o.haare) { rechteck(x - 11 * s, y - 74 * s, 22 * s, 8 * s, o.haare); rechteck(x - 12 * s, y - 70 * s, 5 * s, 22 * s, o.haare); rechteck(x + 7 * s, y - 70 * s, 5 * s, 22 * s, o.haare); }
-        if (o.schal) { rechteck(x - 11 * s, y - 52 * s, 22 * s, 5 * s, o.schal); }
-        if (o.kartusche) { rechteck(x + 11 * s, y - 44 * s, 14 * s, 5 * s, '#ecf0f1'); rechteck(x + 25 * s, y - 43 * s, 6 * s, 3 * s, '#e67e22'); }
-        if (o.handy) { rechteck(x + 11 * s, y - 50 * s, 6 * s, 10 * s, '#111'); rechteck(x + 12 * s, y - 49 * s, 4 * s, 7 * s, '#5dade2'); }
-        if (o.krawatte) { rechteck(x - 2 * s, y - 51 * s, 4 * s, 18 * s, o.krawatte); }
-        if (o.helm) { g.fillStyle = '#f1c40f'; g.beginPath(); g.arc(x, y - 66 * s, 11 * s, Math.PI, 0); g.fill(); }
-        // Augen
-        kreis(x - 3.5 * s, y - 63 * s, 1.4 * s, '#222'); kreis(x + 3.5 * s, y - 63 * s, 1.4 * s, '#222');
-        if (o.mund !== false) { rechteck(x - 3 * s, y - 58 * s, 6 * s, 1.5 * s, '#7b3f00'); }
+    function satz() {
+        const ziel = hover ? zielName(hover) : '';
+        if (objekt) { return `${verb === 'gib' ? 'Gib' : 'Benutze'} ${S.GEGENSTAENDE[objekt].name} ${verb === 'gib' ? 'an' : 'mit'} ${ziel}`.trim(); }
+        if (verb === 'f1' || verb === 'f2') { return `${verbName(verb)}: ${ziel}`.trim(); }
+        return `${verbName(verb)} ${ziel}`.trim();
+    }
+    function zielName(id) {
+        if (z.szene === 'karte') { return S.ORTE[id] ? S.ORTE[id].name : ''; }
+        const h = S.sichtbareHotspots(z).find((x) => x.id === id);
+        return h ? h.name : '';
     }
 
-    function heldenZeichnen() {
-        const joeAktiv = z.figur === 'joe';
-        person(px(5), py(97), 1.1, '#8d6e63', { hut: true, kartusche: true, hose: '#34495e' });
-        person(px(10.5), py(97), 1.05, '#1abc9c', { haare: '#4a2c2a', schal: '#e74c3c', handy: true, hose: '#2c3e50' });
-        const x = joeAktiv ? px(5) : px(10.5);
-        g.fillStyle = '#ffd54f'; g.beginPath(); g.moveTo(x - 7, py(97) - 100); g.lineTo(x + 7, py(97) - 100); g.lineTo(x, py(97) - 90); g.fill();
+    // ---------- Figurenlage ----------
+    const BODEN = 196;
+    function heldenZiel(h) { const r = SZ.R(h); return Math.max(18, Math.min(B - 18, r.x + r.b / 2)); }
+
+    function npcName(h) {
+        if (h.form === 'gegner') { return 'gegner'; }
+        return { rolf: 'rolf', tanja: 'tanja', mia: 'mia', bauleiter: 'kemper' }[h.id] || null;
     }
 
-    // ---------- Szenenhintergründe ----------
-    const HINTERGRUND = {
-        buero() {
-            verlauf('#e8dcc4', '#c9b48f');
-            rechteck(0, py(70), B, H, '#8b5a2b');
-            for (let i = 0; i < B; i += 60) { rechteck(i, py(70), 2, H, '#7a4d24'); }
-            rechteck(px(30), py(10), px(18), py(18), '#87ceeb'); rechteck(px(30), py(18.5), px(18), 3, '#fff'); rechteck(px(38.5), py(10), 3, py(18), '#fff');
-            rechteck(px(34), py(60), px(32), py(4), '#5d4037'); rechteck(px(36), py(64), 8, py(10), '#4e342e'); rechteck(px(63), py(64), 8, py(10), '#4e342e');
-            text('Fraktionsbüro', px(55), py(8), 14, '#5d4037');
-        },
-        archiv() {
-            verlauf('#d5d8dc', '#aab7b8');
-            rechteck(0, py(70), B, H, '#7f8c8d');
-            for (let x = 30; x < B; x += 140) { rechteck(x, py(5), 6, py(65), '#95a5a6'); }
-            g.fillStyle = 'rgba(255,255,255,0.4)'; for (let x = 100; x < B; x += 200) { g.fillRect(x, 0, 80, 6); }
-        },
-        ems() {
-            verlauf('#aed6f1', '#d6eaf8');
-            rechteck(0, py(40), B, py(10), '#7dcea0');
-            rechteck(0, py(50), B, py(50), '#2e86c1');
-            for (let i = 0; i < 12; i++) { rechteck(((i * 97 + tick * 0.6) % B), py(56 + (i % 4) * 9), 40, 2, '#85c1e9'); }
-            rechteck(px(55), py(30), px(32), py(6), '#a04000'); rechteck(px(60), py(36), 14, py(16), '#873600'); rechteck(px(82), py(36), 14, py(16), '#873600');
-            kreis(px(12), py(12), 26, '#f9e79f');
-        },
-        baustelle() {
-            verlauf('#fdebd0', '#f5cba7');
-            rechteck(0, py(66), B, H, '#d4ac0d');
-            for (let x = 0; x < B; x += 40) { rechteck(x, py(62), 6, py(8), '#e74c3c'); rechteck(x, py(64), 40, 3, '#ecf0f1'); }
-            rechteck(px(78), py(40), px(20), py(26), '#ecf0f1'); text('Bauwagen', px(80), py(46), 13, '#555');
-            rechteck(px(20), py(18), px(14), py(8), '#f39c12'); rechteck(px(26), py(8), 8, py(12), '#f39c12');
-        },
-        schule() {
-            verlauf('#5d6d7e', '#212f3c');
-            rechteck(0, py(70), B, H, '#566573');
-            rechteck(px(30), py(10), px(36), py(30), '#a93226'); for (let x = 32; x < 66; x += 7) { rechteck(px(x), py(16), px(4), py(8), '#f7dc6f'); }
-            text('Martin-Luther-Grundschule', px(48), py(9), 14, '#f2f3f4', 'center');
-            for (let i = 0; i < 8; i++) { kreis(px(10 + i * 11), py(5 + (i % 3) * 3), 1.5, '#fff'); }
-        },
-        krypta() {
-            verlauf('#1b1b1b', '#3b2f2f');
-            for (let y = 0; y < H; y += 26) { for (let x = (y / 26) % 2 * 25; x < B; x += 50) { rechteck(x, y, 48, 24, 'rgba(120,60,40,0.35)'); } }
-            const v = g.createRadialGradient(px(40), py(50), 30, px(40), py(50), 420); v.addColorStop(0, 'rgba(255,230,150,0.25)'); v.addColorStop(1, 'rgba(0,0,0,0.6)');
-            g.fillStyle = v; g.fillRect(0, 0, B, H);
-        },
-        tempel() {
-            verlauf('#f0d9a0', '#b9935a');
-            rechteck(0, py(70), B, H, '#a67c52');
-            for (let x = 40; x < B; x += 180) { rechteck(x, py(4), 34, py(66), '#e6c98f'); rechteck(x - 6, py(4), 46, 10, '#d4b06a'); }
-            for (const x of [px(8), px(92)]) { rechteck(x, py(30), 6, 30, '#5d4037'); kreis(x + 3, py(28) + Math.sin(tick / 6) * 2, 9, '#f39c12'); kreis(x + 3, py(27), 5, '#f9e79f'); }
-            text('GRUNDGESETZ', B / 2, py(3.5) + 10, 18, '#7b5a2a', 'center');
-        }
-    };
-
-    // ---------- Hotspot-Formen ----------
-    function hotspotZeichnen(h, aktiv) {
-        const x = px(h.x), y = py(h.y), b = px(h.b), hh = py(h.h);
-        switch (h.form) {
-            case 'brief': rechteck(x, y, b, hh, '#fdfefe'); g.strokeStyle = '#999'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + b / 2, y + hh / 2); g.lineTo(x + b, y); g.stroke(); break;
-            case 'fax': rechteck(x, y + hh * 0.3, b, hh * 0.7, '#bdc3c7'); rechteck(x + b * 0.15, y, b * 0.7, hh * 0.35, '#ecf0f1'); rechteck(x + b * 0.6, y + hh * 0.45, b * 0.3, hh * 0.2, '#2ecc71'); break;
-            case 'regal': rechteck(x, y, b, hh, '#6e2c00'); for (let i = 1; i < 5; i++) { rechteck(x, y + hh * i / 5, b, 3, '#4e2000'); for (let j = 0; j < 6; j++) { rechteck(x + 4 + j * (b - 8) / 6, y + hh * (i - 1) / 5 + 6, (b - 8) / 7, hh / 5 - 8, ['#c0392b', '#2980b9', '#27ae60', '#f1c40f', '#8e44ad', '#ecf0f1'][(i + j) % 6]); } } break;
-            case 'kasten': rechteck(x, y, b, hh, '#7f8c8d'); rechteck(x + 4, y + 4, b - 8, hh / 3, '#2c3e50'); break;
-            case 'garderobe': rechteck(x + b / 2 - 3, y, 6, hh, '#5d4037'); rechteck(x + b * 0.1, y + 10, b * 0.8, hh * 0.45, '#8d6e63'); rechteck(x + b * 0.2, y - 6, b * 0.6, 8, '#6d4c41'); break;
-            case 'tuer': rechteck(x, y, b, hh, '#784212'); rechteck(x + 4, y + 4, b - 8, hh - 4, '#935116'); kreis(x + b - 10, y + hh / 2, 4, '#f7dc6f'); break;
-            case 'pfeil': g.fillStyle = 'rgba(255,255,255,0.75)'; g.beginPath(); g.moveTo(x, y + hh * 0.3); g.lineTo(x + b * 0.6, y + hh * 0.3); g.lineTo(x + b * 0.6, y + hh * 0.1); g.lineTo(x + b, y + hh * 0.5); g.lineTo(x + b * 0.6, y + hh * 0.9); g.lineTo(x + b * 0.6, y + hh * 0.7); g.lineTo(x, y + hh * 0.7); g.fill(); break;
-            case 'person': person(x + b / 2, y + hh, 1, h.farbe || '#999', { helm: h.id === 'bauleiter' }); break;
-            case 'gegner': {
-                const wackel = Math.sin(tick / 8) * 2;
-                person(x + b * 0.3, y + hh + wackel, 1, '#566573', { krawatte: '#2e4053', mund: true });
-                person(x + b * 0.75, y + hh - wackel, 1.08, '#4d5656', { krawatte: '#1b2631' });
-                text('!!', x + b * 0.5, y - 4, 18, '#c0392b', 'center');
-                break;
+    // ---------- Zeichnen ----------
+    function zeichneSzene(dt) {
+        const hs = S.sichtbareHotspots(z);
+        const aktiv = held[z.figur];
+        const parallaxe = Math.round(((aktiv.x - B / 2) / (B / 2)) * SZ.RAND * -0.5);
+        const { bild, vorne } = SZ.hintergrund(z, hs);
+        t2.drawImage(bild, -SZ.RAND + parallaxe, 0);
+        SZ.animation(t2, z, zeit, parallaxe);
+        // Personen (NPC) als Sprites
+        const figuren = [];
+        for (const h of hs) {
+            const n = npcName(h);
+            if (!n) { continue; }
+            const r = SZ.R(h);
+            const fy = Math.min(BODEN - 4, r.y + r.h + 2);
+            const redet = sprecher === h.id && !textbox.hidden;
+            if (n === 'gegner') {
+                figuren.push({ y: fy, name: 'hohlbein', x: r.x + r.b * 0.3, zustand: redet ? 'reden' : 'stehen', blick: -1 });
+                figuren.push({ y: fy - 1, name: 'droehn', x: r.x + r.b * 0.75, zustand: redet ? 'reden' : 'stehen', blick: -1 });
+            } else {
+                figuren.push({ y: fy, name: n, x: r.x + r.b / 2, zustand: redet ? 'reden' : 'stehen', blick: r.x + r.b / 2 > held.joe.x ? -1 : 1 });
             }
-            case 'bild': rechteck(x - 6, y - 6, b + 12, hh + 12, '#b7950b'); rechteck(x, y, b, hh, '#5d6d7e'); for (let i = 0; i < 5; i++) { kreis(x + b * (0.15 + i * 0.17), y + hh * 0.7, 6, '#f5cba7'); } rechteck(x + b * 0.4, y + 6, b * 0.2, hh * 0.3, '#c0392b'); break;
-            case 'inschrift': rechteck(x, y, b, hh, 'rgba(0,0,0,0.15)'); for (let i = 0; i < 4; i++) { rechteck(x + 8, y + 6 + i * (hh - 10) / 4, b - 16, 2, 'rgba(60,40,20,0.6)'); } break;
-            case 'boot': g.fillStyle = '#a04000'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + b, y); g.lineTo(x + b * 0.85, y + hh); g.lineTo(x + b * 0.15, y + hh); g.fill(); text('Volkseigentum', x + b / 2, y + hh * 0.7, 11, '#fff', 'center'); break;
-            case 'pfaehle': for (let i = 0; i < 7; i++) { rechteck(x + i * b / 7, y, b / 14, hh, i === 2 ? '#7b5b3a' : '#6e4b2a'); } break;
-            case 'rohr': rechteck(x, y, b, hh, '#7f8c8d'); for (let i = 0; i < 5; i++) { kreis(x + b * 0.5 + Math.sin(tick / 3 + i) * 6, y + hh + 6 + ((tick * 2 + i * 9) % 30), 3, '#5dade2'); } break;
-            case 'grube': rechteck(x, y, b, hh, '#6e2c00'); rechteck(x + 6, y + 6, b - 12, hh - 6, z.flags.grubeTrocken ? '#4e342e' : '#2e86c1'); if (z.flags.grubeTrocken) { kreis(x + b / 2, y + hh * 0.7, 6, '#f1c40f'); } break;
-            case 'uhr': kreis(x + b / 2, y + hh / 2, Math.min(b, hh) / 2, '#ecf0f1'); g.strokeStyle = '#111'; g.lineWidth = 3; g.beginPath(); g.moveTo(x + b / 2, y + hh / 2); g.lineTo(x + b / 2, y + hh * 0.15); g.moveTo(x + b / 2, y + hh / 2); g.lineTo(x + b * (z.flags.abend ? 0.7 : 0.3), y + hh / 2); g.stroke(); g.lineWidth = 1; break;
-            case 'schloss': rechteck(x, y, b, hh, '#7f8c8d'); for (let i = 0; i < 3; i++) { kreis(x + b * (0.2 + i * 0.3), y + hh / 2, hh * 0.3, '#b7950b'); } break;
-            case 'tor': rechteck(x, y, b, hh, '#5d4e37'); for (let i = 0; i < 3; i++) { kreis(x + b * (0.25 + i * 0.25), y + hh * 0.3, 10, '#2c2c2c'); } kreis(x + b / 2, y + hh * 0.6, 5, '#000'); break;
-            case 'platte': rechteck(x, y, b, hh, '#8d6e63'); rechteck(x + 3, y + 2, b - 6, hh - 4, (h.id === 'platte_links' ? z.platten.links : z.platten.rechts) ? '#f4d03f' : '#a1887f'); break;
-            case 'gitter': for (let i = 0; i <= 6; i++) { rechteck(x + i * b / 6, y, 5, hh, '#424949'); } for (let j = 0; j < 4; j++) { rechteck(x, y + j * hh / 4, b + 5, 5, '#424949'); } break;
-            case 'tafel': rechteck(x, y, b, hh, '#7b7d7d'); text('§', x + b / 2, y + hh / 2 + 8, 28, '#f7dc6f', 'center'); break;
-            case 'abgrund': rechteck(x, y, b, hh, '#000'); if (z.flags.brueckeDa) { rechteck(x, y + hh / 2 - 6, b, 12, '#a67c52'); } break;
-            case 'pokal': rechteck(x + b * 0.3, y + hh * 0.75, b * 0.4, hh * 0.25, '#b7950b'); g.fillStyle = '#f4d03f'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + b, y); g.lineTo(x + b * 0.6, y + hh * 0.75); g.lineTo(x + b * 0.4, y + hh * 0.75); g.fill(); kreis(x + b / 2, y + hh * 0.3, 4, '#e74c3c'); break;
-            case 'urne': rechteck(x, y, b, hh, '#c69c6d'); rechteck(x + b * 0.3, y + 3, b * 0.4, 3, '#3e2723'); rechteck(x + b * 0.9, y + hh * 0.3, 2, hh * 0.5, '#555'); rechteck(x + b * 0.88, y + hh * 0.75, 3, 10, '#f1c40f'); break;
-            default: rechteck(x, y, b, hh, 'rgba(255,255,255,0.2)');
         }
-        if (aktiv) {
-            g.strokeStyle = '#ffd54f'; g.lineWidth = 2; g.setLineDash([6, 4]); g.strokeRect(x - 3, y - 3, b + 6, hh + 6); g.setLineDash([]); g.lineWidth = 1;
-            const t = h.name; g.font = '15px "Trebuchet MS", sans-serif';
-            const w = g.measureText(t).width + 14, lx = Math.min(Math.max(x + b / 2 - w / 2, 4), B - w - 4), ly = Math.max(y - 30, 4);
-            rechteck(lx, ly, w, 24, 'rgba(0,0,0,0.75)'); text(t, lx + 7, ly + 17, 15, '#ffd54f');
+        for (const n of ['joe', 'chani']) {
+            const hh = held[n];
+            const geht = Math.abs(hh.ziel - hh.x) > 0.5;
+            const istSprecher = sprecher === n && !textbox.hidden;
+            const zustand = geht ? 'gehen' : (istSprecher ? 'reden' : (benutzenBis > zeit && n === z.figur ? 'benutzen' : 'stehen'));
+            figuren.push({ y: BODEN, name: n, x: hh.x, zustand, blick: hh.blick, held: true });
         }
+        figuren.sort((a, b) => a.y - b.y);
+        for (const f of figuren) {
+            const bildNr = f.zustand === 'gehen' ? Math.floor(zeit * 10) % 6 : f.zustand === 'reden' ? Math.floor(zeit * 8) % 2 : Math.floor(zeit * 1.3) % 2;
+            const blinzeln = (Math.floor(zeit * 10) + f.name.length * 7) % 37 === 0;
+            const spr = F.sprite(f.name, f.zustand, bildNr, { hut: f.name === 'joe' && z.inventar.includes('taschenlampe'), blinzeln });
+            const x = Math.round(f.x - F.FUSS_X), y = Math.round(f.y - F.FUSS_Y);
+            // Schatten
+            t2.globalAlpha = 0.3; t2.fillStyle = '#000'; t2.beginPath(); t2.ellipse(Math.round(f.x), f.y - 1, 9, 2, 0, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1;
+            if (f.blick < 0) { t2.save(); t2.translate(Math.round(f.x) * 2, 0); t2.scale(-1, 1); t2.drawImage(spr, x, y); t2.restore(); } else { t2.drawImage(spr, x, y); }
+            if (f.held && f.name === z.figur && !mini) { t2.fillStyle = 'rgb(255,214,79)'; t2.fillRect(Math.round(f.x) - 1, y - 2, 3, 2); t2.fillRect(Math.round(f.x), y, 1, 1); }
+        }
+        t2.drawImage(vorne, -SZ.RAND + parallaxe * 2, 0);
+        // Hover-Rahmen (dezent)
+        const ziel = hs.find((h) => h.id === hover);
+        if (ziel && textbox.hidden) { const r = SZ.R(ziel); t2.strokeStyle = 'rgba(255,214,79,0.6)'; t2.setLineDash([2, 2]); t2.strokeRect(r.x + 0.5, r.y + 0.5, r.b - 1, r.h - 1); t2.setLineDash([]); }
+        void dt;
     }
 
-    // ---------- Karte ----------
-    function karteZeichnen() {
-        verlauf('#f3e5ab', '#e0c98a');
-        g.strokeStyle = 'rgba(120,90,40,0.25)'; for (let i = 0; i < B; i += 48) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, H); g.stroke(); } for (let i = 0; i < H; i += 48) { g.beginPath(); g.moveTo(0, i); g.lineTo(B, i); g.stroke(); }
-        g.strokeStyle = '#5dade2'; g.lineWidth = 14; g.beginPath(); g.moveTo(px(20), 0); g.bezierCurveTo(px(30), py(40), px(45), py(60), px(30), H); g.stroke(); g.lineWidth = 1;
-        text('Ems', px(27), py(30), 16, '#2e86c1');
-        text('GREVEN', B / 2, py(8), 30, '#7b5a2a', 'center'); text('Karte der Schatzsuche', B / 2, py(13), 14, '#7b5a2a', 'center');
+    function zeichneKarte() {
+        t2.drawImage(SZ.karte(), 0, 0);
+        const s = window.Pixel.stift(t2);
         for (const [id, o] of Object.entries(S.ORTE)) {
-            const frei = z.orte.indexOf(id) >= 0;
-            kreis(px(o.x), py(o.y), frei ? 10 : 6, frei ? (hover === id ? '#c0392b' : '#7b241c') : 'rgba(0,0,0,0.25)');
-            if (frei) { text(o.name, px(o.x) + 14, py(o.y) + 5, 15, '#4a2c0a'); }
+            const frei = z.orte.includes(id), x = Math.round(o.x * B / 100), y = Math.round(o.y * H / 100);
+            if (!frei) { s.r(x - 1, y - 1, 3, 3, [150, 120, 90]); continue; }
+            s.r(x - 3, y - 3, 7, 7, [60, 30, 20]); s.r(x - 2, y - 2, 5, 5, hover === id ? [250, 80, 60] : [190, 40, 34]);
         }
         if (reise) {
             const a = S.ORTE[reise.von], b = S.ORTE[reise.nach], t = Math.min(1, reise.t);
-            g.strokeStyle = '#c0392b'; g.lineWidth = 4; g.setLineDash([10, 6]); g.beginPath(); g.moveTo(px(a.x), py(a.y));
-            g.lineTo(px(a.x + (b.x - a.x) * t), py(a.y + (b.y - a.y) * t)); g.stroke(); g.setLineDash([]); g.lineWidth = 1;
-            const fx = px(a.x + (b.x - a.x) * t), fy = py(a.y + (b.y - a.y) * t);
-            rechteck(fx - 10, fy - 14, 20, 6, '#5d4037');
+            const ax = a.x * B / 100, ay = a.y * H / 100, bx = b.x * B / 100, by = b.y * H / 100;
+            const n = Math.floor(t * 40);
+            for (let i = 0; i < n; i++) { if (i % 3 === 2) { continue; } const u = i / 40; s.r(ax + (bx - ax) * u, ay + (by - ay) * u - Math.sin(u * Math.PI) * 12, 2, 2, [200, 30, 30]); }
+            const u = t; s.r(ax + (bx - ax) * u - 3, ay + (by - ay) * u - Math.sin(u * Math.PI) * 12 - 6, 7, 3, [118, 78, 46]); s.r(ax + (bx - ax) * u - 2, ay + (by - ay) * u - Math.sin(u * Math.PI) * 12 - 9, 5, 3, [118, 78, 46]);
         }
-        text('Ort antippen, um hinzureisen', B / 2, H - 16, 14, '#7b5a2a', 'center');
     }
 
-    function orteAufKarte() { return Object.entries(S.ORTE).filter(([id]) => z.orte.indexOf(id) >= 0).map(([id, o]) => ({ id, x: px(o.x) - 16, y: py(o.y) - 16, b: 220, h: 32 })); }
+    function hochskalieren() {
+        g.imageSmoothingEnabled = false;
+        g.drawImage(tief, 0, 0, B * SKALA, H * SKALA);
+    }
 
-    // ---------- Minispiele ----------
-    function bootZeichnen() {
-        verlauf('#aed6f1', '#2e86c1');
-        for (let i = 0; i < 3; i++) { rechteck(0, py(25 + i * 25), B, 2, 'rgba(255,255,255,0.35)'); }
-        for (let i = 0; i < 20; i++) { rechteck(((i * 131 - tick * 6) % B + B) % B, py(20 + (i % 9) * 8), 30, 2, '#d6eaf8'); }
-        const spurY = (s) => py(25 + s * 25) + py(12.5);
-        // eigenes Boot
-        const by = spurY(mini.spur);
-        g.fillStyle = '#a04000'; g.beginPath(); g.moveTo(px(8), by - 12); g.lineTo(px(19), by - 12); g.lineTo(px(17), by + 10); g.lineTo(px(10), by + 10); g.fill();
-        kreis(px(12), by - 22, 7, '#f1c27d'); rechteck(px(11) - 2, by - 33, 18, 5, '#6d4c41'); kreis(px(15.5), by - 22, 7, '#f1c27d'); rechteck(px(15.5) - 7, by - 30, 14, 5, '#4a2c2a');
-        for (const h of mini.hindernisse) {
-            const x = px(h.x * 100), y = spurY(h.spur);
-            if (h.art.indexOf('Ente') === 0) { for (let i = 0; i < 3; i++) { kreis(x + i * 14, y, 6, '#f4d03f'); } }
-            else if (h.art.indexOf('Schild') === 0 || h.art.indexOf('Plakat') === 0) { rechteck(x, y - 18, 46, 26, '#ecf0f1'); rechteck(x + 20, y + 8, 4, 10, '#6e4b2a'); text('?!', x + 23, y, 13, '#c0392b', 'center'); }
-            else { rechteck(x, y - 4, 60, 10, '#6e4b2a'); }
+    function textMitSchatten(t, x, y, groesse, farbe, ausrichtung) {
+        g.font = `bold ${groesse}px "Courier New", ui-monospace, monospace`; g.textAlign = ausrichtung || 'left';
+        g.fillStyle = '#000'; g.fillText(t, x + 2, y + 2); g.fillStyle = farbe; g.fillText(t, x, y);
+    }
+
+    function overlay() {
+        if (mini) {
+            if (mini.art === 'boot') { textMitSchatten(`Noch ${Math.max(0, Math.ceil(mini.dauer - mini.zeit))} s   Leben ${'♥'.repeat(Math.max(0, mini.leben))}`, 16, 34, 26, '#ffe08a'); textMitSchatten('↑/↓ oder oben/unten tippen', B * SKALA - 16, 34, 20, '#fff', 'right'); }
+            else { textMitSchatten('Tippen / Leertaste / → für Tempo!', B * SKALA - 16, 34, 22, '#fff', 'right'); g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(16, 16, 300, 18); g.fillStyle = '#f4d03f'; g.fillRect(16, 16, 300 * Math.min(1, mini.pos), 18); }
+            return;
         }
-        // Verfolger
-        const vy = spurY(1) + Math.sin(tick / 10) * py(20);
-        rechteck(px(88), vy - 10, px(10), 20, '#566573'); text('Hohlbein & Dröhn', px(93), vy - 16, 12, '#fff', 'center');
-        text(`Noch ${Math.max(0, Math.ceil(mini.dauer - mini.zeit))} s · Leben ${'♥'.repeat(Math.max(0, mini.leben))}`, 16, 28, 18, '#fff');
-        text('↑/↓ oder oben/unten tippen', B - 16, 28, 14, '#fff', 'right');
+        if (z.szene === 'karte') {
+            textMitSchatten('GREVEN', B * SKALA / 2, 54, 40, '#6b3e1a', 'center');
+            for (const [id, o] of Object.entries(S.ORTE)) { if (z.orte.includes(id)) { textMitSchatten(o.name, o.x * B / 100 * SKALA + 16, o.y * H / 100 * SKALA + 8, 20, hover === id ? '#c0392b' : '#3b2410'); } }
+            textMitSchatten('Ort antippen, um hinzureisen', B * SKALA / 2, H * SKALA - 20, 18, '#3b2410', 'center');
+        } else {
+            textMitSchatten(S.SZENEN[z.szene].titel, 14, 32, 22, '#fff');
+            if (hover && textbox.hidden) {
+                const hs = S.sichtbareHotspots(z).find((h) => h.id === hover);
+                if (hs) { const r = SZ.R(hs); textMitSchatten(hs.name, (r.x + r.b / 2) * SKALA, Math.max(28, r.y * SKALA - 8), 20, '#ffe08a', 'center'); }
+            }
+        }
+        if (z.ende) { g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(0, 0, B * SKALA, H * SKALA); textMitSchatten('ENDE', B * SKALA / 2, H * SKALA / 2, 96, '#ffd54f', 'center'); textMitSchatten(`${z.punkte} Punkte · ${Math.round(z.sekunden / 60)} Minuten`, B * SKALA / 2, H * SKALA / 2 + 54, 30, '#fff', 'center'); }
+        if (blende) {
+            const p = blende.t < 0.5 ? 1 - blende.t * 2 : (blende.t - 0.5) * 2;
+            const r = Math.max(0, p) * Math.hypot(B, H) * SKALA / 2;
+            const fx = held[z.figur].x * SKALA, fy = (BODEN - 30) * SKALA;
+            g.save(); g.fillStyle = '#000'; g.beginPath(); g.rect(0, 0, B * SKALA, H * SKALA); g.arc(fx, fy, r, 0, Math.PI * 2, true); g.fill('evenodd'); g.restore();
+        }
     }
 
-    function kugelZeichnen() {
-        verlauf('#c8a165', '#7b5a2a');
-        rechteck(0, py(70), B, py(30), '#5d4037');
-        g.fillStyle = 'rgba(0,0,0,0.2)'; for (let x = 0; x < B; x += 80) { g.fillRect(x, py(70), 2, py(30)); }
-        rechteck(px(92), py(30), px(8), py(40), '#2c2c2c'); text('Halle', px(96), py(28), 13, '#fff', 'center');
-        const sx = px(4 + mini.pos * 86), kx = px(4 + mini.kugel * 86);
-        if (mini.lastenrad) { kreis(sx - 14, py(69), 10, '#222'); kreis(sx + 18, py(69), 10, '#222'); rechteck(sx - 18, py(62), 40, 6, '#27ae60'); }
-        person(sx - 6, py(70) - (mini.lastenrad ? 10 : 0), 0.9, '#8d6e63', { hut: true });
-        person(sx + 10, py(70) - (mini.lastenrad ? 10 : 0), 0.85, '#1abc9c', { haare: '#4a2c2a' });
-        kreis(kx, py(70) - 60, 60, '#8e8e8e'); kreis(kx - 18, py(70) - 78, 12, '#a6a6a6');
-        text('JA · NEIN', kx, py(70) - 54, 14, '#444', 'center');
-        rechteck(16, 16, 300, 14, 'rgba(0,0,0,0.3)'); rechteck(16, 16, 300 * Math.min(1, mini.pos), 14, '#f4d03f');
-        text('Tippen / Leertaste / → für Tempo', B - 16, 28, 14, '#fff', 'right');
-    }
-
-    // ---------- Zeichenschleife ----------
-    function zeichnen() {
-        g.clearRect(0, 0, B, H);
-        if (!z) { verlauf('#2c1810', '#000'); return; }
-        if (mini) { (mini.art === 'boot' ? bootZeichnen : kugelZeichnen)(); return; }
-        if (z.szene === 'karte') { karteZeichnen(); return; }
-        const s = S.SZENEN[z.szene];
-        (HINTERGRUND[s.stimmung] || HINTERGRUND.buero)();
-        const hs = S.sichtbareHotspots(z);
-        hs.forEach((h, i) => hotspotZeichnen(h, hover === h.id || auswahl === i));
-        heldenZeichnen();
-        text(s.titel, 16, 26, 18, '#fff');
-        if (z.ende) { rechteck(0, 0, B, H, 'rgba(0,0,0,0.45)'); text('ENDE', B / 2, H / 2, 64, '#ffd54f', 'center'); text(`${z.punkte} Punkte · ${Math.round(z.sekunden / 60)} Minuten`, B / 2, H / 2 + 44, 22, '#fff', 'center'); }
-    }
-
+    let benutzenBis = 0;
     let letzteZeit = performance.now();
     function schleife(jetzt) {
-        const dt = Math.min(0.05, (jetzt - letzteZeit) / 1000);
-        letzteZeit = jetzt;
-        tick++;
+        const dt = Math.min(0.05, (jetzt - letzteZeit) / 1000); letzteZeit = jetzt;
         if (z && !pausiert) {
-            if (!textbox.hidden || !dialogEl.hidden) { /* Spiel wartet */ } else if (mini) {
-                if (mini.art === 'boot') { S.bootSchritt(mini, dt, eingabeBoot); eingabeBoot = null; } else { S.kugelSchritt(mini, dt, eingabeKugel); eingabeKugel = false; }
-                if (mini.status !== 'laeuft') { const art = mini.art, ok = mini.status === 'gewonnen'; mini = null; ergebnis(S.minispielEnde(z, art, ok)); klang(ok ? 'erfolg' : 'fehler'); if (!ok) { danach = { minispiel: art }; } }
-            }
-            if (reise) { reise.t += dt * 1.4; if (reise.t >= 1.2) { const ziel = reise.nach; reise = null; ergebnis(S.reisen(z, ziel)); } }
+            zeit += dt;
             if (!z.ende) { z.sekunden += dt; }
+            if (blende) { blende.t += dt * 1.6; if (blende.t >= 0.5 && !blende.gewechselt) { blende.gewechselt = true; blende.wechsel(); } if (blende.t >= 1) { blende = null; } }
+            if (mini && textbox.hidden && dialogEl.hidden) {
+                if (mini.art === 'boot') { S.bootSchritt(mini, dt, eingabeBoot); eingabeBoot = null; } else { S.kugelSchritt(mini, dt, eingabeKugel); eingabeKugel = false; }
+                if (mini.status !== 'laeuft') { const art = mini.art, ok = mini.status === 'gewonnen'; mini = null; klang(ok ? 'erfolg' : 'fehler'); ergebnis(S.minispielEnde(z, art, ok)); if (!ok) { danach = { minispiel: art }; } }
+            }
+            if (reise) { reise.t += dt * 0.9; if (reise.t >= 1.15) { const ziel = reise.nach; reise = null; szenenwechsel(() => { const v = z.szene; ergebnis(S.reisen(z, ziel), v); }); } }
+            laufen(dt);
         }
-        zeichnen();
+        if (z) {
+            if (mini) {
+                const sp = { joe: F.sprite('joe', 'stehen', 0, { hut: true }), chani: F.sprite('chani', mini.art === 'kugel' ? 'gehen' : 'stehen', Math.floor(zeit * 10) % 6), hohlbein: F.sprite('hohlbein', 'reden', Math.floor(zeit * 6) % 2), droehn: F.sprite('droehn', 'reden', Math.floor(zeit * 6 + 1) % 2) };
+                if (mini.art === 'kugel') { sp.joe = F.sprite('joe', 'gehen', Math.floor(zeit * 10) % 6, { hut: true }); }
+                (mini.art === 'boot' ? SZ.boot : SZ.kugel)(t2, mini, zeit, sp);
+            } else if (z.szene === 'karte') { zeichneKarte(); } else { zeichneSzene(dt); }
+            hochskalieren(); overlay();
+            satzEl.textContent = z.szene === 'karte' || mini ? '' : satz();
+        } else {
+            t2.fillStyle = '#120c08'; t2.fillRect(0, 0, B, H); hochskalieren();
+        }
         requestAnimationFrame(schleife);
     }
     let eingabeBoot = null, eingabeKugel = false;
 
-    // ---------- Text, Dialoge, Ergebnisse ----------
+    function laufen(dt) {
+        for (const n of ['joe', 'chani']) {
+            const h = held[n], d = h.ziel - h.x;
+            if (Math.abs(d) > 0.5) { const v = 55 * dt; h.x += Math.sign(d) * Math.min(Math.abs(d), v); h.blick = Math.sign(d); h.schritt += dt; if (h.schritt > 0.3) { h.schritt = 0; klang('schritt'); } }
+        }
+        const a = held[z.figur];
+        if (laufAuftrag && Math.abs(a.ziel - a.x) <= 0.5) { const f = laufAuftrag; laufAuftrag = null; f(); }
+    }
+
+    function gehe(x, danachTun) {
+        const a = held[z.figur], b = held[z.figur === 'joe' ? 'chani' : 'joe'];
+        a.ziel = Math.max(14, Math.min(B - 14, x));
+        const seite = a.ziel > b.x ? -1 : 1;
+        b.ziel = Math.max(14, Math.min(B - 14, a.ziel + seite * 20));
+        laufAuftrag = danachTun || null;
+    }
+
+    // ---------- Text, Porträts, Dialoge ----------
+    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Rolf', 'rolf'], ['Tanja', 'tanja'], ['Mia', 'mia'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Hohlbein', 'hohlbein'], ['Dröhn', 'droehn']];
+    function sprecherAus(zeile) {
+        for (const [n, id] of SPRECHER) { if (zeile.startsWith(n + ':') || zeile.startsWith(n + ' ')) { return id; } }
+        return null;
+    }
+    function ausdruck(zeile) {
+        if (/(Kugel|rollt|heult|Knirschen|Hilfe|poltert|stürzen|klebt)/.test(zeile)) { return 'erschrocken'; }
+        if (/(!|Geschafft|Danke|richtig|Solidarität|leicht)/.test(zeile)) { return 'lacht'; }
+        return 'neutral';
+    }
+
     function zeigeText() {
         if (warteschlange.length === 0) {
-            textbox.hidden = true;
+            textbox.hidden = true; sprecher = null;
             const d = danach; danach = null;
             if (d && d.dialog) { dialogZeigen(d.dialog); }
+            if (d && d.gespraech) { gespraechZeigen(d.gespraech); }
             if (d && d.minispiel) { mini = d.minispiel === 'boot' ? S.bootNeu(Date.now() % 1000) : S.kugelNeu(z.flags.lastenrad); }
             leisteAktualisieren();
             return;
         }
+        const zeile = warteschlange.shift();
+        const wer = sprecherAus(zeile);
+        sprecher = wer === 'hohlbein' || wer === 'droehn' ? 'gegner' : (['rolf', 'tanja', 'mia'].includes(wer) ? wer : wer === 'kemper' ? 'bauleiter' : wer);
+        portraitEl.replaceChildren();
+        if (wer) { const bild = kopie(F.portrait(wer, ausdruck(zeile), { hut: wer === 'joe' && z.inventar.includes('taschenlampe') })); bild.className = 'portraitbild'; portraitEl.appendChild(bild); portraitEl.hidden = false; } else { portraitEl.hidden = true; }
+        textEl.textContent = zeile;
         textbox.hidden = false;
-        textbox.textContent = warteschlange.shift();
-        const weiter = document.createElement('span'); weiter.className = 'weiter'; weiter.textContent = ' ▶';
-        textbox.appendChild(weiter);
     }
 
-    function ergebnis(e) {
-        const vorher = z.szene;
+    function ergebnis(e, vorherSzene) {
+        const vorher = vorherSzene === undefined ? z.szene : vorherSzene;
         warteschlange = warteschlange.concat(e.text || []);
         if (e.dialog || e.minispiel) { danach = { dialog: e.dialog, minispiel: e.minispiel }; }
-        if (e.szene && e.szene !== vorher) { klang('klick'); }
-        if (z.szene !== vorher || e.szene) {
-            if (z.szene !== 'karte' && S.SZENEN[z.szene] && e.szene && e.szene !== 'karte' && e.text.indexOf(S.SZENEN[z.szene].einstieg) < 0) { warteschlange.push(S.SZENEN[z.szene].einstieg); }
+        if (z.szene !== vorher) {
+            if (z.szene !== 'karte' && S.SZENEN[z.szene] && !(e.text || []).includes(S.SZENEN[z.szene].einstieg)) { warteschlange.push(S.SZENEN[z.szene].einstieg); }
             if (S.ORTE[vorher]) { letzterOrt = vorher; }
+            held.joe.x = held.joe.ziel = 30; held.chani.x = held.chani.ziel = 48; held.joe.blick = held.chani.blick = 1;
             plaetze.schreiben('auto', z);
         }
         if (e.ende) { klang('ende'); plaetze.schreiben('auto', z); }
@@ -307,108 +267,156 @@
         zeigeText();
     }
 
+    function szenenwechsel(fn) { klang('blende'); blende = { t: 0, gewechselt: false, wechsel: fn }; }
+
     function dialogZeigen(art) {
         const d = S.dialogInhalt(z, art);
         if (!d) { return; }
-        dialogEl.replaceChildren();
-        const f = document.createElement('p'); f.textContent = d.frage; dialogEl.appendChild(f);
-        d.optionen.forEach((o, i) => {
-            const k = document.createElement('button'); k.type = 'button'; k.textContent = `${i + 1}. ${o.text}`;
-            k.addEventListener('click', () => { dialogEl.hidden = true; klang('klick'); ergebnis(S.dialogWahl(z, art, o.id)); });
-            dialogEl.appendChild(k);
-        });
-        dialogEl.hidden = false;
-        dialogEl.querySelector('button').focus();
+        auswahlListe(d.frage, d.optionen.map((o) => ({ text: o.text, tun: () => { klang('klick'); ergebnis(S.dialogWahl(z, art, o.id)); } })));
     }
 
-    // ---------- Kontextmenü am Hotspot ----------
+    /** Gesprächsauswahl mit Personen (Dialogbaum: Wer sind Sie? / Anliegen / Tschüss). */
+    function gespraechZeigen(h) {
+        const anrede = z.figur === 'joe' ? 'Joe' : 'Chani';
+        auswahlListe(`${anrede} spricht mit ${h.name}:`, [
+            { text: '„Wer sind Sie eigentlich?“', tun: () => ergebnis(S.aktion(z, 'ansehen', h.id)) },
+            { text: h.form === 'gegner' ? '„Was wollen Sie hier?“' : '„Wir brauchen Ihre Hilfe.“', tun: () => handlung('reden', h) },
+            { text: '„Schönen Abend noch.“', tun: () => ergebnis({ text: [`${anrede}: „Schönen Abend noch.“`] }) }
+        ]);
+    }
+
+    function auswahlListe(frage, optionen) {
+        dialogEl.replaceChildren();
+        const f = document.createElement('p'); f.textContent = frage; dialogEl.appendChild(f);
+        optionen.forEach((o, i) => { const k = document.createElement('button'); k.type = 'button'; k.textContent = `${i + 1}. ${o.text}`; k.addEventListener('click', () => { dialogEl.hidden = true; o.tun(); }); dialogEl.appendChild(k); });
+        dialogEl.hidden = false; dialogEl.querySelector('button').focus();
+    }
+
+    // ---------- Aktionen ----------
+    function handlung(art, h, gegenstand) {
+        const vorher = z.punkte, szene = z.szene;
+        const e = S.aktion(z, art, h.id, gegenstand);
+        if (art === 'f1' && z.figur === 'joe') { klang('kartusche'); } else { klang(z.punkte > vorher ? 'erfolg' : 'klick'); }
+        if (art !== 'ansehen' && art !== 'reden') { benutzenBis = zeit + 0.8; }
+        if (z.szene !== szene) {
+            const neu = z.szene; z.szene = szene;
+            szenenwechsel(() => { z.szene = neu; ergebnis(e, szene); });
+            return;
+        }
+        ergebnis(e);
+    }
+
+    /** Standardaktion beim Tippen (Gehe zu): Personen ansprechen, Ausgänge benutzen, sonst ansehen. */
+    function standard(h) {
+        if (npcName(h)) { return 'reden'; }
+        if (h.form === 'pfeil' || h.form === 'tuer' || h.form === 'tor') { return 'benutzen'; }
+        return 'ansehen';
+    }
+
+    function hotspotAusloesen(h, langDruck, px, py) {
+        if (langDruck) { kontextZeigen(h, px, py); return; }
+        const v = verb, o = objekt;
+        verb = 'gehe'; objekt = null;
+        gehe(heldenZiel(h), () => {
+            held[z.figur].blick = (SZ.R(h).x + SZ.R(h).b / 2) >= held[z.figur].x ? 1 : -1;
+            if (o) { handlung('gegenstand', h, o); return; }
+            const art = v === 'gehe' ? standard(h) : v === 'nimm' || v === 'benutze' ? 'benutzen' : v === 'gib' ? null : v;
+            if (art === null) { ergebnis({ text: [`${S.FIGUREN[z.figur].name}: „Was soll ich geben? Erst einen Gegenstand im Inventar wählen.“`] }); return; }
+            if (art === 'reden' && npcName(h)) { gespraechZeigen(h); return; }
+            handlung(art, h);
+        });
+        leisteAktualisieren();
+    }
+
     function kontextZeigen(h, x, y) {
         kontextEl.replaceChildren();
         const kopf = document.createElement('div'); kopf.className = 'kopf'; kopf.textContent = h.name; kontextEl.appendChild(kopf);
         const f = S.FIGUREN[z.figur].faehigkeiten;
-        const verben = [['ansehen', 'Ansehen'], ['benutzen', 'Benutzen / Nehmen'], ['reden', 'Reden'], ['f1', f[0]], ['f2', f[1]]];
-        verben.forEach(([art, t], i) => knopf(`${i + 1}. ${t}`, () => ausfuehren(art, h.id)));
-        for (const gid of z.inventar) { knopf(`➜ ${S.GEGENSTAENDE[gid].name}`, () => ausfuehren('gegenstand', h.id, gid)); }
-        knopf('Abbrechen', () => { kontextEl.hidden = true; });
-        const r = leinwand.getBoundingClientRect(), buehne = $('buehne').getBoundingClientRect();
+        [['ansehen', 'Schau an'], ['benutzen', 'Nimm / Benutze'], ['reden', 'Rede mit'], ['f1', f[0]], ['f2', f[1]]].forEach(([art, t], i) => knopf(`${i + 1}. ${t}`, () => gehe(heldenZiel(h), () => (art === 'reden' && npcName(h) ? gespraechZeigen(h) : handlung(art, h)))));
+        for (const gid of z.inventar) { knopf(`➜ ${S.GEGENSTAENDE[gid].name}`, () => gehe(heldenZiel(h), () => handlung('gegenstand', h, gid))); }
+        knopf('Abbrechen', () => { });
+        const r = leinwand.getBoundingClientRect(), bu = $('buehne').getBoundingClientRect();
         kontextEl.hidden = false;
-        const kx = Math.min(Math.max(r.left - buehne.left + x * r.width / B, 4), buehne.width - kontextEl.offsetWidth - 4);
-        const ky = Math.min(Math.max(r.top - buehne.top + y * r.height / H, 4), buehne.height - kontextEl.offsetHeight - 4);
-        kontextEl.style.left = `${kx}px`; kontextEl.style.top = `${ky}px`;
+        kontextEl.style.left = `${Math.min(Math.max(r.left - bu.left + x * r.width / B, 4), bu.width - kontextEl.offsetWidth - 4)}px`;
+        kontextEl.style.top = `${Math.min(Math.max(r.top - bu.top + y * r.height / H, 4), bu.height - kontextEl.offsetHeight - 4)}px`;
         kontextEl.querySelector('button').focus();
         function knopf(t, fn) { const k = document.createElement('button'); k.type = 'button'; k.textContent = t; k.addEventListener('click', () => { kontextEl.hidden = true; fn(); }); kontextEl.appendChild(k); }
     }
 
-    function ausfuehren(art, ziel, gegenstand) {
-        const vorherPunkte = z.punkte;
-        const e = S.aktion(z, art, ziel, gegenstand);
-        if (art === 'f1' && z.figur === 'joe') { klang('kartusche'); } else { klang(z.punkte > vorherPunkte ? 'erfolg' : 'klick'); }
-        ergebnis(e);
-    }
-
-    // ---------- Leiste: Figuren, Inventar, Status ----------
+    // ---------- Leiste: Verben, Figuren, Inventar ----------
     function leisteAktualisieren() {
         if (!z) { return; }
+        verbenEl.replaceChildren();
+        for (const [v] of VERBEN) {
+            const k = document.createElement('button'); k.type = 'button'; k.className = 'verb' + (verb === v ? ' aktiv' : '') + (v === 'f1' || v === 'f2' ? ' faehigkeit' : '');
+            k.textContent = verbName(v);
+            k.addEventListener('click', () => { verb = v; objekt = null; klang('klick'); leisteAktualisieren(); });
+            verbenEl.appendChild(k);
+        }
         figurenEl.replaceChildren();
         for (const id of ['joe', 'chani']) {
-            const k = document.createElement('button'); k.type = 'button'; k.className = 'figur' + (z.figur === id ? ' aktiv' : '');
-            k.textContent = S.FIGUREN[id].name; k.title = S.FIGUREN[id].beschreibung;
-            k.setAttribute('aria-pressed', String(z.figur === id));
-            k.addEventListener('click', () => { if (z.figur !== id) { klang('klick'); ergebnis(S.figurWechseln(z)); } });
+            const k = document.createElement('button'); k.type = 'button'; k.className = 'figur' + (z.figur === id ? ' aktiv' : ''); k.title = S.FIGUREN[id].beschreibung; k.setAttribute('aria-pressed', String(z.figur === id));
+            const bild = kopie(F.portrait(id, 'neutral', { hut: id === 'joe' && z.inventar.includes('taschenlampe') })); bild.className = 'mini';
+            k.append(bild, document.createTextNode(S.FIGUREN[id].name));
+            k.addEventListener('click', () => { if (z.figur !== id && textbox.hidden) { klang('klick'); ergebnis(S.figurWechseln(z)); } });
             figurenEl.appendChild(k);
         }
         inventarEl.replaceChildren();
         for (const gid of z.inventar) {
-            const k = document.createElement('button'); k.type = 'button'; k.className = 'ding ' + gid; k.textContent = S.GEGENSTAENDE[gid].name;
-            k.addEventListener('click', () => ergebnis({ text: [S.GEGENSTAENDE[gid].text] }));
+            const k = document.createElement('button'); k.type = 'button'; k.className = 'ding' + (objekt === gid ? ' aktiv' : ''); k.title = S.GEGENSTAENDE[gid].name; k.setAttribute('aria-label', S.GEGENSTAENDE[gid].name);
+            const bild = kopie(F.icon(gid)); bild.className = 'icon'; k.appendChild(bild);
+            k.addEventListener('click', () => {
+                if (!textbox.hidden) { return; }
+                if (verb === 'benutze' || verb === 'gib') { objekt = gid; leisteAktualisieren(); return; }
+                ergebnis({ text: [`${S.GEGENSTAENDE[gid].name}: ${S.GEGENSTAENDE[gid].text}`] });
+            });
             inventarEl.appendChild(k);
         }
-        statusEl.textContent = `${z.punkte} Punkte · ${S.FIGUREN[z.figur].faehigkeiten.join(' / ')}`;
+        punkteEl.textContent = `${z.punkte} Punkte`;
     }
 
     // ---------- Eingabe ----------
-    function punktAusEreignis(ev) {
-        const r = leinwand.getBoundingClientRect();
-        return { x: (ev.clientX - r.left) * B / r.width, y: (ev.clientY - r.top) * H / r.height };
-    }
-
+    function punktAus(ev) { const r = leinwand.getBoundingClientRect(); return { x: (ev.clientX - r.left) * B / r.width, y: (ev.clientY - r.top) * H / r.height }; }
     function treffer(p) {
-        if (z.szene === 'karte') { const o = orteAufKarte().find((o) => p.x >= o.x && p.x <= o.x + o.b && p.y >= o.y && p.y <= o.y + o.h); return o ? { karte: o.id } : null; }
-        const hs = S.sichtbareHotspots(z).slice().reverse();
-        const h = hs.find((h) => p.x >= px(h.x) && p.x <= px(h.x + h.b) && p.y >= py(h.y) && p.y <= py(h.y + h.h));
+        if (z.szene === 'karte') { const o = Object.entries(S.ORTE).find(([id, o]) => z.orte.includes(id) && Math.abs(p.x - o.x * B / 100) < 10 && Math.abs(p.y - o.y * H / 100) < 8); return o ? { karte: o[0] } : null; }
+        const h = S.sichtbareHotspots(z).slice().reverse().find((h) => { const r = SZ.R(h); return p.x >= r.x && p.x <= r.x + r.b && p.y >= r.y && p.y <= r.y + r.h; });
         return h ? { hotspot: h } : null;
     }
-
-    function blockiert() { return !z || pausiert || !textbox.hidden || !dialogEl.hidden || !titelEl.hidden || reise; }
+    function blockiert() { return !z || pausiert || !textbox.hidden || !dialogEl.hidden || !titelEl.hidden || reise || blende; }
 
     leinwand.addEventListener('pointermove', (ev) => {
         if (blockiert() || mini) { return; }
-        const t = treffer(punktAusEreignis(ev));
+        const t = treffer(punktAus(ev));
         hover = t ? (t.karte || t.hotspot.id) : null;
-        leinwand.style.cursor = hover ? 'pointer' : 'default';
+        leinwand.style.cursor = hover ? 'pointer' : 'crosshair';
     });
 
+    let druck = null;
     leinwand.addEventListener('pointerdown', (ev) => {
         if (!z || pausiert || !titelEl.hidden) { return; }
         ev.preventDefault();
         if (!textbox.hidden) { zeigeText(); return; }
-        if (mini) {
-            const p = punktAusEreignis(ev);
-            if (mini.art === 'boot') { eingabeBoot = p.y < H / 2 ? 'hoch' : 'runter'; } else { eingabeKugel = true; }
-            return;
-        }
+        if (mini) { const p = punktAus(ev); if (mini.art === 'boot') { eingabeBoot = p.y < H / 2 ? 'hoch' : 'runter'; } else { eingabeKugel = true; } return; }
         if (blockiert()) { return; }
         kontextEl.hidden = true;
-        const p = punktAusEreignis(ev), t = treffer(p);
-        if (!t) { return; }
-        if (t.karte) { reiseStarten(t.karte); return; }
-        kontextZeigen(t.hotspot, p.x, p.y);
+        const p = punktAus(ev);
+        druck = { p, zeit: performance.now(), lang: false, timer: setTimeout(() => { druck.lang = true; const t = treffer(p); if (t && t.hotspot) { hotspotAusloesen(t.hotspot, true, p.x, p.y); } }, 480) };
     });
-
+    leinwand.addEventListener('pointerup', () => {
+        if (!druck) { return; }
+        clearTimeout(druck.timer);
+        const d = druck; druck = null;
+        if (d.lang || blockiert()) { return; }
+        const t = treffer(d.p);
+        if (!t) { if (z.szene !== 'karte') { verb = 'gehe'; objekt = null; gehe(d.p.x); leisteAktualisieren(); } return; }
+        if (t.karte) { reiseStarten(t.karte); return; }
+        hotspotAusloesen(t.hotspot, false);
+    });
+    leinwand.addEventListener('contextmenu', (ev) => ev.preventDefault());
     textbox.addEventListener('click', () => zeigeText());
 
     function reiseStarten(ziel) {
-        if (ziel === letzterOrt && ziel !== 'buero') { ergebnis(S.reisen(z, ziel)); return; }
+        if (ziel === letzterOrt && ziel !== 'buero') { szenenwechsel(() => { const v = z.szene; ergebnis(S.reisen(z, ziel), v); }); return; }
         reise = { von: S.ORTE[letzterOrt] ? letzterOrt : 'buero', nach: ziel, t: 0 };
         klang('klick');
     }
@@ -424,90 +432,70 @@
             if (mini.art === 'kugel' && (ev.key === ' ' || ev.key === 'ArrowRight' || ev.key === 'd')) { eingabeKugel = true; ev.preventDefault(); }
             return;
         }
-        if (!dialogEl.hidden) {
-            const n = Number(ev.key); const k = dialogEl.querySelectorAll('button');
-            if (n >= 1 && n <= k.length) { k[n - 1].click(); }
-            return;
-        }
-        if (!kontextEl.hidden) {
-            const n = Number(ev.key); const k = kontextEl.querySelectorAll('button');
-            if (n >= 1 && n <= 5) { k[n - 1].click(); }
-            return;
-        }
+        const n = Number(ev.key);
+        if (!dialogEl.hidden) { const k = dialogEl.querySelectorAll('button'); if (n >= 1 && n <= k.length) { k[n - 1].click(); } return; }
+        if (!kontextEl.hidden) { const k = kontextEl.querySelectorAll('button'); if (n >= 1 && n <= 5) { k[n - 1].click(); } return; }
+        if (n >= 1 && n <= 8) { verb = VERBEN[n - 1][0]; objekt = null; leisteAktualisieren(); return; }
         if (ev.key === 'Tab' || ev.key === 'f') { ev.preventDefault(); ergebnis(S.figurWechseln(z)); return; }
-        const ziele = z.szene === 'karte' ? orteAufKarte() : S.sichtbareHotspots(z);
-        if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') {
-            ev.preventDefault();
-            auswahl = (auswahl + (ev.key === 'ArrowRight' ? 1 : -1) + ziele.length) % ziele.length;
-            hover = ziele[auswahl] ? ziele[auswahl].id : null;
-        }
-        if (ev.key === 'Enter' && auswahl >= 0 && ziele[auswahl]) {
-            ev.preventDefault();
-            if (z.szene === 'karte') { reiseStarten(ziele[auswahl].id); } else { const h = ziele[auswahl]; kontextZeigen(h, px(h.x + h.b / 2), py(h.y + h.h / 2)); }
-        }
+        const ziele = z.szene === 'karte' ? Object.keys(S.ORTE).filter((o) => z.orte.includes(o)).map((id) => ({ id })) : S.sichtbareHotspots(z);
+        if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') { ev.preventDefault(); auswahl = (auswahl + (ev.key === 'ArrowRight' ? 1 : -1) + ziele.length) % ziele.length; hover = ziele[auswahl] ? ziele[auswahl].id : null; }
+        if (ev.key === 'Enter' && auswahl >= 0 && ziele[auswahl]) { ev.preventDefault(); if (z.szene === 'karte') { reiseStarten(ziele[auswahl].id); } else { hotspotAusloesen(ziele[auswahl], false); } }
     });
 
-    // ---------- Menü, Pause, Speicherplätze ----------
-    function pauseUmschalten() {
-        pausiert = !pausiert;
-        if (pausiert) { menueZeigen(); } else { menueEl.hidden = true; }
-    }
-
+    // ---------- Menü ----------
+    function pauseUmschalten() { pausiert = !pausiert; if (pausiert) { menueZeigen(); } else { menueEl.hidden = true; } }
     function menueZeigen() {
         menueEl.replaceChildren();
         const h = document.createElement('h2'); h.textContent = 'Pause'; menueEl.appendChild(h);
         knopf('Weiterspielen', () => pauseUmschalten());
-        for (const p of ['1', '2', '3']) {
-            const info = plaetze.info(p);
-            knopf(`Speichern auf Platz ${p}${info ? ` (belegt: ${info.punkte} Punkte)` : ''}`, () => { const ok = plaetze.schreiben(p, z); hinweis(ok ? `Gespeichert auf Platz ${p}.` : 'Speichern nicht möglich (Browser-Speicher gesperrt).'); });
-        }
-        for (const p of ['auto', '1', '2', '3']) {
-            const info = plaetze.info(p);
-            if (info) { knopf(`Laden: ${p === 'auto' ? 'Autospeicher' : 'Platz ' + p} (${info.punkte} Punkte)`, () => { const s = plaetze.lesen(p); if (s) { starten(s); } }); }
-        }
+        for (const p of ['1', '2', '3']) { const info = plaetze.info(p); knopf(`Speichern auf Platz ${p}${info ? ` (belegt: ${info.punkte} Punkte)` : ''}`, () => { const ok = plaetze.schreiben(p, z); hinweis(ok ? `Gespeichert auf Platz ${p}.` : 'Speichern nicht möglich (Browser-Speicher gesperrt).'); }); }
+        for (const p of ['auto', '1', '2', '3']) { const info = plaetze.info(p); if (info) { knopf(`Laden: ${p === 'auto' ? 'Autospeicher' : 'Platz ' + p} (${info.punkte} Punkte)`, () => { const s = plaetze.lesen(p); if (s) { starten(s); } }); } }
         knopf(ton ? 'Ton aus' : 'Ton an', () => { ton = !ton; try { window.localStorage.setItem('fp-spiel-ton', ton ? 'an' : 'aus'); } catch (_) { /* egal */ } menueZeigen(); });
         knopf('Neues Spiel', () => starten(S.neuerZustand(), true));
         const zurueck = document.createElement('a'); zurueck.href = '../'; zurueck.textContent = 'Zurück zu FraktionPerfekt'; menueEl.appendChild(zurueck);
         menueEl.hidden = false;
         function knopf(t, fn) { const k = document.createElement('button'); k.type = 'button'; k.textContent = t; k.addEventListener('click', fn); menueEl.appendChild(k); }
     }
-
     function hinweis(t) { const p = document.createElement('p'); p.className = 'hinweis'; p.textContent = t; menueEl.appendChild(p); }
 
     function starten(zustand, neu) {
-        z = zustand; mini = null; reise = null; pausiert = false; menueEl.hidden = true; titelEl.hidden = true; dialogEl.hidden = true; kontextEl.hidden = true;
-        warteschlange = []; danach = null;
+        z = zustand; mini = null; reise = null; blende = null; pausiert = false; laufAuftrag = null;
+        menueEl.hidden = true; titelEl.hidden = true; dialogEl.hidden = true; kontextEl.hidden = true;
+        warteschlange = []; danach = null; verb = 'gehe'; objekt = null;
+        held.joe.x = held.joe.ziel = 30; held.chani.x = held.chani.ziel = 48;
         letzterOrt = S.ORTE[z.szene] ? z.szene : 'buero';
+        $('leiste').hidden = false;
         leisteAktualisieren();
         if (neu) {
             ergebnis({ text: [
                 'Greven, Montagabend. Die Fraktionssitzung ist vorbei, die Kekse sind alle.',
-                'Joe – Fraktionschef, im Hauptberuf Vertreter für Baudichtstoffe – und Chani – Social-Media-Referentin und Kunsthistorikerin – räumen noch auf.',
-                'Da liegt ein Umschlag auf dem Tisch. Und draußen fährt ein Wagen vor, aus dem zwei Herren in zu engen Anzügen steigen …',
-                '(Tippe auf Dinge im Raum. Unten wechselst du zwischen Joe und Chani – jede Figur hat eigene Fähigkeiten. Esc oder P: Pause.)'
+                'Joe: „Chani, hast du den Umschlag auf dem Tisch gesehen? Ohne Absender.“',
+                'Chani: „Und draußen steigen zwei Herren in zu engen Anzügen aus einem Wagen … Das gefällt mir nicht.“',
+                '(Antippen = gehen und die naheliegende Aktion. Verben unten wählen, Gegenstände mit „Benutze“ oder „Gib“ kombinieren. Langes Drücken öffnet alle Aktionen. Esc: Pause.)'
             ] });
         } else {
             ergebnis({ text: [z.szene === 'karte' ? 'Weiter geht’s – auf der Karte.' : `Weiter geht’s: ${S.SZENEN[z.szene].titel}.`] });
         }
     }
 
-    // Titelbildschirm
     $('neu').addEventListener('click', () => { klang('klick'); starten(S.neuerZustand(), true); });
     const weiterKnopf = $('weiter');
-    if (plaetze.info('auto')) {
-        weiterKnopf.hidden = false;
-        weiterKnopf.addEventListener('click', () => { const s = plaetze.lesen('auto'); if (s) { starten(s); } });
-    }
+    if (plaetze.info('auto')) { weiterKnopf.hidden = false; weiterKnopf.addEventListener('click', () => { const s = plaetze.lesen('auto'); if (s) { starten(s); } }); }
     $('pause').addEventListener('click', () => { if (z && titelEl.hidden) { pauseUmschalten(); } });
 
-    // Skalierung: Seitenverhältnis 16:9 halten
+    // Titelbild: beide Porträts
+    $('titelbilder').append(kopie(F.portrait('joe', 'lacht', { hut: true })), kopie(F.portrait('chani', 'lacht')));
+
+    // Ganzzahlige Skalierung, wenn möglich
     function groesse() {
-        const leiste = $('leiste').offsetHeight;
-        const verf = { b: window.innerWidth, h: window.innerHeight - leiste };
-        const f = Math.min(verf.b / B, verf.h / H);
+        const leiste = $('leiste').hidden ? 0 : $('leiste').offsetHeight;
+        const vb = window.innerWidth, vh = window.innerHeight - leiste;
+        let f = Math.min(vb / B, vh / H);
+        if (f >= 2) { f = Math.floor(f); }
         $('buehne').style.width = `${Math.floor(B * f)}px`; $('buehne').style.height = `${Math.floor(H * f)}px`;
     }
     window.addEventListener('resize', groesse);
+    new ResizeObserver(groesse).observe($('leiste'));
     groesse();
     requestAnimationFrame(schleife);
 })();
