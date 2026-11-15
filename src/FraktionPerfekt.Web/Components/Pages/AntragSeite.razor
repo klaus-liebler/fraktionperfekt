@@ -154,6 +154,7 @@ else
                 <div class="fp-field"><label class="fp-lbl">Kommentar</label><RadzenTextArea @bind-Value="kommentar" Rows="2" /></div>
                 <RadzenButton Text="Kommentieren" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(kommentar)" Click="@(() => AusfuehrenAsync(s => s.KommentierenAsync(Id, zitat, kommentar!), "Kommentar gespeichert."))" />
             </section>
+            <Anhaenge BezugArt="Antrag" BezugId="@Id" Ordner="Anträge" />
         </div>
     </div>
 }

@@ -16,6 +16,7 @@ public static class Registrierung
         dienste.AddSingleton<IZustellKanal, MockPushKanal>();
         dienste.AddSingleton<IRisSchnittstelle, MockRis>();
         dienste.AddScoped<Testdaten.Demodaten>();
+        dienste.AddSingleton<Application.Wissen.IKiAssistent, MockKi>();
         return dienste;
     }
 }

@@ -33,5 +33,23 @@ public sealed partial class FraktionDbContext
         Iteration5(modelBuilder);
     }
 
-    static partial void Iteration5(ModelBuilder modelBuilder);
+    private static void Iteration5(ModelBuilder modelBuilder)
+    {
+        Einfach<Domain.Wissen.Datei>(modelBuilder, "Dateien", b =>
+        {
+            b.HasIndex(x => x.Ordner);
+            b.HasIndex(x => new { x.BezugArt, x.BezugId });
+        });
+        Einfach<Domain.Wissen.WikiSeite>(modelBuilder, "WikiSeiten", b => b.HasIndex(x => x.Titel).IsUnique());
+        Einfach<Domain.Wissen.WikiVersion>(modelBuilder, "WikiVersionen", b => b.HasIndex(x => new { x.SeiteId, x.Nummer }).IsUnique());
+        Einfach<Domain.Wissen.WikiVorschlag>(modelBuilder, "WikiVorschlaege", b =>
+        {
+            b.HasIndex(x => new { x.SeiteId, x.Status });
+            b.Property(x => x.Art).HasConversion<string>().HasMaxLength(20);
+            b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+        });
+        Iteration6(modelBuilder);
+    }
+
+    static partial void Iteration6(ModelBuilder modelBuilder);
 }

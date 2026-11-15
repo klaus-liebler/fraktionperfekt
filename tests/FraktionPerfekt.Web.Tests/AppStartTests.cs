@@ -34,6 +34,7 @@ public sealed partial class AppStartTests : IAsyncLifetime
         start.Environment["Speicher__Schluessel"] = Path.Combine(_ordner, "schluessel");
         start.Environment["Speicher__Logs"] = Path.Combine(_ordner, "logs");
         start.Environment["Hintergrundjobs__Aktiv"] = "false";
+        start.Environment["Dateiablage__Pfad"] = Path.Combine(_ordner, "dateien");
         _app = Process.Start(start)!;
         _app.OutputDataReceived += (_, _) => { };
         _app.ErrorDataReceived += (_, _) => { };
@@ -121,11 +122,25 @@ public sealed partial class AppStartTests : IAsyncLifetime
         antwort.IsSuccessStatusCode.ShouldBeTrue();
 
         // Alle Hauptseiten laden (vorgerendert, Status 200).
-        foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit", "sitzungen", "aufgaben", "antraege", "abstimmungen", "ressourcen", "besetzung" })
+        foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit", "sitzungen", "aufgaben", "antraege", "abstimmungen", "ressourcen", "besetzung", "wiki", "wiki/vorschlaege", "wiki/seite/Fraktionssitzung", "dateien" })
         {
             var r = await http.GetAsync(seite, abbruch);
             r.StatusCode.ShouldBe(HttpStatusCode.OK, $"Seite /{seite}");
         }
+
+        // KI-Schnittstelle: nur mit Schlüssel, eigenes Konto ohne vertrauliche Seiten; MCP mit Werkzeugen.
+        using var ki = new HttpClient { BaseAddress = _adresse };
+        (await ki.GetAsync("api/wiki/seiten", abbruch)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        ki.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "demo-ki-schluessel");
+        var kiSeiten = await ki.GetStringAsync("api/wiki/seiten", abbruch);
+        kiSeiten.ShouldContain("Grundschullandschaft");
+        kiSeiten.ShouldNotContain("Personalfragen");
+        (await ki.GetStringAsync("api/wiki/suche?q=Grundschule", abbruch)).ShouldContain("Grundschullandschaft");
+        var mcp = await ki.PostAsync("mcp", new StringContent("""{"jsonrpc":"2.0","id":1,"method":"tools/list"}""", System.Text.Encoding.UTF8, "application/json"), abbruch);
+        (await mcp.Content.ReadAsStringAsync(abbruch)).ShouldContain("wiki_vorschlagen");
+        var aufruf = await ki.PostAsync("mcp", new StringContent("""{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"wiki_lesen","arguments":{"titel":"Antrag stellen"}}}""",
+            System.Text.Encoding.UTF8, "application/json"), abbruch);
+        (await aufruf.Content.ReadAsStringAsync(abbruch)).ShouldContain("zwei Wochen");
 
         // Handy: Vertretungsanfrage mit Ein-Tipp-Antwort „Ich vertrete“.
         var handy = await http.GetStringAsync("handy", abbruch);

@@ -1,0 +1,150 @@
+@page "/dateien"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Wissen
+@inject Vorgang Vorgang
+
+<PageTitle>Dateien · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Dateien</h1>
+        <p class="fp-sub">Ordner je Gremium und Arbeitskreis; Rechte kommen aus den Mitgliedschaften. Speicher: <b>@speicher</b>.</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+<div class="fp-split fp-split-nav">
+    <nav class="fp-card" aria-label="Ordner">
+        <h2>Ordner</h2>
+        <ul class="fp-baum">
+            @foreach (var o in ordner)
+            {
+                <li class="@(o.Pfad == aktuell ? "fp-gewaehlt" : null)">
+                    <button class="fp-linkbutton" @onclick="@(() => WaehlenAsync(o.Pfad))">@o.Anzeige</button>
+                    @if (o.Dateien > 0)
+                    {
+                        <span class="fp-chip-n">@o.Dateien</span>
+                    }
+                </li>
+            }
+        </ul>
+    </nav>
+    <section class="fp-card fp-grow">
+        <h2>@(ordner.FirstOrDefault(o => o.Pfad == aktuell)?.Anzeige ?? aktuell)</h2>
+        @if (dateien.Count == 0)
+        {
+            <p class="fp-leer">Der Ordner ist leer.</p>
+        }
+        else
+        {
+            <div class="fp-tbl">
+                <table>
+                    <thead><tr><th>Name</th><th>Größe</th><th>Von</th><th>Am</th><th>Bezug</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var z in dateien)
+                        {
+                            <tr>
+                                <td><a href="dateien/@z.Datei.Id" target="_blank">@z.Datei.Name</a>@if (z.Datei.Vertraulich) { <span class="fp-pill fp-p-warn">vertraulich</span> }</td>
+                                <td>@(Math.Max(1, z.Datei.Groesse / 1024)) KB</td>
+                                <td>@z.HochgeladenVon</td>
+                                <td>@Ortszeit.AlsOrtszeit(z.Datei.Am).ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>@BezugLink(z)</td>
+                                <td><BegruendeterButton Text="Löschen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Loeschen" Click="@(() => LoeschenAsync(z.Datei.Id))" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        <div class="fp-form">
+            <div class="fp-field"><label><input type="checkbox" @bind="vertraulich" /> vertraulich (nur Gremium und Leitung)</label></div>
+            <div class="fp-field">
+                <label class="fp-lbl" for="hochladen">Hochladen (PDF, Office, Text, Bild; höchstens 20 MB)</label>
+                <InputFile id="hochladen" OnChange="HochladenAsync" multiple />
+            </div>
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<Ordner> ordner = [];
+    private IReadOnlyList<DateiZeile> dateien = [];
+    private string aktuell = "Fraktion";
+    private string speicher = "";
+    private bool vertraulich;
+    private string? meldung;
+    private bool fehler;
+
+    [SupplyParameterFromQuery(Name = "ordner")]
+    private string? OrdnerParameter { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ordner = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().OrdnerAsync());
+        speicher = await Vorgang.AusfuehrenAsync(d => Task.FromResult(d.GetRequiredService<DateiDienst>().Speicher));
+        aktuell = OrdnerParameter ?? ordner.FirstOrDefault()?.Pfad ?? "Fraktion";
+        await LadenAsync();
+    }
+
+    private static RenderFragment BezugLink(DateiZeile z) => z.Datei.BezugArt switch
+    {
+        "Antrag" => @<a href="antraege/@z.Datei.BezugId">Antrag</a>,
+        "Sitzung" => @<a href="sitzungen/@z.Datei.BezugId">Sitzung</a>,
+        "Termin" => @<a href="termine/@z.Datei.BezugId">Termin</a>,
+        _ => @<span class="fp-muted">–</span>,
+    };
+
+    private async Task WaehlenAsync(string pfad)
+    {
+        aktuell = pfad;
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        dateien = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().ListeAsync(aktuell));
+        ordner = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().OrdnerAsync());
+    }
+
+    private async Task HochladenAsync(InputFileChangeEventArgs e)
+    {
+        var gremium = ordner.FirstOrDefault(o => o.Pfad == aktuell)?.GremiumId;
+        var n = 0;
+        try
+        {
+            foreach (var f in e.GetMultipleFiles(20))
+            {
+                await using var strom = f.OpenReadStream(DateiDienst.MaxBytes);
+                await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().HochladenAsync(aktuell, f.Name, strom, gremium, vertraulich));
+                n++;
+            }
+
+            (meldung, fehler) = ($"{n} Datei(en) hochgeladen.", false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task LoeschenAsync(Guid id)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().LoeschenAsync(id));
+            (meldung, fehler) = ("Gelöscht.", false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

@@ -1,0 +1,164 @@
+@page "/wiki"
+@using FraktionPerfekt.Application.Wissen
+@using FraktionPerfekt.Domain.Wissen
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+
+<PageTitle>Wiki · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Wiki</h1>
+        <p class="fp-sub">Wissen der Fraktion: Abläufe, Politikfelder, Gremien, Positionen. Verlinken mit [[Titel]]. Die KI liest nur nicht vertrauliche Seiten und macht nur Vorschläge.</p>
+    </div>
+    <div class="fp-row">
+        <a class="fp-btn" href="wiki/vorschlaege">KI-Vorschläge @if (offen > 0) { <span class="fp-zahl">@offen</span> }</a>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+<section class="fp-card fp-einschub">
+    <div class="fp-form">
+        <div class="fp-field fp-grow">
+            <label class="fp-lbl" for="wiki-suche">Volltextsuche oder Frage</label>
+            <RadzenTextBox id="wiki-suche" @bind-Value="anfrage" @bind-Value:event="oninput" Placeholder="z. B. Haushalt, Schulcampus, Wie läuft eine Fraktionssitzung?" />
+        </div>
+    </div>
+    <div class="fp-row">
+        <RadzenButton Text="Suchen" Icon="search" Click="SuchenAsync" Disabled="@string.IsNullOrWhiteSpace(anfrage)" />
+        <RadzenButton Text="KI fragen" Icon="auto_awesome" ButtonStyle="ButtonStyle.Light" Click="FragenAsync" Disabled="@string.IsNullOrWhiteSpace(anfrage)" />
+    </div>
+    @if (antwort is not null)
+    {
+        <div class="fp-zitat">
+            <Markdown Text="@antwort.Antwort" />
+            @if (antwort.Quellen.Count > 0)
+            {
+                <p class="fp-small">Quellen:
+                    @foreach (var q in antwort.Quellen)
+                    {
+                        <a href="wiki/seite/@Uri.EscapeDataString(q.Titel)">@q.Titel</a><text> </text>
+                    }
+                </p>
+            }
+        </div>
+    }
+    @if (treffer is not null)
+    {
+        <h3>@treffer.Count Treffer</h3>
+        <ul class="fp-kompakt">
+            @foreach (var t in treffer)
+            {
+                <li>
+                    <a href="wiki/seite/@Uri.EscapeDataString(t.Seite.Titel)"><b>@t.Seite.Titel</b></a> <span class="fp-small fp-muted">@t.Seite.Bereich</span>
+                    <div class="fp-small"><Markdown Text="@t.Ausschnitt" /></div>
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+<div class="fp-grid-2">
+    @foreach (var bereich in WikiDienst.Bereiche.Concat(seiten.Select(s => s.Seite.Bereich)).Distinct())
+    {
+        var inBereich = seiten.Where(s => s.Seite.Bereich == bereich).ToList();
+        <section class="fp-card">
+            <h2>@bereich <span class="fp-zahl">@inBereich.Count</span></h2>
+            @if (inBereich.Count == 0)
+            {
+                <p class="fp-muted fp-small">Noch keine Seiten.</p>
+            }
+            <ul class="fp-kompakt">
+                @foreach (var z in inBereich)
+                {
+                    <li>
+                        <a href="wiki/seite/@Uri.EscapeDataString(z.Seite.Titel)">@z.Seite.Titel</a>
+                        @if (z.Seite.Vertraulich)
+                        {
+                            <span class="fp-pill fp-p-warn">vertraulich</span>
+                        }
+                        @if (z.OffeneVorschlaege > 0)
+                        {
+                            <span class="fp-pill fp-p-info">@z.OffeneVorschlaege Vorschlag</span>
+                        }
+                        <span class="fp-small fp-muted">· v@(z.Seite.Version) · @z.Rueckverweise Verweise</span>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+</div>
+
+@if (darfBearbeiten)
+{
+    <details class="fp-card" open="@(NeuParameter is not null)">
+        <summary>Neue Seite</summary>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl" for="neu-titel">Titel</label><RadzenTextBox id="neu-titel" @bind-Value="neuTitel" @bind-Value:event="oninput" /></div>
+            <div class="fp-field"><label class="fp-lbl">Bereich</label><RadzenDropDown TValue="string" @bind-Value="neuBereich" Data="@WikiDienst.Bereiche" /></div>
+            <div class="fp-field"><label class="fp-lbl">Vorlage</label><RadzenDropDown TValue="string" @bind-Value="neuVorlage" Data="@Wikivorlagen.Alle.Keys" /></div>
+            <div class="fp-field"><label><input type="checkbox" @bind="neuVertraulich" /> vertraulich (für die KI unsichtbar)</label></div>
+        </div>
+        <RadzenButton Text="Anlegen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(neuTitel)" Click="AnlegenAsync" />
+    </details>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "neu")]
+    private string? NeuParameter { get; set; }
+
+    private IReadOnlyList<WikiZeile> seiten = [];
+    private IReadOnlyList<Suchtreffer>? treffer;
+    private KiAntwort? antwort;
+    private string? anfrage;
+    private int offen;
+    private bool darfBearbeiten;
+    private string? meldung;
+    private bool fehler;
+    private string? neuTitel;
+    private string neuBereich = WikiDienst.Bereiche[0];
+    private string neuVorlage = "Ablauf";
+    private bool neuVertraulich;
+
+    protected override async Task OnInitializedAsync()
+    {
+        darfBearbeiten = (await Vorgang.BenutzerAsync()).Rolle is not Rolle.Helferin;
+        neuTitel = NeuParameter;
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        seiten = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WikiDienst>().SeitenAsync());
+        offen = seiten.Sum(s => s.OffeneVorschlaege);
+    }
+
+    private async Task SuchenAsync()
+    {
+        antwort = null;
+        treffer = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WikiDienst>().SuchenAsync(anfrage ?? ""));
+    }
+
+    private async Task FragenAsync()
+    {
+        treffer = null;
+        antwort = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WikiDienst>().FragenAsync(anfrage ?? ""));
+    }
+
+    private async Task AnlegenAsync()
+    {
+        try
+        {
+            var s = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WikiDienst>().AnlegenAsync(neuBereich, neuTitel!, neuVorlage, neuVertraulich, null));
+            Navigation.NavigateTo($"wiki/seite/{Uri.EscapeDataString(s.Titel)}?bearbeiten=1");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+    }
+}

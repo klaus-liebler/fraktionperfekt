@@ -1,0 +1,88 @@
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Wissen
+@inject Vorgang Vorgang
+
+@* Anhänge an Antrag, Sitzung (Protokoll) oder Termin; liegen in der Dateiablage im passenden Ordner. *@
+<section class="fp-card">
+    <h2>Anhänge <span class="fp-zahl">@dateien.Count</span></h2>
+    @if (meldung is not null)
+    {
+        <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+    }
+    @if (dateien.Count == 0)
+    {
+        <p class="fp-muted fp-small">Noch keine Anhänge.</p>
+    }
+    <ul class="fp-kompakt">
+        @foreach (var z in dateien)
+        {
+            <li>
+                <a href="dateien/@z.Datei.Id" target="_blank">@z.Datei.Name</a>
+                <span class="fp-small fp-muted">· @(z.Datei.Groesse / 1024) KB · @z.HochgeladenVon · @Ortszeit.AlsOrtszeit(z.Datei.Am).ToString("dd.MM.yyyy")</span>
+                @if (z.Loeschen.Erlaubt)
+                {
+                    <button class="fp-linkbutton fp-small" @onclick="@(() => LoeschenAsync(z.Datei.Id))">löschen</button>
+                }
+            </li>
+        }
+    </ul>
+    <label class="fp-lbl" for="@($"anhang-{BezugId:N}")">Datei anhängen (PDF, Office, Text, Bild; höchstens 20 MB)</label>
+    <InputFile id="@($"anhang-{BezugId:N}")" OnChange="HochladenAsync" />
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string BezugArt { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public Guid BezugId { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Ordner { get; set; } = "Fraktion";
+
+    [Parameter]
+    public Guid? GremiumId { get; set; }
+
+    [Parameter]
+    public bool Vertraulich { get; set; }
+
+    private IReadOnlyList<DateiZeile> dateien = [];
+    private string? meldung;
+    private bool fehler;
+
+    protected override Task OnParametersSetAsync() => LadenAsync();
+
+    private async Task LadenAsync()
+        => dateien = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().ListeAsync(null, BezugArt, BezugId));
+
+    private async Task HochladenAsync(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            await using var strom = e.File.OpenReadStream(DateiDienst.MaxBytes);
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().HochladenAsync(Ordner, e.File.Name, strom, GremiumId, Vertraulich, BezugArt, BezugId));
+            (meldung, fehler) = ($"„{e.File.Name}“ angehängt.", false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task LoeschenAsync(Guid id)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().LoeschenAsync(id));
+            (meldung, fehler) = ("Gelöscht.", false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

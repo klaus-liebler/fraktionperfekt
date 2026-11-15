@@ -27,6 +27,8 @@ public static class Registrierung
         dienste.AddScoped<Ressourcen.RessourcenDienst>();
         dienste.AddScoped<Termine.BesetzungDienst>();
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Abstimmungen", d.GetRequiredService<Abstimmungen.UmfrageDienst>().FristenPruefenAsync));
+        dienste.AddScoped<Wissen.DateiDienst>();
+        dienste.AddScoped<Wissen.WikiDienst>();
         return dienste;
     }
 }

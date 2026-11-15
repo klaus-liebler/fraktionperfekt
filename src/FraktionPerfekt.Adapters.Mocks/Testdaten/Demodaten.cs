@@ -32,6 +32,8 @@ public sealed class Demodaten(
     RisAbgleich risAbgleich,
     PostausgangDienst postausgang,
     IAuditProtokoll protokoll,
+    Application.Wissen.IWikiSuche wikiSuche,
+    Application.Wissen.IDateiablage dateiablage,
     TimeProvider uhr)
 {
     public const int Startwert = 20261115;
@@ -136,6 +138,7 @@ public sealed class Demodaten(
         await SitzungsDemodaten.AnlegenAsync(daten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
         await AntragsDemodaten.AnlegenAsync(daten, stammdaten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
         await RessourcenDemodaten.AnlegenAsync(daten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
+        await WissenDemodaten.AnlegenAsync(daten, stammdaten, wikiSuche, dateiablage, personen, uhr.GetUtcNow(), abbruch);
 
         await protokoll.ProtokollierenAsync("Demodaten.Angelegt",
             $"Demofraktion angelegt: {personen.Count} Personen, {anzahlTermine} eigene Termine, {ris.Zusammenfassung}, {faelle} Vertretungsfälle", abbruch: abbruch);

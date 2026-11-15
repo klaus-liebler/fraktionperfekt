@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261115174236_Iteration4Ressourcen";
+    public override string LastMigrationId => "20261115175005_Iteration5Wissen";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -1299,6 +1299,190 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("TerminId");
 
                 b.ToTable("Vertretungsfaelle");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.Datei", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("BezugArt")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("BezugId")
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("GeloeschtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid?>("GremiumId")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Groesse")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid>("HochgeladenVonPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Ordner")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Schluessel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Sha256")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Typ")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<bool>("Vertraulich")
+                    .HasColumnType("INTEGER");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Ordner");
+
+                b.HasIndex("BezugArt", "BezugId");
+
+                b.ToTable("Dateien");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.WikiSeite", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<bool>("Archiviert")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Bereich")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("ErstelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long>("GeaendertAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid?>("GremiumId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("Version")
+                    .HasColumnType("INTEGER");
+
+                b.Property<bool>("Vertraulich")
+                    .HasColumnType("INTEGER");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Titel")
+                    .IsUnique();
+
+                b.ToTable("WikiSeiten");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.WikiVersion", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Kommentar")
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("Nummer")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid?>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("SeiteId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("VorschlagId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("SeiteId", "Nummer")
+                    .IsUnique();
+
+                b.ToTable("WikiVersionen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.WikiVorschlag", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Art")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("BasisVersion")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Begruendung")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("EntschiedenAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid?>("EntschiedenVonPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Nachher")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("SeiteId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Von")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Vorher")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("SeiteId", "Status");
+
+                b.ToTable("WikiVorschlaege");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Mitgliedschaft", b =>

@@ -1,0 +1,98 @@
+@page "/wiki/vorschlaege"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Wissen
+@inject Vorgang Vorgang
+
+<PageTitle>KI-Vorschläge · Wiki</PageTitle>
+
+<a class="fp-zurueck" href="wiki">← Wiki</a>
+<div class="fp-head">
+    <div>
+        <h1>Änderungsvorschläge der KI</h1>
+        <p class="fp-sub">Die KI ändert nie direkt. Sie findet veraltete Angaben, Dubletten, Lücken und verwaiste Seiten; eine verantwortliche Person sieht Vorher und Nachher und entscheidet. Assistent: <b>@kiName</b>.</p>
+    </div>
+    <div class="fp-row">
+        <BegruendeterButton Text="KI jetzt prüfen lassen" Icon="auto_awesome" Freigabe="@pruefen" Click="PruefenAsync" />
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (zeilen.Count == 0)
+{
+    <p class="fp-leer">Keine offenen Vorschläge.</p>
+}
+
+@foreach (var z in zeilen)
+{
+    <section class="fp-card">
+        <div class="fp-row" style="justify-content:space-between">
+            <h2><a href="wiki/seite/@Uri.EscapeDataString(z.Seite.Titel)">@z.Seite.Titel</a> <span class="fp-pill fp-p-info">@z.Vorschlag.Art</span></h2>
+            <span class="fp-small fp-muted">@z.Vorschlag.Von · @Ortszeit.AlsOrtszeit(z.Vorschlag.Am).ToString("dd.MM.yyyy HH:mm") · zu Version @z.Vorschlag.BasisVersion</span>
+        </div>
+        <p>@z.Vorschlag.Begruendung</p>
+        @if (z.Veraltet)
+        {
+            <div class="fp-alert fp-warn">Die Seite wurde seit dem Vorschlag geändert (jetzt Version @z.Seite.Version).</div>
+        }
+        @if (z.Vorschlag.Nachher is { } nachher)
+        {
+            <details open>
+                <summary>Vorher → Nachher</summary>
+                <Vergleich Vorher="@z.Vorschlag.Vorher" Nachher="@nachher" />
+            </details>
+        }
+        else
+        {
+            <p class="fp-small fp-muted">Nur Hinweis, kein Textvorschlag. „Erledigt“ schließt ihn.</p>
+        }
+        <div class="fp-row">
+            <BegruendeterButton Text="@(z.Vorschlag.Nachher is null ? "Erledigt" : "Annehmen")" Icon="check" Freigabe="@z.Entscheiden" Click="@(() => EntscheidenAsync(z.Vorschlag.Id, true))" />
+            <BegruendeterButton Text="Ablehnen" ButtonStyle="ButtonStyle.Light" Freigabe="@pruefen" Click="@(() => EntscheidenAsync(z.Vorschlag.Id, false))" />
+        </div>
+    </section>
+}
+
+@code {
+    private IReadOnlyList<VorschlagZeile> zeilen = [];
+    private Freigabe pruefen = Freigabe.Ja;
+    private string kiName = "";
+    private string? meldung;
+    private bool fehler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        pruefen = Rechte.SitzungenSteuern((await Vorgang.BenutzerAsync()).Rolle) is { Erlaubt: true }
+            ? Freigabe.Ja
+            : Freigabe.Nein("Über KI-Vorschläge entscheiden Vorstand und Geschäftsführung.");
+        kiName = await Vorgang.AusfuehrenAsync(d => Task.FromResult(d.GetRequiredService<IKiAssistent>().Name));
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync() => zeilen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WikiDienst>().VorschlaegeAsync());
+
+    private async Task PruefenAsync()
+    {
+        var n = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WikiDienst>().KiPruefenAsync());
+        (meldung, fehler) = ($"{n} neue Vorschläge.", false);
+        await LadenAsync();
+    }
+
+    private async Task EntscheidenAsync(Guid id, bool annehmen)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WikiDienst>().VorschlagEntscheidenAsync(id, annehmen));
+            (meldung, fehler) = (annehmen ? "Übernommen – neue Version der Seite angelegt." : "Abgelehnt.", false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

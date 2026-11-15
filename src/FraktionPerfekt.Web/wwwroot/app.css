@@ -384,3 +384,9 @@ p .fp-eintrag { display: inline-block; }
 label.fp-option { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--fp-line); border-radius: 8px; cursor: pointer; }
 label.fp-option.sel { border-color: var(--fp-rhoendorf); background: var(--fp-cadenabbia-hell); }
 .fp-ueberfaellig { border-left: 3px solid var(--fp-crit); padding-left: 8px; }
+
+/* Iteration 5: Dateien, Wiki */
+.fp-split-nav { grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); }
+.fp-baum li.fp-gewaehlt { border-radius: 6px; padding-left: 6px; }
+.fp-zitat .fp-markdown p:last-child { margin-bottom: 0; }
+.fp-baum .fp-linkbutton { text-align: left; }

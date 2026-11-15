@@ -192,6 +192,36 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   - Bestätigte haben den Termin als Zusage im Kalender.
   - Nach dem Termin erscheint der Folgeschritt **„Kurzbericht anlegen“** auf der Startseite.
 
+## Iteration 5: Wissen und Dateien
+
+- **Dateien** (`/dateien`, Modul 8):
+  - Ordner „Fraktion“, „Anträge“, „Protokolle“, je Gremium und Arbeitskreis, „Wahlkampf“. Rechte aus den
+    Mitgliedschaften; **vertrauliche** Dateien nur für Gremienmitglieder, Vorstand und Geschäftsführung; Helfer:innen nur
+    „Wahlkampf“.
+  - Upload (mehrere Dateien, höchstens 20 MB, PDF/Office/Text/Bild), Download, Löschen durch Hochladende oder
+    Geschäftsführung, Prüfsumme SHA-256, Audit.
+  - **Anhänge** an Anträgen, Sitzungen (Protokoll), Terminen und Wiki-Seiten.
+  - Speicher über den Port `IDateiablage`: Standard lokal (`Dateiablage:Pfad`, `data/dateien`); mit
+    `Dateiablage:Art=WebDav` und `Dateiablage:WebDav:Adresse/Benutzer/Passwort` in **Nextcloud** (WebDAV, Ordner im
+    Desktop-Client sichtbar).
+- **Wiki** (`/wiki`, Modul 20):
+  - Bereiche Abläufe, Politikfelder, Gremien, Positionen, Hintergrund; Vorlagen (Ablauf, Politikfeld, Gremium).
+  - Jede Änderung ist eine **Version** (wer, wann, Kommentar); Vergleich jeder Version mit dem aktuellen Stand.
+  - **Verlinkung** mit `[[Titel]]`, Rückverweise, „fehlende Seiten“ mit Anlegen-Link; Dubletten beim Anlegen werden
+    abgewiesen (Titelvergleich ohne Groß-/Kleinschreibung und Satzzeichen).
+  - **Volltextsuche** mit SQLite FTS5 (Präfixsuche, Ausschnitt mit Markierung).
+  - Rechte: vertrauliche Seiten nur für Vorstand, Geschäftsführung und das zugeordnete Gremium.
+- **KI-Schnittstelle** (Port `IKiAssistent`, vorerst regelbasierter Mock):
+  - Eigenes Konto „ki“, sieht **nur nicht vertrauliche** Seiten, ändert **nie direkt**.
+  - „KI jetzt prüfen lassen“ (`/wiki/vorschlaege`): findet Dubletten, veraltete Angaben (alte Jahreszahlen mit
+    „aktuell/derzeit/geplant“), Lücken (neuere Fraktionsbeschlüsse zum Thema) und verwaiste Seiten.
+  - Vorschläge mit **Vorher-nachher**; Vorstand oder Geschäftsführung nehmen an (neue Version „KI-Vorschlag“) oder
+    lehnen ab. Hat sich die Seite seitdem geändert, ist Annehmen gesperrt (mit Begründung).
+  - „KI fragen“: Antwort aus den gefundenen Seiten mit **Quellen**.
+  - **REST-API** `/api/wiki/seiten`, `/api/wiki/seiten/{id}`, `/api/wiki/suche?q=`, `POST /api/wiki/vorschlaege` und
+    **MCP-Server** `POST /mcp` (Werkzeuge `wiki_liste`, `wiki_lesen`, `wiki_suchen`, `wiki_vorschlagen`), jeweils mit
+    `Authorization: Bearer <Ki:Schluessel>` (Entwicklung: `demo-ki-schluessel`).
+
 ## Gestaltung
 
 Farben und Schrift stehen zentral als CSS-Variablen in `src/FraktionPerfekt.Web/wwwroot/app.css` (`:root`, oben), das

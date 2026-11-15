@@ -92,6 +92,8 @@
         new("Fraktion", "Personen", "personen", r => r is Rolle.Helferin ? Freigabe.Nein("Helfer:innen sehen nur Wahlkampf und öffentliche Termine.") : Freigabe.Ja),
         new("Fraktion", "Räume und Ressourcen", "ressourcen"),
         new("Fraktion", "Terminbesetzung", "besetzung", r => r is Rolle.Helferin ? Freigabe.Nein("Helfer:innen sehen nur den Wahlkampf.") : Freigabe.Ja),
+        new("Wissen", "Wiki", "wiki"),
+        new("Wissen", "Dateien", "dateien"),
         new("Fraktion", "Wahlkampf", "wahlkampf", Geplant: "3"),
         new("Persönlich", "Kalender-Abo", "kalender-abo"),
         new("Verwaltung", "Postausgang", "postausgang", Rechte.VerwaltungEinsehen),

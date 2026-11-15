@@ -1,0 +1,160 @@
+@page "/wiki/seite/{Titel}"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Application.Wissen
+@inject Vorgang Vorgang
+
+<PageTitle>@Titel · Wiki</PageTitle>
+
+<a class="fp-zurueck" href="wiki">← Wiki</a>
+
+@if (d is null)
+{
+    <section class="fp-card">
+        <h1>@Titel</h1>
+        <p>Diese Seite gibt es noch nicht (oder sie ist vertraulich).</p>
+        <a class="fp-btn" href="wiki?neu=@Uri.EscapeDataString(Titel)">Seite „@Titel“ anlegen</a>
+    </section>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <h1>@d.Seite.Titel</h1>
+            <p class="fp-sub">
+                @d.Seite.Bereich · Version @d.Seite.Version · geändert @Ortszeit.AlsOrtszeit(d.Seite.GeaendertAm).ToString("dd.MM.yyyy HH:mm")
+                @if (d.Seite.Vertraulich)
+                {
+                    <span class="fp-pill fp-p-warn">vertraulich – für die KI unsichtbar</span>
+                }
+            </p>
+        </div>
+        <div class="fp-row">
+            @if (!bearbeiten)
+            {
+                <BegruendeterButton Text="Bearbeiten" Icon="edit" Freigabe="@d.Bearbeiten" Click="BearbeitenBeginnen" />
+            }
+        </div>
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+    }
+
+    @if (d.Vorschlaege.Count > 0)
+    {
+        <div class="fp-alert fp-info">@d.Vorschlaege.Count offene Änderungsvorschläge der KI – <a href="wiki/vorschlaege">ansehen und entscheiden</a>.</div>
+    }
+
+    <div class="fp-split">
+        <section class="fp-card">
+            @if (bearbeiten)
+            {
+                <RadzenTextArea @bind-Value="text" Rows="18" Style="width:100%; font-family: monospace" aria-label="Seitentext" />
+                <div class="fp-form">
+                    <div class="fp-field fp-grow"><label class="fp-lbl" for="w-komm">Was wurde geändert?</label><RadzenTextBox id="w-komm" @bind-Value="kommentar" /></div>
+                </div>
+                <div class="fp-row">
+                    <RadzenButton Text="Speichern" Icon="save" Click="SpeichernAsync" />
+                    <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => bearbeiten = false)" />
+                </div>
+                <p class="fp-small fp-muted">Formatierung: # Überschrift, ## Unterüberschrift, - Liste, **fett**, [[Seitentitel]] für Verweise.</p>
+            }
+            else
+            {
+                <Markdown Text="@d.Aktuell.Text" />
+            }
+        </section>
+        <aside>
+            <section class="fp-card">
+                <h2>Verweise hierher</h2>
+                @if (d.Rueckverweise.Count == 0)
+                {
+                    <p class="fp-small fp-muted">Keine Seite verweist hierher.</p>
+                }
+                <ul class="fp-kompakt">
+                    @foreach (var r in d.Rueckverweise)
+                    {
+                        <li><a href="wiki/seite/@Uri.EscapeDataString(r.Titel)">@r.Titel</a></li>
+                    }
+                </ul>
+                @if (d.FehlendeVerweise.Count > 0)
+                {
+                    <h3>Fehlende Seiten</h3>
+                    <ul class="fp-kompakt">
+                        @foreach (var f in d.FehlendeVerweise)
+                        {
+                            <li><a href="wiki?neu=@Uri.EscapeDataString(f)">„@f“ anlegen</a></li>
+                        }
+                    </ul>
+                }
+            </section>
+            <section class="fp-card">
+                <h2>Versionen</h2>
+                <ul class="fp-kompakt fp-small">
+                    @foreach (var v in d.Versionen.Reverse())
+                    {
+                        var nr = v.Nummer;
+                        <li>
+                            <button class="fp-linkbutton" @onclick="@(() => vergleich = vergleich == nr ? null : nr)">v@(nr)</button>
+                            · @Ortszeit.AlsOrtszeit(v.Am).ToString("dd.MM.yyyy HH:mm") · @(v.PersonId is { } p ? namen.GetValueOrDefault(p, "?") : "KI-Vorschlag")@(v.Kommentar is null ? "" : $" · {v.Kommentar}")
+                        </li>
+                    }
+                </ul>
+                @if (vergleich is { } gewaehlt && d.Versionen.FirstOrDefault(v => v.Nummer == gewaehlt) is { } alt)
+                {
+                    <h3>Version @gewaehlt → aktuell</h3>
+                    <Vergleich Vorher="@alt.Text" Nachher="@d.Aktuell.Text" />
+                }
+            </section>
+            <Anhaenge BezugArt="Wiki" BezugId="@d.Seite.Id" Ordner="Wiki" GremiumId="@d.Seite.GremiumId" Vertraulich="@d.Seite.Vertraulich" />
+        </aside>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Titel { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "bearbeiten")]
+    private int? BearbeitenParameter { get; set; }
+
+    private WikiDetail? d;
+    private Dictionary<Guid, string> namen = [];
+    private bool bearbeiten;
+    private string? text;
+    private string? kommentar;
+    private int? vergleich;
+    private string? meldung;
+    private bool fehler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        namen = (await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<IStammdatenSpeicher>().PersonenAsync())).ToDictionary(p => p.Id, p => p.Anzeigename);
+        await LadenAsync();
+        if (BearbeitenParameter == 1 && d is { Bearbeiten.Erlaubt: true })
+        {
+            BearbeitenBeginnen();
+        }
+    }
+
+    private void BearbeitenBeginnen() => (bearbeiten, text) = (true, d?.Aktuell.Text);
+
+    private async Task LadenAsync() => d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<WikiDienst>().SeiteAsync(Titel));
+
+    private async Task SpeichernAsync()
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<WikiDienst>().SpeichernAsync(d!.Seite.Id, text ?? "", kommentar));
+            (meldung, fehler, bearbeiten, kommentar) = ("Gespeichert.", false, false, null);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

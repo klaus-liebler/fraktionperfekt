@@ -36,6 +36,24 @@ public static class Registrierung
         dienste.AddSingleton<Application.Dokumente.IPdfErzeugung, Dokumente.MarkdownPdf>();
         dienste.AddScoped<IAuditProtokoll, AuditProtokoll>();
         dienste.AddScoped<Application.Betrieb.ISicherung, Betrieb.SqliteSicherung>();
+        dienste.AddScoped<Application.Wissen.IWikiSuche, Wissen.WikiSuche>();
+        if (string.Equals(konfiguration["Dateiablage:Art"], "WebDav", StringComparison.OrdinalIgnoreCase))
+        {
+            var webdav = new Wissen.WebDavOptionen
+            {
+                Adresse = konfiguration["Dateiablage:WebDav:Adresse"] is { Length: > 0 } a ? new Uri(a.EndsWith('/') ? a : a + "/") : null,
+                Benutzer = konfiguration["Dateiablage:WebDav:Benutzer"],
+                Passwort = konfiguration["Dateiablage:WebDav:Passwort"],
+            };
+            dienste.AddSingleton<Application.Wissen.IDateiablage>(new Wissen.WebDavDateiablage(new HttpClient { Timeout = TimeSpan.FromMinutes(2) }, webdav));
+        }
+        else
+        {
+            var wurzel = konfiguration["Dateiablage:Pfad"] ?? "data/dateien";
+            wurzel = Path.IsPathRooted(wurzel) ? wurzel : Path.GetFullPath(Path.Combine(basisVerzeichnis, wurzel));
+            dienste.AddSingleton<Application.Wissen.IDateiablage>(new Wissen.LokaleDateiablage(wurzel));
+        }
+
 
         if (!hintergrundjobs)
         {

@@ -1,0 +1,17 @@
+@using FraktionPerfekt.Domain.Antraege
+
+@* Wortweiser Vorher-nachher-Vergleich (rot entfernt, grün eingefügt). *@
+<p class="fp-vergleich-text">
+    @foreach (var st in Textvergleich.Vergleichen(Vorher ?? "", Nachher ?? ""))
+    {
+        <span class="@(st.Art == Vergleichsart.Entfernt ? "fp-entfernt" : st.Art == Vergleichsart.Eingefuegt ? "fp-eingefuegt" : null)">@st.Text</span>
+    }
+</p>
+
+@code {
+    [Parameter]
+    public string? Vorher { get; set; }
+
+    [Parameter]
+    public string? Nachher { get; set; }
+}
