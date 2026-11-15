@@ -1,0 +1,84 @@
+@page "/beschluesse"
+@using FraktionPerfekt.Application.Politik
+@using FraktionPerfekt.Domain.Gremien
+@using FraktionPerfekt.Domain.Sitzungen
+@inject Vorgang Vorgang
+
+<PageTitle>Beschlusslage · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Beschlusslage</h1>
+        <p class="fp-sub">Was hat die Fraktion beschlossen, was Rat und Ausschüsse? Eigene Beschlüsse kommen aus den Protokollen, Rat und Ausschüsse aus dem RIS (nächtlicher Abgleich).</p>
+    </div>
+</div>
+
+<section class="fp-card fp-einschub">
+    <div class="fp-form">
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="b-suche">Suche</label><RadzenTextBox id="b-suche" @bind-Value="suche" @bind-Value:event="oninput" @onkeyup="LadenAsync" Placeholder="z. B. Grundschule, Haushalt, Radweg" /></div>
+        <div class="fp-field"><label class="fp-lbl">Quelle</label><RadzenDropDown TValue="Beschlussquelle?" @bind-Value="quelle" AllowClear="true" Data="@(Enum.GetValues<Beschlussquelle>().Cast<Beschlussquelle?>())" Change="@(_ => LadenAsync())" /></div>
+        <div class="fp-field"><label class="fp-lbl">Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" AllowClear="true" Data="@gremien" TextProperty="Kurzname" ValueProperty="Id" Change="@(_ => LadenAsync())" /></div>
+        <div class="fp-field"><label class="fp-lbl">Jahr</label><RadzenNumeric TValue="int?" @bind-Value="jahr" Min="2000" Max="2100" Change="@(_ => LadenAsync())" Style="width:110px" /></div>
+    </div>
+</section>
+
+<section class="fp-card">
+    <h2>@zeilen.Count Beschlüsse</h2>
+    @if (zeilen.Count == 0)
+    {
+        <p class="fp-leer">Keine Beschlüsse gefunden.</p>
+    }
+    else
+    {
+        <div class="fp-tbl">
+            <table>
+                <thead><tr><th>Datum</th><th>Quelle</th><th>Beschluss</th><th>Ergebnis</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var z in zeilen)
+                    {
+                        var b = z.Beschluss;
+                        <tr>
+                            <td>@b.Datum.ToString("dd.MM.yyyy")</td>
+                            <td>@b.Quelle@(z.Gremium is null ? "" : $" · {z.Gremium}")</td>
+                            <td><b>@b.Titel</b><br /><span class="fp-small">@b.Text</span></td>
+                            <td>
+                                <StatusPille Stil="@(b.Ergebnis == Beschlussergebnis.Angenommen ? "gut" : b.Ergebnis == Beschlussergebnis.Abgelehnt ? "krit" : "neutral")">@b.Ergebnis</StatusPille>
+                                @if (b.Ja + b.Nein + b.Enthaltung > 0)
+                                {
+                                    <span class="fp-small fp-muted">@b.Ja : @b.Nein : @b.Enthaltung</span>
+                                }
+                            </td>
+                            <td class="fp-small">
+                                @if (b.SitzungId is { } s) { <a href="sitzungen/@s">Protokoll</a> }
+                                @if (b.AntragId is { } a) { <a href="antraege/@a">Antrag</a> }
+                                @if (b.RisId is not null) { <span class="fp-muted">RIS</span> }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<BeschlussZeile> zeilen = [];
+    private IReadOnlyList<Gremium> gremien = [];
+    private string? suche;
+    private Beschlussquelle? quelle;
+    private Guid? gremium;
+    private int? jahr;
+
+    [SupplyParameterFromQuery(Name = "q")]
+    private string? Q { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        suche = Q;
+        gremien = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync())).Where(g => g.Aktiv).ToList();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+        => zeilen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<BeschlussArchiv>().SuchenAsync(suche, quelle, gremium, jahr));
+}

@@ -192,6 +192,25 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   - Bestätigte haben den Termin als Zusage im Kalender.
   - Nach dem Termin erscheint der Folgeschritt **„Kurzbericht anlegen“** auf der Startseite.
 
+## Iteration 6: Politische Arbeit
+
+- **Anfragen an die Verwaltung** (`/anfragen`, Modul 13): Entwurf → Einreichen durch Vorstand oder Geschäftsführung mit
+  Antwortfrist (Standard 4 Wochen) → Antwort erfassen (Push an die Autor:in). Überfällig: einmalige Erinnerung und
+  Aufgabe „Bei der Verwaltung nachhaken“ im Korb Administration.
+- **Beschlusslage** (`/beschluesse`, Modul 12): Beschlüsse der Fraktion (aus Protokollen und Fraktionsabstimmungen) und
+  von Rat/Ausschüssen (aus dem RIS, nächtlicher Abgleich, idempotent über die RIS-Id); Suche, Filter nach Quelle,
+  Gremium, Jahr; Verweise auf Protokoll und Antrag.
+- **Bürgeranliegen** (`/anliegen`, Modul 15): Erfassen (Kanal, Politikfeld) → Aufgabe „zuweisen“ im Korb
+  Administration → Zuweisung, vorgeschlagen ist die Themenpatin/der Themenpate → Aufgabe und Push an die Person →
+  Antwort. **Löschfrist:** Name und Kontaktweg 12 Monate nach Erledigung entfernen (Fristenprüfung).
+- **Pressearbeit** (`/presse`, Modul 16): Redaktionskalender, Entwurf → zur Freigabe (Aufgabe im Korb Vorstand) →
+  Freigabe durch den Vorstand nach dem **Vier-Augen-Prinzip** (nie die eigene Mitteilung) → versendet. Textänderungen
+  nach der Freigabe setzen auf Entwurf zurück. **Pressespiegel** mit Tonlage und Bezug zur eigenen Mitteilung.
+- **Kontakte** (`/kontakte`, Modul 14): gemeinsames Adressbuch mit Suche; Löschen durch Anlegende oder Geschäftsführung.
+- **OParl-Adapter** (echtes RIS): `Ris:Art=OParl`, `Ris:OParl:Endpunkt` (System- oder Body-URL), optional
+  `Ris:OParl:Body`. Liest Organization, Person (mit Mitgliedschaften), Meeting mit öffentlichen AgendaItems;
+  Listen seitenweise über `links.next`. Ohne Einstellung bleibt das simulierte RIS aktiv.
+
 ## Iteration 5: Wissen und Dateien
 
 - **Dateien** (`/dateien`, Modul 8):

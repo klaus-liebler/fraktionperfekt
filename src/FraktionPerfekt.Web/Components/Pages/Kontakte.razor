@@ -1,0 +1,117 @@
+@page "/kontakte"
+@using FraktionPerfekt.Application.Politik
+@using FraktionPerfekt.Domain.Politik
+@inject Vorgang Vorgang
+
+<PageTitle>Kontakte · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Kontakte</h1>
+        <p class="fp-sub">Gemeinsames Adressbuch: Verwaltung, Schulen, Vereine, Presse. Nur dienstliche Angaben.</p>
+    </div>
+    <div class="fp-row"><RadzenButton Text="Neuer Kontakt" Icon="person_add" Click="@(() => Bearbeiten(null))" /></div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (formular)
+{
+    <section class="fp-card fp-hervor">
+        <h2>@(id is null ? "Neuer Kontakt" : "Kontakt bearbeiten")</h2>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl" for="k-name">Name</label><RadzenTextBox id="k-name" @bind-Value="name" @bind-Value:event="oninput" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="k-org">Organisation</label><RadzenTextBox id="k-org" @bind-Value="organisation" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="k-fkt">Funktion</label><RadzenTextBox id="k-fkt" @bind-Value="funktion" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="k-mail">E-Mail</label><RadzenTextBox id="k-mail" @bind-Value="eMail" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="k-tel">Telefon</label><RadzenTextBox id="k-tel" @bind-Value="telefon" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="k-themen">Themen</label><RadzenTextBox id="k-themen" @bind-Value="themen" /></div>
+            <div class="fp-field fp-grow"><label class="fp-lbl" for="k-notiz">Notiz</label><RadzenTextBox id="k-notiz" @bind-Value="notiz" /></div>
+        </div>
+        <div class="fp-row">
+            <RadzenButton Text="Speichern" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(name)" Click="SpeichernAsync" />
+            <RadzenButton Text="Abbrechen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
+        </div>
+    </section>
+}
+
+<section class="fp-card">
+    <div class="fp-form">
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="k-suche">Suche (Name, Organisation, Funktion, Thema)</label>
+            <RadzenTextBox id="k-suche" @bind-Value="suche" @bind-Value:event="oninput" @onkeyup="LadenAsync" /></div>
+    </div>
+    <div class="fp-tbl">
+        <table>
+            <thead><tr><th>Name</th><th>Organisation / Funktion</th><th>Kontakt</th><th>Themen</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var z in zeilen)
+                {
+                    var k = z.Kontakt;
+                    <tr>
+                        <td><b>@k.Name</b>@if (k.Notiz is not null) { <br /><span class="fp-small fp-muted">@k.Notiz</span> }</td>
+                        <td>@k.Organisation<br /><span class="fp-small">@k.Funktion</span></td>
+                        <td class="fp-small">@if (k.EMail is not null) { <a href="mailto:@k.EMail">@k.EMail</a><br /> }@if (k.Telefon is not null) { <a href="tel:@k.Telefon">@k.Telefon</a> }</td>
+                        <td class="fp-small">@k.Themen</td>
+                        <td>
+                            <button class="fp-linkbutton fp-small" @onclick="@(() => Bearbeiten(k))">bearbeiten</button>
+                            <BegruendeterButton Text="Löschen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Loeschen" Click="@(() => LoeschenAsync(k.Id))" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private IReadOnlyList<KontaktZeile> zeilen = [];
+    private string? suche;
+    private bool formular;
+    private Guid? id;
+    private string? name, organisation, funktion, eMail, telefon, themen, notiz;
+    private string? meldung;
+    private bool fehler;
+
+    protected override Task OnInitializedAsync() => LadenAsync();
+
+    private async Task LadenAsync() => zeilen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KontaktDienst>().ListeAsync(suche));
+
+    private void Bearbeiten(Kontakt? k)
+    {
+        formular = true;
+        (id, name, organisation, funktion, eMail, telefon, themen, notiz) = (k?.Id, k?.Name, k?.Organisation, k?.Funktion, k?.EMail, k?.Telefon, k?.Themen, k?.Notiz);
+    }
+
+    private async Task SpeichernAsync()
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KontaktDienst>().SpeichernAsync(id, name!, organisation, funktion, eMail, telefon, themen, notiz));
+            (meldung, fehler, formular) = ("Gespeichert.", false, false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task LoeschenAsync(Guid kontaktId)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KontaktDienst>().LoeschenAsync(kontaktId));
+            (meldung, fehler) = ("Gelöscht.", false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

@@ -150,6 +150,18 @@ public sealed class WikiDienst(
         return neu;
     }
 
+    /// <summary>Fristenprüfung (stündlich): die KI prüft einmal je Woche, montags nach 6 Uhr.</summary>
+    public async Task<int> KiPruefenNachtsAsync(CancellationToken abbruch = default)
+    {
+        var jetzt = Ortszeit.AlsOrtszeit(uhr.GetUtcNow());
+        if (jetzt.DayOfWeek != DayOfWeek.Monday || jetzt.Hour != 6)
+        {
+            return 0;
+        }
+
+        return await KiPruefenAsync(abbruch);
+    }
+
     /// <summary>Vorschlag über die API (KI-Konto) anlegen; die KI ändert nie direkt.</summary>
     public async Task<WikiVorschlag> VorschlagAnlegenAsync(Guid seiteId, Vorschlagsart art, string begruendung, string? neuerText, string von,
         CancellationToken abbruch = default)

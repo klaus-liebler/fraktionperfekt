@@ -17,11 +17,12 @@ public sealed record RisAbgleichErgebnis(
     int MitgliedschaftenBeendet,
     int SitzungenNeu,
     int SitzungenGeaendert,
-    IReadOnlyList<string> NichtZugeordnet)
+    IReadOnlyList<string> NichtZugeordnet,
+    int BeschluesseNeu = 0)
 {
     public string Zusammenfassung =>
         $"Gremien: {GremienNeu} neu, {GremienGeaendert} geändert · Mitgliedschaften: {MitgliedschaftenNeu} neu, {MitgliedschaftenGeaendert} geändert, "
-        + $"{MitgliedschaftenBeendet} beendet · Sitzungen: {SitzungenNeu} neu, {SitzungenGeaendert} geändert";
+        + $"{MitgliedschaftenBeendet} beendet · Sitzungen: {SitzungenNeu} neu, {SitzungenGeaendert} geändert · Beschlüsse: {BeschluesseNeu} neu";
 }
 
 /// <summary>
@@ -33,6 +34,7 @@ public sealed class RisAbgleich(
     IRisSchnittstelle ris,
     IStammdatenSpeicher stammdaten,
     ITerminSpeicher termine,
+    IDaten daten,
     IAuditProtokoll protokoll,
     IAktuellerBenutzer benutzer,
     IOptions<FraktionOptionen> optionen,
@@ -153,11 +155,32 @@ public sealed class RisAbgleich(
             sNeu++;
         }
 
-        var ergebnis = new RisAbgleichErgebnis(ris.Quelle, gremienNeu, gremienGeaendert, mNeu, mGeaendert, mBeendet, sNeu, sGeaendert, nichtZugeordnet);
+        // Beschlüsse des Rates und der Ausschüsse (letztes Jahr) für das Beschlusslage-Archiv; idempotent über die RIS-Id.
+        var bekannt = (await daten.ListeAsync(daten.Menge<Domain.Sitzungen.Beschluss>().Where(b => b.RisId != null).Select(b => b.RisId!), abbruch)).ToHashSet();
+        var bNeu = 0;
+        foreach (var b in (await ris.BeschluesseAsync(heute.AddDays(-365), heute, abbruch)).Where(b => gremien.ContainsKey(b.GremiumRisId) && !bekannt.Contains(b.RisId)))
+        {
+            var gremium = gremien[b.GremiumRisId];
+            daten.Hinzufuegen(new Domain.Sitzungen.Beschluss(gremium.Art == Gremienart.Rat ? Domain.Sitzungen.Beschlussquelle.Rat : Domain.Sitzungen.Beschlussquelle.Ausschuss,
+                b.Datum, b.Titel, b.Text, Ergebnis(b.Ergebnis), 0, 0, 0, gremiumId: gremium.Id, risId: b.RisId));
+            bNeu++;
+        }
+
+        var ergebnis = new RisAbgleichErgebnis(ris.Quelle, gremienNeu, gremienGeaendert, mNeu, mGeaendert, mBeendet, sNeu, sGeaendert, nichtZugeordnet, bNeu);
         await protokoll.ProtokollierenAsync("Ris.Abgleich", $"Abgleich mit {ris.Quelle}: {ergebnis.Zusammenfassung}"
             + (nichtZugeordnet.Count > 0 ? $"; {nichtZugeordnet.Count} Personen der Fraktion im RIS ohne Zuordnung" : string.Empty), abbruch: abbruch);
         await stammdaten.SpeichernAsync(abbruch);
         return ergebnis;
+    }
+
+    /// <summary>Ergebnis-Freitext des RIS grob einordnen.</summary>
+    public static Domain.Sitzungen.Beschlussergebnis Ergebnis(string? text)
+    {
+        var t = (text ?? string.Empty).ToLowerInvariant();
+        return t.Contains("abgelehnt", StringComparison.Ordinal) ? Domain.Sitzungen.Beschlussergebnis.Abgelehnt
+            : t.Contains("vertagt", StringComparison.Ordinal) || t.Contains("zurückgestellt", StringComparison.Ordinal) ? Domain.Sitzungen.Beschlussergebnis.Vertagt
+            : t.Contains("kenntnis", StringComparison.Ordinal) ? Domain.Sitzungen.Beschlussergebnis.Kenntnisnahme
+            : Domain.Sitzungen.Beschlussergebnis.Angenommen;
     }
 
     private static int NaechsterRang(IEnumerable<Mitgliedschaft> alle, Guid gremiumId, DateOnly tag, DateTimeOffset jetzt)

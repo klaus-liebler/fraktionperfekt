@@ -1,0 +1,132 @@
+@page "/anfragen"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Politik
+@using FraktionPerfekt.Domain.Gremien
+@using FraktionPerfekt.Domain.Politik
+@inject Vorgang Vorgang
+@inject TimeProvider Uhr
+
+<PageTitle>Anfragen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Anfragen an die Verwaltung</h1>
+        <p class="fp-sub">Entwurf → Einreichen (Vorstand oder Geschäftsführung, Antwortfrist Standard 4 Wochen) → Antwort erfassen. Überfällige Anfragen erinnern einmal und landen als Aufgabe „nachhaken“ im Korb der Geschäftsführung.</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+<div class="fp-kpis">
+    <div class="fp-kpi"><div class="fp-kpi-lbl">Entwürfe</div><div class="fp-kpi-val">@zeilen.Count(z => z.Anfrage.Status == Anfragestatus.Entwurf)</div></div>
+    <div class="fp-kpi"><div class="fp-kpi-lbl">Offen bei der Verwaltung</div><div class="fp-kpi-val">@zeilen.Count(z => z.Anfrage.Status == Anfragestatus.Eingereicht)</div></div>
+    <div class="fp-kpi"><div class="fp-kpi-lbl">Überfällig</div><div class="fp-kpi-val">@zeilen.Count(z => z.Ueberfaellig)</div></div>
+</div>
+
+@foreach (var z in zeilen)
+{
+    <section class="fp-card @(z.Ueberfaellig ? "fp-ueberfaellig" : null)">
+        <div class="fp-row" style="justify-content:space-between">
+            <h2>@z.Anfrage.Titel</h2>
+            <span>
+                <StatusPille Stil="@(z.Ueberfaellig ? "krit" : z.Anfrage.Status == Anfragestatus.Beantwortet ? "gut" : z.Anfrage.Status == Anfragestatus.Eingereicht ? "info" : "neutral")">@(z.Ueberfaellig ? "überfällig" : StatusText(z.Anfrage.Status))</StatusPille>
+            </span>
+        </div>
+        <p class="fp-small fp-muted">von @z.Autor@(z.Gremium is null ? "" : $" · {z.Gremium}")@(z.Anfrage.Thema is null ? "" : $" · {z.Anfrage.Thema}")
+            @if (z.Anfrage.EingereichtAm is { } e) { <text> · eingereicht @e.ToString("dd.MM.yyyy") · Frist @z.Anfrage.FristBis?.ToString("dd.MM.yyyy")</text> }</p>
+        <Markdown Text="@z.Anfrage.Text" />
+        @if (z.Anfrage.Antwort is { } antwort)
+        {
+            <div class="fp-zitat"><b>Antwort vom @z.Anfrage.BeantwortetAm?.ToString("dd.MM.yyyy"):</b> @antwort</div>
+        }
+        <div class="fp-row">
+            @if (z.Anfrage.Status == Anfragestatus.Entwurf)
+            {
+                <RadzenDatePicker TValue="DateTime" @bind-Value="frist" DateFormat="dd.MM.yyyy" aria-label="Antwortfrist" Style="width:150px" />
+                <BegruendeterButton Text="Einreichen" Icon="send" Freigabe="@z.Einreichen" Click="@(() => AusfuehrenAsync(s => s.EinreichenAsync(z.Anfrage.Id, DateOnly.FromDateTime(frist)), "Eingereicht."))" />
+            }
+            @if (z.Anfrage.Status == Anfragestatus.Eingereicht)
+            {
+                @if (antwortFuer == z.Anfrage.Id)
+                {
+                    <RadzenTextArea @bind-Value="antwortText" Rows="3" Style="width:100%" aria-label="Antwort der Verwaltung" />
+                    <RadzenButton Text="Antwort speichern" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(antwortText)"
+                                  Click="@(() => AusfuehrenAsync(s => s.BeantwortenAsync(z.Anfrage.Id, antwortText!), "Antwort erfasst."))" />
+                }
+                else
+                {
+                    <BegruendeterButton Text="Antwort erfassen" Icon="mark_email_read" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Beantworten" Click="@(() => { antwortFuer = z.Anfrage.Id; antwortText = null; })" />
+                }
+            }
+        </div>
+    </section>
+}
+
+<details class="fp-card" open="@(zeilen.Count == 0)">
+    <summary>Neue Anfrage</summary>
+    <div class="fp-form">
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="a-titel">Titel</label><RadzenTextBox id="a-titel" @bind-Value="titel" @bind-Value:event="oninput" /></div>
+        <div class="fp-field"><label class="fp-lbl">Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" AllowClear="true" Data="@gremien" TextProperty="Kurzname" ValueProperty="Id" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="a-thema">Politikfeld</label><RadzenTextBox id="a-thema" @bind-Value="thema" /></div>
+    </div>
+    <RadzenTextArea @bind-Value="text" Rows="5" Style="width:100%" aria-label="Fragen an die Verwaltung" Placeholder="1. Wie viele … ?&#10;2. Bis wann …?" />
+    <RadzenButton Text="Als Entwurf anlegen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(titel)" Click="AnlegenAsync" />
+</details>
+
+@code {
+    private IReadOnlyList<AnfrageZeile> zeilen = [];
+    private IReadOnlyList<Gremium> gremien = [];
+    private DateTime frist;
+    private Guid? antwortFuer;
+    private string? antwortText;
+    private string? titel;
+    private string? text;
+    private string? thema;
+    private Guid? gremium;
+    private string? meldung;
+    private bool fehler;
+
+    private static string StatusText(Anfragestatus s) => s switch
+    {
+        Anfragestatus.Eingereicht => "eingereicht",
+        Anfragestatus.Beantwortet => "beantwortet",
+        Anfragestatus.Zurueckgezogen => "zurückgezogen",
+        _ => "Entwurf",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        frist = Ortszeit.Heute(Uhr).AddDays(AnfrageDienst.StandardFristTage).ToDateTime(TimeOnly.MinValue);
+        gremien = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync())).Where(g => g.Aktiv && g.Art != Gremienart.Fraktion).ToList();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync() => zeilen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AnfrageDienst>().ListeAsync());
+
+    private async Task AnlegenAsync()
+    {
+        await AusfuehrenAsync(s => s.AnlegenAsync(titel!, text ?? "", gremium, thema), "Entwurf angelegt.");
+        if (!fehler)
+        {
+            (titel, text, thema) = (null, null, null);
+        }
+    }
+
+    private async Task AusfuehrenAsync(Func<AnfrageDienst, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => aktion(d.GetRequiredService<AnfrageDienst>()));
+            (meldung, fehler, antwortFuer) = (erfolg, false, null);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

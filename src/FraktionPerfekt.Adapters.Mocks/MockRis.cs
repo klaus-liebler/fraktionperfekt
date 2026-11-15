@@ -57,6 +57,31 @@ public sealed class MockRis : IRisSchnittstelle
         return Task.FromResult<IReadOnlyList<RisSitzung>>(liste.OrderBy(s => s.Beginn).ToList());
     }
 
+    /// <summary>Beschlüsse zu den Tagesordnungspunkten vergangener Sitzungen (fiktive Ergebnisse, fester Rhythmus).</summary>
+    public async Task<IReadOnlyList<RisBeschluss>> BeschluesseAsync(DateOnly von, DateOnly bis, CancellationToken abbruch = default)
+    {
+        string[] ergebnisse = ["mehrheitlich beschlossen", "einstimmig beschlossen", "zur Kenntnis genommen", "vertagt", "mehrheitlich abgelehnt"];
+        var liste = new List<RisBeschluss>();
+        foreach (var s in await SitzungenAsync(von, bis, abbruch))
+        {
+            if (s.Tagesordnung is null || DateOnly.FromDateTime(s.Beginn) > bis)
+            {
+                continue;
+            }
+
+            var punkte = s.Tagesordnung.Split('\n');
+            for (var i = 0; i < punkte.Length; i++)
+            {
+                var titel = punkte[i].Contains(' ', StringComparison.Ordinal) ? punkte[i][(punkte[i].IndexOf(' ', 4) + 1)..] : punkte[i];
+                var ergebnis = ergebnisse[(s.RisId.Length + i + s.Beginn.Day) % ergebnisse.Length];
+                liste.Add(new RisBeschluss($"{s.RisId}-b{i + 1}", s.GremiumRisId, DateOnly.FromDateTime(s.Beginn), titel,
+                    $"{s.Name}: {titel} – {ergebnis}.", ergebnis));
+            }
+        }
+
+        return liste;
+    }
+
     /// <summary>Fiktive Tagesordnungspunkte zu echten Grevener Themen (Stand November 2026).</summary>
     private static string? Tagesordnung(string kurzname, int nr)
     {

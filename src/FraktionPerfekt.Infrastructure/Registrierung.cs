@@ -55,6 +55,20 @@ public static class Registrierung
         }
 
 
+        // Echtes RIS über OParl nur auf ausdrücklichen Wunsch; sonst registrieren die Mocks das simulierte RIS.
+        if (string.Equals(konfiguration["Ris:Art"], "OParl", StringComparison.OrdinalIgnoreCase))
+        {
+            var oparl = new Ris.OParlOptionen
+            {
+                Endpunkt = konfiguration["Ris:OParl:Endpunkt"] is { Length: > 0 } e ? new Uri(e) : null,
+                Body = konfiguration["Ris:OParl:Body"],
+            };
+            var client = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("FraktionPerfekt/1.0");
+            dienste.AddSingleton<Application.Ris.IRisSchnittstelle>(d => new Ris.OParlRis(client, oparl,
+                d.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Ris.OParlRis>>()));
+        }
+
         if (!hintergrundjobs)
         {
             return dienste;

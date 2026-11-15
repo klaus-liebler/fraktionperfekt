@@ -17,7 +17,13 @@ public interface IRisSchnittstelle
 
     /// <summary>Sitzungen mit Beginn im Zeitraum (Wanduhrzeit Greven).</summary>
     Task<IReadOnlyList<RisSitzung>> SitzungenAsync(DateOnly von, DateOnly bis, CancellationToken abbruch = default);
+
+    /// <summary>Beschlüsse (OParl: AgendaItem mit result/resolutionText) aus Sitzungen im Zeitraum.</summary>
+    Task<IReadOnlyList<RisBeschluss>> BeschluesseAsync(DateOnly von, DateOnly bis, CancellationToken abbruch = default);
 }
+
+/// <summary>OParl „AgendaItem“ mit Ergebnis. <paramref name="Ergebnis"/> ist der Freitext des RIS (z. B. „einstimmig beschlossen“).</summary>
+public sealed record RisBeschluss(string RisId, string GremiumRisId, DateOnly Datum, string Titel, string Text, string? Ergebnis);
 
 /// <summary>OParl „Organization“ (Gremium).</summary>
 /// <param name="Art">„Rat“, „Ausschuss“ oder „Beirat“ (OParl: organizationType/classification).</param>

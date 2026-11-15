@@ -1,0 +1,131 @@
+@page "/anliegen"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Politik
+@using FraktionPerfekt.Domain.Politik
+@inject Vorgang Vorgang
+
+<PageTitle>Bürgeranliegen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Bürgeranliegen</h1>
+        <p class="fp-sub">Eingang → Zuweisung (Vorschlag: Themenpate) → Bearbeitung → Antwort. Name und Kontaktweg werden @AnliegenDienst.LoeschfristMonate Monate nach Erledigung gelöscht.</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+<details class="fp-card fp-einschub" open="@(zeilen.Count == 0)">
+    <summary>Anliegen erfassen</summary>
+    <div class="fp-form">
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="an-betreff">Betreff</label><RadzenTextBox id="an-betreff" @bind-Value="betreff" @bind-Value:event="oninput" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="an-name">Name</label><RadzenTextBox id="an-name" @bind-Value="name" @bind-Value:event="oninput" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="an-kontakt">Kontaktweg</label><RadzenTextBox id="an-kontakt" @bind-Value="kontakt" Placeholder="Mail oder Telefon" /></div>
+        <div class="fp-field"><label class="fp-lbl">Eingang über</label><RadzenDropDown TValue="Eingangskanal" @bind-Value="kanal" Data="@(Enum.GetValues<Eingangskanal>())" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="an-thema">Politikfeld</label><RadzenTextBox id="an-thema" @bind-Value="thema" Placeholder="z. B. Schule und Bildung" /></div>
+    </div>
+    <RadzenTextArea @bind-Value="text" Rows="3" Style="width:100%" aria-label="Anliegen" />
+    <RadzenButton Text="Erfassen" Size="ButtonSize.Small" Disabled="@(string.IsNullOrWhiteSpace(betreff) || string.IsNullOrWhiteSpace(name))" Click="ErfassenAsync" />
+</details>
+
+@foreach (var gruppe in zeilen.GroupBy(z => z.Anliegen.Status).OrderBy(g => g.Key))
+{
+    <h2>@StatusText(gruppe.Key) <span class="fp-zahl">@gruppe.Count()</span></h2>
+    @foreach (var z in gruppe)
+    {
+        var a = z.Anliegen;
+        <section class="fp-card">
+            <div class="fp-row" style="justify-content:space-between">
+                <h3>@a.Betreff</h3>
+                <span class="fp-small fp-muted">@Ortszeit.AlsOrtszeit(a.Eingang).ToString("dd.MM.yyyy") · @a.Kanal · @a.Name@(a.Kontaktweg is null ? "" : $" ({a.Kontaktweg})")</span>
+            </div>
+            <p>@a.Text</p>
+            <p class="fp-small">@(a.Thema is null ? "" : $"Politikfeld: {a.Thema} · ")Zuständig: <b>@(z.Zustaendig ?? "noch niemand")</b></p>
+            @if (a.Antwort is not null)
+            {
+                <div class="fp-zitat"><b>Antwort:</b> @a.Antwort</div>
+            }
+            @if (a.Status != Anliegenstatus.Erledigt)
+            {
+                <div class="fp-row">
+                    @if (z.Zuweisen.Erlaubt)
+                    {
+                        <RadzenDropDown TValue="Guid?" Value="@(wahl.GetValueOrDefault(a.Id) ?? z.VorschlagPersonId)" Change="@(v => wahl[a.Id] = (Guid?)v)" Data="@personen" TextProperty="Anzeigename" ValueProperty="Id"
+                                        Placeholder="Person wählen" Style="width:220px" aria-label="Zuständige Person" />
+                    }
+                    <BegruendeterButton Text="@(z.VorschlagPersonId is not null && wahl.GetValueOrDefault(a.Id) is null ? $"Zuweisen (Themenpate {z.Vorschlag})" : "Zuweisen")" Size="ButtonSize.Small"
+                                        Freigabe="@(z.Zuweisen.Erlaubt && (wahl.GetValueOrDefault(a.Id) ?? z.VorschlagPersonId) is null ? Freigabe.Nein("Bitte eine Person wählen.") : z.Zuweisen)"
+                                        Click="@(() => AusfuehrenAsync(s => s.ZuweisenAsync(a.Id, (wahl.GetValueOrDefault(a.Id) ?? z.VorschlagPersonId)!.Value), "Zugewiesen – Aufgabe und Push an die Person."))" />
+                    @if (a.Status == Anliegenstatus.Zugewiesen)
+                    {
+                        <BegruendeterButton Text="In Bearbeitung" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Bearbeiten" Click="@(() => AusfuehrenAsync(s => s.InBearbeitungAsync(a.Id), "In Bearbeitung."))" />
+                    }
+                </div>
+                @if (z.Bearbeiten.Erlaubt)
+                {
+                    <div class="fp-form">
+                        <div class="fp-field fp-grow"><label class="fp-lbl" for="@($"antw-{a.Id:N}")">Antwort an die Bürgerin / den Bürger</label>
+                            <RadzenTextBox id="@($"antw-{a.Id:N}")" Value="@antworten.GetValueOrDefault(a.Id)" Change="@(v => antworten[a.Id] = v)" /></div>
+                    </div>
+                    <BegruendeterButton Text="Beantwortet – erledigt" Icon="check" Size="ButtonSize.Small"
+                                        Freigabe="@(string.IsNullOrWhiteSpace(antworten.GetValueOrDefault(a.Id)) ? Freigabe.Nein("Bitte die Antwort kurz festhalten.") : Freigabe.Ja)"
+                                        Click="@(() => AusfuehrenAsync(s => s.ErledigenAsync(a.Id, antworten[a.Id]!), "Erledigt."))" />
+                }
+            }
+        </section>
+    }
+}
+
+@code {
+    private IReadOnlyList<AnliegenZeile> zeilen = [];
+    private IReadOnlyList<Person> personen = [];
+    private readonly Dictionary<Guid, Guid?> wahl = [];
+    private readonly Dictionary<Guid, string?> antworten = [];
+    private string? betreff, name, kontakt, thema, text;
+    private Eingangskanal kanal = Eingangskanal.Mail;
+    private string? meldung;
+    private bool fehler;
+
+    private static string StatusText(Anliegenstatus s) => s switch
+    {
+        Anliegenstatus.Neu => "Neu – zuweisen",
+        Anliegenstatus.Zugewiesen => "Zugewiesen",
+        Anliegenstatus.InBearbeitung => "In Bearbeitung",
+        _ => "Erledigt",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        personen = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonenAsync())).OrderBy(p => p.Nachname).ToList();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync() => zeilen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AnliegenDienst>().ListeAsync());
+
+    private async Task ErfassenAsync()
+    {
+        await AusfuehrenAsync(s => s.ErfassenAsync(betreff!, text ?? "", name!, kontakt, kanal, thema), "Erfasst – die Geschäftsführung hat eine Aufgabe „zuweisen“.");
+        if (!fehler)
+        {
+            (betreff, name, kontakt, thema, text) = (null, null, null, null, null);
+        }
+    }
+
+    private async Task AusfuehrenAsync(Func<AnliegenDienst, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => aktion(d.GetRequiredService<AnliegenDienst>()));
+            (meldung, fehler) = (erfolg, false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using FraktionPerfekt.Application.Postausgang;
 using FraktionPerfekt.Application.Ris;
 using Microsoft.Extensions.Configuration;
@@ -14,9 +15,9 @@ public static class Registrierung
         dienste.AddSingleton<Zugangsschutz>();
         dienste.AddSingleton<IZustellKanal, MockMailKanal>();
         dienste.AddSingleton<IZustellKanal, MockPushKanal>();
-        dienste.AddSingleton<IRisSchnittstelle, MockRis>();
+        dienste.TryAddSingleton<IRisSchnittstelle, MockRis>();
         dienste.AddScoped<Testdaten.Demodaten>();
-        dienste.AddSingleton<Application.Wissen.IKiAssistent, MockKi>();
+        dienste.TryAddSingleton<Application.Wissen.IKiAssistent, MockKi>();
         return dienste;
     }
 }

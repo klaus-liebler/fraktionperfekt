@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261115175005_Iteration5Wissen";
+    public override string LastMigrationId => "20261115180403_Iteration6Politik";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -715,6 +715,248 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("PersonId", "GueltigVon");
 
                 b.ToTable("PersonRollen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Anfrage", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Antwort")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("AutorPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly?>("BeantwortetAm")
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly?>("EingereichtAm")
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("ErinnertAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long>("ErstelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<DateOnly?>("FristBis")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("GremiumId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Thema")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Status");
+
+                b.ToTable("Anfragen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Buergeranliegen", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<bool>("Anonymisiert")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Antwort")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Betreff")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Eingang")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long?>("ErledigtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Kanal")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Kontaktweg")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Thema")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("ZugewiesenPersonId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Status");
+
+                b.ToTable("Buergeranliegen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Kontakt", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("AngelegtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid>("AngelegtVonPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("EMail")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Funktion")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("GeaendertAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Notiz")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Organisation")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Telefon")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Themen")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Name");
+
+                b.ToTable("Kontakte");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Presseartikel", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly>("Datum")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("ErfasstVonPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Link")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Medium")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("PressemitteilungId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Thema")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Tonlage")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Zusammenfassung")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Datum");
+
+                b.ToTable("Presseartikel");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Pressemitteilung", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("AutorPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("ErstelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long?>("FreigegebenAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid?>("FreigegebenVonPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("GeaendertAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<DateOnly?>("GeplantAm")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Thema")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("VeroeffentlichtAm")
+                    .HasColumnType("INTEGER");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Status");
+
+                b.ToTable("Pressemitteilungen");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Ressourcen.Buchung", b =>

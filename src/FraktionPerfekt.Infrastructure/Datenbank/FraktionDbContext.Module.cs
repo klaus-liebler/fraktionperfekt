@@ -51,5 +51,15 @@ public sealed partial class FraktionDbContext
         Iteration6(modelBuilder);
     }
 
-    static partial void Iteration6(ModelBuilder modelBuilder);
+    private static void Iteration6(ModelBuilder modelBuilder)
+    {
+        Einfach<Domain.Politik.Anfrage>(modelBuilder, "Anfragen", b => b.HasIndex(x => x.Status));
+        Einfach<Domain.Politik.Kontakt>(modelBuilder, "Kontakte", b => b.HasIndex(x => x.Name));
+        Einfach<Domain.Politik.Buergeranliegen>(modelBuilder, "Buergeranliegen", b => b.HasIndex(x => x.Status));
+        Einfach<Domain.Politik.Pressemitteilung>(modelBuilder, "Pressemitteilungen", b => b.HasIndex(x => x.Status));
+        Einfach<Domain.Politik.Presseartikel>(modelBuilder, "Presseartikel", b => b.HasIndex(x => x.Datum));
+        Iteration7(modelBuilder);
+    }
+
+    static partial void Iteration7(ModelBuilder modelBuilder);
 }

@@ -138,6 +138,7 @@ public sealed class Demodaten(
         await SitzungsDemodaten.AnlegenAsync(daten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
         await AntragsDemodaten.AnlegenAsync(daten, stammdaten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
         await RessourcenDemodaten.AnlegenAsync(daten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
+        await PolitikDemodaten.AnlegenAsync(daten, stammdaten, personen, heute, uhr.GetUtcNow(), abbruch);
         await WissenDemodaten.AnlegenAsync(daten, stammdaten, wikiSuche, dateiablage, personen, uhr.GetUtcNow(), abbruch);
 
         await protokoll.ProtokollierenAsync("Demodaten.Angelegt",
