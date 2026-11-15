@@ -21,13 +21,26 @@ Adventures der frühen 90er. Figuren sind ca. 60 px hoch und leicht gestreckt (K
 rechts. Für die Gegenrichtung spiegelt das Spiel die Bilder.
 
 **Abgleich mit dem Spiel:**
-- Das **Büro** passt fast. Es fehlen drei Objekte, die im Spiel gebraucht werden: Postfach, Garderobe mit Hut und Lederjacke, Umschlag auf dem Tisch. Sie können als einzelne Sprites darübergelegt werden (siehe unten).
+- Das **Büro** passt fast. Es fehlen drei Objekte, die im Spiel gebraucht werden: Briefkasten/Postfach, Garderobe mit Hut und Lederjacke, Umschlag auf dem Tisch. Siehe „Neugenerierung“; als Ausweichlösung gehen auch einzelne Sprites.
 - Das **Archiv** wird zu zwei Szenen:
   - **Rathausflur** (`rathaus_flur_x5.png`): Hier sitzt Rolf vor der Archivtür, später versperren Hohlbein und Dröhn den Ausgang.
   - **Archivraum** (`archiv_256x144.png`): mit dem Regal der Ratsprotokolle. Es fehlt das Gemälde „Der Rat von 1949“ als Sprite.
 - **Joe** trägt im Spiel nach der Garderobe Hut und Umhängetasche mit Kartuschen. Dafür ist ein zweites Sheet sinnvoll, alternativ bleibt er ohne Hut.
 - **Chani** hat im Spiel Umhängetasche und Handy. Das ist optional; das vorhandene Sheet reicht.
 - Für Reden und Benutzen fehlen bei beiden Figuren Posen (siehe Figuren).
+
+## Neugenerierung vorhandener Hintergründe
+
+Bei allen drei vorhandenen Hintergründen fehlen Objekte, die das Spiel als Klickflächen braucht. Statt sie nachträglich
+als Sprites einzusetzen, sollen die Bilder mit dem angepassten Prompt neu erzeugt werden. Die vorhandene Anordnung
+bleibt erhalten; die Positionen der neuen Objekte sind auf die bestehenden Bilder abgestimmt. Die Klickflächen
+des Spiels passe ich beim Einbau an die fertigen Bilder an; die Positionen hier sind Zielwerte.
+
+| Datei (neu) | Was fehlt / was sich ändert | Angepasster Prompt (zusätzlich zur Stilvorgabe) |
+|---|---|---|
+| `buero_1990er_256x144.png` (Neugenerierung) | **Briefkasten/Postfach** der Fraktion: Holz-Wandfach mit sechs Fächern, Papiere darin, an der Wand zwischen Kalender und Wanduhr (ca. x 100–124, y 26–44). **Garderobe:** Garderobenständer mit brauner Lederjacke und braunem Filzhut, statt der Topfpflanze links neben dem Schreibtisch (ca. x 62–82, y 36–102); die Pflanze wird klein und steht auf dem Aktenschrank. **Umschlag:** weißer Briefumschlag mit rotem Siegel gut sichtbar vorn auf dem Schreibtisch (ca. x 140–160, y 78–86). **Fax:** Das Gerät auf dem Rollcontainer klar als Faxgerät erkennbar machen (Papiereinzug, Hörer, Tastenfeld; x 180–208, y 66–84). Bleibt: Bücherregal links, Kalender 1995, Wanduhr, Schreibtisch mit Röhrenmonitor, Tür mit EXIT-Schild rechts | „1990s office of a town council party group, bookshelf on the left, wall calendar 1995, wall clock, wooden wall-mounted mail pigeonhole box with six compartments and papers between calendar and clock, coat stand with a brown leather jacket and a brown fedora left of the desk, desk with an old CRT monitor and a white envelope with a red seal lying on it, fax machine with handset and paper tray on a rolling cabinet, small plant, door with EXIT sign on the right“ |
+| `archiv_256x144.png` (Neugenerierung) | **Gemälde „Der Rat von 1949“** im Goldrahmen an einem freien Wandstück zwischen zwei Regalen (ca. x 160–208, y 24–56): Gruppe von Ratsherren der Nachkriegszeit vor einem Fantasiewappen. **Regal mit Ratsprotokollen** als eigenes, deutlich erkennbares Regal mit gleichförmigen grauen, nummerierten Ordnern und Schild „RATSPROTOKOLLE“ (ca. x 110–150, y 40–100). **Tür zurück in den Flur** am Rand (links, ca. x 4–28, y 36–104). Rollleiter und Kartons können bleiben | „archive room full of shelves with binders and books, one distinct shelf of identical grey numbered binders labeled RATSPROTOKOLLE in the middle, a gold-framed oil painting of a group of post-war councilmen in front of a fantasy coat of arms on a free wall section, rolling library ladder, boxes, door on the left edge, wooden floor“ |
+| `rathaus_flur_x5.png` (Neugenerierung, optional) | Passt bis auf die Ausgänge: **Doppeltür „ARCHIV“** bleibt (Archivtür, Klickfläche). Die Tür „Zimmer 012“ wird zur Tür **„FRAKTION“** (Rückweg ins Büro). Am linken Rand ein **Treppenhaus/Ausgang** mit grünem Notausgangsschild (ca. x 0–24, y 36–104), dort versperren später Hohlbein und Dröhn den Weg. Die Bank bleibt (Rolf sitzt davor oder darauf; die Figur kommt als Sprite) | „town hall corridor, arched window, notice board, wooden door labeled FRAKTION, double door labeled ARCHIV, wooden bench, plant, fire extinguisher, radiator, checkered floor, stairwell exit with green emergency exit sign at the left edge“ |
 
 ## Gemeinsame Stilvorgabe für alle Prompts
 
@@ -124,9 +137,9 @@ key ring, round seal with scales, ornate golden key“.
 
 | Spielort | Grafik |
 |---|---|
-| Fraktionsbüro | `buero_1990er_256x144.png` + Umschlag, Postfach, Garderobe |
+| Fraktionsbüro | `buero_1990er_256x144.png` (neu generiert mit Briefkasten, Garderobe, Umschlag) |
 | Rathausflur (Rolf, Archivtür, Gegner, Ausgang) | `rathaus_flur_x5.png` |
-| Archivraum (Gemälde, Ratsprotokolle) | `archiv_256x144.png` + Gemälde |
+| Archivraum (Gemälde, Ratsprotokolle) | `archiv_256x144.png` (neu generiert mit Gemälde, Protokollregal, Tür) |
 | Ems-Ufer, Bootsverfolgung | `ems_ufer`, `minispiel_ems` + Boote, Hindernisse |
 | Baustelle Badsanierung | `baustelle_bad` (+ trocken), Leck |
 | Schulhof | `schulhof_nacht` + Uhr, Fledermäuse |
