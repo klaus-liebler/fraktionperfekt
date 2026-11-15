@@ -251,12 +251,16 @@ details.fp-card > summary { cursor: pointer; }
 .fp-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 12px; }
 
 /* Dashboard (I8): ein Merkmal, eine Farbe; Spur recessiv, Wert mit gerundetem Ende */
-.fp-balken { display: flex; flex-direction: column; gap: 6px; }
-.fp-balken-zeile { display: grid; grid-template-columns: minmax(120px, 38%) 1fr 48px; gap: 8px; align-items: center; }
-.fp-balken-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Balkenliste: ein gemeinsames Raster für alle Zeilen (Zeilen mit display: contents) – Spur beginnt und endet überall gleich,
+   die Wertspalte richtet sich nach dem breitesten Wert. */
+.fp-balken { display: grid; grid-template-columns: minmax(80px, 34%) minmax(64px, 1fr) max-content; gap: 6px 10px; align-items: center; }
+.fp-balken-zeile { display: contents; }
+.fp-balken-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .fp-balken-spur { height: 14px; background: var(--fp-surface-2); border-radius: 4px; overflow: hidden; }
 .fp-balken-wert { display: block; height: 100%; background: var(--fp-accent); border-radius: 0 4px 4px 0; }
-.fp-balken-zahl { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+.fp-balken-zahl { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fp-balken-warnung { background: var(--fp-crit); }
+.fp-kpi-val { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .fp-saeulen { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; align-items: end; height: 180px; }
 .fp-saeule { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; }
 .fp-saeule-spur { flex: 1; width: 70%; display: flex; align-items: flex-end; }
@@ -396,10 +400,10 @@ label.fp-option.sel { border-color: var(--fp-rhoendorf); background: var(--fp-ca
 .fp-punkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #333; vertical-align: middle; }
 .fp-chip.on { background: var(--fp-accent, #2d3c4b); color: #fff; }
 @media (max-width: 600px) { .fp-karte { height: 320px; } }
-.fp-budget .fp-balken-zeile { grid-template-columns: minmax(110px, 1fr) minmax(60px, 1.4fr) auto; }
-.fp-budget .fp-balken-zahl { white-space: nowrap; font-size: 13px; }
 
 /* Iteration 8 */
 .fp-kopfsuche input { width: 220px; padding: 5px 10px; border-radius: 16px; }
 @media (max-width: 700px) { .fp-kopfsuche input { width: 130px; } }
 .fp-offline { max-width: 520px; margin: 40px auto; padding: 16px; }
+@media (max-width: 520px) { .fp-balken { grid-template-columns: minmax(70px, 30%) minmax(40px, 1fr) max-content; } .fp-balken-zahl { font-size: 12px; } }
+.fp-betrag { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }

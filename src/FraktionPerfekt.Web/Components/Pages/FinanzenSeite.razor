@@ -68,18 +68,14 @@ else if (u is not null)
     <div class="fp-split">
         <section class="fp-card">
             <h2>Budget @jahr</h2>
-            <div class="fp-budget">
+            <div class="fp-balken fp-budget">
             @if (u.Posten.Count == 0)
             {
                 <p class="fp-leer">Noch keine Posten für @jahr.</p>
             }
             @foreach (var p in u.Posten)
             {
-                <div class="fp-balken-zeile">
-                    <div class="fp-balken-name">@p.Posten.Bezeichnung</div>
-                    <div class="fp-balken-spur"><div class="fp-balken-wert" style="width:@(Math.Min(100, p.Anteil * 100).ToString("F0", CultureInfo.InvariantCulture))%; @(p.Rest < 0 ? "background:var(--fp-crit)" : "")"></div></div>
-                    <div class="fp-balken-zahl">@Euro(p.Ist) / @Euro(p.Posten.Ansatz)</div>
-                </div>
+                <Balken Name="@p.Posten.Bezeichnung" Wert="@((double)p.Ist)" Maximum="@((double)p.Posten.Ansatz)" Anzeige="@($"{Euro(p.Ist)} / {Euro(p.Posten.Ansatz)}")" Ueberzogen="@(p.Rest < 0)" />
             }
             </div>
             @if (u.Buchen.Erlaubt)
@@ -155,7 +151,7 @@ else if (u is not null)
                             <td>@b.Datum.ToString("dd.MM.yyyy")</td>
                             <td>@b.Text</td>
                             <td class="fp-small">@(u.Posten.FirstOrDefault(p => p.Posten.Id == b.PostenId)?.Posten.Bezeichnung ?? "–")</td>
-                            <td style="text-align:right;color:@(b.Einnahme ? "var(--fp-ok, #2e8540)" : "inherit")">@(b.Einnahme ? "+" : "−")@Euro(b.Betrag)</td>
+                            <td class="fp-betrag" style="color:@(b.Einnahme ? "var(--fp-ok, #2e8540)" : "inherit")">@(b.Einnahme ? "+" : "−")@Euro(b.Betrag)</td>
                         </tr>
                     }
                 </tbody>

@@ -81,7 +81,9 @@ internal static class WahlkampfDemodaten
         var plakatPosten = new Haushaltsposten(Kasse.Wahlkampf, jahr, "Plakate und Material", 2_500m);
         var flyer = new Haushaltsposten(Kasse.Wahlkampf, jahr, "Flyer und Druck", 1_800m);
         var veranst = new Haushaltsposten(Kasse.Wahlkampf, jahr, "Veranstaltungen und Infostände", 900m);
-        foreach (var h in new[] { personal, sach, oeff, fortbildung, plakatPosten, flyer, veranst })
+        // Testwerte mit großen Zahlen (Darstellung von Balken und Kennzahlen prüfen)
+        var gross = new Haushaltsposten(Kasse.Fraktion, jahr, "Rücklage Großprojekt (Testwert)", 1_234_567.89m);
+        foreach (var h in new[] { personal, sach, oeff, fortbildung, plakatPosten, flyer, veranst, gross })
         {
             daten.Hinzufuegen(h);
         }
@@ -94,6 +96,8 @@ internal static class WahlkampfDemodaten
         Buchen(Kasse.Fraktion, 200, false, 1_240.80m, sach, "Büromaterial und Drucker");
         Buchen(Kasse.Fraktion, 120, false, 2_950m, oeff, "Fraktionszeitung Herbst");
         Buchen(Kasse.Fraktion, 60, false, 420m, fortbildung, "Seminar Kommunalfinanzen");
+        Buchen(Kasse.Fraktion, 100, true, 1_600_000m, null, "Sonderzuweisung (Testwert große Zahlen)");
+        Buchen(Kasse.Fraktion, 90, false, 1_500_000m, gross, "Ausgabe Großprojekt (Testwert, überzieht den Ansatz)");
         Buchen(Kasse.Wahlkampf, 90, true, 3_000m, null, "Zuschuss Kreisverband (fiktiv)");
         Buchen(Kasse.Wahlkampf, 40, false, 1_980m, plakatPosten, "Plakatdruck 400 Stück");
         Buchen(Kasse.Wahlkampf, 20, false, 1_150m, flyer, "Flyer Landtagswahl");

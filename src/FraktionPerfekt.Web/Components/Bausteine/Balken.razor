@@ -1,0 +1,28 @@
+@* Eine Zeile einer Balkenliste. Steht immer in einem <div class="fp-balken">: Die Zeilen teilen sich dort ein gemeinsames
+   Raster (Bezeichnung | Balkenspur | Wert), so beginnen und enden alle Balken bündig – auch bei sehr großen Zahlen. *@
+<div class="fp-balken-zeile" role="group" aria-label="@($"{Name}: {Anzeige}")">
+    <span class="fp-balken-name" title="@Name">@Name</span>
+    <span class="fp-balken-spur" aria-hidden="true"><span class="fp-balken-wert@(Warnung ? " fp-balken-warnung" : null)" style="width:@Balkenrechnung.Css(Balkenrechnung.Prozent(Wert, Maximum))"></span></span>
+    <span class="fp-balken-zahl">@Anzeige</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter]
+    public double Wert { get; set; }
+
+    [Parameter]
+    public double Maximum { get; set; }
+
+    /// <summary>Angezeigter Wert, z. B. „1.234,56 € / 2.000,00 €“ oder „10.000“.</summary>
+    [Parameter, EditorRequired]
+    public string Anzeige { get; set; } = string.Empty;
+
+    /// <summary>Warnfarbe (z. B. Budget überzogen); Standard: außerhalb von 0 bis Maximum.</summary>
+    [Parameter]
+    public bool? Ueberzogen { get; set; }
+
+    private bool Warnung => Ueberzogen ?? Balkenrechnung.Ausserhalb(Wert, Maximum);
+}

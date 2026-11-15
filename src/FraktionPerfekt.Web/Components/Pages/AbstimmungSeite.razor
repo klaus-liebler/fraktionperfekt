@@ -55,11 +55,7 @@ else
                 @{ var max = Math.Max(1, d.Ergebnis.Optionen.Max(o => o.Stimmen)); }
                 @foreach (var o in d.Ergebnis.Optionen)
                 {
-                    <div class="fp-balken-zeile">
-                        <span class="fp-balken-name" title="@o.Text">@o.Text</span>
-                        <span class="fp-balken-spur"><span class="fp-balken-wert" style="width:@(o.Stimmen * 100 / max)%"></span></span>
-                        <span class="fp-balken-zahl">@o.Stimmen</span>
-                    </div>
+                    <Balken Name="@o.Text" Wert="@o.Stimmen" Maximum="@max" Anzeige="@o.Stimmen.ToString("N0")" />
                 }
             </div>
             <p class="fp-small fp-muted">Abgestimmt haben: @string.Join(", ", d.Abgestimmt)</p>
