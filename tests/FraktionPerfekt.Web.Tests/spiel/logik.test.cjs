@@ -1,4 +1,5 @@
 // Tests der Spiellogik „Joe & Chani und der Gral der Demokratie“ (node --test).
+// Diese Tests laufen ohne Browser und geben nie Ton aus; Browser-Tests des Spiels starten stumm (--mute-audio, /spiel/?ton=aus).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');

@@ -38,6 +38,8 @@
     let ctx = null, haupt = null, laeuft = [];
     const PEGEL = 0.55;   // Headroom: viele Stimmen summieren sich, der Kompressor fängt Spitzen ab
     let lautstaerke = 0.5, an = true;
+    // Für automatisierte Tests: ?ton=aus schaltet jede Tonausgabe ab (ohne die gespeicherte Einstellung zu ändern).
+    const STUMM = !!(wurzel.location && /[?&]ton=aus(&|$)/.test(wurzel.location.search));
     try { an = wurzel.localStorage ? wurzel.localStorage.getItem('fp-spiel-musik') !== 'aus' : true; lautstaerke = Number(wurzel.localStorage.getItem('fp-spiel-lautstaerke') || 0.5); } catch (_) { /* Standard */ }
 
     function speichern() {
@@ -75,7 +77,7 @@
 
     /** Spielt das Stück (oder die Kurzfassung fürs Finale). Gibt die Gesamtdauer in Sekunden zurück. */
     function spielen(kurz) {
-        if (!an) { return 0; }
+        if (!an || STUMM) { return 0; }
         try {
             ctx = ctx || new (wurzel.AudioContext || wurzel.webkitAudioContext)();
             if (ctx.state === 'suspended') { ctx.resume(); }

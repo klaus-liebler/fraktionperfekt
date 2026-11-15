@@ -34,6 +34,7 @@
     function portraetBild(n, ausdruck) { return G.ausschnitt(G.portraet(n === 'joe' && hutAuf() ? 'joe_hut' : n, ausdruck), 64, 64); }
     let ton = true;
     try { ton = window.localStorage.getItem('fp-spiel-ton') !== 'aus'; } catch (_) { ton = true; }
+    const STUMM = /[?&]ton=aus(&|$)/.test(window.location.search);   // Tests: nie Ton ausgeben
 
     // ---------- Ton ----------
     // Effekte: jede Note mit weicher Hüllkurve (Attack/Release ≥ 5 ms, Ende bei 0), Tiefpass, gemeinsamer Bus mit Headroom
@@ -51,7 +52,7 @@
         return effektBus;
     }
     function klang(art) {
-        if (!ton) { return; }
+        if (!ton || STUMM) { return; }
         try {
             const ziel = bus(), t = audio.currentTime + 0.01;
             const folge = { klick: [[660, 0.05]], schritt: [[140, 0.05]], erfolg: [[523, 0.1], [659, 0.1], [784, 0.18]], fehler: [[220, 0.14], [165, 0.2]], kartusche: [[90, 0.22], [65, 0.18]], ende: [[523, 0.15], [659, 0.15], [784, 0.15], [1046, 0.4]], blende: [[300, 0.07], [200, 0.09]] }[art] || [[440, 0.06]];

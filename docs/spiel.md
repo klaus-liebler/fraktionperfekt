@@ -69,6 +69,10 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
 
 ## Technik und Tests
 
+**Tests geben nie Ton aus.** Automatisierte oder ferngesteuerte Browser starten stumm (Chromium/Edge mit `--mute-audio`,
+Playwright mit `args: ['--mute-audio']`) und öffnen das Spiel mit `?ton=aus` (`/spiel/?ton=aus`): Dann bleiben Melodie und
+Effekte aus, ohne die gespeicherte Ton-Einstellung zu ändern. Test-Tabs mit dem Spiel nach dem Lauf schließen.
+
 - Reines HTML/CSS/JavaScript ohne Bibliotheken: `logik.js` (Zustand, Szenen, Rätsel, Minispiele, Speichern – ohne
   Browser testbar), `darstellung.js` (Canvas-Grafik im Code, Eingabe, WebAudio-Töne, Speicherplätze), `spiel.css`.
   CSP-konform (keine Inline-Skripte).
