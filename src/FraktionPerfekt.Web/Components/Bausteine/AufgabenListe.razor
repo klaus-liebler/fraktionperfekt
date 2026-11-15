@@ -1,0 +1,59 @@
+@using FraktionPerfekt.Application.Aufgaben
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+
+<section class="fp-card">
+    <h2>@Titel <span class="fp-zahl">@Zeilen.Count</span></h2>
+    @if (Zeilen.Count == 0)
+    {
+        <p class="fp-muted">Keine.</p>
+    }
+    @foreach (var z in Zeilen)
+    {
+        var a = z.Aufgabe;
+        <div class="fp-anfrage @(z.Ueberfaellig ? "fp-ueberfaellig" : null)">
+            <a href="@a.Ziel"><b>@a.Titel</b></a>
+            <span class="fp-small fp-muted">
+                @(a.Zustaendig is { } r ? $"Korb {r.Anzeigename()}" : "persönlich")@(z.Bearbeitet is null ? "" : $" · bearbeitet von {z.Bearbeitet}")
+                @(a.FaelligAm is { } f ? $" · fällig {Ortszeit.AlsOrtszeit(f):dd.MM.yyyy}" : "")@(a.Thema is null ? "" : $" · {a.Thema}")
+                @if (z.Ueberfaellig) { <StatusPille Stil="krit">überfällig</StatusPille> }
+            </span>
+            @if (a.Beschreibung is not null)
+            {
+                <span class="fp-small">@a.Beschreibung.Split(" [TOP")[0]</span>
+            }
+            @if (a.IstOffen)
+            {
+                <div class="fp-row">
+                    <BegruendeterButton Text="Übernehmen" Size="ButtonSize.ExtraSmall" Freigabe="@z.Uebernehmen" Click="@(() => Aktion.InvokeAsync((s => s.UebernehmenAsync(a.Id), "Übernommen.")))" />
+                    <BegruendeterButton Text="Erledigt" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Erledigen" Click="@(() => Aktion.InvokeAsync((s => s.ErledigenAsync(a.Id, vermerk.GetValueOrDefault(a.Id)), "Erledigt.")))" />
+                    <BegruendeterButton Text="Zurück in den Korb" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.ZurueckInKorb" Click="@(() => Aktion.InvokeAsync((s => s.ZurueckInKorbAsync(a.Id), "Zurück im Korb.")))" />
+                    <RadzenDropDown TValue="Guid?" Data="@Personen" TextProperty="Sortiername" ValueProperty="Id" Placeholder="zuweisen an …" AllowFiltering="true" Style="width:180px"
+                                    Change="@(v => v is Guid p ? Aktion.InvokeAsync((s => s.ZuweisenAsync(a.Id, p), "Zugewiesen (Push an die Person).")) : Task.CompletedTask)" />
+                    <RadzenTextBox Placeholder="Vermerk" Style="width:160px" Change="@((string v) => vermerk[a.Id] = v)" />
+                </div>
+            }
+            else
+            {
+                <span class="fp-small fp-muted">erledigt @(a.ErledigtAm is { } e ? Ortszeit.AlsOrtszeit(e).ToString("dd.MM. HH:mm") : "") @a.Vermerk</span>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Titel { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<AufgabeZeile> Zeilen { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<PersonZeile> Personen { get; set; } = [];
+
+    /// <summary>Aktion mit Erfolgsmeldung; die Seite führt sie in einem Vorgang aus und lädt neu.</summary>
+    [Parameter]
+    public EventCallback<(Func<AufgabenDienst, Task> Aktion, string Erfolg)> Aktion { get; set; }
+
+    private readonly Dictionary<Guid, string?> vermerk = [];
+}

@@ -9,7 +9,7 @@ Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
 | Dokument | Link |
 |---|---|
 | Konzept | https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb |
-| Abnahme (Klick-Drehbuch) | [`docs/abnahme-1.md`](docs/abnahme-1.md) |
+| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md) |
 | Betrieb, Sicherung, Wiederherstellung | [`docs/betrieb.md`](docs/betrieb.md) |
 | Sicherheit (OWASP-Checkliste) | [`docs/sicherheit.md`](docs/sicherheit.md) |
 | Handy-Test im LAN (HTTPS) | [`docs/handy-test.md`](docs/handy-test.md) |
@@ -129,6 +129,32 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   spätestens 2 h vor Beginn) geht zur nächsten Person → ohne Zusage Aufgabe an den Vorstand, der selbst eintragen kann.
   „Ich bin doch da“ zieht alles zurück. Übersicht „Sitzungen mit offener Vertretung“ (auch: abwesend, noch nicht angefragt).
 
+## Iteration 2: Sitzungen, Protokolle, Aufgaben
+
+- **Sitzungen** (`/sitzungen`): eine Protokoll-Engine für Fraktionssitzungen, Arbeitskreise und eigene Ausschuss- und
+  Ratsprotokolle.
+  - Vorbereiten aus einer Vorlage mit festen TOPs; bei Gremienprotokollen kommen die TOPs aus der RIS-Tagesordnung.
+  - Vertagte TOPs früherer Sitzungen desselben Gremiums werden übernommen.
+  - Mitglieder melden TOPs bis zur Frist an (drei Tage vorher).
+  - Tagesordnung: umsortieren, einfügen, vertagen, zusammenlegen.
+  - Einladung mit Tagesordnung und Zu-/Absage-Link über den Postausgang (Mail und Push).
+  - Sitzungsmodus: Anwesenheit aus den Rückmeldungen vorbelegt, Notizen je TOP, Beschlüsse mit Stimmen, Aufgaben an
+    Personen mit Frist.
+  - Ablauf: Entwurf → Freigabe durch Sitzungsleitung oder Vorstand → Versand per Mail; danach unveränderlich.
+  - PDF im Fraktionslayout mit Logo (`/sitzungen/{id}/protokoll.pdf`, PDFsharp/MigraDoc).
+  - Volltextsuche über freigegebene Protokolle.
+- **Aufgaben** (`/aufgaben`, Modul 12, wie in VibeVHS):
+  - Listen „Meine“, „Im Korb“ (aktive Rolle), „Bei anderen“, „Kürzlich erledigt“.
+  - Übernehmen, Zuweisen (mit Push), Zurück in den Korb, Erledigen mit Vermerk; gesperrte Knöpfe erklären den Grund.
+  - Fristen mit einmaliger Erinnerung 24 Stunden vorher (stündlicher Fristen-Job).
+  - **Themenpaten** je Politikfeld bekommen passende Aufgaben direkt.
+- Startseite: „Meine Aufgaben“. Termin- und Kalenderseiten führen zu Tagesordnung und Protokoll.
+- Technisch:
+  - Allgemeiner Datenport `IDaten` (Abfragen als `IQueryable`, ausgeführt in der Infrastruktur).
+  - Fristen-Job mit `IFristenpruefung` je Modul.
+  - Logo aus `CDU-Gesamtlogo_transparent_RGB.png` (nur skaliert) in Kopfzeile, Favicon, PWA-Icons (192/512) und
+    PDF-Briefkopf (`wwwroot/marke`).
+
 ## Gestaltung
 
 Farben und Schrift stehen zentral als CSS-Variablen in `src/FraktionPerfekt.Web/wwwroot/app.css` (`:root`, oben), das
@@ -136,8 +162,19 @@ Radzen-Theme liest sie mit. Angelehnt an das CDU-Corporate-Design: „Cadenabbia
 „Rhöndorf“ (Dunkelblau, `--fp-rhoendorf`) für Text und Schaltflächen, Schwarz-Rot-Gold nur als dünner Streifen
 (`.fp-streifen`). **Die Hex-Werte sind vorläufig** und mit dem offiziellen Markenhandbuch abzugleichen. Kontraste nach
 WCAG 2.2 AA: Text auf Türkis immer dunkel. Die Hausschrift ist lizenzpflichtig und nicht eingebunden; Ersatz über
-`--fp-font` (Tahoma, Helvetica, Arial). Kein Parteilogo im Code: In der Kopfzeile steht „CDU-Fraktion Greven“ mit
-Platzhalter; eine gelieferte Logodatei kommt nach `wwwroot` und wird in `Fraktion:Logo` eingetragen.
+`--fp-font` (Tahoma, Helvetica, Arial).
+
+Logo: Die Fraktion hat `CDU-Gesamtlogo_transparent_RGB.png` (dunkle Schrift, für hellen Grund) und zwei EPS-Dateien
+abgelegt. Verwendet wird nur das PNG, unverändert und nur skaliert:
+
+| Datei in `src/FraktionPerfekt.Web/wwwroot/marke` | Verwendung |
+|---|---|
+| `logo.png` (600 px breit) | Kopfzeile (`Fraktion:Logo`) |
+| `favicon.png` (64 px) | Favicon |
+| `icon-192.png`, `icon-512.png` | PWA-Symbol, Apple-Touch-Icon (Logo zentriert auf weißer Fläche) |
+| `logo-druck.png` (1200 px breit) | Briefkopf der PDFs (Protokolle, Anträge) |
+
+Die EPS-Dateien kann der Browser nicht darstellen; sie bleiben als Quelle im Projektordner.
 
 ## Bibliotheken
 

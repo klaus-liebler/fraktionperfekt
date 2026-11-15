@@ -1,0 +1,293 @@
+@page "/sitzungen/{Id:guid}"
+@using FraktionPerfekt.Application.Sitzungen
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Sitzungen
+@inject Vorgang Vorgang
+
+<PageTitle>Sitzung · FraktionPerfekt</PageTitle>
+
+<a class="fp-zurueck" href="sitzungen">← Sitzungen</a>
+
+@if (d is null)
+{
+    <p class="fp-muted">Lade …</p>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <h1>@d.Sitzung.Titel</h1>
+            <p class="fp-sub">
+                <a href="termine/@d.Termin.Id">@d.Termin.Beginn.ToString("dddd, dd.MM.yyyy, HH:mm") Uhr</a> · @d.Termin.Ort
+                @(d.Gremium is null ? "" : $" · {d.Gremium}") · Leitung: @(d.Leitung ?? "–")
+            </p>
+        </div>
+        <StatusPille Stil="@(d.Sitzung.Status == Sitzungsstatus.Freigegeben ? "gut" : "info")">@d.Sitzung.Status.Anzeigename()</StatusPille>
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+    }
+
+    @if (schritte.Count > 0)
+    {
+        <NaechsteSchritte Schritte="schritte" />
+    }
+
+    <div class="fp-row" role="tablist">
+        @foreach (var (key, text) in Reiter)
+        {
+            <button class="fp-chip @(reiter == key ? "on" : null)" role="tab" aria-selected="@(reiter == key)" @onclick="@(() => reiter = key)">@text</button>
+        }
+    </div>
+
+    @if (reiter == "tagesordnung")
+    {
+        <section class="fp-card">
+            <h2>Tagesordnung</h2>
+            @if (d.Sitzung.TopAnmeldungBis is { } frist)
+            {
+                <p class="fp-small fp-muted">TOP-Anmeldung bis @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(frist).ToString("dd.MM.yyyy HH:mm") Uhr.</p>
+            }
+            <div class="fp-list">
+                @foreach (var t in d.Tops.Where(t => t.Top.Status != Topstatus.Zusammengelegt))
+                {
+                    <div>
+                        <span class="fp-zeit"><b>TOP @t.Nummer</b></span>
+                        <span class="fp-grow">
+                            <b>@t.Top.Titel</b>
+                            @if (t.Top.Status == Topstatus.Vertagt) { <StatusPille Stil="warn">vertagt</StatusPille> }
+                            @if (t.Top.VertagtAusTopId is not null) { <StatusPille Stil="neutral">aus letzter Sitzung</StatusPille> }
+                            @if (t.AngemeldetVon is not null) { <span class="fp-small fp-muted"> · angemeldet von @t.AngemeldetVon</span> }
+                            @if (t.Top.Beschreibung is not null) { <br /><span class="fp-small fp-muted" style="white-space:pre-line">@t.Top.Beschreibung</span> }
+                        </span>
+                        <span class="fp-row">
+                            <BegruendeterButton Icon="arrow_upward" Text="" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Bearbeiten" Click="@(() => AusfuehrenAsync(s => s.TopVerschiebenAsync(t.Top.Id, -1)))" />
+                            <BegruendeterButton Icon="arrow_downward" Text="" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Bearbeiten" Click="@(() => AusfuehrenAsync(s => s.TopVerschiebenAsync(t.Top.Id, 1)))" />
+                            <BegruendeterButton Text="Vertagen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light"
+                                                Freigabe="@d.Bearbeiten.Und(() => t.Top.Status == Topstatus.Vertagt ? Freigabe.Nein("Bereits vertagt.") : Freigabe.Ja)"
+                                                Click="@(() => AusfuehrenAsync(s => s.TopVertagenAsync(t.Top.Id), "TOP vertagt – er erscheint in der nächsten Einladung."))" />
+                            @if (zusammenlegenVon == t.Top.Id)
+                            {
+                                <RadzenDropDown TValue="Guid?" @bind-Value="zusammenlegenMit" Data="@d.Tops.Where(x => x.Top.Id != t.Top.Id && x.Top.Status != Topstatus.Zusammengelegt).Select(x => new TopWahl(x.Top.Id, $"TOP {x.Nummer} {x.Top.Titel}")).ToList()"
+                                                TextProperty="Text" ValueProperty="Id" Placeholder="mit TOP …" Style="width:200px" />
+                                <RadzenButton Text="Zusammenlegen" Size="ButtonSize.ExtraSmall" Disabled="@(zusammenlegenMit is null)"
+                                              Click="@(() => AusfuehrenAsync(s => s.TopZusammenlegenAsync(t.Top.Id, zusammenlegenMit!.Value), "TOPs zusammengelegt."))" />
+                            }
+                            else
+                            {
+                                <BegruendeterButton Text="Zusammenlegen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Bearbeiten"
+                                                    Click="@(() => { zusammenlegenVon = t.Top.Id; zusammenlegenMit = null; })" />
+                            }
+                        </span>
+                    </div>
+                }
+            </div>
+            <h3>TOP anmelden oder einfügen</h3>
+            <div class="fp-form">
+                <div class="fp-field"><label class="fp-lbl" for="top-titel">Titel</label><RadzenTextBox id="top-titel" @bind-Value="neuTitel" /></div>
+                <div class="fp-field"><label class="fp-lbl" for="top-text">Beschreibung</label><RadzenTextBox id="top-text" @bind-Value="neuText" /></div>
+                <div class="fp-field"><label class="fp-lbl" for="top-pos">An Position (nur Vorstand)</label><RadzenNumeric id="top-pos" TValue="int?" @bind-Value="neuPosition" Min="1" /></div>
+            </div>
+            <div class="fp-row">
+                <BegruendeterButton Text="TOP anmelden" Icon="add" Freigabe="@d.TopAnmelden.Und(() => string.IsNullOrWhiteSpace(neuTitel) ? Freigabe.Nein("Bitte einen Titel eingeben.") : Freigabe.Ja)"
+                                    Click="TopAnmeldenAsync" />
+            </div>
+        </section>
+    }
+    else if (reiter == "einladung")
+    {
+        <section class="fp-card">
+            <h2>Einladung</h2>
+            <p>Die Einladung mit Tagesordnung geht als Mail und Push-Mitteilung an alle Mitglieder (Postausgang).
+                @(d.Sitzung.EingeladenAm is { } am ? $"Zuletzt versandt am {FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(am):dd.MM.yyyy HH:mm}." : "")</p>
+            <BegruendeterButton Text="@(d.Sitzung.EingeladenAm is null ? "Einladung versenden" : "Aktualisierte Einladung versenden")" Icon="send" Freigabe="@d.Einladen" Click="EinladenAsync" />
+        </section>
+    }
+    else if (reiter == "sitzung")
+    {
+        <section class="fp-card">
+            <div class="fp-row" style="justify-content:space-between">
+                <h2>Sitzungsmodus</h2>
+                <div class="fp-row">
+                    <BegruendeterButton Text="Sitzung beginnen" Icon="play_arrow" Freigabe="@d.Beginnen" Click="@(() => AusfuehrenAsync(s => s.BeginnenAsync(Id), "Sitzung läuft. Anwesenheit ist aus den Rückmeldungen vorbelegt."))" />
+                    <BegruendeterButton Text="Sitzung beenden" Icon="stop" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Beenden" Click="@(() => AusfuehrenAsync(s => s.BeendenAsync(Id), "Sitzung beendet. Das Protokoll liegt als Entwurf vor.", "protokoll"))" />
+                </div>
+            </div>
+            <h3>Anwesenheit</h3>
+            <div class="fp-list">
+                @foreach (var a in d.Anwesenheit)
+                {
+                    <div>
+                        <span class="fp-grow">@a.Name</span>
+                        @foreach (var st in Enum.GetValues<Anwesenheitsstatus>())
+                        {
+                            <BegruendeterButton Text="@st.ToString()" Size="ButtonSize.ExtraSmall" Freigabe="@d.Protokollieren"
+                                                ButtonStyle="@(a.Status == st ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                                Click="@(() => AusfuehrenAsync(s => s.AnwesenheitSetzenAsync(Id, a.PersonId, st)))" />
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+        @foreach (var t in d.Tops.Where(t => t.Top.Status != Topstatus.Zusammengelegt))
+        {
+            <section class="fp-card">
+                <h3>TOP @t.Nummer @t.Top.Titel @if (t.Top.Status == Topstatus.Behandelt) { <StatusPille Stil="gut">behandelt</StatusPille> } @if (t.Top.Status == Topstatus.Vertagt) { <StatusPille Stil="warn">vertagt</StatusPille> }</h3>
+                <RadzenTextArea Value="@(notizen.GetValueOrDefault(t.Top.Id) ?? t.Top.Notiz)" Change="@((string v) => notizen[t.Top.Id] = v)" Rows="3" Style="width:100%"
+                                Disabled="@(!d.Protokollieren.Erlaubt)" aria-label="Notizen" />
+                <div class="fp-row">
+                    <BegruendeterButton Text="Notiz speichern" Size="ButtonSize.Small" Freigabe="@d.Protokollieren"
+                                        Click="@(() => AusfuehrenAsync(s => s.NotizSetzenAsync(t.Top.Id, notizen.GetValueOrDefault(t.Top.Id) ?? t.Top.Notiz, true), "Notiz gespeichert."))" />
+                </div>
+                @foreach (var b in t.Beschluesse)
+                {
+                    <div class="fp-small"><b>Beschluss:</b> @b.Text – @b.Ergebnis (@b.Stimmen)</div>
+                }
+                @foreach (var a in t.Aufgaben)
+                {
+                    <div class="fp-small">Aufgabe: @a.Titel</div>
+                }
+                @if (d.Protokollieren.Erlaubt)
+                {
+                    <details>
+                        <summary>Beschluss erfassen</summary>
+                        <div class="fp-form">
+                            <div class="fp-field"><label class="fp-lbl">Beschlusstext</label><RadzenTextBox @bind-Value="beschlussText" /></div>
+                            <div class="fp-field"><label class="fp-lbl">Ja</label><RadzenNumeric TValue="int" @bind-Value="ja" Min="0" /></div>
+                            <div class="fp-field"><label class="fp-lbl">Nein</label><RadzenNumeric TValue="int" @bind-Value="nein" Min="0" /></div>
+                            <div class="fp-field"><label class="fp-lbl">Enthaltung</label><RadzenNumeric TValue="int" @bind-Value="enthaltung" Min="0" /></div>
+                        </div>
+                        <RadzenButton Text="Beschluss speichern" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(beschlussText)"
+                                      Click="@(() => AusfuehrenAsync(s => s.BeschlussErfassenAsync(t.Top.Id, beschlussText!, ja, nein, enthaltung), "Beschluss erfasst."))" />
+                    </details>
+                    <details>
+                        <summary>Aufgabe zuweisen</summary>
+                        <div class="fp-form">
+                            <div class="fp-field"><label class="fp-lbl">Aufgabe</label><RadzenTextBox @bind-Value="aufgabeTitel" /></div>
+                            <div class="fp-field"><label class="fp-lbl">Wer</label><RadzenDropDown TValue="Guid?" @bind-Value="aufgabePerson" Data="@personen" TextProperty="Sortiername" ValueProperty="Id" AllowFiltering="true" /></div>
+                            <div class="fp-field"><label class="fp-lbl">Bis</label><RadzenDatePicker TValue="DateTime?" @bind-Value="aufgabeFrist" DateFormat="dd.MM.yyyy" /></div>
+                        </div>
+                        <RadzenButton Text="Aufgabe zuweisen" Size="ButtonSize.Small" Disabled="@(string.IsNullOrWhiteSpace(aufgabeTitel) || aufgabePerson is null)"
+                                      Click="@(() => AusfuehrenAsync(s => s.AufgabeZuweisenAsync(t.Top.Id, aufgabePerson!.Value, aufgabeTitel!, aufgabeFrist is { } f ? DateOnly.FromDateTime(f) : null), "Aufgabe zugewiesen (Push an die Person)."))" />
+                    </details>
+                }
+            </section>
+        }
+    }
+    else
+    {
+        <section class="fp-card">
+            <div class="fp-row" style="justify-content:space-between">
+                <h2>Protokoll</h2>
+                <div class="fp-row">
+                    <a class="fp-btn" href="sitzungen/@Id/protokoll.pdf" target="_blank">PDF</a>
+                    <BegruendeterButton Text="Freigeben und versenden" Icon="verified" Freigabe="@d.Freigeben" Click="FreigebenAsync" />
+                </div>
+            </div>
+            <Markdown Text="@protokolltext" />
+        </section>
+    }
+}
+
+@code {
+    private sealed record TopWahl(Guid Id, string Text);
+
+    private static readonly (string, string)[] Reiter = [("tagesordnung", "Tagesordnung"), ("einladung", "Einladung"), ("sitzung", "Sitzungsmodus"), ("protokoll", "Protokoll")];
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromQuery(Name = "reiter")]
+    private string? ReiterParameter { get; set; }
+
+    private SitzungDetail? d;
+    private string reiter = "tagesordnung";
+    private string? protokolltext;
+    private string? meldung;
+    private bool fehler;
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+    private IReadOnlyList<PersonZeile> personen = [];
+    private readonly Dictionary<Guid, string?> notizen = [];
+    private string? neuTitel;
+    private string? neuText;
+    private int? neuPosition;
+    private Guid? zusammenlegenVon;
+    private Guid? zusammenlegenMit;
+    private string? beschlussText;
+    private int ja;
+    private int nein;
+    private int enthaltung;
+    private string? aufgabeTitel;
+    private Guid? aufgabePerson;
+    private DateTime? aufgabeFrist;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        reiter = ReiterParameter ?? reiter;
+        personen = (await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<StammdatenDienst>().PersonenAsync())).Where(p => p.Aktiv).ToList();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<SitzungDienst>().DetailAsync(Id));
+        protokolltext = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<SitzungDienst>().ProtokolltextAsync(Id));
+    }
+
+    private async Task AusfuehrenAsync(Func<SitzungDienst, Task> aktion, string? erfolg = null, string? danachReiter = null)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(s => aktion(s.GetRequiredService<SitzungDienst>()));
+            (meldung, fehler) = (erfolg, false);
+            reiter = danachReiter ?? reiter;
+            zusammenlegenVon = null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task TopAnmeldenAsync()
+    {
+        var (titel, text, pos) = (neuTitel!, neuText, neuPosition);
+        var einfuegen = pos is not null && d?.Bearbeiten.Erlaubt == true;
+        await AusfuehrenAsync(s => einfuegen ? s.TopEinfuegenAsync(Id, titel, text, pos!.Value) : s.TopAnmeldenAsync(Id, titel, text), "TOP aufgenommen.");
+        (neuTitel, neuText, neuPosition) = (null, null, null);
+    }
+
+    private async Task EinladenAsync()
+    {
+        try
+        {
+            var e = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<SitzungDienst>().EinladenAsync(Id));
+            (meldung, fehler, schritte) = (e.Meldung, false, e.NaechsteSchritte);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task FreigebenAsync()
+    {
+        try
+        {
+            var e = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<SitzungDienst>().FreigebenAsync(Id));
+            (meldung, fehler, schritte) = (e.Meldung, false, e.NaechsteSchritte);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

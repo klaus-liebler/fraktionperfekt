@@ -38,6 +38,25 @@ internal sealed class VertretungsfristenJob(VertretungDienst vertretung, ILogger
     }
 }
 
+/// <summary>Stündlich: Erinnerungen an bald fällige Aufgaben und weitere Fristen der Module.</summary>
+[DisallowConcurrentExecution]
+internal sealed class FristenJob(IEnumerable<Application.Gemeinsam.IFristenpruefung> pruefungen, ILogger<FristenJob> log) : IJob
+{
+    public static readonly JobKey Schluessel = new("fristen", "automatik");
+
+    public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken)
+    {
+        foreach (var p in pruefungen)
+        {
+            var n = await p.PruefenAsync(cancellationToken);
+            if (n > 0)
+            {
+                log.LogInformation("Fristen {Pruefung}: {Anzahl} Vorgänge", p.Name, n);
+            }
+        }
+    }
+}
+
 /// <summary>Tägliche Datensicherung mit Wiederherstellungstest.</summary>
 [DisallowConcurrentExecution]
 internal sealed class SicherungJob(Application.Betrieb.ISicherung sicherung, ILogger<SicherungJob> log) : IJob

@@ -59,6 +59,10 @@ else
             {
                 <a href="vertretungen/termin/@t.Id">Vertretungen für diese Sitzung</a>
             }
+            @if (t.Art is Terminart.Fraktionssitzung or Terminart.Arbeitskreis or Terminart.Ratssitzung or Terminart.Ausschusssitzung)
+            {
+                <a href="@(sitzungId is { } sid ? $"sitzungen/{sid}" : $"sitzungen?termin={t.Id}")">@(sitzungId is null ? "Tagesordnung und Protokoll anlegen" : "Tagesordnung und Protokoll")</a>
+            }
         </section>
 
         <section class="fp-card">
@@ -109,6 +113,7 @@ else
     public Guid Id { get; set; }
 
     private TerminDetail? detail;
+    private Guid? sitzungId;
     private bool geladen;
     private string? meldung;
     private IReadOnlyList<NaechsterSchritt> schritte = [];
@@ -118,6 +123,7 @@ else
     private async Task LadenAsync()
     {
         detail = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().TerminAsync(Id));
+        sitzungId = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Sitzungen.SitzungDienst>().ZuTerminAsync(Id)))?.Id;
         geladen = true;
     }
 

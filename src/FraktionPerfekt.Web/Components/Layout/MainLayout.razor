@@ -82,11 +82,11 @@
     [
         new("Übersicht", "Heute", ""),
         new("Übersicht", "Kalender", "kalender"),
-        new("Übersicht", "Aufgaben", "aufgaben", Rechte.VertretungenSteuern),
+        new("Übersicht", "Aufgaben", "aufgaben", r => r is Rolle.Helferin ? Freigabe.Nein("Helfer:innen sehen nur den Wahlkampf.") : Freigabe.Ja),
         new("Sitzungen", "Abwesenheit melden", "abwesenheit", Rechte.AbwesenheitMelden),
         new("Sitzungen", "Offene Vertretungen", "vertretungen", r => r is Rolle.Helferin ? Freigabe.Nein("Nur für Mitglieder, sachkundige Bürger:innen, Vorstand und Administration.") : Freigabe.Ja),
         new("Sitzungen", "Anträge", "antraege", Geplant: "2"),
-        new("Sitzungen", "Protokolle", "protokolle", Geplant: "2"),
+        new("Sitzungen", "Sitzungen und Protokolle", "sitzungen", r => r is Rolle.Helferin ? Freigabe.Nein("Helfer:innen sehen nur den Wahlkampf.") : Freigabe.Ja),
         new("Fraktion", "Gremien und Mandate", "gremien", r => r is Rolle.Helferin ? Freigabe.Nein("Helfer:innen sehen nur Wahlkampf und öffentliche Termine.") : Freigabe.Ja),
         new("Fraktion", "Personen", "personen", r => r is Rolle.Helferin ? Freigabe.Nein("Helfer:innen sehen nur Wahlkampf und öffentliche Termine.") : Freigabe.Ja),
         new("Fraktion", "Raumbuchung", "ressourcen", Geplant: "2"),

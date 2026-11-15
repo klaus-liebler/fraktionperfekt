@@ -28,6 +28,7 @@ public sealed class Demodaten(
     IStammdatenSpeicher stammdaten,
     ITerminSpeicher termine,
     IVertretungSpeicher vertretung,
+    IDaten daten,
     RisAbgleich risAbgleich,
     PostausgangDienst postausgang,
     IAuditProtokoll protokoll,
@@ -129,6 +130,10 @@ public sealed class Demodaten(
         // 5. Vertretungen in verschiedenen Zuständen
         // Aktueller Zeitpunkt: Die Mandate aus dem RIS-Abgleich sind erst seit eben bekannt (bitemporaler Wissensstand).
         var faelle = await VertretungenAsync(personen, heute, uhr.GetUtcNow(), abbruch);
+        await stammdaten.SpeichernAsync(abbruch);
+
+        // 6. Stufe 2 und folgende Module
+        await SitzungsDemodaten.AnlegenAsync(daten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
 
         await protokoll.ProtokollierenAsync("Demodaten.Angelegt",
             $"Demofraktion angelegt: {personen.Count} Personen, {anzahlTermine} eigene Termine, {ris.Zusammenfassung}, {faelle} Vertretungsfälle", abbruch: abbruch);

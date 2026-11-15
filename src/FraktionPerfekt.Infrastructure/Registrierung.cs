@@ -31,6 +31,9 @@ public static class Registrierung
         dienste.AddScoped<ITerminSpeicher>(d => d.GetRequiredService<FraktionSpeicher>());
         dienste.AddScoped<IVertretungSpeicher>(d => d.GetRequiredService<FraktionSpeicher>());
         dienste.AddScoped<INachrichtenSpeicher, NachrichtenSpeicher>();
+        dienste.AddScoped<IDaten, Daten>();
+        dienste.AddSingleton<Application.Dokumente.Briefkopf>();
+        dienste.AddSingleton<Application.Dokumente.IPdfErzeugung, Dokumente.MarkdownPdf>();
         dienste.AddScoped<IAuditProtokoll, AuditProtokoll>();
         dienste.AddScoped<Application.Betrieb.ISicherung, Betrieb.SqliteSicherung>();
 
@@ -52,6 +55,9 @@ public static class Registrierung
 
             q.AddJob<RisAbgleichJob>(j => j.WithIdentity(RisAbgleichJob.Schluessel));
             q.AddTrigger(t => t.ForJob(RisAbgleichJob.Schluessel).WithIdentity("ris-nachts", "automatik").WithCronSchedule("0 30 2 * * ?"));
+
+            q.AddJob<FristenJob>(j => j.WithIdentity(FristenJob.Schluessel));
+            q.AddTrigger(t => t.ForJob(FristenJob.Schluessel).WithIdentity("fristen-stuendlich", "automatik").WithCronSchedule("0 7 * * * ?"));
 
             if (konfiguration.GetValue("Sicherung:Aktiv", true))
             {

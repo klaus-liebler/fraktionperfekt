@@ -272,6 +272,6 @@ public sealed class KalenderUndRisTests
         offen.ShouldContain(v => v.Fall == null);
         offen.ShouldContain(v => v.Fall != null && v.Fall.Status == Vertretungsstatus.Angefragt);
         offen.ShouldContain(v => v.Fall != null && v.Fall.Status == Vertretungsstatus.Eskaliert);
-        (await u.InAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync())).ShouldHaveSingleItem();
+        (await u.InAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync())).ShouldContain(a => a.Anlass == VertretungDienst.AufgabenAnlass);
     }
 }

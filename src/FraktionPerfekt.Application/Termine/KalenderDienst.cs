@@ -188,12 +188,12 @@ public sealed class KalenderDienst(
         };
         if (neu.Art == Terminart.Fraktionssitzung)
         {
-            schritte.Add(new("Raum buchen", "ressourcen", Freigabe: Freigabe.Geplant("Die Raumbuchung", "2")));
-            schritte.Add(new("Einladung mit Vorlage-TOPs versenden", "sitzungen", Freigabe: Freigabe.Geplant("Die Einladung mit Tagesordnung", "2")));
+            schritte.Add(new("Tagesordnung aus Vorlage anlegen und einladen", $"sitzungen?termin={termin.Id}", "Feste TOPs aus der Vorlage, vertagte TOPs der letzten Sitzung."));
+            schritte.Add(new("Raum buchen", $"ressourcen?termin={termin.Id}"));
         }
         else if (neu.Art.IstOeffentlich())
         {
-            schritte.Add(new("Besetzungsanfrage an alle", "besetzung", Freigabe: Freigabe.Geplant("Die Terminbesetzung", "2")));
+            schritte.Add(new("Besetzungsanfrage mit N Plätzen an alle", $"besetzung?termin={termin.Id}"));
         }
 
         schritte.Add(new("Weiteren Termin anlegen", "kalender?neu=1"));

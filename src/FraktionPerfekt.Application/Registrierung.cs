@@ -20,6 +20,8 @@ public static class Registrierung
         dienste.AddScoped<Vertretung.VertretungDienst>();
         dienste.AddScoped<Aufgaben.AufgabenDienst>();
         dienste.AddScoped<Heute.HeuteDienst>();
+        dienste.AddScoped<Sitzungen.SitzungDienst>();
+        dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Aufgaben", d.GetRequiredService<Aufgaben.AufgabenDienst>().ErinnernAsync));
         return dienste;
     }
 }

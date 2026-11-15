@@ -70,6 +70,15 @@ builder.Services.AddDataProtection()
 var app = builder.Build();
 
 await DatenbankInitialisierung.InitialisierenAsync(app.Services);
+
+// Briefkopf für PDFs: Logo der Fraktion (nur skaliert, siehe wwwroot/marke) und Absender aus den Einstellungen.
+var briefkopf = app.Services.GetRequiredService<FraktionPerfekt.Application.Dokumente.Briefkopf>();
+briefkopf.Absender = app.Configuration["Fraktion:Anzeigename"] ?? briefkopf.Absender;
+var logoDruck = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"), "marke", "logo-druck.png");
+if (File.Exists(logoDruck))
+{
+    briefkopf.Logo = await File.ReadAllBytesAsync(logoDruck);
+}
 if (app.Configuration.GetValue("Demodaten:Anlegen", false))
 {
     await using var bereich = app.Services.CreateAsyncScope();
@@ -130,6 +139,7 @@ app.MapGet("/kalender/abo/{token}.ics", async (string token, KalenderDienst kale
 }).AllowAnonymous();
 
 FraktionPerfekt.Web.Handy.HandyEndpunkte.MapHandy(app);
+FraktionPerfekt.Web.Dokumente.DokumentEndpunkte.MapDokumente(app);
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 await app.RunAsync();

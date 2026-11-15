@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace FraktionPerfekt.Infrastructure.Datenbank;
 
-public sealed class FraktionDbContext(DbContextOptions<FraktionDbContext> optionen) : DbContext(optionen)
+public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext> optionen) : DbContext(optionen)
 {
     public DbSet<Person> Personen => Set<Person>();
 
@@ -193,6 +193,14 @@ public sealed class FraktionDbContext(DbContextOptions<FraktionDbContext> option
             b.HasIndex(a => new { a.Anlass, a.AnlassId });
         });
 
+        // Stufe 2: einfache Fachobjekte ohne Navigationen (Verweise über Ids).
+        Einfach<Themenpate>(modelBuilder, "Themenpaten");
+        Einfach<Domain.Sitzungen.Sitzung>(modelBuilder, "Sitzungen", b => b.HasIndex(s => s.TerminId).IsUnique());
+        Einfach<Domain.Sitzungen.Top>(modelBuilder, "Tops", b => b.HasIndex(t => new { t.SitzungId, t.Position }));
+        Einfach<Domain.Sitzungen.Sitzungsanwesenheit>(modelBuilder, "Sitzungsanwesenheiten", b => b.HasIndex(a => new { a.SitzungId, a.PersonId }).IsUnique());
+        Einfach<Domain.Sitzungen.Beschluss>(modelBuilder, "Beschluesse", b => b.HasIndex(x => x.Datum));
+        Stufe2(modelBuilder);
+
         modelBuilder.Entity<AuditEintrag>(b =>
         {
             b.ToTable("Protokoll");
@@ -236,6 +244,20 @@ public sealed class FraktionDbContext(DbContextOptions<FraktionDbContext> option
         NurAnfuegenPruefen();
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
+
+    /// <summary>Abbildung eines einfachen Fachobjekts: Tabelle, Schlüssel „Id“ (vom Objekt vergeben).</summary>
+    internal static void Einfach<T>(ModelBuilder modelBuilder, string tabelle, Action<EntityTypeBuilder<T>>? weiter = null)
+        where T : class
+        => modelBuilder.Entity<T>(b =>
+        {
+            b.ToTable(tabelle);
+            b.HasKey("Id");
+            b.Property<Guid>("Id").ValueGeneratedNever();
+            weiter?.Invoke(b);
+        });
+
+    /// <summary>Weitere Module (partielle Erweiterung in <c>FraktionDbContext.Module.cs</c>).</summary>
+    static partial void Stufe2(ModelBuilder modelBuilder);
 
     /// <summary>Gemeinsame Abbildung aller bitemporalen Versionen.</summary>
     private static void Version<T>(ModelBuilder modelBuilder, string tabelle, string fremdschluessel, Action<EntityTypeBuilder<T>> weiter)

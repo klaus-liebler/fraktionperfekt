@@ -1,0 +1,79 @@
+@using System.Net
+@using System.Text
+@using System.Text.RegularExpressions
+
+@* Einfaches, sicheres Markdown (#, ##, ###, -, **fett**, [[Wiki-Link]], Absätze). Alles wird HTML-kodiert. *@
+<div class="fp-markdown">@((MarkupString)Html(Text))</div>
+
+@code {
+    [Parameter]
+    public string? Text { get; set; }
+
+    /// <summary>Basisadresse für [[Wiki-Links]] (z. B. „wiki/seite/“).</summary>
+    [Parameter]
+    public string WikiBasis { get; set; } = "wiki/seite/";
+
+    private string Html(string? text)
+    {
+        var sb = new StringBuilder();
+        var liste = false;
+        foreach (var roh in (text ?? string.Empty).Replace("\r", string.Empty).Split('\n'))
+        {
+            var zeile = roh.TrimEnd();
+            if (zeile.StartsWith("- ", StringComparison.Ordinal))
+            {
+                if (!liste)
+                {
+                    sb.Append("<ul>");
+                    liste = true;
+                }
+
+                sb.Append("<li>").Append(Inline(zeile[2..])).Append("</li>");
+                continue;
+            }
+
+            if (liste)
+            {
+                sb.Append("</ul>");
+                liste = false;
+            }
+
+            if (zeile.Length == 0)
+            {
+                continue;
+            }
+
+            if (zeile.StartsWith("### ", StringComparison.Ordinal))
+            {
+                sb.Append("<h4>").Append(Inline(zeile[4..])).Append("</h4>");
+            }
+            else if (zeile.StartsWith("## ", StringComparison.Ordinal))
+            {
+                sb.Append("<h3>").Append(Inline(zeile[3..])).Append("</h3>");
+            }
+            else if (zeile.StartsWith("# ", StringComparison.Ordinal))
+            {
+                sb.Append("<h2>").Append(Inline(zeile[2..])).Append("</h2>");
+            }
+            else
+            {
+                sb.Append("<p>").Append(Inline(zeile)).Append("</p>");
+            }
+        }
+
+        if (liste)
+        {
+            sb.Append("</ul>");
+        }
+
+        return sb.ToString();
+    }
+
+    private string Inline(string text)
+    {
+        var html = WebUtility.HtmlEncode(text);
+        html = Regex.Replace(html, @"\*\*(.+?)\*\*", "<b>$1</b>");
+        html = Regex.Replace(html, @"\[\[(.+?)\]\]", m => $"<a href=\"{WikiBasis}{Uri.EscapeDataString(WebUtility.HtmlDecode(m.Groups[1].Value))}\">{m.Groups[1].Value}</a>");
+        return html;
+    }
+}

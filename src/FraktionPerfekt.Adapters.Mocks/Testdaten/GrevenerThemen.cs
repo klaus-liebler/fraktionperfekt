@@ -18,6 +18,14 @@ public static class GrevenerThemen
         "Ganztagsanspruch ab 2026: Reicht der Platz für Grundschulkinder?",
     ];
 
+    public const string ProtokollSchule =
+        "Die Verwaltung schlägt vor, zwei Grundschulstandorte aufzugeben; diskutiert wird auch die Nachnutzung des Grundstücks der "
+        + "Martin-Luther-Grundschule. Die Fraktion will zuerst wissen, wie sich Schulwege und der Ganztagsanspruch ab 2026 auswirken.";
+
+    public const string ProtokollHaushalt =
+        "Der Haushalt 2026 weist ein wachsendes Defizit aus. Bei rund 180 Mio. Euro geplanten Bauinvestitionen fehlt eine verbindliche "
+        + "Prioritätenliste. Die Badsanierung wollen die Stadtwerke eigenständig stemmen.";
+
     public static readonly string[] Arbeitskreistops =
     [
         "Ganztagsanspruch ab 2026: Raumbedarf je Grundschule, Rückmeldungen der Schulleitungen",

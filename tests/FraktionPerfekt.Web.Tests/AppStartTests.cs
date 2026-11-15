@@ -121,7 +121,7 @@ public sealed partial class AppStartTests : IAsyncLifetime
         antwort.IsSuccessStatusCode.ShouldBeTrue();
 
         // Alle Hauptseiten laden (vorgerendert, Status 200).
-        foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit" })
+        foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit", "sitzungen", "aufgaben" })
         {
             var r = await http.GetAsync(seite, abbruch);
             r.StatusCode.ShouldBe(HttpStatusCode.OK, $"Seite /{seite}");

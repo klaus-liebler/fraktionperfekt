@@ -18,10 +18,11 @@ public sealed record HeuteAnsicht(
     IReadOnlyList<MeineAnfrage> Vertretungsanfragen,
     IReadOnlyList<TerminZeile> OffeneZusagen,
     IReadOnlyList<Aufgabe> Aufgaben,
+    IReadOnlyList<AufgabeZeile> MeineAufgaben,
     int OffeneVertretungen,
     IReadOnlyList<Schnellaktion> Schnellaktionen)
 {
-    public bool NichtsZuTun => Vertretungsanfragen.Count == 0 && OffeneZusagen.Count == 0 && Aufgaben.Count == 0;
+    public bool NichtsZuTun => Vertretungsanfragen.Count == 0 && OffeneZusagen.Count == 0 && Aufgaben.Count == 0 && MeineAufgaben.Count == 0;
 }
 
 /// <summary>Startseite „Heute“: nur, was jetzt zu tun ist – jeweils mit Ein-Klick-Antwort.</summary>
@@ -51,6 +52,7 @@ public sealed class HeuteDienst(
             await vertretung.MeineAnfragenAsync(abbruch),
             offeneZusagen,
             await aufgaben.KorbAsync(abbruch),
+            (await aufgaben.UebersichtAsync(abbruch)).Meine.Take(6).ToList(),
             steuert ? (await vertretung.OffeneVertretungenAsync(abbruch)).Count : 0,
             [
                 new("Abwesenheit melden", "abwesenheit?neu=1", "event_busy", Rechte.AbwesenheitMelden(wer.Rolle)),

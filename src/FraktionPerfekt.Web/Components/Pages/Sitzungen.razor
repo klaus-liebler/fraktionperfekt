@@ -1,0 +1,135 @@
+@page "/sitzungen"
+@using FraktionPerfekt.Application.Sitzungen
+@using FraktionPerfekt.Domain.Sitzungen
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+
+<PageTitle>Sitzungen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Sitzungen und Protokolle</h1>
+        <p class="fp-sub">Fraktionssitzungen mit Einladung und Protokoll, eigene Protokolle der Ausschüsse (TOPs aus dem RIS), Arbeitskreise.</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">@meldung</div>
+}
+
+@if (schritte.Count > 0)
+{
+    <NaechsteSchritte Schritte="schritte" />
+}
+
+<section class="fp-card">
+    <h2>Protokolle durchsuchen</h2>
+    <div class="fp-row">
+        <RadzenTextBox @bind-Value="suche" Placeholder="z. B. Grundschule, Haushalt, Rathausstraße" Style="min-width:300px" />
+        <RadzenButton Text="Suchen" Icon="search" Click="SuchenAsync" />
+    </div>
+    @foreach (var t in treffer)
+    {
+        <div class="fp-anfrage">
+            <a href="sitzungen/@t.SitzungId"><b>@t.Sitzung</b></a> <span class="fp-small fp-muted">@t.Datum.ToString("dd.MM.yyyy") · TOP „@t.Top“</span>
+            <span class="fp-small">@t.Ausschnitt</span>
+        </div>
+    }
+    @if (gesucht && treffer.Count == 0)
+    {
+        <p class="fp-muted">Keine Treffer in freigegebenen Protokollen.</p>
+    }
+</section>
+
+<section class="fp-card">
+    <h2>Noch nicht vorbereitet <span class="fp-zahl">@offen.Count</span></h2>
+    <p class="fp-small fp-muted">Sitzungstermine der nächsten sechs Wochen ohne Tagesordnung.</p>
+    <div class="fp-list">
+        @foreach (var o in offen)
+        {
+            <div>
+                <span class="fp-zeit">@o.Termin.Beginn.ToString("ddd dd.MM.")<br /><span class="fp-small fp-muted">@o.Termin.Beginn.ToString("HH:mm")</span></span>
+                <span class="fp-grow"><b>@o.Termin.Titel</b><br /><span class="fp-small fp-muted">@(o.Gremium ?? "") · @(o.Art == Sitzungsart.Gremienprotokoll ? "eigenes Protokoll, TOPs aus dem RIS" : "Einladung und Protokoll")</span></span>
+                <BegruendeterButton Text="Vorbereiten" Size="ButtonSize.Small" Icon="playlist_add" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)"
+                                    Click="@(() => VorbereitenAsync(o.Termin.Id))" />
+            </div>
+        }
+    </div>
+</section>
+
+<section class="fp-card fp-tbl">
+    <h2>Sitzungen</h2>
+    <table>
+        <thead><tr><th>Datum</th><th>Sitzung</th><th>Gremium</th><th>TOPs</th><th>Stand</th></tr></thead>
+        <tbody>
+            @foreach (var z in sitzungen)
+            {
+                <tr>
+                    <td>@z.Termin.Beginn.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td><a href="sitzungen/@z.Sitzung.Id">@z.Sitzung.Titel</a></td>
+                    <td>@z.Gremium</td>
+                    <td>@z.Tops</td>
+                    <td><StatusPille Stil="@(z.Sitzung.Status == Sitzungsstatus.Freigegeben ? "gut" : z.Sitzung.Status == Sitzungsstatus.Entwurf ? "warn" : "info")">@z.Sitzung.Status.Anzeigename()</StatusPille></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "termin")]
+    private Guid? TerminParameter { get; set; }
+
+    private Benutzer? benutzer;
+    private IReadOnlyList<SitzungZeile> sitzungen = [];
+    private IReadOnlyList<OffenerSitzungstermin> offen = [];
+    private IReadOnlyList<Protokolltreffer> treffer = [];
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+    private string? suche;
+    private bool gesucht;
+    private string? meldung;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        await LadenAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (TerminParameter is { } t && RendererInfo.IsInteractive && Rechte.SitzungenSteuern(benutzer?.Rolle).Erlaubt)
+        {
+            TerminParameter = null;
+            await VorbereitenAsync(t);
+            Navigation.NavigateTo("sitzungen", replace: true);
+        }
+    }
+
+    private async Task LadenAsync()
+    {
+        sitzungen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<SitzungDienst>().SitzungenAsync());
+        offen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<SitzungDienst>().OffeneTermineAsync());
+    }
+
+    private async Task VorbereitenAsync(Guid terminId)
+    {
+        try
+        {
+            var e = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<SitzungDienst>().VorbereitenAsync(terminId));
+            (meldung, schritte) = (e.Meldung, e.NaechsteSchritte);
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task SuchenAsync()
+    {
+        treffer = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<SitzungDienst>().SuchenAsync(suche ?? string.Empty));
+        gesucht = true;
+    }
+}

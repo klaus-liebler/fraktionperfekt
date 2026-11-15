@@ -79,6 +79,22 @@ else
             </section>
         }
 
+        @if (ansicht.MeineAufgaben.Count > 0)
+        {
+            <section class="fp-card">
+                <h2>Meine Aufgaben <span class="fp-zahl">@ansicht.MeineAufgaben.Count</span></h2>
+                @foreach (var z in ansicht.MeineAufgaben)
+                {
+                    <div class="fp-anfrage">
+                        <a href="@z.Aufgabe.Ziel"><b>@z.Aufgabe.Titel</b></a>
+                        <span class="fp-small fp-muted">@(z.Aufgabe.FaelligAm is { } f ? $"fällig {FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(f):dd.MM.yyyy}" : "ohne Frist")
+                            @if (z.Ueberfaellig) { <StatusPille Stil="krit">überfällig</StatusPille> }</span>
+                    </div>
+                }
+                <a href="aufgaben">Alle Aufgaben</a>
+            </section>
+        }
+
         @if (ansicht.Aufgaben.Count > 0 || ansicht.OffeneVertretungen > 0)
         {
             <section class="fp-card">

@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261115164106_Iteration1";
+    public override string LastMigrationId => "20261115172355_Iteration2Sitzungen";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -163,6 +163,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(2000)
                     .HasColumnType("TEXT");
 
+                b.Property<long?>("ErinnertAm")
+                    .HasColumnType("INTEGER");
+
                 b.Property<long?>("ErledigtAm")
                     .HasColumnType("INTEGER");
 
@@ -181,6 +184,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
+                b.Property<string>("Thema")
+                    .HasColumnType("TEXT");
+
                 b.Property<string>("Titel")
                     .IsRequired()
                     .HasMaxLength(300)
@@ -195,8 +201,10 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(300)
                     .HasColumnType("TEXT");
 
+                b.Property<Guid?>("ZugewiesenPersonId")
+                    .HasColumnType("TEXT");
+
                 b.Property<string>("Zustaendig")
-                    .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
@@ -207,6 +215,26 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("Status", "Zustaendig");
 
                 b.ToTable("Aufgaben");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Aufgaben.Themenpate", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Politikfeld")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("VertretungPersonId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.ToTable("Themenpaten");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Gremium", b =>
@@ -417,6 +445,205 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("PersonId", "GueltigVon");
 
                 b.ToTable("PersonRollen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Beschluss", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("AntragId")
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly>("Datum")
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("Enthaltung")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Ergebnis")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("GremiumId")
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("Ja")
+                    .HasColumnType("INTEGER");
+
+                b.Property<int>("Nein")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Quelle")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("RisId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("SitzungId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("TopId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Datum");
+
+                b.ToTable("Beschluesse");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Sitzung", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("AngelegtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Art")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("BeendetAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long?>("BegonnenAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long?>("EingeladenAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long?>("FreigegebenAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid?>("FreigegebenVonPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("GremiumId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("LeitungPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("ProtokollPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("TerminId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("TopAnmeldungBis")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Vorlage")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("TerminId")
+                    .IsUnique();
+
+                b.ToTable("Sitzungen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Sitzungsanwesenheit", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("SitzungId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("SitzungId", "PersonId")
+                    .IsUnique();
+
+                b.ToTable("Sitzungsanwesenheiten");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Top", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("AngelegtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid?>("AngemeldetVonPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("AntragId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Beschreibung")
+                    .HasColumnType("TEXT");
+
+                b.Property<bool>("Fest")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Notiz")
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("Position")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid>("SitzungId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("UebernommenInSitzungId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("VertagtAusTopId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("ZusammengelegtMitTopId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("SitzungId", "Position");
+
+                b.ToTable("Tops");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Termine.KalenderAbo", b =>

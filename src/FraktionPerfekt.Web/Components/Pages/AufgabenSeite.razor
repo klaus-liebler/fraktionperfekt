@@ -1,7 +1,7 @@
 @page "/aufgaben"
 @using FraktionPerfekt.Application.Aufgaben
 @using FraktionPerfekt.Application.Gemeinsam
-@using FraktionPerfekt.Domain.Aufgaben
+@using FraktionPerfekt.Application.Stammdaten
 @inject Vorgang Vorgang
 
 <PageTitle>Aufgaben · FraktionPerfekt</PageTitle>
@@ -9,62 +9,79 @@
 <div class="fp-head">
     <div>
         <h1>Aufgaben</h1>
-        <p class="fp-sub">Korb der aktiven Rolle. In Iteration 1: Vertretungen, für die niemand zugesagt hat (Eskalation an den Vorstand).</p>
+        <p class="fp-sub">Meine Aufgaben, Korb der aktiven Rolle (@(benutzer?.Rolle?.Anzeigename())), bei anderen. Aus Protokollen, Anträgen, Anliegen, Anfragen und Eskalationen.</p>
     </div>
 </div>
 
 @if (meldung is not null)
 {
-    <div class="fp-alert fp-info" role="status">@meldung</div>
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (u is not null)
+{
+    <div class="fp-wsa">
+        <AufgabenListe Titel="Meine Aufgaben" Zeilen="u.Meine" Personen="personen" Aktion="AusfuehrenAsync" />
+        <AufgabenListe Titel="Im Korb" Zeilen="u.Korb" Personen="personen" Aktion="AusfuehrenAsync" />
+        <AufgabenListe Titel="Bei anderen" Zeilen="u.BeiAnderen" Personen="personen" Aktion="AusfuehrenAsync" />
+        <AufgabenListe Titel="Kürzlich erledigt" Zeilen="u.KuerzlichErledigt" Personen="personen" Aktion="AusfuehrenAsync" />
+    </div>
 }
 
 <section class="fp-card">
-    @if (aufgaben.Count == 0)
-    {
-        <p class="fp-muted">Keine offenen Aufgaben im Korb „@(benutzer?.Rolle?.Anzeigename())“.</p>
-    }
+    <h2>Themenpaten</h2>
+    <p class="fp-small fp-muted">Zuständig je Politikfeld: Aufgaben und Bürgeranliegen zum Thema gehen direkt an die Patin oder den Paten.</p>
     <div class="fp-list">
-        @foreach (var a in aufgaben)
+        @foreach (var t in paten)
         {
-            <div>
-                <span class="fp-grow">
-                    <a href="@a.Ziel"><b>@a.Titel</b></a>
-                    <br /><span class="fp-small fp-muted">@a.Beschreibung</span>
-                    @if (a.FaelligAm is { } f)
-                    {
-                        <br /><span class="fp-small">fällig @Ortszeit.AlsOrtszeit(f).ToString("dd.MM.yyyy HH:mm")</span>
-                    }
-                </span>
-                <StatusPille Stil="info">@a.Zustaendig.Anzeigename()</StatusPille>
-                <RadzenButton Text="Erledigt" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => ErledigenAsync(a.Id))" />
-            </div>
+            <div><span class="fp-grow"><b>@t.Pate.Politikfeld</b></span><span>@t.Person@(t.Vertretung is null ? "" : $" (Vertretung: {t.Vertretung})")</span></div>
         }
     </div>
+    <div class="fp-form">
+        <div class="fp-field"><label class="fp-lbl" for="pate-feld">Politikfeld</label><RadzenTextBox id="pate-feld" @bind-Value="feld" /></div>
+        <div class="fp-field"><label class="fp-lbl">Pate/Patin</label><RadzenDropDown TValue="Guid?" @bind-Value="pate" Data="@personen" TextProperty="Sortiername" ValueProperty="Id" AllowFiltering="true" /></div>
+        <div class="fp-field"><label class="fp-lbl">Vertretung</label><RadzenDropDown TValue="Guid?" @bind-Value="vertretung" Data="@personen" TextProperty="Sortiername" ValueProperty="Id" AllowClear="true" AllowFiltering="true" /></div>
+    </div>
+    <BegruendeterButton Text="Themenpate speichern" Size="ButtonSize.Small"
+                        Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle).Und(() => string.IsNullOrWhiteSpace(feld) || pate is null ? Freigabe.Nein("Politikfeld und Person wählen.") : Freigabe.Ja)"
+                        Click="@(() => AusfuehrenAsync((s => s.ThemenpateSetzenAsync(feld!, pate!.Value, vertretung), "Themenpate gespeichert.")))" />
 </section>
 
 @code {
     private Benutzer? benutzer;
-    private IReadOnlyList<Aufgabe> aufgaben = [];
+    private Aufgabenuebersicht? u;
+    private IReadOnlyList<ThemenpateZeile> paten = [];
+    private IReadOnlyList<PersonZeile> personen = [];
     private string? meldung;
+    private bool fehler;
+    private string? feld;
+    private Guid? pate;
+    private Guid? vertretung;
 
     protected override async Task OnInitializedAsync()
     {
         benutzer = await Vorgang.BenutzerAsync();
+        personen = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().PersonenAsync())).Where(p => p.Aktiv).ToList();
         await LadenAsync();
     }
 
-    private async Task LadenAsync() => aufgaben = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync());
-
-    private async Task ErledigenAsync(Guid id)
+    private async Task LadenAsync()
     {
+        u = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AufgabenDienst>().UebersichtAsync());
+        paten = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AufgabenDienst>().ThemenpatenAsync());
+    }
+
+    private async Task AusfuehrenAsync((Func<AufgabenDienst, Task> Aktion, string Erfolg) a)
+    {
+        var (aktion, erfolg) = a;
         try
         {
-            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AufgabenDienst>().ErledigenAsync(id, "von Hand erledigt"));
-            meldung = "Aufgabe erledigt.";
+            await Vorgang.AusfuehrenAsync(d => aktion(d.GetRequiredService<AufgabenDienst>()));
+            (meldung, fehler) = (erfolg, false);
         }
         catch (InvalidOperationException ex)
         {
-            meldung = ex.Message;
+            (meldung, fehler) = (ex.Message, true);
         }
 
         await LadenAsync();

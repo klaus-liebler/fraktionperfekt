@@ -3,13 +3,13 @@
 @inject IOptions<FraktionOptionen> Optionen
 
 @*
-    Kopfzeilen-Marke: Text plus Platzhalter für das Logo der Fraktion. Es wird bewusst KEIN Parteilogo eingebunden oder
-    nachgezeichnet; die Logodatei liefert die Fraktion selbst (dann hier als <img> einsetzen, Pfad in Fraktion:Logo).
+    Kopfzeilen-Marke: Logo der Fraktion (von der Fraktion geliefert, CDU-Gesamtlogo_transparent_RGB.png, nur skaliert nach
+    wwwroot/marke/logo.png; Pfad in Fraktion:Logo) plus Text. Ohne Logo erscheint ein Platzhalter.
 *@
 <div class="fp-brand" title="@Optionen.Value.Anzeigename">
     @if (Optionen.Value.Logo is { Length: > 0 } logo)
     {
-        <img src="@logo" alt="" class="fp-logo" />
+        <img src="@logo" alt="CDU" class="fp-logo" />
     }
     else
     {
