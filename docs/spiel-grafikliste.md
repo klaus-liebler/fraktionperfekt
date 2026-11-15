@@ -23,7 +23,7 @@ rechts. Für die Gegenrichtung spiegelt das Spiel die Bilder.
 **Abgleich mit dem Spiel:**
 - Das **Büro** passt fast. Es fehlen drei Objekte, die im Spiel gebraucht werden: Briefkasten/Postfach, Garderobe mit Hut und Lederjacke, Umschlag auf dem Tisch. Siehe „Neugenerierung“; als Ausweichlösung gehen auch einzelne Sprites.
 - Das **Archiv** wird zu zwei Szenen:
-  - **Rathausflur** (`rathaus_flur_x5.png`): Hier sitzt Rolf vor der Archivtür, später versperren Hohlbein und Dröhn den Ausgang.
+  - **Rathausflur** (`rathaus_flur_x5.png`): Hier sitzt Christian vor der Archivtür, später versperren Hohlbein und Dröhn den Ausgang.
   - **Archivraum** (`archiv_256x144.png`): mit dem Regal der Ratsprotokolle. Es fehlt das Gemälde „Der Rat von 1949“ als Sprite.
 - **Joe** trägt im Spiel nach der Garderobe Hut und Umhängetasche mit Kartuschen. Dafür ist ein zweites Sheet sinnvoll, alternativ bleibt er ohne Hut.
 - **Chani** hat im Spiel Umhängetasche und Handy. Das ist optional; das vorhandene Sheet reicht.
@@ -40,7 +40,7 @@ des Spiels passe ich beim Einbau an die fertigen Bilder an; die Positionen hier 
 |---|---|---|
 | `buero_1990er_256x144.png` (Neugenerierung) | **Briefkasten/Postfach** der Fraktion: Holz-Wandfach mit sechs Fächern, Papiere darin, an der Wand zwischen Kalender und Wanduhr (ca. x 100–124, y 26–44). **Garderobe:** Garderobenständer mit brauner Lederjacke und braunem Filzhut, statt der Topfpflanze links neben dem Schreibtisch (ca. x 62–82, y 36–102); die Pflanze wird klein und steht auf dem Aktenschrank. **Umschlag:** weißer Briefumschlag mit rotem Siegel gut sichtbar vorn auf dem Schreibtisch (ca. x 140–160, y 78–86). **Fax:** Das Gerät auf dem Rollcontainer klar als Faxgerät erkennbar machen (Papiereinzug, Hörer, Tastenfeld; x 180–208, y 66–84). Bleibt: Bücherregal links, Kalender 1995, Wanduhr, Schreibtisch mit Röhrenmonitor, Tür mit EXIT-Schild rechts | „1990s office of a town council party group, bookshelf on the left, wall calendar 1995, wall clock, wooden wall-mounted mail pigeonhole box with six compartments and papers between calendar and clock, coat stand with a brown leather jacket and a brown fedora left of the desk, desk with an old CRT monitor and a white envelope with a red seal lying on it, fax machine with handset and paper tray on a rolling cabinet, small plant, door with EXIT sign on the right“ |
 | `archiv_256x144.png` (Neugenerierung) | **Gemälde „Der Rat von 1949“** im Goldrahmen an einem freien Wandstück zwischen zwei Regalen (ca. x 160–208, y 24–56): Gruppe von Ratsherren der Nachkriegszeit vor einem Fantasiewappen. **Regal mit Ratsprotokollen** als eigenes, deutlich erkennbares Regal mit gleichförmigen grauen, nummerierten Ordnern und Schild „RATSPROTOKOLLE“ (ca. x 110–150, y 40–100). **Tür zurück in den Flur** am Rand (links, ca. x 4–28, y 36–104). Rollleiter und Kartons können bleiben | „archive room full of shelves with binders and books, one distinct shelf of identical grey numbered binders labeled RATSPROTOKOLLE in the middle, a gold-framed oil painting of a group of post-war councilmen in front of a fantasy coat of arms on a free wall section, rolling library ladder, boxes, door on the left edge, wooden floor“ |
-| `rathaus_flur_x5.png` (Neugenerierung, optional) | Passt bis auf die Ausgänge: **Doppeltür „ARCHIV“** bleibt (Archivtür, Klickfläche). Die Tür „Zimmer 012“ wird zur Tür **„FRAKTION“** (Rückweg ins Büro). Am linken Rand ein **Treppenhaus/Ausgang** mit grünem Notausgangsschild (ca. x 0–24, y 36–104), dort versperren später Hohlbein und Dröhn den Weg. Die Bank bleibt (Rolf sitzt davor oder darauf; die Figur kommt als Sprite) | „town hall corridor, arched window, notice board, wooden door labeled FRAKTION, double door labeled ARCHIV, wooden bench, plant, fire extinguisher, radiator, checkered floor, stairwell exit with green emergency exit sign at the left edge“ |
+| `rathaus_flur_x5.png` (Neugenerierung, optional) | Passt bis auf die Ausgänge: **Doppeltür „ARCHIV“** bleibt (Archivtür, Klickfläche). Die Tür „Zimmer 012“ wird zur Tür **„FRAKTION“** (Rückweg ins Büro). Am linken Rand ein **Treppenhaus/Ausgang** mit grünem Notausgangsschild (ca. x 0–24, y 36–104), dort versperren später Hohlbein und Dröhn den Weg. Die Bank bleibt (Christian sitzt davor oder darauf; die Figur kommt als Sprite) | „town hall corridor, arched window, notice board, wooden door labeled FRAKTION, double door labeled ARCHIV, wooden bench, plant, fire extinguisher, radiator, checkered floor, stairwell exit with green emergency exit sign at the left edge“ |
 
 ## Gemeinsame Stilvorgabe für alle Prompts
 
@@ -75,9 +75,9 @@ Kleine Abweichungen passe ich beim Einbau an.
 
 | Datei (Vorschlag) | Figur, Aussehen | Prompt (zusätzlich zur Sprite-Vorgabe) |
 |---|---|---|
-| `rolf_spritesheet_32x64.png` | **Rolf (SPD-Typ)**, älterer Herr, grauer Vollbart, Brille, rote Strickjacke über hellem Hemd, graue Hose, Thermoskanne in der Hand. Steht meist | „older man with grey full beard and glasses, red knitted cardigan, light shirt, grey trousers, holding a thermos flask“ |
-| `tanja_spritesheet_32x64.png` | **Tanja (Linke-Typ)**, Frau mittleren Alters, kurze schwarze Haare, violetter Kapuzenpullover, Jutebeutel, Klemmbrett | „woman with short black hair, purple hoodie, cloth tote bag over the shoulder, clipboard“ |
-| `mia_spritesheet_32x64.png` | **Mia (Grünen-Typ)**, junge Frau, blonder Zopf, grüner Fahrradhelm, grüne Regenjacke, dickes Gutachten unter dem Arm | „young woman with blonde ponytail, green bicycle helmet, green rain jacket, thick report under her arm“ |
+| `rolf_spritesheet_32x64.png` | **Christian (SPD-Typ)**, älterer Herr, grauer Vollbart, Brille, rote Strickjacke über hellem Hemd, graue Hose, Thermoskanne in der Hand. Steht meist | „older man with grey full beard and glasses, red knitted cardigan, light shirt, grey trousers, holding a thermos flask“ |
+| `tanja_spritesheet_32x64.png` | **Joanna (Linke-Typ)**, Frau mittleren Alters, kurze schwarze Haare, violetter Kapuzenpullover, Jutebeutel, Klemmbrett | „woman with short black hair, purple hoodie, cloth tote bag over the shoulder, clipboard“ |
+| `mia_spritesheet_32x64.png` | **Lore (Grünen-Typ)**, junge Frau, blonder Zopf, grüner Fahrradhelm, grüne Regenjacke, dickes Gutachten unter dem Arm | „young woman with blonde ponytail, green bicycle helmet, green rain jacket, thick report under her arm“ |
 | `kemper_spritesheet_32x64.png` | **Frau Kemper**, Bauleiterin, gelber Bauhelm, orange Warnweste über grauer Jacke, Klemmbrett | „female construction site manager, yellow hard hat, orange high-visibility vest over grey jacket, clipboard“ |
 | `hohlbein_spritesheet_32x64.png` | **Hohlbein** (Gegner, Karikatur), kräftig, kurzes blondes Haar mit Seitenscheitel, zu enger grauer Anzug, Krawatte, selbstgefälliges Grinsen. Kein Abzeichen | „stocky man with short blond side-parted hair, too tight grey suit, tie, smug grin, no badges or symbols“ |
 | `droehn_spritesheet_32x64.png` | **Dröhn** (Gegner, Karikatur), groß und dünn, gegelte dunkle Haare, kleine Brille, dunkelblauer Anzug, rote Krawatte. Kein Abzeichen | „tall thin man with slicked-back dark hair, small glasses, dark blue suit, red tie, pompous posture, no badges or symbols“ |
@@ -99,7 +99,7 @@ Joe mit Dichtstoff-Kartusche im Anschlag (in `joe_posen`, Bild 3/4). **Chani** m
 
 | Datei (Vorschlag) | Inhalt | Prompt |
 |---|---|---|
-| `<name>_portraet_64x64.png` (je Figur: joe, chani, rolf, tanja, mia, kemper, hohlbein, droehn) | Sheet 192×64 aus 3 Bildern à 64×64: neutral, lacht, erschrocken. Kopf und Schultern, frontal, schlichter Hintergrund | „portrait sheet 192×64 pixels, three 64×64 head-and-shoulders portraits of the same character: neutral, laughing, startled; plain background“ + Figurbeschreibung |
+| `<name>_portraet_64x64.png` (je Figur: joe, chani, christian, joanna, lore, kemper, hohlbein, droehn) | Sheet 192×64 aus 3 Bildern à 64×64: neutral, lacht, erschrocken. Kopf und Schultern, frontal, schlichter Hintergrund | „portrait sheet 192×64 pixels, three 64×64 head-and-shoulders portraits of the same character: neutral, laughing, startled; plain background“ + Figurbeschreibung |
 
 ## Objekte, die sich im Spiel ändern (Sprites, transparent)
 
@@ -137,8 +137,8 @@ key ring, round seal with scales, ornate golden key“.
 
 | Spielort | Grafik |
 |---|---|
-| Fraktionsbüro | `buero_1990er_256x144.png` (neu generiert mit Briefkasten, Garderobe, Umschlag) |
-| Rathausflur (Rolf, Archivtür, Gegner, Ausgang) | `rathaus_flur_x5.png` |
+| Zukunftsschmiede (Parteibüro, Marktstraße) | `buero_1990er_256x144.png` (neu generiert mit Briefkasten, Garderobe, Umschlag) |
+| Rathausflur (Christian, Archivtür, Gegner, Ausgang) | `rathaus_flur_x5.png` |
 | Archivraum (Gemälde, Ratsprotokolle) | `archiv_256x144.png` (neu generiert mit Gemälde, Protokollregal, Tür) |
 | Ems-Ufer, Bootsverfolgung | `ems_ufer`, `minispiel_ems` + Boote, Hindernisse |
 | Baustelle Badsanierung | `baustelle_bad` (+ trocken), Leck |

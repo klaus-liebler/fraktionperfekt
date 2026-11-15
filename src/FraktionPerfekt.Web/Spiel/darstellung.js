@@ -70,7 +70,7 @@
 
     function npcName(h) {
         if (h.form === 'gegner') { return 'gegner'; }
-        return { rolf: 'rolf', tanja: 'tanja', mia: 'mia', bauleiter: 'kemper' }[h.id] || null;
+        return { christian: 'christian', joanna: 'joanna', lore: 'lore', bauleiter: 'kemper' }[h.id] || null;
     }
 
     // ---------- Zeichnen ----------
@@ -227,7 +227,7 @@
     }
 
     // ---------- Text, Porträts, Dialoge ----------
-    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Rolf', 'rolf'], ['Tanja', 'tanja'], ['Mia', 'mia'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Hohlbein', 'hohlbein'], ['Dröhn', 'droehn']];
+    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Christian', 'christian'], ['Joanna', 'joanna'], ['Lore', 'lore'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Hohlbein', 'hohlbein'], ['Dröhn', 'droehn']];
     function sprecherAus(zeile) {
         for (const [n, id] of SPRECHER) { if (zeile.startsWith(n + ':') || zeile.startsWith(n + ' ')) { return id; } }
         return null;
@@ -250,7 +250,7 @@
         }
         const zeile = warteschlange.shift();
         const wer = sprecherAus(zeile);
-        sprecher = wer === 'hohlbein' || wer === 'droehn' ? 'gegner' : (['rolf', 'tanja', 'mia'].includes(wer) ? wer : wer === 'kemper' ? 'bauleiter' : wer);
+        sprecher = wer === 'hohlbein' || wer === 'droehn' ? 'gegner' : (['christian', 'joanna', 'lore'].includes(wer) ? wer : wer === 'kemper' ? 'bauleiter' : wer);
         portraitEl.replaceChildren();
         if (wer) { const bild = kopie(F.portrait(wer, ausdruck(zeile), { hut: wer === 'joe' && z.inventar.includes('taschenlampe') })); bild.className = 'portraitbild'; portraitEl.appendChild(bild); portraitEl.hidden = false; } else { portraitEl.hidden = true; }
         textEl.textContent = zeile;
@@ -267,7 +267,7 @@
             held.joe.x = held.joe.ziel = 30; held.chani.x = held.chani.ziel = 48; held.joe.blick = held.chani.blick = 1;
             plaetze.schreiben('auto', z);
         }
-        if (e.ende) { klang('ende'); plaetze.schreiben('auto', z); }
+        if (e.ende) { plaetze.schreiben('auto', z); if (window.Musik && window.Musik.an) { window.Musik.spielen(true); } else { klang('ende'); } }
         hover = null; auswahl = -1;
         zeigeText();
     }
@@ -455,6 +455,12 @@
         knopf('Weiterspielen', () => pauseUmschalten());
         for (const p of ['1', '2', '3']) { const info = plaetze.info(p); knopf(`Speichern auf Platz ${p}${info ? ` (belegt: ${info.punkte} Punkte)` : ''}`, () => { const ok = plaetze.schreiben(p, z); hinweis(ok ? `Gespeichert auf Platz ${p}.` : 'Speichern nicht möglich (Browser-Speicher gesperrt).'); }); }
         for (const p of ['auto', '1', '2', '3']) { const info = plaetze.info(p); if (info) { knopf(`Laden: ${p === 'auto' ? 'Autospeicher' : 'Platz ' + p} (${info.punkte} Punkte)`, () => { const s = plaetze.lesen(p); if (s) { starten(s); } }); } }
+        if (window.Musik) {
+            knopf(window.Musik.an ? 'Musik aus' : 'Musik an', () => { window.Musik.setzeAn(!window.Musik.an); menueZeigen(); });
+            knopf('Erkennungsmelodie abspielen', () => { window.Musik.setzeAn(true); window.Musik.spielen(); });
+            const regler = document.createElement('input'); regler.type = 'range'; regler.min = '0'; regler.max = '1'; regler.step = '0.05'; regler.value = String(window.Musik.lautstaerke); regler.setAttribute('aria-label', 'Lautstärke der Musik');
+            regler.addEventListener('input', () => window.Musik.setzeLautstaerke(regler.value)); menueEl.appendChild(regler);
+        }
         knopf(ton ? 'Ton aus' : 'Ton an', () => { ton = !ton; try { window.localStorage.setItem('fp-spiel-ton', ton ? 'an' : 'aus'); } catch (_) { /* egal */ } menueZeigen(); });
         knopf('Neues Spiel', () => starten(S.neuerZustand(), true));
         const zurueck = document.createElement('a'); zurueck.href = '../'; zurueck.textContent = 'Zurück zu FraktionPerfekt'; menueEl.appendChild(zurueck);
@@ -473,7 +479,7 @@
         leisteAktualisieren();
         if (neu) {
             ergebnis({ text: [
-                'Greven, Montagabend. Die Fraktionssitzung ist vorbei, die Kekse sind alle.',
+                'Greven, Montagabend in der Zukunftsschmiede an der Marktstraße. Die Fraktionssitzung ist vorbei, die Kekse sind alle.',
                 'Joe: „Chani, hast du den Umschlag auf dem Tisch gesehen? Ohne Absender.“',
                 'Chani: „Und draußen steigen zwei Herren in zu engen Anzügen aus einem Wagen … Das gefällt mir nicht.“',
                 '(Antippen = gehen und die naheliegende Aktion. Verben unten wählen, Gegenstände mit „Benutze“ oder „Gib“ kombinieren. Langes Drücken öffnet alle Aktionen. Esc: Pause.)'
@@ -484,6 +490,20 @@
     }
 
     $('neu').addEventListener('click', () => { klang('klick'); starten(S.neuerZustand(), true); });
+
+    // Erkennungsmelodie: startet mit der ersten Bedienung auf dem Titelbild (Browser erlauben Ton erst nach einer Eingabe)
+    const M = window.Musik;
+    let melodieGespielt = false;
+    function musikKnopf() { $('musik').textContent = M && M.an ? '♪ Musik an' : '♪ Musik aus'; }
+    if (M) {
+        $('lautstaerke').value = String(M.lautstaerke);
+        musikKnopf();
+        $('musik').addEventListener('click', () => { M.setzeAn(!M.an); musikKnopf(); if (M.an) { melodieGespielt = true; M.spielen(); } });
+        $('lautstaerke').addEventListener('input', (e) => M.setzeLautstaerke(e.target.value));
+        const ersteEingabe = () => { if (!melodieGespielt && !titelEl.hidden) { melodieGespielt = true; M.spielen(); } };
+        document.addEventListener('pointerdown', ersteEingabe, { once: true });
+        document.addEventListener('keydown', ersteEingabe, { once: true });
+    } else { $('musik').hidden = true; }
     const weiterKnopf = $('weiter');
     if (plaetze.info('auto')) { weiterKnopf.hidden = false; weiterKnopf.addEventListener('click', () => { const s = plaetze.lesen('auto'); if (s) { starten(s); } }); }
     $('pause').addEventListener('click', () => { if (z && titelEl.hidden) { pauseUmschalten(); } });

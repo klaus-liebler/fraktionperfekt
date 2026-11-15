@@ -139,3 +139,14 @@ test('Pixel-Grundlage: Dithering mischt zwei Farben, Verlauf trifft Anfangs- und
     assert.deepEqual(v.lies(0, 9), [200, 200, 200]);
     v.setze(-1, 50, [1, 2, 3]); // außerhalb: kein Fehler
 });
+
+test('Erkennungsmelodie: Fanfare, unverändertes Haydn-Zitat, Schluss; Stimmung stimmt', () => {
+    const M = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'musik.js'));
+    assert.deepEqual(M.STUECK.teile.map((t) => t.name), ['Fanfare', 'Haydn-Zitat', 'Schluss']);
+    const haydn = M.STUECK.teile[1].melodie.map((n) => n[0]).join(' ');
+    assert.equal(haydn, 'C5 D5 E5 D5 F5 E5 D5 B4 C5'); // erste Phrase, unverändert
+    assert.equal(M.STUECK.teile[1].melodie.reduce((s, n) => s + n[1], 0), 8); // zwei 4/4-Takte
+    assert.equal(Math.round(M.frequenz('A4')), 440);
+    assert.equal(Math.round(M.frequenz('C5') * 100) / 100, 523.25);
+    assert.equal(M.spielen(), 0); // ohne Browser: still, kein Fehler
+});

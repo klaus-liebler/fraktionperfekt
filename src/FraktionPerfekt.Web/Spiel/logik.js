@@ -33,7 +33,7 @@
 
     // Orte auf der Reisekarte (x/y in Prozent der Karte)
     const ORTE = {
-        buero: { name: 'Fraktionsbüro', x: 52, y: 46 },
+        buero: { name: 'Zukunftsschmiede', x: 52, y: 46 },
         archiv: { name: 'Rathausarchiv', x: 48, y: 40 },
         ems: { name: 'Ems-Ufer', x: 38, y: 56 },
         baustelle: { name: 'Baustelle Badsanierung', x: 64, y: 64 },
@@ -76,9 +76,9 @@
     // Aktionen: ansehen, benutzen, reden, f1, f2 (Fähigkeiten der aktiven Figur), gegenstand (mit z.B. { tagesordnung: fn }).
     const SZENEN = {
         buero: {
-            titel: 'Fraktionsbüro, Rathaus Greven',
+            titel: 'Zukunftsschmiede, Marktstraße',
             stimmung: 'buero',
-            einstieg: 'Montagabend nach der Fraktionssitzung. Auf dem Tisch liegt ein Umschlag ohne Absender.',
+            einstieg: 'Die Zukunftsschmiede in der Marktstraße, Montagabend nach der Fraktionssitzung. Auf dem Tisch liegt ein Umschlag ohne Absender.',
             hotspots: [
                 {
                     id: 'brief', name: 'Umschlag', x: 40, y: 58, b: 10, h: 7, form: 'brief',
@@ -129,8 +129,8 @@
                     }
                 },
                 {
-                    id: 'tuer', name: 'Tür zum Flur', x: 52, y: 26, b: 10, h: 40, form: 'tuer',
-                    ansehen: () => antwort('Die Tür zum Rathausflur.'),
+                    id: 'tuer', name: 'Tür zur Marktstraße', x: 52, y: 26, b: 10, h: 40, form: 'tuer',
+                    ansehen: () => antwort('Die Ladentür zur Marktstraße.'),
                     benutzen: (z) => z.flags.briefGelesen ? antwort('Ab zur Karte.', { szene: 'karte' }) : antwort(`${name(z)}: „Erst mal den Umschlag lesen.“`)
                 }
             ]
@@ -139,29 +139,29 @@
         archiv: {
             titel: 'Rathausarchiv',
             stimmung: 'archiv',
-            einstieg: 'Staub, Neonlicht, Regale bis zur Decke. Vor der Archivtür sitzt Genosse Rolf von der SPD, ehrenamtlicher Archivpfleger.',
+            einstieg: 'Staub, Neonlicht, Regale bis zur Decke. Vor der Archivtür sitzt Genosse Christian von der SPD, ehrenamtlicher Archivpfleger.',
             hotspots: [
                 {
-                    id: 'rolf', name: 'Genosse Rolf (SPD)', x: 20, y: 40, b: 9, h: 30, form: 'person', farbe: '#c0392b',
-                    ansehen: () => antwort('Rolf. Strickjacke, Thermoskanne, Schlüsselbund. Hält Ordnung für eine Tugend und Arbeitskreise für eine Lebensform.'),
+                    id: 'christian', name: 'Genosse Christian (SPD)', x: 20, y: 40, b: 9, h: 30, form: 'person', farbe: '#c0392b',
+                    ansehen: () => antwort('Christian. Strickjacke, Thermoskanne, Schlüsselbund. Hält Ordnung für eine Tugend und Arbeitskreise für eine Lebensform.'),
                     reden: (z) => z.flags.agGegruendet
-                        ? antwort('Rolf: „Wenn ihr Hilfe braucht: Der Gewerkschaftsbus steht bereit. Solidarität hat einen Diesel.“')
-                        : antwort(['Rolf: „Ins Archiv? Gerne. Aber erst gründen wir einen Arbeitskreis. Ordentlich, mit Tagesordnung.“', `${name(z)}: „Eine Tagesordnung … hatten wir nicht so etwas im Büro?“`]),
+                        ? antwort('Christian: „Wenn ihr Hilfe braucht: Der Gewerkschaftsbus steht bereit. Solidarität hat einen Diesel.“')
+                        : antwort(['Christian: „Ins Archiv? Gerne. Aber erst gründen wir einen Arbeitskreis. Ordentlich, mit Tagesordnung.“', `${name(z)}: „Eine Tagesordnung … hatten wir nicht so etwas im Büro?“`]),
                     gegenstand: {
                         tagesordnung: (z) => {
                             nehmen(z, 'tagesordnung'); z.flags.agGegruendet = true; z.flags.archivOffen = true; punkte(z, 'ag');
-                            return antwort(['Rolf eröffnet die Sitzung. TOP 1: Gründung des Arbeitskreises „Archivöffnung“ – einstimmig.', 'TOP 2: Verschiedenes. Rolf schließt die Tür auf. „Das ging ja zügig. Zwölf Minuten!“']);
+                            return antwort(['Christian eröffnet die Sitzung. TOP 1: Gründung des Arbeitskreises „Archivöffnung“ – einstimmig.', 'TOP 2: Verschiedenes. Christian schließt die Tür auf. „Das ging ja zügig. Zwölf Minuten!“']);
                         }
                     },
                     f2: (z) => antwort(istJoe(z)
-                        ? 'Joe bietet Rolf einen Rahmenvertrag über Fugendichtstoff an. Rolf will das erst im Ortsverein beraten.'
-                        : 'Chani startet eine Live-Story. Rolf winkt und fragt, ob man das auch ausdrucken kann.')
+                        ? 'Joe bietet Christian einen Rahmenvertrag über Fugendichtstoff an. Christian will das erst im Ortsverein beraten.'
+                        : 'Chani startet eine Live-Story. Christian winkt und fragt, ob man das auch ausdrucken kann.')
                 },
                 {
                     id: 'archivtuer', name: 'Archivtür', x: 44, y: 24, b: 12, h: 44, form: 'tuer',
                     sichtbar: (z) => !z.flags.archivOffen,
                     ansehen: () => antwort('Eine Stahltür. Schild: „Zutritt nur nach Beschluss“.'),
-                    benutzen: () => antwort('Abgeschlossen. Rolf hat den Schlüssel.')
+                    benutzen: () => antwort('Abgeschlossen. Christian hat den Schlüssel.')
                 },
                 {
                     id: 'wappen', name: 'Gemälde „Der Rat von 1949“', x: 66, y: 18, b: 18, h: 22, form: 'bild',
@@ -213,26 +213,26 @@
         ems: {
             titel: 'Ems-Ufer an der alten Brücke',
             stimmung: 'ems',
-            einstieg: 'Die Ems glitzert. Am Steg liegt ein Ruderboot mit einem selbstgemalten Schild: „Volkseigentum“. Daneben Genossin Tanja von der Linken.',
+            einstieg: 'Die Ems glitzert. Am Steg liegt ein Ruderboot mit einem selbstgemalten Schild: „Volkseigentum“. Daneben Genossin Joanna von der Linken.',
             hotspots: [
                 {
-                    id: 'tanja', name: 'Genossin Tanja (Linke)', x: 18, y: 40, b: 9, h: 30, form: 'person', farbe: '#8e44ad',
-                    ansehen: () => antwort('Tanja. Jutebeutel, Klemmbrett, Umverteilungsliste.'),
+                    id: 'joanna', name: 'Genossin Joanna (Linke)', x: 18, y: 40, b: 9, h: 30, form: 'person', farbe: '#8e44ad',
+                    ansehen: () => antwort('Joanna. Jutebeutel, Klemmbrett, Umverteilungsliste.'),
                     reden: (z) => {
-                        if (hat(z, 'paddel') || z.flags.bootGewonnen) { return antwort('Tanja: „Viel Erfolg! Und wenn ihr den Gral findet: Der gehört allen.“'); }
-                        return antwort(['Tanja: „Das Boot habe ich vergesellschaftet. Das Paddel auch. Ihr kriegt es – aber ich verteile um.“', '„Gebt mir etwas aus eurem Inventar, dann gebe ich euch das Paddel. Gerecht ist gerecht.“']);
+                        if (hat(z, 'paddel') || z.flags.bootGewonnen) { return antwort('Joanna: „Viel Erfolg! Und wenn ihr den Gral findet: Der gehört allen.“'); }
+                        return antwort(['Joanna: „Das Boot habe ich vergesellschaftet. Das Paddel auch. Ihr kriegt es – aber ich verteile um.“', '„Gebt mir etwas aus eurem Inventar, dann gebe ich euch das Paddel. Gerecht ist gerecht.“']);
                     },
                     gegenstand: {
                         stadtplan: (z) => {
-                            nehmen(z, 'stadtplan'); z.flags.stadtplanWeg = true; geben(z, 'paddel'); punkte(z, 'tanja');
-                            return antwort('Tanja nimmt den Stadtplan („Kartenmaterial gehört dem Volk“) und gibt euch das Paddel. Sie heftet den Plan an den Bürgerbus-Fahrplan.');
+                            nehmen(z, 'stadtplan'); z.flags.stadtplanWeg = true; geben(z, 'paddel'); punkte(z, 'joanna');
+                            return antwort('Joanna nimmt den Stadtplan („Kartenmaterial gehört dem Volk“) und gibt euch das Paddel. Sie heftet den Plan an den Bürgerbus-Fahrplan.');
                         },
-                        geschaeftsordnung: () => antwort('Tanja: „Die Geschäftsordnung? Die bleibt bei euch. Die braucht ihr noch, glaubt mir.“'),
-                        taschenlampe: () => antwort('Tanja: „Die Lampe braucht ihr selber. Ich verteile nicht von arm zu arm.“'),
-                        brief: () => antwort('Tanja: „Persönliche Post verteile ich nicht um. Ich habe Grundsätze.“')
+                        geschaeftsordnung: () => antwort('Joanna: „Die Geschäftsordnung? Die bleibt bei euch. Die braucht ihr noch, glaubt mir.“'),
+                        taschenlampe: () => antwort('Joanna: „Die Lampe braucht ihr selber. Ich verteile nicht von arm zu arm.“'),
+                        brief: () => antwort('Joanna: „Persönliche Post verteile ich nicht um. Ich habe Grundsätze.“')
                     },
                     f2: (z) => antwort(istJoe(z)
-                        ? 'Joe bietet ihr Dichtstoff zum Einkaufspreis. Tanja: „Gibt es den auch genossenschaftlich?“'
+                        ? 'Joe bietet ihr Dichtstoff zum Einkaufspreis. Joanna: „Gibt es den auch genossenschaftlich?“'
                         : 'Chani macht eine Story über das Volkseigentum-Boot. 2000 Aufrufe in drei Minuten.')
                 },
                 {
@@ -334,22 +334,22 @@
         schule: {
             titel: 'Hof der Martin-Luther-Grundschule',
             stimmung: 'schule',
-            einstieg: 'Ein leerer Schulhof. Am Kellerabgang flattert Absperrband. Davor: Mia von den Grünen, mit Lastenrad und Gutachten.',
+            einstieg: 'Ein leerer Schulhof. Am Kellerabgang flattert Absperrband. Davor: Lore von den Grünen, mit Lastenrad und Gutachten.',
             hotspots: [
                 {
-                    id: 'mia', name: 'Mia (Grüne)', x: 22, y: 40, b: 9, h: 30, form: 'person', farbe: '#27ae60',
-                    ansehen: () => antwort('Mia. Fahrradhelm, Lastenrad, ein Gutachten unter dem Arm, dick wie ein Haushaltsplan.'),
+                    id: 'lore', name: 'Lore (Grüne)', x: 22, y: 40, b: 9, h: 30, form: 'person', farbe: '#27ae60',
+                    ansehen: () => antwort('Lore. Fahrradhelm, Lastenrad, ein Gutachten unter dem Arm, dick wie ein Haushaltsplan.'),
                     reden: (z) => {
                         if (z.flags.abend && !z.flags.lastenrad) {
                             z.flags.lastenrad = true; punkte(z, 'lastenrad');
-                            return antwort(['Mia: „Die Fledermäuse sind ausgeflogen. Geht ruhig rein.“', '„Und nehmt das Lastenrad mit. Für den Rückweg – man weiß ja nie, was in so einem Tempel herumrollt.“']);
+                            return antwort(['Lore: „Die Fledermäuse sind ausgeflogen. Geht ruhig rein.“', '„Und nehmt das Lastenrad mit. Für den Rückweg – man weiß ja nie, was in so einem Tempel herumrollt.“']);
                         }
-                        if (z.flags.lastenrad) { return antwort('Mia: „Und bringt mir das Lastenrad mit vollem Akku zurück!“'); }
-                        return antwort(['Mia: „Der Kellergang ist gesperrt. Fledermausgutachten! Hier überwintern Zwergfledermäuse.“', '„Erst wenn sie zur Nacht ausfliegen, ab halb neun, darf jemand durch. Steht auf Seite 212.“']);
+                        if (z.flags.lastenrad) { return antwort('Lore: „Und bringt mir das Lastenrad mit vollem Akku zurück!“'); }
+                        return antwort(['Lore: „Der Kellergang ist gesperrt. Fledermausgutachten! Hier überwintern Zwergfledermäuse.“', '„Erst wenn sie zur Nacht ausfliegen, ab halb neun, darf jemand durch. Steht auf Seite 212.“']);
                     },
                     f2: (z) => antwort(istJoe(z)
-                        ? 'Joe bietet an, den Gang fledermausfreundlich abzudichten. Mia: „Dafür brauchen wir ein Gutachten.“'
-                        : 'Chani macht eine Story über Zwergfledermäuse. Mia ist begeistert und teilt sie sofort.')
+                        ? 'Joe bietet an, den Gang fledermausfreundlich abzudichten. Lore: „Dafür brauchen wir ein Gutachten.“'
+                        : 'Chani macht eine Story über Zwergfledermäuse. Lore ist begeistert und teilt sie sofort.')
                 },
                 {
                     id: 'uhr', name: 'Schulhofuhr', x: 60, y: 14, b: 10, h: 16, form: 'uhr',
@@ -364,7 +364,7 @@
                     id: 'kellergang', name: 'Kellergang', x: 70, y: 36, b: 12, h: 34, form: 'tuer',
                     ansehen: () => antwort('Ein Kellerabgang mit Absperrband. Dahinter: Dunkelheit.'),
                     benutzen: (z) => {
-                        if (!z.flags.abend) { return antwort('Mia hebt das Gutachten: „Seite 212!“'); }
+                        if (!z.flags.abend) { return antwort('Lore hebt das Gutachten: „Seite 212!“'); }
                         if (!hat(z, 'taschenlampe')) { return antwort('Stockdunkel. Ohne Licht geht hier niemand runter.'); }
                         return antwort('Ihr knipst die Taschenlampe an und steigt hinab …', { szene: 'krypta' });
                     }
@@ -464,7 +464,7 @@
                     sichtbar: (z) => z.flags.brueckeDa && !z.flags.kugelGeschafft,
                     ansehen: () => antwort('Ein langer Gang, leicht abschüssig. Am oberen Ende: eine riesige steinerne Wahlkugel. Sie wackelt.'),
                     benutzen: (z) => antwort(['Ein Knirschen. Die Wahlkugel löst sich und rollt los!', z.flags.lastenrad
-                        ? '(Mias Lastenrad! Tippen oder Leertaste/→ für Tempo.)'
+                        ? '(Lores Lastenrad! Tippen oder Leertaste/→ für Tempo.)'
                         : '(Rennen! Tippen oder Leertaste/→ für Tempo.)'], { minispiel: 'kugel' })
                 },
                 {
@@ -507,17 +507,18 @@
     function finale(z) {
         z.ende = true; z.flags.ende = true; punkte(z, 'finale', 50);
         const hilfe = [];
-        hilfe.push(z.flags.agGegruendet ? 'Genosse Rolf fährt mit dem Gewerkschaftsbus vor: „Solidarität!“' : 'Ein Bus hupt draußen.');
-        hilfe.push(z.flags.lastenrad ? 'Mia schiebt das Lastenrad heran: „Die Urne fährt im Lastenkorb – angeschnallt.“' : '');
-        hilfe.push(z.flags.stadtplanWeg ? 'Tanja hat den Tragegurt organisiert: „Gemeinsam tragen. Alle.“' : '');
+        hilfe.push(z.flags.agGegruendet ? 'Genosse Christian fährt mit dem Gewerkschaftsbus vor: „Solidarität!“' : 'Ein Bus hupt draußen.');
+        hilfe.push(z.flags.lastenrad ? 'Lore schiebt das Lastenrad heran: „Die Urne fährt im Lastenkorb – angeschnallt.“' : '');
+        hilfe.push(z.flags.stadtplanWeg ? 'Joanna hat den Tragegurt organisiert: „Gemeinsam tragen. Alle.“' : '');
         return antwort([
             'Hohlbein jubelt über seinen Kegelpokal. Dröhn ruft: „Den Rest remigrieren wir auch!“ – und versucht, die Wahlurne allein hochzuheben.',
             'Sie bewegt sich keinen Millimeter. Eine Inschrift am Boden: „Ich werde nur getragen, wenn viele mitanfassen.“',
             'Joe hebt eine Seite an, Chani die andere. Und plötzlich ist die Urne ganz leicht.',
             ...hilfe.filter((h) => h),
-            'Hohlbein und Dröhn folgen ihrer „alternativen Faktenkarte“ zum Ausgang – und landen in der Fledermaus-Sackgasse. Mia ruft: „Seite 212!“',
+            'Hohlbein und Dröhn folgen ihrer „alternativen Faktenkarte“ zum Ausgang – und landen in der Fledermaus-Sackgasse. Lore ruft: „Seite 212!“',
             'Der Gral der Demokratie ist kein Gold. Er ist eine Kiste mit einem Schlitz und ein Bleistift an einer Schnur. Gold wäre einfacher gewesen. Aber nicht so wertvoll.',
-            'ENDE – Danke fürs Spielen!'
+            'ENDE – Danke fürs Spielen!',
+            'Kartendaten der Reisekarte: © OpenStreetMap-Mitwirkende (ODbL).'
         ], { ende: true });
     }
 
@@ -790,7 +791,7 @@
         ['aktion', 'benutzen', 'garderobe'],
         ['aktion', 'benutzen', 'tuer'],
         ['reisen', 'archiv'],
-        ['aktion', 'gegenstand', 'rolf', 'tagesordnung'],
+        ['aktion', 'gegenstand', 'christian', 'tagesordnung'],
         ['figur'],
         ['aktion', 'f1', 'wappen'],
         ['aktion', 'benutzen', 'protokolle'],
@@ -798,7 +799,7 @@
         ['aktion', 'f1', 'gegner'],
         ['aktion', 'benutzen', 'ausgang'],
         ['reisen', 'ems'],
-        ['aktion', 'gegenstand', 'tanja', 'stadtplan'],
+        ['aktion', 'gegenstand', 'joanna', 'stadtplan'],
         ['figur'],
         ['aktion', 'f1', 'bruecke'],
         ['aktion', 'benutzen', 'boot'],
@@ -815,7 +816,7 @@
         ['aktion', 'benutzen', 'zurkarte'],
         ['reisen', 'schule'],
         ['aktion', 'benutzen', 'uhr'],
-        ['aktion', 'reden', 'mia'],
+        ['aktion', 'reden', 'lore'],
         ['aktion', 'benutzen', 'kellergang'],
         ['aktion', 'f1', 'fresko'],
         ['aktion', 'benutzen', 'schloss'],

@@ -29,7 +29,7 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
 ## Bedienung
 
 - **Verbleiste** unten: Gehe zu, Schau an, Nimm, Benutze, Rede mit, Gib und die zwei Fähigkeiten der aktiven Figur; die
-  Satzzeile zeigt, was passiert („Benutze Mustertagesordnung mit Genosse Rolf“). Gegenstände: Verb „Benutze“ oder „Gib“
+  Satzzeile zeigt, was passiert („Benutze Mustertagesordnung mit Genosse Christian“). Gegenstände: Verb „Benutze“ oder „Gib“
   wählen, dann Icon im Inventar, dann das Ziel.
 - **Tippen/Klicken** in der Szene: Die Figur läuft hin und führt das gewählte Verb aus; mit „Gehe zu“ die naheliegende
   Aktion (Personen ansprechen, Ausgänge benutzen, sonst ansehen). **Langes Drücken** öffnet das Verbmenü am Objekt.
@@ -41,22 +41,22 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
 - **Pause-Menü:** Speichern auf Platz 1–3, Laden (auch Autospeicher bei jedem Szenenwechsel), Ton an/aus, neues Spiel.
   Spielstände liegen im `localStorage` des Browsers; ohne Speicher läuft das Spiel trotzdem.
 - **Minispiele:** Bootsverfolgung auf der Ems (↑/↓ oder oben/unten tippen, 35 Sekunden, drei Treffer erlaubt) und die
-  rollende Wahlkugel (tippen/Leertaste/→ für Tempo; mit Mias Lastenrad leichter). Verloren = einfach noch einmal.
+  rollende Wahlkugel (tippen/Leertaste/→ für Tempo; mit Lores Lastenrad leichter). Verloren = einfach noch einmal.
 
 ## Komplettlösung
 
-1. **Fraktionsbüro:** Umschlag nehmen. Als **Joe** das Faxgerät benutzen (Stadtplan 1949). Regal benutzen
+1. **Zukunftsschmiede (Parteibüro, Marktstraße):** Umschlag nehmen. Als **Joe** das Faxgerät benutzen (Stadtplan 1949). Regal benutzen
    (Geschäftsordnung), Postfach benutzen (Mustertagesordnung), Garderobe benutzen (Taschenlampe). Tür → Karte.
-2. **Rathausarchiv:** Rolf die **Mustertagesordnung** geben (Arbeitskreis „Archivöffnung“ wird gegründet, Tür offen).
+2. **Rathausarchiv:** Christian die **Mustertagesordnung** geben (Arbeitskreis „Archivöffnung“ wird gegründet, Tür offen).
    **Chani:** Gemälde „Der Rat von 1949“ deuten → „Protokoll 47“. Regal mit Ratsprotokollen benutzen → **Siegel der
    Beschlüsse**. Hohlbein und Dröhn versperren den Ausgang: **Joe**, Kartusche auf die beiden → festgeklebt. Ausgang.
-3. **Ems-Ufer:** Tanja den **Stadtplan** geben (Umverteilung) → Paddel. **Chani:** Inschrift an der Brücke deuten →
+3. **Ems-Ufer:** Joanna den **Stadtplan** geben (Umverteilung) → Paddel. **Chani:** Inschrift an der Brücke deuten →
    „dritter von sieben Pfählen“. Boot benutzen → **Bootsverfolgung** schaffen. Sieben Pfähle benutzen → **Siegel der
    Ausführung**. Weg zur Straße.
 4. **Baustelle Badsanierung:** **Joe:** Kartusche auf die leckende Leitung (Grube läuft leer). **Joe:**
    Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**. **Chani:** Live-Story bei
    Hohlbein und Dröhn → sie stolpern in den Bauwagen. Bauzaun-Tor.
-5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Mia reden →
+5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lore reden →
    Lastenrad. Kellergang benutzen (Taschenlampe nötig).
 6. **Krypta:** **Chani:** Wandfresko deuten → „von unten nach oben“. Symbolschloss: **Urne, Buch, Waage** →
    Tempelschlüssel. Tor benutzen (drei Siegel + Schlüssel).
