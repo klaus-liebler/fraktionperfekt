@@ -21,4 +21,10 @@
     <ProjectReference Include="..\FraktionPerfekt.Adapters.Mocks\FraktionPerfekt.Adapters.Mocks.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Easteregg-Spiel: nur für angemeldete Personen über /spiel/ ausgeliefert (nicht in wwwroot) -->
+    <None Remove="Spiel\**" />
+    <Content Include="Spiel\**" Exclude="Spiel\**\*.cs" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

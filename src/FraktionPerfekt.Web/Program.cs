@@ -142,6 +142,7 @@ FraktionPerfekt.Web.Handy.HandyEndpunkte.MapHandy(app);
 FraktionPerfekt.Web.Dokumente.DokumentEndpunkte.MapDokumente(app);
 FraktionPerfekt.Web.Wissen.WissenEndpunkte.MapWissen(app);
 FraktionPerfekt.Web.Wahlkampf.WahlkampfEndpunkte.MapWahlkampf(app);
+FraktionPerfekt.Web.Spiel.SpielEndpunkte.MapSpiel(app);
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 await app.RunAsync();

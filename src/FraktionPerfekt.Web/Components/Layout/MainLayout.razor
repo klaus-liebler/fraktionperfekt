@@ -34,6 +34,7 @@
             <a class="fp-link" href="handy" title="Schlanke Handy-Ansicht (statisch, schnell bei schlechtem Netz)">Handy-Ansicht</a>
             <AuthorizeView>
                 <Authorized>
+                    <span data-angemeldet hidden></span>
                     <div class="fp-role">
                         <span>Angemeldet als <b>@benutzer?.Name</b></span>
                         @if (benutzer is { Rollen.Count: > 1 })

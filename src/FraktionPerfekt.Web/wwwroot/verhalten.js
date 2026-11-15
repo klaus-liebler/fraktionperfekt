@@ -67,3 +67,24 @@ document.addEventListener('click', async (e) => {
         melden('Push konnte nicht aktiviert werden: ' + fehler.message);
     }
 });
+
+// Easteregg: Konami-Code (↑ ↑ ↓ ↓ ← → ← → B A) oder siebenmal schnell auf das Logo tippen – nur angemeldet.
+(() => {
+    const folge = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    let stelle = 0, tipps = [];
+    const los = () => { if (document.querySelector('[data-angemeldet]')) { window.location.href = 'spiel/'; } };
+    document.addEventListener('keydown', (e) => {
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) { stelle = 0; return; }
+        const taste = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        stelle = taste === folge[stelle] ? stelle + 1 : (taste === folge[0] ? 1 : 0);
+        if (stelle === folge.length) { stelle = 0; los(); }
+    });
+    document.addEventListener('click', (e) => {
+        if (!(e.target.closest && e.target.closest('.fp-brand'))) { return; }
+        const jetzt = Date.now();
+        tipps = tipps.filter((x) => jetzt - x < 3000);
+        tipps.push(jetzt);
+        if (tipps.length >= 7) { tipps = []; los(); }
+    });
+})();

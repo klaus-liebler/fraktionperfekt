@@ -104,6 +104,7 @@ public sealed partial class AppStartTests : IAsyncLifetime
         (await http.GetAsync("manifest.webmanifest", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetAsync("sw.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetAsync("offline.html", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await http.GetStringAsync("spiel/", abbruch)).ShouldContain("Testanmeldung"); // Easteregg nur angemeldet
 
         // Sicherheitsheader (CSP mit Hash der Import-Map, kein Framing) und no-store auf dem Kalender-Abo.
         var kopf = await http.GetAsync("anmelden", abbruch);
@@ -129,6 +130,11 @@ public sealed partial class AppStartTests : IAsyncLifetime
             var r = await http.GetAsync(seite, abbruch);
             r.StatusCode.ShouldBe(HttpStatusCode.OK, $"Seite /{seite}");
         }
+
+        // Easteregg-Spiel (angemeldet)
+        (await http.GetStringAsync("spiel/", abbruch)).ShouldContain("Gral der Demokratie");
+        (await http.GetAsync("spiel/logik.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await http.GetAsync("spiel/SpielEndpunkte.cs", abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         // KI-Schnittstelle: nur mit Schlüssel, eigenes Konto ohne vertrauliche Seiten; MCP mit Werkzeugen.
         using var ki = new HttpClient { BaseAddress = _adresse };
