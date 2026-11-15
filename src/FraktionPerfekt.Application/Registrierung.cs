@@ -37,6 +37,9 @@ public static class Registrierung
         dienste.AddScoped<Politik.PresseDienst>();
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Anfragen", d.GetRequiredService<Politik.AnfrageDienst>().FristenPruefenAsync));
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Anliegen-Löschfrist", d.GetRequiredService<Politik.AnliegenDienst>().LoeschfristenAsync));
+        dienste.AddScoped<Wahlkampf.WahlkampfDienst>();
+        dienste.AddScoped<Finanzen.FinanzDienst>();
+        dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Wahlkampf", d.GetRequiredService<Wahlkampf.WahlkampfDienst>().FristenPruefenAsync));
         return dienste;
     }
 }

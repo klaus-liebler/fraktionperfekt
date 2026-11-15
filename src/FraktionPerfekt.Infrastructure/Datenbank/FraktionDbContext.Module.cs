@@ -61,5 +61,19 @@ public sealed partial class FraktionDbContext
         Iteration7(modelBuilder);
     }
 
-    static partial void Iteration7(ModelBuilder modelBuilder);
+    private static void Iteration7(ModelBuilder modelBuilder)
+    {
+        Einfach<Domain.Wahlkampf.Plakat>(modelBuilder, "Plakate", b => b.HasIndex(x => x.Status));
+        Einfach<Domain.Wahlkampf.Gebiet>(modelBuilder, "Gebiete");
+        Einfach<Domain.Wahlkampf.Schicht>(modelBuilder, "Schichten", b => b.HasIndex(x => x.Von));
+        Einfach<Domain.Wahlkampf.Schichteintrag>(modelBuilder, "Schichteintraege", b => b.HasIndex(x => new { x.SchichtId, x.PersonId }).IsUnique());
+        Einfach<Domain.Finanzen.Haushaltsposten>(modelBuilder, "Haushaltsposten", b => b.HasIndex(x => new { x.Kasse, x.Jahr }));
+        Einfach<Domain.Finanzen.Kassenbuchung>(modelBuilder, "Kassenbuchungen", b =>
+        {
+            b.HasIndex(x => new { x.Kasse, x.Datum });
+            b.Ignore(x => x.Wirkung);
+        });
+        Einfach<Domain.Finanzen.Spende>(modelBuilder, "Spenden", b => b.Ignore(x => x.QuittungFaellig));
+        Einfach<Domain.Finanzen.Auslage>(modelBuilder, "Auslagen", b => b.HasIndex(x => x.Status));
+    }
 }

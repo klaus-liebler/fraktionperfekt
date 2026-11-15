@@ -1,0 +1,221 @@
+@page "/finanzen"
+@using System.Globalization
+@using FraktionPerfekt.Application.Finanzen
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Domain.Finanzen
+@inject Vorgang Vorgang
+@inject TimeProvider Uhr
+
+<PageTitle>Finanzen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Kasse und Budget</h1>
+        <p class="fp-sub">Fraktionskasse (Zuwendungen der Stadt) und Wahlkampfkasse getrennt. Buchen, Spenden erfassen und auszahlen: Kassier. Auslagen freigeben: Kassier oder Vorstand, nie die eigene.</p>
+    </div>
+    <div class="fp-row">
+        <RadzenDropDown TValue="Kasse" @bind-Value="kasse" Data="@(Enum.GetValues<Kasse>())" Change="@(_ => LadenAsync())" Style="width:140px" aria-label="Kasse" />
+        <RadzenNumeric TValue="int" @bind-Value="jahr" Min="2020" Max="2100" Change="@(_ => LadenAsync())" Style="width:100px" aria-label="Jahr" />
+        <a class="fp-btn" href="finanzen/kassenbericht.pdf?kasse=@kasse&jahr=@jahr" target="_blank">Kassenbericht (PDF)</a>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (fehlerLaden is not null)
+{
+    <div class="fp-alert fp-warn">@fehlerLaden</div>
+}
+else if (u is not null)
+{
+    <div class="fp-kpis">
+        <div class="fp-kpi"><div class="fp-kpi-lbl">Einnahmen @jahr</div><div class="fp-kpi-val">@Euro(u.Einnahmen)</div></div>
+        <div class="fp-kpi"><div class="fp-kpi-lbl">Ausgaben @jahr</div><div class="fp-kpi-val">@Euro(u.Ausgaben)</div></div>
+        <div class="fp-kpi"><div class="fp-kpi-lbl">Kassenstand</div><div class="fp-kpi-val">@Euro(u.Kassenstand)</div></div>
+        <div class="fp-kpi"><div class="fp-kpi-lbl">Auslagen offen</div><div class="fp-kpi-val">@u.Auslagen.Count</div></div>
+    </div>
+
+    @if (u.Auslagen.Count > 0)
+    {
+        <section class="fp-card fp-hervor">
+            <h2>Auslagen <span class="fp-zahl">@u.Auslagen.Count</span></h2>
+            @foreach (var z in u.Auslagen)
+            {
+                var a = z.Auslage;
+                <div class="fp-anfrage">
+                    <span><b>@a.Zweck</b> · @Euro(a.Betrag) · @z.Person · @a.Datum.ToString("dd.MM.yyyy") · @a.Status
+                        @if (a.BelegSchluessel is not null) { <text> · </text><a href="finanzen/beleg/@a.Id" target="_blank">Beleg</a> } else { <span class="fp-pill fp-p-krit">ohne Beleg</span> }</span>
+                    <div class="fp-row">
+                        @if (a.Status == Auslagenstatus.Eingereicht)
+                        {
+                            <BegruendeterButton Text="Freigeben" Size="ButtonSize.ExtraSmall" Freigabe="@z.Entscheiden" Click="@(() => AusfuehrenAsync(s => s.AuslageEntscheidenAsync(a.Id, true, null), "Freigegeben."))" />
+                            <BegruendeterButton Text="Ablehnen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@(z.Entscheiden.Begruendung?.Contains("Beleg") == true ? Freigabe.Ja : z.Entscheiden)"
+                                                Click="@(() => AusfuehrenAsync(s => s.AuslageEntscheidenAsync(a.Id, false, "bitte mit Beleg erneut einreichen"), "Abgelehnt."))" />
+                        }
+                        else
+                        {
+                            <BegruendeterButton Text="Ausgezahlt" Size="ButtonSize.ExtraSmall" Freigabe="@z.Auszahlen" Click="@(() => AusfuehrenAsync(s => s.AuszahlenAsync(a.Id), "Ausgezahlt und gebucht."))" />
+                        }
+                    </div>
+                </div>
+            }
+        </section>
+    }
+
+    <div class="fp-split">
+        <section class="fp-card">
+            <h2>Budget @jahr</h2>
+            <div class="fp-budget">
+            @if (u.Posten.Count == 0)
+            {
+                <p class="fp-leer">Noch keine Posten für @jahr.</p>
+            }
+            @foreach (var p in u.Posten)
+            {
+                <div class="fp-balken-zeile">
+                    <div class="fp-balken-name">@p.Posten.Bezeichnung</div>
+                    <div class="fp-balken-spur"><div class="fp-balken-wert" style="width:@(Math.Min(100, p.Anteil * 100).ToString("F0", CultureInfo.InvariantCulture))%; @(p.Rest < 0 ? "background:var(--fp-crit)" : "")"></div></div>
+                    <div class="fp-balken-zahl">@Euro(p.Ist) / @Euro(p.Posten.Ansatz)</div>
+                </div>
+            }
+            </div>
+            @if (u.Buchen.Erlaubt)
+            {
+                <details>
+                    <summary>Posten anlegen</summary>
+                    <div class="fp-form">
+                        <div class="fp-field"><label class="fp-lbl" for="po-bez">Bezeichnung</label><RadzenTextBox id="po-bez" @bind-Value="postenName" @bind-Value:event="oninput" /></div>
+                        <div class="fp-field"><label class="fp-lbl">Ansatz (€)</label><RadzenNumeric TValue="decimal" @bind-Value="postenAnsatz" Min="0" Format="N2" Style="width:130px" /></div>
+                    </div>
+                    <RadzenButton Text="Anlegen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(postenName)" Click="@(() => AusfuehrenAsync(s => s.PostenAnlegenAsync(kasse, jahr, postenName!, postenAnsatz), "Posten angelegt."))" />
+                </details>
+            }
+        </section>
+        <section class="fp-card">
+            <h2>Buchen</h2>
+            <div class="fp-form">
+                <div class="fp-field"><label class="fp-lbl">Art</label><RadzenDropDown TValue="bool" @bind-Value="einnahme" Data="@(new[] { new { W = false, T = "Ausgabe" }, new { W = true, T = "Einnahme" } })" TextProperty="T" ValueProperty="W" /></div>
+                <div class="fp-field"><label class="fp-lbl">Betrag (€)</label><RadzenNumeric TValue="decimal" @bind-Value="betrag" Min="0" Format="N2" Style="width:130px" /></div>
+                <div class="fp-field"><label class="fp-lbl">Datum</label><RadzenDatePicker TValue="DateTime" @bind-Value="datum" DateFormat="dd.MM.yyyy" /></div>
+                <div class="fp-field"><label class="fp-lbl">Posten</label><RadzenDropDown TValue="Guid?" @bind-Value="posten" AllowClear="true" Data="@u.Posten.Select(p => p.Posten).ToList()" TextProperty="Bezeichnung" ValueProperty="Id" /></div>
+                <div class="fp-field fp-grow"><label class="fp-lbl" for="bu-text">Text</label><RadzenTextBox id="bu-text" @bind-Value="text" @bind-Value:event="oninput" /></div>
+            </div>
+            <BegruendeterButton Text="Buchen" Freigabe="@(u.Buchen.Erlaubt && (betrag <= 0 || string.IsNullOrWhiteSpace(text)) ? Freigabe.Nein("Betrag und Text angeben.") : u.Buchen)"
+                                Click="@(() => AusfuehrenAsync(s => s.BuchenAsync(kasse, DateOnly.FromDateTime(datum), einnahme, betrag, posten, text!), "Gebucht."))" />
+            @if (kasse == Kasse.Wahlkampf)
+            {
+                <h3>Spende erfassen</h3>
+                <div class="fp-form">
+                    <div class="fp-field"><label class="fp-lbl" for="sp-name">Spender:in (leer = anonym)</label><RadzenTextBox id="sp-name" @bind-Value="spender" /></div>
+                    <div class="fp-field"><label class="fp-lbl" for="sp-anschrift">Anschrift</label><RadzenTextBox id="sp-anschrift" @bind-Value="anschrift" /></div>
+                    <div class="fp-field"><label class="fp-lbl">Betrag (€)</label><RadzenNumeric TValue="decimal" @bind-Value="spendeBetrag" Min="0" Format="N2" Style="width:130px" /></div>
+                </div>
+                <p class="fp-small fp-muted">Anonyme Spenden höchstens @Spende.AnonymGrenze.ToString("N0") €; ab @Spende.QuittungAb.ToString("N0") € Zuwendungsbestätigung.</p>
+                <BegruendeterButton Text="Spende buchen" Freigabe="@(u.Buchen.Erlaubt && spendeBetrag <= 0 ? Freigabe.Nein("Betrag angeben.") : u.Buchen)"
+                                    Click="@(() => AusfuehrenAsync(s => s.SpendeErfassenAsync(DateOnly.FromDateTime(datum), spender, anschrift, spendeBetrag, "Wahlkampf"), "Spende gebucht."))" />
+            }
+        </section>
+    </div>
+
+    @if (u.Spenden.Count > 0)
+    {
+        <section class="fp-card">
+            <h2>Spenden @jahr</h2>
+            <ul class="fp-kompakt">
+                @foreach (var s in u.Spenden)
+                {
+                    <li>@s.Datum.ToString("dd.MM.yyyy") · @(s.Spender ?? "anonym") · @Euro(s.Betrag)
+                        @if (s.QuittungFaellig)
+                        {
+                            <span class="fp-pill fp-p-warn">Bestätigung offen</span>
+                            <BegruendeterButton Text="Bestätigung versandt" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@u.Buchen" Click="@(() => AusfuehrenAsync(x => x.QuittungVermerkenAsync(s.Id), "Vermerkt."))" />
+                        }
+                        else if (s.QuittungAm is { } q)
+                        {
+                            <span class="fp-small fp-muted">Bestätigung @q.ToString("dd.MM.yyyy")</span>
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+
+    <section class="fp-card">
+        <h2>Kassenbuch @jahr</h2>
+        <div class="fp-tbl">
+            <table>
+                <thead><tr><th>Datum</th><th>Text</th><th>Posten</th><th style="text-align:right">Betrag</th></tr></thead>
+                <tbody>
+                    @foreach (var b in u.Buchungen)
+                    {
+                        <tr>
+                            <td>@b.Datum.ToString("dd.MM.yyyy")</td>
+                            <td>@b.Text</td>
+                            <td class="fp-small">@(u.Posten.FirstOrDefault(p => p.Posten.Id == b.PostenId)?.Posten.Bezeichnung ?? "–")</td>
+                            <td style="text-align:right;color:@(b.Einnahme ? "var(--fp-ok, #2e8540)" : "inherit")">@(b.Einnahme ? "+" : "−")@Euro(b.Betrag)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@code {
+    private static readonly CultureInfo De = CultureInfo.GetCultureInfo("de-DE");
+    private Finanzuebersicht? u;
+    private Kasse kasse = Kasse.Fraktion;
+    private int jahr;
+    private string? fehlerLaden;
+    private string? meldung;
+    private bool fehler;
+    private bool einnahme;
+    private decimal betrag;
+    private DateTime datum;
+    private Guid? posten;
+    private string? text;
+    private string? postenName;
+    private decimal postenAnsatz;
+    private string? spender, anschrift;
+    private decimal spendeBetrag;
+
+    private static string Euro(decimal d) => d.ToString("C", De);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var heute = Ortszeit.Heute(Uhr);
+        (jahr, datum) = (heute.Year, heute.ToDateTime(TimeOnly.MinValue));
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        try
+        {
+            u = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<FinanzDienst>().UebersichtAsync(kasse, jahr));
+            fehlerLaden = null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            fehlerLaden = ex.Message;
+        }
+    }
+
+    private async Task AusfuehrenAsync(Func<FinanzDienst, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => aktion(d.GetRequiredService<FinanzDienst>()));
+            (meldung, fehler) = (erfolg, false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

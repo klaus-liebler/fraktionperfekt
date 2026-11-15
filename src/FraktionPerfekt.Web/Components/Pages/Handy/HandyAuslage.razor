@@ -1,0 +1,59 @@
+@page "/handy/auslage"
+@attribute [ExcludeFromInteractiveRouting]
+@layout HandyLayout
+@using FraktionPerfekt.Application.Finanzen
+@using FraktionPerfekt.Domain.Finanzen
+@inject FinanzDienst Finanzen
+@inject TimeProvider Uhr
+@inject IAktuellerBenutzer Benutzer
+
+<PageTitle>Auslage einreichen · FraktionPerfekt</PageTitle>
+
+@if (Meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">@Meldung</div>
+}
+
+<article class="fp-handy-karte">
+    <h1 style="font-size:20px;margin:0 0 6px">Auslage einreichen</h1>
+    <form method="post" action="handy-aktion/auslage" enctype="multipart/form-data">
+        <AntiforgeryToken />
+        <label for="zweck">Wofür?</label>
+        <input id="zweck" name="zweck" type="text" required placeholder="z. B. Kabelbinder für Plakate" />
+        <label for="betrag">Betrag in Euro</label>
+        <input id="betrag" name="betrag" type="text" inputmode="decimal" required placeholder="12,50" />
+        <label for="datum">Datum</label>
+        <input id="datum" name="datum" type="date" required value="@heute" />
+        <label for="kasse">Kasse</label>
+        <select id="kasse" name="kasse">
+            <option value="Wahlkampf">Wahlkampf</option>
+            <option value="Fraktion">Fraktion</option>
+        </select>
+        <label for="beleg">Beleg (Foto oder PDF)</label>
+        <input id="beleg" name="beleg" type="file" accept="image/*,application/pdf" capture="environment" required />
+        <button type="submit" class="fp-btn fp-btn-haupt">Einreichen</button>
+    </form>
+</article>
+
+<h2 style="font-size:17px">Meine Auslagen</h2>
+@foreach (var z in meine)
+{
+    <article class="fp-handy-karte">
+        <b>@z.Auslage.Zweck</b> · @z.Auslage.Betrag.ToString("C") <span class="fp-small">· @z.Auslage.Status@(z.Auslage.Vermerk is null ? "" : $" ({z.Auslage.Vermerk})")</span>
+    </article>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? Meldung { get; set; }
+
+    private IReadOnlyList<AuslageZeile> meine = [];
+    private string heute = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        heute = FraktionPerfekt.Application.Gemeinsam.Ortszeit.Heute(Uhr).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        var ich = (await Benutzer.ErmittelnAsync()).PersonId;
+        meine = (await Finanzen.AuslagenAsync()).Where(z => z.Auslage.PersonId == ich).Take(10).ToList();
+    }
+}

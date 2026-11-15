@@ -1,0 +1,122 @@
+@page "/handy/plakat"
+@attribute [ExcludeFromInteractiveRouting]
+@layout HandyLayout
+@using System.Globalization
+@using FraktionPerfekt.Application.Wahlkampf
+@using FraktionPerfekt.Domain.Wahlkampf
+@inject WahlkampfDienst Wahlkampf
+
+<PageTitle>Plakate · FraktionPerfekt</PageTitle>
+
+@if (Meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">@Meldung</div>
+}
+
+@if (Abhaengen == 1)
+{
+    <article class="fp-handy-karte">
+        <h1 style="font-size:20px;margin:0 0 6px">Abhängliste (@liste.Count)</h1>
+        @if (abhaeng?.FristBis is { } frist)
+        {
+            <p class="fp-small">Alle Plakate bis @frist.ToString("dd.MM.yyyy") abhängen. @(Breite is null ? "Standort wird ermittelt, dann nächste zuerst." : "Nächste zuerst.")</p>
+        }
+        <form method="get" action="handy/plakat" data-standort-auto>
+            <input type="hidden" name="abhaengen" value="1" />
+            <input type="hidden" name="breite" value="@Breite?.ToString(CultureInfo.InvariantCulture)" />
+            <input type="hidden" name="laenge" value="@Laenge?.ToString(CultureInfo.InvariantCulture)" />
+        </form>
+    </article>
+    @foreach (var z in liste)
+    {
+        <article class="fp-handy-karte">
+            <b>@z.Plakat.Standort</b>
+            <div class="fp-small">@z.Plakat.Art@(z.EntfernungMeter is { } m ? $" · {Entfernung(m)}" : "") · <a href="https://www.openstreetmap.org/?mlat=@z.Plakat.Breite.ToString(CultureInfo.InvariantCulture)&mlon=@z.Plakat.Laenge.ToString(CultureInfo.InvariantCulture)#map=18/@z.Plakat.Breite.ToString(CultureInfo.InvariantCulture)/@z.Plakat.Laenge.ToString(CultureInfo.InvariantCulture)" target="_blank" rel="noopener">Karte</a></div>
+            <form method="post" action="handy-aktion/plakat/@z.Plakat.Id/status" style="margin-top:8px">
+                <AntiforgeryToken />
+                <input type="hidden" name="status" value="Abgehaengt" />
+                <input type="hidden" name="zurueck" value="handy/plakat?abhaengen=1" />
+                <button type="submit" class="fp-btn fp-btn-haupt">Abgehängt</button>
+            </form>
+        </article>
+    }
+    <a class="fp-btn" href="handy/plakat">Plakat erfassen</a>
+}
+else
+{
+    <article class="fp-handy-karte">
+        <h1 style="font-size:20px;margin:0 0 6px">Plakat erfassen</h1>
+        <form method="post" action="handy-aktion/plakat" enctype="multipart/form-data">
+            <AntiforgeryToken />
+            <button type="button" class="fp-btn" data-standort>📍 Standort übernehmen</button>
+            <p class="fp-small" data-standort-anzeige>Noch kein Standort.</p>
+            <input type="hidden" name="breite" />
+            <input type="hidden" name="laenge" />
+            <label for="standort">Ort (z. B. „Marktstraße / Ecke Kirchstraße“)</label>
+            <input id="standort" name="standort" type="text" />
+            <label for="art">Art</label>
+            <select id="art" name="art">
+                @foreach (var a in Enum.GetValues<Plakatart>())
+                {
+                    <option value="@a">@a</option>
+                }
+            </select>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="Haengt">hängt</option>
+                <option value="Geplant">geplant</option>
+                <option value="Beschaedigt">beschädigt</option>
+            </select>
+            <label for="foto">Foto</label>
+            <input id="foto" name="foto" type="file" accept="image/*" capture="environment" />
+            <button type="submit" class="fp-btn fp-btn-haupt">Speichern</button>
+        </form>
+    </article>
+    <a class="fp-btn" href="handy/plakat?abhaengen=1">Abhängliste</a>
+    <h2 style="font-size:17px">Zuletzt erfasst</h2>
+    @foreach (var z in liste.Take(8))
+    {
+        <article class="fp-handy-karte">
+            <b>@z.Plakat.Standort</b> <span class="fp-small">· @z.Plakat.Status</span>
+            <form method="post" action="handy-aktion/plakat/@z.Plakat.Id/status" class="fp-row" style="margin-top:6px">
+                <AntiforgeryToken />
+                <input type="hidden" name="zurueck" value="handy/plakat" />
+                <button type="submit" name="status" value="Haengt" class="fp-btn">hängt</button>
+                <button type="submit" name="status" value="Beschaedigt" class="fp-btn">beschädigt</button>
+                <button type="submit" name="status" value="Abgehaengt" class="fp-btn">abgehängt</button>
+            </form>
+        </article>
+    }
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? Meldung { get; set; }
+
+    [SupplyParameterFromQuery]
+    private int? Abhaengen { get; set; }
+
+    [SupplyParameterFromQuery]
+    private double? Breite { get; set; }
+
+    [SupplyParameterFromQuery]
+    private double? Laenge { get; set; }
+
+    private IReadOnlyList<PlakatZeile> liste = [];
+    private Abhaengliste? abhaeng;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Abhaengen == 1)
+        {
+            abhaeng = await Wahlkampf.AbhaenglisteAsync(Breite, Laenge);
+            liste = abhaeng.Plakate;
+        }
+        else
+        {
+            liste = await Wahlkampf.PlakateAsync();
+        }
+    }
+
+    private static string Entfernung(double meter) => meter < 1000 ? $"{meter:N0} m" : $"{meter / 1000:N1} km";
+}

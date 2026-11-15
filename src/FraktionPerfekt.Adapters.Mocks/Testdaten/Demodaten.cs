@@ -104,8 +104,8 @@ public sealed class Demodaten(
             anzahlTermine++;
         }
 
-        Randomizer.Seed = new Random(Startwert);
-        var f = new Faker("de");
+        // Eigener Zufallsgenerator (nicht der globale Randomizer.Seed): parallele Läufe bleiben reproduzierbar.
+        var f = new Faker("de") { Random = new Randomizer(Startwert) };
         var orte = new[] { "Marktplatz Greven", "Bürgerhaus Reckenfeld", "Ballenlager", "Rathausstraße (Treffpunkt Rathaus)", "Emsaue" };
         var oeffentliche = new List<Termin>();
         foreach (var (titel, art, ort, beschreibung) in GrevenerThemen.OeffentlicheTermine)
@@ -139,6 +139,7 @@ public sealed class Demodaten(
         await AntragsDemodaten.AnlegenAsync(daten, stammdaten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
         await RessourcenDemodaten.AnlegenAsync(daten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
         await PolitikDemodaten.AnlegenAsync(daten, stammdaten, personen, heute, uhr.GetUtcNow(), abbruch);
+        await WahlkampfDemodaten.AnlegenAsync(daten, dateiablage, personen, heute, uhr.GetUtcNow(), abbruch);
         await WissenDemodaten.AnlegenAsync(daten, stammdaten, wikiSuche, dateiablage, personen, uhr.GetUtcNow(), abbruch);
 
         await protokoll.ProtokollierenAsync("Demodaten.Angelegt",

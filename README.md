@@ -192,6 +192,31 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   - Bestätigte haben den Termin als Zusage im Kalender.
   - Nach dem Termin erscheint der Folgeschritt **„Kurzbericht anlegen“** auf der Startseite.
 
+## Iteration 7: Wahlkampf und Finanzen
+
+- **Wahlkampf** (`/wahlkampf`, Modul 17; Helfer:innen arbeiten voll mit):
+  - **Plakatkarte** mit Leaflet 1.9.4 (lokal unter `wwwroot/lib/leaflet`, BSD-2) und OpenStreetMap-Kacheln (CSP
+    erlaubt nur `tile.openstreetmap.org` zusätzlich); Farbe je Status (geplant, hängt, beschädigt, abgehängt), Foto im
+    Popup.
+  - **Handy-Erfassung** (`/handy/plakat`, ohne SignalR): „Standort übernehmen“ (GPS), Ort, Art, Status, Foto direkt
+    mit der Kamera (`capture`). Status ändern mit einem Tipp.
+  - **Abhängliste** (`/handy/plakat?abhaengen=1`): alle noch hängenden Plakate, sortiert nach Entfernung vom eigenen
+    Standort, mit Link zur Karte; Frist = Wahltag + `Fraktion:AbhaengenTage` (Standard 14). Nach der Wahl legt die
+    Fristenprüfung einmal die Aufgabe „Plakate abhängen“ für den Vorstand an.
+  - **Gebiete** (Plakatieren, Haustür, Flyer) zuteilen (Vorstand/Geschäftsführung, Push) und abhaken (zugeteilte Person).
+  - **Infostand-Schichten** mit Plätzen; Eintragen/Austragen mit einem Klick.
+  - **Löschfrist:** abgehängte Plakate (mit Fotos) und Schichteinträge nach einem halben Jahr.
+  - Wahltag: `Fraktion:Wahltag` (Demo: 16.05.2027, angenommen).
+- **Finanzen** (`/finanzen`, Modul 18; sichtbar für Kassier, Vorstand, Geschäftsführung):
+  - Zwei Kassen: **Fraktion** (Zuwendungen der Stadt) und **Wahlkampf**. Budget je Posten mit Ist und Balken,
+    Kassenbuch, Kassenstand.
+  - Buchen, Spenden erfassen und auszahlen nur durch den **Kassier**.
+  - **Spenden** nur in der Wahlkampfkasse; anonym höchstens 500 € (§ 25 PartG); ab 300 € Hinweis
+    „Zuwendungsbestätigung offen“.
+  - **Auslagen** (`/auslagen`, am Handy `/handy/auslage`): Beleg fotografieren → Aufgabe im Korb Kassier → Freigabe
+    durch Kassier oder Vorstand, **nie die eigene**, ohne Beleg keine Freigabe → Auszahlung bucht automatisch.
+  - **Kassenbericht** als PDF mit Briefkopf (`/finanzen/kassenbericht.pdf?kasse=…&jahr=…`).
+
 ## Iteration 6: Politische Arbeit
 
 - **Anfragen an die Verwaltung** (`/anfragen`, Modul 13): Entwurf → Einreichen durch Vorstand oder Geschäftsführung mit

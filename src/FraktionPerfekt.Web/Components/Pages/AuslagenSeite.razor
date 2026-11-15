@@ -1,0 +1,89 @@
+@page "/auslagen"
+@using FraktionPerfekt.Application.Finanzen
+@using FraktionPerfekt.Domain.Finanzen
+@inject Vorgang Vorgang
+@inject TimeProvider Uhr
+
+<PageTitle>Meine Auslagen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Meine Auslagen</h1>
+        <p class="fp-sub">Ausgelegtes Geld zurückholen: Beleg fotografieren, Betrag und Zweck angeben. Am Handy geht es schneller: <a href="handy/auslage">Handy-Ansicht „Auslage“</a>.</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+<section class="fp-card fp-einschub">
+    <h2>Auslage einreichen</h2>
+    <div class="fp-form">
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="au-zweck">Wofür?</label><RadzenTextBox id="au-zweck" @bind-Value="zweck" @bind-Value:event="oninput" /></div>
+        <div class="fp-field"><label class="fp-lbl">Betrag (€)</label><RadzenNumeric TValue="decimal" @bind-Value="betrag" Min="0" Format="N2" Style="width:130px" /></div>
+        <div class="fp-field"><label class="fp-lbl">Datum</label><RadzenDatePicker TValue="DateTime" @bind-Value="datum" DateFormat="dd.MM.yyyy" /></div>
+        <div class="fp-field"><label class="fp-lbl">Kasse</label><RadzenDropDown TValue="Kasse" @bind-Value="kasse" Data="@(Enum.GetValues<Kasse>())" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="au-beleg">Beleg (Foto/PDF)</label><InputFile id="au-beleg" OnChange="@(e => beleg = e.File)" accept="image/*,application/pdf" /></div>
+    </div>
+    <BegruendeterButton Text="Einreichen" Icon="receipt_long"
+                        Freigabe="@(string.IsNullOrWhiteSpace(zweck) || betrag <= 0 ? Freigabe.Nein("Zweck und Betrag angeben.") : beleg is null ? Freigabe.Nein("Bitte den Beleg anhängen – ohne Beleg keine Erstattung.") : Freigabe.Ja)"
+                        Click="EinreichenAsync" />
+</section>
+
+<section class="fp-card">
+    <h2>Eingereicht</h2>
+    @if (meine.Count == 0)
+    {
+        <p class="fp-leer">Noch keine Auslagen.</p>
+    }
+    <ul class="fp-kompakt">
+        @foreach (var z in meine)
+        {
+            <li>@z.Auslage.Datum.ToString("dd.MM.yyyy") · <b>@z.Auslage.Zweck</b> · @z.Auslage.Betrag.ToString("C") ·
+                <StatusPille Stil="@(z.Auslage.Status switch { Auslagenstatus.Ausgezahlt => "gut", Auslagenstatus.Abgelehnt => "krit", Auslagenstatus.Freigegeben => "info", _ => "neutral" })">@z.Auslage.Status</StatusPille>
+                @if (z.Auslage.Vermerk is not null) { <span class="fp-small fp-muted">(@z.Auslage.Vermerk)</span> }
+                @if (z.Auslage.BelegSchluessel is not null) { <a class="fp-small" href="finanzen/beleg/@z.Auslage.Id" target="_blank">Beleg</a> }</li>
+        }
+    </ul>
+</section>
+
+@code {
+    private IReadOnlyList<AuslageZeile> meine = [];
+    private string? zweck;
+    private decimal betrag;
+    private DateTime datum;
+    private Kasse kasse = Kasse.Wahlkampf;
+    private IBrowserFile? beleg;
+    private string? meldung;
+    private bool fehler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        datum = FraktionPerfekt.Application.Gemeinsam.Ortszeit.Heute(Uhr).ToDateTime(TimeOnly.MinValue);
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        var ich = (await Vorgang.BenutzerAsync()).PersonId;
+        meine = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<FinanzDienst>().AuslagenAsync())).Where(z => z.Auslage.PersonId == ich).ToList();
+    }
+
+    private async Task EinreichenAsync()
+    {
+        try
+        {
+            await using var strom = beleg!.OpenReadStream(15 * 1024 * 1024);
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<FinanzDienst>().AuslageEinreichenAsync(kasse, DateOnly.FromDateTime(datum), betrag, zweck!, null, strom, beleg.Name));
+            (meldung, fehler, zweck, betrag, beleg) = ("Eingereicht. Der Kassier prüft und meldet sich per Push.", false, null, 0, null);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or IOException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

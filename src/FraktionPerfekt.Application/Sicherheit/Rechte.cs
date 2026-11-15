@@ -23,6 +23,15 @@ public static class Rechte
     public static Freigabe BetriebSteuern(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Administration);
 
     /// <summary>Postausgang und Protokoll einsehen.</summary>
+    /// <summary>Finanzen einsehen: Kassier, Vorstand, Geschäftsführung.</summary>
+    public static Freigabe FinanzenEinsehen(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Kassier, Rolle.Vorstand, Rolle.Administration);
+
+    /// <summary>Buchen, Spenden erfassen, auszahlen: nur der Kassier.</summary>
+    public static Freigabe FinanzenBuchen(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Kassier);
+
+    /// <summary>Wahlkampf steuern (Gebiete zuteilen, Schichten anlegen): Vorstand und Geschäftsführung.</summary>
+    public static Freigabe WahlkampfSteuern(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Vorstand, Rolle.Administration);
+
     public static Freigabe VerwaltungEinsehen(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Administration, Rolle.Vorstand);
 
     /// <summary>Abwesenheit melden: alle mit Gremiensitzen oder Fraktionsterminen.</summary>

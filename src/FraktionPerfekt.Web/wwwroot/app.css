@@ -390,3 +390,11 @@ label.fp-option.sel { border-color: var(--fp-rhoendorf); background: var(--fp-ca
 .fp-baum li.fp-gewaehlt { border-radius: 6px; padding-left: 6px; }
 .fp-zitat .fp-markdown p:last-child { margin-bottom: 0; }
 .fp-baum .fp-linkbutton { text-align: left; }
+
+/* Iteration 7: Wahlkampf, Finanzen */
+.fp-karte { height: 460px; border-radius: 8px; z-index: 0; }
+.fp-punkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #333; vertical-align: middle; }
+.fp-chip.on { background: var(--fp-accent, #2d3c4b); color: #fff; }
+@media (max-width: 600px) { .fp-karte { height: 320px; } }
+.fp-budget .fp-balken-zeile { grid-template-columns: minmax(110px, 1fr) minmax(60px, 1.4fr) auto; }
+.fp-budget .fp-balken-zahl { white-space: nowrap; font-size: 13px; }

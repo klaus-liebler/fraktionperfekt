@@ -17,7 +17,7 @@ internal static class Sicherheitsheader
         => "default-src 'self'; "
            + $"script-src 'self'{(importMapHash is null ? "" : $" 'sha256-{importMapHash}'")}; "
            + "style-src 'self' 'unsafe-inline'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; "
-           + "img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws: wss:; worker-src 'self'; manifest-src 'self'; "
+           + "img-src 'self' data: blob: https://tile.openstreetmap.org; font-src 'self' data:; connect-src 'self' ws: wss:; worker-src 'self'; manifest-src 'self'; "
            + "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
 
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, string> Hashes = new();
