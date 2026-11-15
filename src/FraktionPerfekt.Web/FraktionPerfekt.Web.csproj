@@ -25,6 +25,8 @@
     <!-- Easteregg-Spiel: nur für angemeldete Personen über /spiel/ ausgeliefert (nicht in wwwroot) -->
     <None Remove="Spiel\**" />
     <Content Include="Spiel\**" Exclude="Spiel\**\*.cs" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Spielgrafiken: einzige Quelle ist assets/ (erzeugt mit tools/Grafik/erzeuge.mjs) -->
+    <Content Include="..\..\assets\*.png" Link="Spiel\grafik\%(Filename)%(Extension)" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

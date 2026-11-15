@@ -1,5 +1,5 @@
 // Reisekarte von Greven aus OpenStreetMap-Daten (© OpenStreetMap-Mitwirkende, ODbL), gerendert im Spielstil:
-// Pergament, flache Farben, nummerierte Stationen mit roter Reiselinie, Legende und Namensnennung.
+// Pergament, flache Farben, nummerierte Stationen, Legende und Namensnennung (die Reiselinie animiert das Spiel).
 import { readFileSync } from 'node:fs';
 import { Bild, F, text, textBreite } from './pixel.mjs';
 
@@ -56,12 +56,7 @@ export function karteGreven(datei) {
         .reduce((best, p) => { const d = (p[0] - 52.0922) ** 2 + ((p[1] - 7.6094) * 0.62) ** 2; return d < best.d ? { d, p } : best; }, { d: 1e9, p: null }).p;
     const stationen = STATIONEN.map((s) => (s.nr === '3' ? { ...s, lat: ems[0], lon: ems[1] } : s));
 
-    // rote Reiselinie (gestrichelt) in Spielreihenfolge
-    for (let i = 1; i < stationen.length; i++) {
-        const a = stationen[i - 1], c = stationen[i];
-        const x0 = px(a.lon), y0 = py(a.lat), x1 = px(c.lon), y1 = py(c.lat), n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0)));
-        for (let t = 0; t <= n; t++) { if (t % 4 < 3) { b.rechteck(Math.round(x0 + ((x1 - x0) * t) / n), Math.round(y0 + ((y1 - y0) * t) / n), 2, 2, F.rot); } }
-    }
+    // Die rote Reiselinie zeichnet das Spiel selbst (animiert von Station zu Station).
     for (const s of stationen) {
         const x = Math.round(px(s.lon)), y = Math.round(py(s.lat));
         b.ellipse(x, y, 4, 4, s.nr === '?' ? F.lila : F.dunkelrot); b.ellipse(x, y, 3, 3, s.nr === '?' ? F.flieder : F.rot);

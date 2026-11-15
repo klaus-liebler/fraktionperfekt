@@ -4,7 +4,7 @@ namespace FraktionPerfekt.Web.Spiel;
 /// Easteregg „Joe &amp; Chani und der Gral der Demokratie“: liegt bewusst nicht in wwwroot, sondern wird nur an angemeldete
 /// Personen ausgeliefert. Einstieg: Konami-Code (↑↑↓↓←→←→BA) oder siebenmal schnell auf das Logo tippen.
 /// </summary>
-internal static class SpielEndpunkte
+internal static partial class SpielEndpunkte
 {
     private static readonly Dictionary<string, string> Dateien = new(StringComparer.Ordinal)
     {
@@ -12,15 +12,18 @@ internal static class SpielEndpunkte
         ["spiel.css"] = "text/css; charset=utf-8",
         ["logik.js"] = "text/javascript; charset=utf-8",
         ["musik.js"] = "text/javascript; charset=utf-8",
-        ["pixel.js"] = "text/javascript; charset=utf-8",
-        ["figuren.js"] = "text/javascript; charset=utf-8",
-        ["szenen.js"] = "text/javascript; charset=utf-8",
+        ["grafik.js"] = "text/javascript; charset=utf-8",
         ["darstellung.js"] = "text/javascript; charset=utf-8",
     };
 
     public static void MapSpiel(this IEndpointRouteBuilder app)
     {
-        var ordner = Path.Combine(app.ServiceProvider.GetRequiredService<IWebHostEnvironment>().ContentRootPath, "Spiel");
+        var inhalt = app.ServiceProvider.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
+        var ordner = Path.Combine(inhalt, "Spiel");
+        // Grafiken: einzige Quelle ist assets/ im Repository; beim Veröffentlichen landen sie in Spiel/grafik (siehe csproj).
+        var grafik = Directory.Exists(Path.Combine(ordner, "grafik"))
+            ? Path.Combine(ordner, "grafik")
+            : Path.GetFullPath(Path.Combine(inhalt, "..", "..", "assets"));
         app.MapGet("/spiel/{datei?}", (string? datei, HttpContext http) =>
         {
             if (string.IsNullOrEmpty(datei) && !http.Request.Path.Value!.EndsWith('/'))
@@ -37,5 +40,25 @@ internal static class SpielEndpunkte
             http.Response.Headers.CacheControl = "no-cache";
             return Results.File(Path.Combine(ordner, name), typ);
         }).RequireAuthorization();
+
+        app.MapGet("/spiel/grafik/{datei}", (string datei, HttpContext http) =>
+        {
+            if (!GrafikName().IsMatch(datei))
+            {
+                return Results.NotFound();
+            }
+
+            var pfad = Path.Combine(grafik, datei);
+            if (!File.Exists(pfad))
+            {
+                return Results.NotFound();
+            }
+
+            http.Response.Headers.CacheControl = "no-cache";
+            return Results.File(pfad, "image/png");
+        }).RequireAuthorization();
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.png$")]
+    private static partial System.Text.RegularExpressions.Regex GrafikName();
 }

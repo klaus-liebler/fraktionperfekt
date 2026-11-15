@@ -6,7 +6,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Bild, F, text, textBreite } from './pixel.mjs';
 import * as HG from './hintergruende.mjs';
-import { figurenSheets } from './figuren.mjs';
+import { figurenSheets, posen, portraets, mitHut } from './figuren.mjs';
 import { objekte, icons } from './objekte.mjs';
 import { karteGreven } from './karte.mjs';
 
@@ -34,6 +34,7 @@ function schildImFlur(flur) {
 
 // ---------- Hintergründe ----------
 speichere('buero_zukunftsschmiede_v2_256x144.png', HG.zukunftsschmiede(), 'Hintergründe');
+speichere('buero_zukunftsschmiede_v2_ohne_umschlag_256x144.png', HG.zukunftsschmiede(false), 'Hintergründe');
 speichere('archiv_v2_256x144.png', HG.archivV2(Bild.laden(join(ASSETS, 'archiv_256x144.png'))), 'Hintergründe');
 const flur = Bild.laden(join(ASSETS, 'rathaus_flur_x5.png'));
 speichere('rathaus_flur_v2_256x144.png', HG.flurV2(flur, schildImFlur(flur)), 'Hintergründe');
@@ -52,7 +53,15 @@ speichere('minispiel_ems_512x144.png', HG.minispielEms(), 'Minispiele');
 speichere('minispiel_gang_512x144.png', HG.minispielGang(), 'Minispiele');
 
 // ---------- Figuren, Objekte, Icons ----------
-for (const [name, bild] of figurenSheets(Bild.laden(join(ASSETS, 'joe_spritesheet_32x64.png')), Bild.laden(join(ASSETS, 'chani_spritesheet_32x64.png')))) { speichere(name, bild, 'Figuren'); }
+const joe = Bild.laden(join(ASSETS, 'joe_spritesheet_32x64.png')), chani = Bild.laden(join(ASSETS, 'chani_spritesheet_32x64.png'));
+const sheets = [['joe', joe], ['chani', chani]];
+for (const [name, bild] of figurenSheets(joe, chani)) { speichere(name, bild, 'Figuren'); sheets.push([name.replace('_spritesheet_32x64.png', ''), bild]); }
+const joeHut = mitHut(joe); speichere('joe_hut_spritesheet_32x64.png', joeHut, 'Figuren'); sheets.push(['joe_hut', joeHut]);
+const GEGNER = ['hohlbein', 'droehn'];
+for (const [name, bild] of sheets) {
+    speichere(`${name}_posen_32x64.png`, posen(bild, name.startsWith('joe') ? 'kartusche' : name === 'chani' ? 'handy' : null), 'Posen');
+    speichere(`${name}_portraet_64x64.png`, portraets(bild, GEGNER.includes(name) ? F.steindunkel : F.sand), 'Porträts');
+}
 for (const [name, bild] of objekte()) { speichere(name, bild, 'Objekte'); }
 speichere('inventar_icons_16x16.png', icons(), 'Icons');
 

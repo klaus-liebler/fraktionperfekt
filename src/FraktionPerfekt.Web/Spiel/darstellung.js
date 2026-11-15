@@ -1,10 +1,10 @@
 // Joe & Chani und der Gral der Demokratie – Darstellung im Stil der Point-and-Click-Adventures der frühen 90er:
-// 320×200 Pixel-Art (ganzzahlig hochskaliert), Verbleiste, Satzzeile, Inventar mit Icons, laufende Figuren, Porträts mit
+// 256×144 Pixel-Art aus assets/ (ganzzahlig hochskaliert, Pixel scharf), Verbleiste, Satzzeile, Inventar mit Icons, laufende Figuren, Porträts mit
 // Mimik, Dialogauswahl, Irisblende. Tippen = Standardaktion, langes Drücken = Verbmenü.
 (function () {
     'use strict';
-    const S = window.GralSpiel, F = window.Figuren, SZ = window.Szenen;
-    const B = SZ.B, H = SZ.H, SKALA = 3;
+    const S = window.GralSpiel, G = window.Grafik;
+    const B = G.B, H = G.H, SKALA = 4;
     const $ = (id) => document.getElementById(id);
     const leinwand = $('leinwand');
     leinwand.width = B * SKALA; leinwand.height = H * SKALA;
@@ -21,12 +21,15 @@
     let z = null, warteschlange = [], danach = null, mini = null, pausiert = false, hover = null, auswahl = -1, reise = null, letzterOrt = 'buero';
     let verb = 'gehe', objekt = null;          // gewähltes Verb und Gegenstand („Benutze X mit …“)
     let blende = null;                          // { t, ziel } Irisblende
-    let zeit = 0;
-    const held = { joe: { x: 40, ziel: 40, blick: 1, schritt: 0 }, chani: { x: 58, ziel: 58, blick: 1, schritt: 0 } };
+    let zeit = 0, geladen = false;
+    const START_JOE = 36, START_CHANI = 56;
+    const held = { joe: { x: START_JOE, ziel: START_JOE, blick: 1, schritt: 0 }, chani: { x: START_CHANI, ziel: START_CHANI, blick: 1, schritt: 0 } };
     let laufAuftrag = null;                     // wird nach Ankunft ausgeführt
-    let sprecher = null;                        // für Sprechanimation
-    /** Kopie eines (gecachten) Canvas für das DOM – ein Canvas kann nur an einer Stelle hängen. */
-    function kopie(c) { const k = document.createElement('canvas'); k.width = c.width; k.height = c.height; k.getContext('2d').drawImage(c, 0, 0); return k; }
+    let sprecher = null, sprecherSchreck = false; // für Sprechanimation
+    const R = (h) => G.R(h, z);
+    const hutAuf = () => !!z && z.inventar.includes('taschenlampe');
+    const figurName = (n) => (n === 'joe' && hutAuf() ? 'joe_hut' : n);
+    function portraetBild(n, ausdruck) { return G.ausschnitt(G.portraet(n === 'joe' && hutAuf() ? 'joe_hut' : n, ausdruck), 64, 64); }
     let ton = true;
     try { ton = window.localStorage.getItem('fp-spiel-ton') !== 'aus'; } catch (_) { ton = true; }
 
@@ -65,8 +68,8 @@
     }
 
     // ---------- Figurenlage ----------
-    const BODEN = 196;
-    function heldenZiel(h) { const r = SZ.R(h); return Math.max(18, Math.min(B - 18, r.x + r.b / 2)); }
+    const BODEN = G.BODEN;
+    function heldenZiel(h) { const r = R(h); return Math.max(14, Math.min(B - 14, r.x + r.b / 2)); }
 
     function npcName(h) {
         if (h.form === 'gegner') { return 'gegner'; }
@@ -74,73 +77,136 @@
     }
 
     // ---------- Zeichnen ----------
-    function zeichneSzene(dt) {
+    function teil(t) { const b = G.bild(t.bild); if (b) { t2.drawImage(b, t.sx, t.sy || 0, t.b, t.h, Math.round(t.x), Math.round(t.y), t.b, t.h); } }
+
+    /** Figur mit Fußpunkt (x, fussY) zeichnen; seitliche Bilder schauen nach rechts und werden für blick < 0 gespiegelt. */
+    function zeichneFigur(name, zustand, bildNr, x, fussY, blick, blinzeln, schatten) {
+        const r = G.rahmen(name, zustand, bildNr, blinzeln), b = G.bild(r.bild);
+        if (!b) { return; }
+        const px = Math.round(x - G.FUSS_X), py = Math.round(fussY - G.FUSS_Y);
+        if (schatten !== false) { t2.globalAlpha = 0.3; t2.fillStyle = '#000'; t2.beginPath(); t2.ellipse(Math.round(x), fussY, 9, 2, 0, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1; }
+        if (r.seitlich && blick < 0) { t2.save(); t2.translate(Math.round(x) * 2, 0); t2.scale(-1, 1); t2.drawImage(b, r.sx, 0, 32, 64, px, py, 32, 64); t2.restore(); }
+        else { t2.drawImage(b, r.sx, 0, 32, 64, px, py, 32, 64); }
+        return py;
+    }
+
+    function zeichneSzene() {
         const hs = S.sichtbareHotspots(z);
-        const aktiv = held[z.figur];
-        const parallaxe = Math.round(((aktiv.x - B / 2) / (B / 2)) * SZ.RAND * -0.5);
-        const { bild, vorne } = SZ.hintergrund(z, hs);
-        t2.drawImage(bild, -SZ.RAND + parallaxe, 0);
-        SZ.animation(t2, z, zeit, parallaxe);
-        // Personen (NPC) als Sprites
+        const bg = G.bild(G.hintergrund(z));
+        if (bg) { t2.drawImage(bg, 0, 0); }
+        for (const o of G.ueberlagerungen(z, zeit)) { teil(o); }
+        // Fackeln flackern
+        for (const [fx, fy] of G.fackeln(z)) {
+            const f = Math.floor(zeit * 10 + fx) % 3;
+            t2.fillStyle = f === 0 ? 'rgb(252,152,56)' : f === 1 ? 'rgb(252,216,120)' : 'rgb(252,252,188)';
+            t2.fillRect(fx + (f === 2 ? 0 : 1), fy - 9 - f, 1 + (f === 1 ? 1 : 0), 2);
+            t2.globalAlpha = 0.1 + f * 0.03; t2.fillStyle = 'rgb(255,200,100)'; t2.beginPath(); t2.arc(fx + 1, fy - 4, 16 + f, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1;
+        }
+        // Wasser glitzert
+        if (z.szene === 'ems') { for (let i = 0; i < 10; i++) { const x = Math.round((i * 47 + zeit * 8 * (1 + (i % 3))) % B), y = 96 + (i * 13) % 40; t2.fillStyle = 'rgb(188,228,252)'; t2.fillRect(x, y, 3 + (i % 2), 1); } }
+        // Personen (NPC)
         const figuren = [];
         for (const h of hs) {
             const n = npcName(h);
             if (!n) { continue; }
-            const r = SZ.R(h);
-            const fy = Math.min(BODEN - 4, r.y + r.h + 2);
+            const r = R(h);
+            const fy = Math.min(BODEN - 2, r.y + r.h);
             const redet = sprecher === h.id && !textbox.hidden;
+            const zustand = redet ? (sprecherSchreck ? 'erschrocken' : 'reden') : 'stehen';
             if (n === 'gegner') {
-                figuren.push({ y: fy, name: 'hohlbein', x: r.x + r.b * 0.3, zustand: redet ? 'reden' : 'stehen', blick: -1 });
-                figuren.push({ y: fy - 1, name: 'droehn', x: r.x + r.b * 0.75, zustand: redet ? 'reden' : 'stehen', blick: -1 });
+                figuren.push({ y: fy, name: 'hohlbein', x: r.x + r.b * 0.3, zustand, blick: -1 });
+                figuren.push({ y: fy - 1, name: 'droehn', x: r.x + r.b * 0.72, zustand, blick: -1 });
             } else {
-                figuren.push({ y: fy, name: n, x: r.x + r.b / 2, zustand: redet ? 'reden' : 'stehen', blick: r.x + r.b / 2 > held.joe.x ? -1 : 1 });
+                figuren.push({ y: fy, name: n, x: r.x + r.b / 2, zustand, blick: r.x + r.b / 2 > held.joe.x ? -1 : 1 });
             }
         }
         if (z.szene === 'tempel' && z.flags.kugelGeschafft) {
             const wackel = Math.floor(zeit * 3) % 2;
-            figuren.push({ y: 186, name: 'hohlbein', x: 112, zustand: z.ende ? 'benutzen' : 'reden', blick: 1 });
-            figuren.push({ y: 184 - wackel, name: 'droehn', x: z.ende ? 178 : 148, zustand: z.ende ? 'benutzen' : 'stehen', blick: 1 });
+            figuren.push({ y: BODEN - 4, name: 'hohlbein', x: 110, zustand: z.ende ? 'erschrocken' : 'reden', blick: 1 });
+            figuren.push({ y: BODEN - 5 - wackel, name: 'droehn', x: z.ende ? 186 : 140, zustand: z.ende ? 'erschrocken' : 'stehen', blick: 1 });
         }
         for (const n of ['joe', 'chani']) {
             const hh = held[n];
             const geht = Math.abs(hh.ziel - hh.x) > 0.5;
             const istSprecher = sprecher === n && !textbox.hidden;
-            const zustand = geht ? 'gehen' : (istSprecher ? 'reden' : (benutzenBis > zeit && n === z.figur ? 'benutzen' : 'stehen'));
-            figuren.push({ y: BODEN, name: n, x: hh.x, zustand, blick: hh.blick, held: true });
+            const zustand = geht ? 'gehen' : (istSprecher ? (sprecherSchreck ? 'erschrocken' : 'reden') : (benutzenBis > zeit && n === z.figur ? 'benutzen' : 'stehen'));
+            figuren.push({ y: BODEN, name: figurName(n), x: hh.x, zustand, blick: hh.blick, held: n });
         }
         figuren.sort((a, b) => a.y - b.y);
         for (const f of figuren) {
-            const bildNr = f.zustand === 'gehen' ? Math.floor(zeit * 10) % 6 : f.zustand === 'reden' ? Math.floor(zeit * 8) % 2 : Math.floor(zeit * 1.3) % 2;
-            const blinzeln = (Math.floor(zeit * 10) + f.name.length * 7) % 37 === 0;
-            const spr = F.sprite(f.name, f.zustand, bildNr, { hut: f.name === 'joe' && z.inventar.includes('taschenlampe'), blinzeln });
-            const x = Math.round(f.x - F.FUSS_X), y = Math.round(f.y - F.FUSS_Y);
-            // Schatten
-            t2.globalAlpha = 0.3; t2.fillStyle = '#000'; t2.beginPath(); t2.ellipse(Math.round(f.x), f.y - 1, 9, 2, 0, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1;
-            if (f.blick < 0) { t2.save(); t2.translate(Math.round(f.x) * 2, 0); t2.scale(-1, 1); t2.drawImage(spr, x, y); t2.restore(); } else { t2.drawImage(spr, x, y); }
-            if (f.held && f.name === z.figur && !mini) { t2.fillStyle = 'rgb(255,214,79)'; t2.fillRect(Math.round(f.x) - 1, y - 2, 3, 2); t2.fillRect(Math.round(f.x), y, 1, 1); }
+            const bildNr = f.zustand === 'gehen' ? Math.floor(zeit * 10) : f.zustand === 'reden' ? Math.floor(zeit * 7) : f.zustand === 'benutzen' ? (benutzenBis - zeit > 0.4 ? 0 : 1) : 0;
+            const blinzeln = f.zustand === 'stehen' && (Math.floor(zeit * 8) + f.name.length * 11) % 41 === 0;
+            const py = zeichneFigur(f.name, f.zustand, bildNr, f.x, f.y, f.blick, blinzeln);
+            if (f.held && f.held === z.figur && !mini && py !== undefined) { t2.fillStyle = 'rgb(255,214,79)'; t2.fillRect(Math.round(f.x) - 1, py - 4, 3, 2); t2.fillRect(Math.round(f.x), py - 2, 1, 1); }
         }
-        t2.drawImage(vorne, -SZ.RAND + parallaxe * 2, 0);
         // Hover-Rahmen (dezent)
         const ziel = hs.find((h) => h.id === hover);
-        if (ziel && textbox.hidden) { const r = SZ.R(ziel); t2.strokeStyle = 'rgba(255,214,79,0.6)'; t2.setLineDash([2, 2]); t2.strokeRect(r.x + 0.5, r.y + 0.5, r.b - 1, r.h - 1); t2.setLineDash([]); }
-        void dt;
+        if (ziel && textbox.hidden) { const r = R(ziel); t2.strokeStyle = 'rgba(255,214,79,0.7)'; t2.setLineDash([2, 2]); t2.strokeRect(r.x + 0.5, r.y + 0.5, r.b - 1, r.h - 1); t2.setLineDash([]); }
     }
 
+    const ortPunkt = (id) => ({ x: S.ORTE[id].x * B / 100, y: S.ORTE[id].y * H / 100 });
     function zeichneKarte() {
-        t2.drawImage(SZ.karte(), 0, 0);
-        const s = window.Pixel.stift(t2);
-        for (const [id, o] of Object.entries(S.ORTE)) {
-            const frei = z.orte.includes(id), x = Math.round(o.x * B / 100), y = Math.round(o.y * H / 100);
-            if (!frei) { s.r(x - 1, y - 1, 3, 3, [150, 120, 90]); continue; }
-            s.r(x - 3, y - 3, 7, 7, [60, 30, 20]); s.r(x - 2, y - 2, 5, 5, hover === id ? [250, 80, 60] : [190, 40, 34]);
+        const k = G.bild('karte_greven_256x144');
+        if (k) { t2.drawImage(k, 0, 0); }
+        for (const id of Object.keys(S.ORTE)) {
+            const { x, y } = ortPunkt(id);
+            if (!z.orte.includes(id)) { t2.globalAlpha = 0.55; t2.fillStyle = 'rgb(228,196,148)'; t2.beginPath(); t2.arc(x, y, 5, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1; continue; }
+            const puls = hover === id ? 7 : 6 + (Math.floor(zeit * 3) % 2);
+            t2.strokeStyle = hover === id ? 'rgb(252,216,0)' : 'rgba(255,255,255,0.8)'; t2.lineWidth = 1;
+            t2.beginPath(); t2.arc(Math.round(x) + 0.5, Math.round(y) + 0.5, puls, 0, Math.PI * 2); t2.stroke();
         }
         if (reise) {
-            const a = S.ORTE[reise.von], b = S.ORTE[reise.nach], t = Math.min(1, reise.t);
-            const ax = a.x * B / 100, ay = a.y * H / 100, bx = b.x * B / 100, by = b.y * H / 100;
-            const n = Math.floor(t * 40);
-            for (let i = 0; i < n; i++) { if (i % 3 === 2) { continue; } const u = i / 40; s.r(ax + (bx - ax) * u, ay + (by - ay) * u - Math.sin(u * Math.PI) * 12, 2, 2, [200, 30, 30]); }
-            const u = t; s.r(ax + (bx - ax) * u - 3, ay + (by - ay) * u - Math.sin(u * Math.PI) * 12 - 6, 7, 3, [118, 78, 46]); s.r(ax + (bx - ax) * u - 2, ay + (by - ay) * u - Math.sin(u * Math.PI) * 12 - 9, 5, 3, [118, 78, 46]);
+            // rote Reiselinie wächst von Ort zu Ort, dahinter ein laufender Wegpunkt
+            const a = ortPunkt(reise.von), b = ortPunkt(reise.nach), t = Math.min(1, reise.t);
+            const n = Math.max(8, Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 2)), bis = Math.floor(t * n);
+            const bogen = (u) => ({ x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u - Math.sin(u * Math.PI) * 10 });
+            t2.fillStyle = 'rgb(188,0,0)';
+            for (let i = 0; i <= bis; i++) { if (i % 3 === 2) { continue; } const p = bogen(i / n); t2.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 2); }
+            const p = bogen(t);
+            t2.fillStyle = 'rgb(60,30,20)'; t2.fillRect(Math.round(p.x) - 3, Math.round(p.y) - 9, 7, 3); t2.fillRect(Math.round(p.x) - 2, Math.round(p.y) - 12, 5, 3);
         }
+    }
+
+    // ---------- Minispiele ----------
+    function streifen(name, versatz) {
+        const b = G.bild(name); if (!b) { return; }
+        const v = ((Math.round(versatz) % 512) + 512) % 512;
+        t2.drawImage(b, -v, 0); t2.drawImage(b, 512 - v, 0);
+    }
+    /** Oberkörper einer Figur (für Bootsfahrten). */
+    function oberkoerper(name, x, y) { const r = G.rahmen(name, 'stehen', 0, false), b = G.bild(r.bild); if (b) { t2.drawImage(b, r.sx, 0, 32, 40, Math.round(x), Math.round(y), 32, 40); } }
+
+    const BOOT_ART = { Treibholz: 0, Entenfamilie: 1, Schild: 2, Plakat: 3 };
+    function zeichneBoot(sim) {
+        streifen('minispiel_ems_512x144', zeit * 70);
+        const spurY = (sp) => 50 + sp * 30;
+        const by = spurY(sim.spur) + (Math.floor(zeit * 4) % 2);
+        oberkoerper('joe_hut', 14, by - 30); oberkoerper('chani', 34, by - 30);
+        teil({ bild: 'ruderboot_46x14', sx: 0, b: 46, h: 14, x: 12, y: by + 4 });
+        t2.fillStyle = 'rgb(188,228,252)'; for (let i = 0; i < 4; i++) { t2.fillRect(8 - i * 5, by + 14 + (i % 2), 4, 1); }
+        for (const h of sim.hindernisse) {
+            const i = BOOT_ART[Object.keys(BOOT_ART).find((k) => h.art.indexOf(k) === 0)] || 0;
+            teil({ bild: 'hindernisse_ems_96x24', sx: i * 24, b: 24, h: 24, x: h.x * B, y: spurY(h.spur) - 4 });
+        }
+        const vy = spurY(1) + Math.sin(zeit * 1.5) * 26;
+        oberkoerper('hohlbein', B - 66, vy - 30); oberkoerper('droehn', B - 46, vy - 32);
+        teil({ bild: 'motorboot_64x24', sx: 0, b: 64, h: 24, x: B - 70, y: vy - 2 });
+        t2.fillStyle = 'rgb(188,228,252)'; for (let i = 0; i < 5; i++) { t2.fillRect(B - 6 + i * 2, vy + 14 + (Math.floor(zeit * 20 + i) % 3), 2, 1); }
+    }
+
+    function zeichneKugel(sim) {
+        const weg = (p) => 30 + p * (B - 90);
+        streifen('minispiel_gang_512x144', sim.pos * 400);
+        const sx = weg(sim.pos), kx = weg(sim.kugel) - 30, boden = 132;
+        const lauf = Math.floor(zeit * 12);
+        if (sim.lastenrad) {
+            teil({ bild: 'lastenrad_48x32', sx: 0, b: 48, h: 32, x: sx - 22, y: boden - 30 });
+            zeichneFigur('joe_hut', 'stehen', 0, sx - 12, boden - 16, 1, false, false); zeichneFigur('chani', 'stehen', 0, sx + 10, boden - 18, 1, false, false);
+        } else {
+            zeichneFigur('joe_hut', 'gehen', lauf, sx - 8, boden, 1, false); zeichneFigur('chani', 'gehen', lauf + 2, sx + 12, boden, 1, false);
+        }
+        const wackel = Math.floor(zeit * 20) % 2;
+        teil({ bild: 'wahlkugel_64x64_x4', sx: 64 * (Math.floor(zeit * 8) % 4), b: 64, h: 64, x: kx - 32, y: boden - 64 - wackel });
     }
 
     function hochskalieren() {
@@ -160,14 +226,12 @@
             return;
         }
         if (z.szene === 'karte') {
-            textMitSchatten('GREVEN', B * SKALA / 2, 54, 40, '#6b3e1a', 'center');
-            for (const [id, o] of Object.entries(S.ORTE)) { if (z.orte.includes(id)) { textMitSchatten(o.name, o.x * B / 100 * SKALA + 16, o.y * H / 100 * SKALA + 8, 20, hover === id ? '#c0392b' : '#3b2410'); } }
-            textMitSchatten('Ort antippen, um hinzureisen', B * SKALA / 2, H * SKALA - 20, 18, '#3b2410', 'center');
+            if (hover && S.ORTE[hover]) { const p = ortPunkt(hover); textMitSchatten(S.ORTE[hover].name, p.x * SKALA, p.y * SKALA - 34, 22, '#ffe08a', 'center'); }
         } else {
             textMitSchatten(S.SZENEN[z.szene].titel, 14, 32, 22, '#fff');
             if (hover && textbox.hidden) {
                 const hs = S.sichtbareHotspots(z).find((h) => h.id === hover);
-                if (hs) { const r = SZ.R(hs); textMitSchatten(hs.name, (r.x + r.b / 2) * SKALA, Math.max(28, r.y * SKALA - 8), 20, '#ffe08a', 'center'); }
+                if (hs) { const r = R(hs); textMitSchatten(hs.name, (r.x + r.b / 2) * SKALA, Math.max(28, r.y * SKALA - 8), 20, '#ffe08a', 'center'); }
             }
         }
         if (z.ende && textbox.hidden) { g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(0, 0, B * SKALA, H * SKALA); textMitSchatten('ENDE', B * SKALA / 2, H * SKALA / 2, 96, '#ffd54f', 'center'); textMitSchatten(`${z.punkte} Punkte · ${Math.round(z.sekunden / 60)} Minuten`, B * SKALA / 2, H * SKALA / 2 + 54, 30, '#fff', 'center'); }
@@ -195,13 +259,10 @@
             laufen(dt);
         }
         if (z) {
-            if (mini) {
-                const sp = { joe: F.sprite('joe', 'stehen', 0, { hut: true }), chani: F.sprite('chani', mini.art === 'kugel' ? 'gehen' : 'stehen', Math.floor(zeit * 10) % 6), hohlbein: F.sprite('hohlbein', 'reden', Math.floor(zeit * 6) % 2), droehn: F.sprite('droehn', 'reden', Math.floor(zeit * 6 + 1) % 2) };
-                if (mini.art === 'kugel') { sp.joe = F.sprite('joe', 'gehen', Math.floor(zeit * 10) % 6, { hut: true }); }
-                (mini.art === 'boot' ? SZ.boot : SZ.kugel)(t2, mini, zeit, sp);
-            } else if (z.szene === 'karte') { zeichneKarte(); } else { zeichneSzene(dt); }
+            if (mini) { if (mini.art === 'boot') { zeichneBoot(mini); } else { zeichneKugel(mini); } }
+            else if (z.szene === 'karte') { zeichneKarte(); } else { zeichneSzene(); }
             hochskalieren(); overlay();
-            satzEl.textContent = z.szene === 'karte' || mini ? '' : satz();
+            satzEl.textContent = mini ? '' : z.szene === 'karte' ? `Reise nach ${hover && S.ORTE[hover] ? S.ORTE[hover].name : '…'}` : satz();
         } else {
             t2.fillStyle = '#120c08'; t2.fillRect(0, 0, B, H); hochskalieren();
         }
@@ -250,9 +311,10 @@
         }
         const zeile = warteschlange.shift();
         const wer = sprecherAus(zeile);
+        sprecherSchreck = ausdruck(zeile) === 'erschrocken';
         sprecher = wer === 'hohlbein' || wer === 'droehn' ? 'gegner' : (['christian', 'joanna', 'lore'].includes(wer) ? wer : wer === 'kemper' ? 'bauleiter' : wer);
         portraitEl.replaceChildren();
-        if (wer) { const bild = kopie(F.portrait(wer, ausdruck(zeile), { hut: wer === 'joe' && z.inventar.includes('taschenlampe') })); bild.className = 'portraitbild'; portraitEl.appendChild(bild); portraitEl.hidden = false; } else { portraitEl.hidden = true; }
+        if (wer) { const bild = portraetBild(wer, ausdruck(zeile)); bild.className = 'portraitbild'; portraitEl.appendChild(bild); portraitEl.hidden = false; } else { portraitEl.hidden = true; }
         textEl.textContent = zeile;
         textbox.hidden = false;
     }
@@ -264,7 +326,7 @@
         if (z.szene !== vorher) {
             if (z.szene !== 'karte' && S.SZENEN[z.szene] && !(e.text || []).includes(S.SZENEN[z.szene].einstieg)) { warteschlange.push(S.SZENEN[z.szene].einstieg); }
             if (S.ORTE[vorher]) { letzterOrt = vorher; }
-            held.joe.x = held.joe.ziel = 30; held.chani.x = held.chani.ziel = 48; held.joe.blick = held.chani.blick = 1;
+            held.joe.x = held.joe.ziel = START_JOE; held.chani.x = held.chani.ziel = START_CHANI; held.joe.blick = held.chani.blick = 1;
             plaetze.schreiben('auto', z);
         }
         if (e.ende) { plaetze.schreiben('auto', z); if (window.Musik && window.Musik.an) { window.Musik.spielen(true); } else { klang('ende'); } }
@@ -323,7 +385,7 @@
         const v = verb, o = objekt;
         verb = 'gehe'; objekt = null;
         gehe(heldenZiel(h), () => {
-            held[z.figur].blick = (SZ.R(h).x + SZ.R(h).b / 2) >= held[z.figur].x ? 1 : -1;
+            held[z.figur].blick = (R(h).x + R(h).b / 2) >= held[z.figur].x ? 1 : -1;
             if (o) { handlung('gegenstand', h, o); return; }
             const art = v === 'gehe' ? standard(h) : v === 'nimm' || v === 'benutze' ? 'benutzen' : v === 'gib' ? null : v;
             if (art === null) { ergebnis({ text: [`${S.FIGUREN[z.figur].name}: „Was soll ich geben? Erst einen Gegenstand im Inventar wählen.“`] }); return; }
@@ -361,7 +423,7 @@
         figurenEl.replaceChildren();
         for (const id of ['joe', 'chani']) {
             const k = document.createElement('button'); k.type = 'button'; k.className = 'figur' + (z.figur === id ? ' aktiv' : ''); k.title = S.FIGUREN[id].beschreibung; k.setAttribute('aria-pressed', String(z.figur === id));
-            const bild = kopie(F.portrait(id, 'neutral', { hut: id === 'joe' && z.inventar.includes('taschenlampe') })); bild.className = 'mini';
+            const bild = portraetBild(id, 'neutral'); bild.className = 'mini';
             k.append(bild, document.createTextNode(S.FIGUREN[id].name));
             k.addEventListener('click', () => { if (z.figur !== id && textbox.hidden) { klang('klick'); ergebnis(S.figurWechseln(z)); } });
             figurenEl.appendChild(k);
@@ -369,7 +431,7 @@
         inventarEl.replaceChildren();
         for (const gid of z.inventar) {
             const k = document.createElement('button'); k.type = 'button'; k.className = 'ding' + (objekt === gid ? ' aktiv' : ''); k.title = S.GEGENSTAENDE[gid].name; k.setAttribute('aria-label', S.GEGENSTAENDE[gid].name);
-            const bild = kopie(F.icon(gid)); bild.className = 'icon'; k.appendChild(bild);
+            const bild = G.ausschnitt(G.icon(gid), 16, 16); bild.className = 'icon'; k.appendChild(bild);
             k.addEventListener('click', () => {
                 if (!textbox.hidden) { return; }
                 if (verb === 'benutze' || verb === 'gib') { objekt = gid; leisteAktualisieren(); return; }
@@ -383,8 +445,8 @@
     // ---------- Eingabe ----------
     function punktAus(ev) { const r = leinwand.getBoundingClientRect(); return { x: (ev.clientX - r.left) * B / r.width, y: (ev.clientY - r.top) * H / r.height }; }
     function treffer(p) {
-        if (z.szene === 'karte') { const o = Object.entries(S.ORTE).find(([id, o]) => z.orte.includes(id) && Math.abs(p.x - o.x * B / 100) < 10 && Math.abs(p.y - o.y * H / 100) < 8); return o ? { karte: o[0] } : null; }
-        const h = S.sichtbareHotspots(z).slice().reverse().find((h) => { const r = SZ.R(h); return p.x >= r.x && p.x <= r.x + r.b && p.y >= r.y && p.y <= r.y + r.h; });
+        if (z.szene === 'karte') { const o = Object.entries(S.ORTE).find(([id, o]) => z.orte.includes(id) && Math.abs(p.x - o.x * B / 100) < 8 && Math.abs(p.y - o.y * H / 100) < 8); return o ? { karte: o[0] } : null; }
+        const h = S.sichtbareHotspots(z).slice().reverse().find((h) => { const r = R(h); return p.x >= r.x && p.x <= r.x + r.b && p.y >= r.y && p.y <= r.y + r.h; });
         return h ? { hotspot: h } : null;
     }
     function blockiert() { return !z || pausiert || !textbox.hidden || !dialogEl.hidden || !titelEl.hidden || reise || blende; }
@@ -473,7 +535,7 @@
         z = zustand; mini = null; reise = null; blende = null; pausiert = false; laufAuftrag = null;
         menueEl.hidden = true; titelEl.hidden = true; dialogEl.hidden = true; kontextEl.hidden = true;
         warteschlange = []; danach = null; verb = 'gehe'; objekt = null;
-        held.joe.x = held.joe.ziel = 30; held.chani.x = held.chani.ziel = 48;
+        held.joe.x = held.joe.ziel = START_JOE; held.chani.x = held.chani.ziel = START_CHANI;
         letzterOrt = S.ORTE[z.szene] ? z.szene : 'buero';
         $('leiste').hidden = false;
         leisteAktualisieren();
@@ -489,7 +551,7 @@
         }
     }
 
-    $('neu').addEventListener('click', () => { klang('klick'); starten(S.neuerZustand(), true); });
+    $('neu').addEventListener('click', () => { if (geladen) { klang('klick'); starten(S.neuerZustand(), true); } });
 
     // Erkennungsmelodie: startet mit der ersten Bedienung auf dem Titelbild (Browser erlauben Ton erst nach einer Eingabe)
     const M = window.Musik;
@@ -505,11 +567,15 @@
         document.addEventListener('keydown', ersteEingabe, { once: true });
     } else { $('musik').hidden = true; }
     const weiterKnopf = $('weiter');
-    if (plaetze.info('auto')) { weiterKnopf.hidden = false; weiterKnopf.addEventListener('click', () => { const s = plaetze.lesen('auto'); if (s) { starten(s); } }); }
+    if (plaetze.info('auto')) { weiterKnopf.hidden = false; weiterKnopf.addEventListener('click', () => { const s = plaetze.lesen('auto'); if (s && geladen) { starten(s); } }); }
     $('pause').addEventListener('click', () => { if (z && titelEl.hidden) { pauseUmschalten(); } });
 
-    // Titelbild: beide Porträts
-    $('titelbilder').append(kopie(F.portrait('joe', 'lacht', { hut: true })), kopie(F.portrait('chani', 'lacht')));
+    // Grafiken laden, dann Titelbild mit beiden Porträts
+    $('neu').disabled = true; weiterKnopf.disabled = true;
+    G.laden('grafik/').then(() => {
+        geladen = true; $('neu').disabled = false; weiterKnopf.disabled = false;
+        $('titelbilder').append(G.ausschnitt(G.portraet('joe_hut', 'lacht'), 64, 64), G.ausschnitt(G.portraet('chani', 'lacht'), 64, 64));
+    }).catch((e) => { $('titelbilder').textContent = e.message; });
 
     // Ganzzahlige Skalierung, wenn möglich
     function groesse() {
@@ -522,5 +588,7 @@
     window.addEventListener('resize', groesse);
     new ResizeObserver(groesse).observe($('leiste'));
     groesse();
+    // Für Browsertests der Komplettlösung: aktueller Spielstand und laufendes Minispiel (nur lesen)
+    window.GralSpielStand = () => ({ z, mini, textOffen: !textbox.hidden, dialogOffen: !dialogEl.hidden, beschaeftigt: !!(reise || blende || laufAuftrag) });
     requestAnimationFrame(schleife);
 })();

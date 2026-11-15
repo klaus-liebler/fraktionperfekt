@@ -41,7 +41,7 @@ function sterne(b, n, saat, maxY) { let s = saat; for (let i = 0; i < n; i++) { 
 function bodenplatte(b, x, y, w, h, aktiv) { b.rechteck(x, y, w, h, F.steindunkel); b.rechteck(x + 1, y + 1, w - 2, h - 2, aktiv ? F.gelb : F.stein); b.rechteck(x + Math.round(w / 2) - 3, y + 3, 6, 3, aktiv ? F.hellgelb : F.sand2); }
 
 // ---------- Zukunftsschmiede (Parteibüro, Ladenlokal Marktstraße) ----------
-export function zukunftsschmiede() {
+export function zukunftsschmiede(mitUmschlag = true) {
     const b = new Bild(B, H);
     b.rechteck(0, 0, B, 6, F.hellgrau); b.rechteck(0, 6, B, 1, F.grau);
     tapete(b, 7, 104, F.sand, F.sand2);
@@ -70,7 +70,7 @@ export function zukunftsschmiede() {
     b.rechteck(70, 20, 16, 24, F.weiss); b.rechteck(71, 21, 14, 10, F.himmel); b.rechteck(71, 27, 14, 4, F.gruen); b.rechteck(73, 34, 10, 1, F.dunkelgrau); b.rechteck(73, 37, 8, 1, F.dunkelgrau); b.rechteck(73, 40, 10, 1, F.dunkelgrau);
     // Schreibtisch mit Umschlag (Umschlag x 102–128, y 84–94)
     b.rechteck(86, 94, 46, 4, F.holzhell); b.rechteck(86, 98, 46, 2, F.holz); b.rechteck(88, 100, 4, 16, F.holz); b.rechteck(126, 100, 4, 16, F.holz);
-    b.rechteck(106, 88, 18, 6, F.weiss); b.linie(106, 88, 115, 92, F.hellgrau); b.linie(123, 88, 115, 92, F.hellgrau); b.rechteck(114, 91, 3, 2, F.rot);
+    if (mitUmschlag) { b.rechteck(106, 88, 18, 6, F.weiss); b.linie(106, 88, 115, 92, F.hellgrau); b.linie(123, 88, 115, 92, F.hellgrau); b.rechteck(114, 91, 3, 2, F.rot); }
     b.rechteck(90, 86, 10, 8, F.dunkelgrau); b.rechteck(91, 87, 8, 5, F.dunkelblau); b.rechteck(93, 94, 4, 1, F.grau);
     // Rollcontainer mit Faxgerät (Fax x 179–210, y 66–83)
     b.rechteck(176, 84, 38, 22, F.hellgrau); b.rechteck(176, 84, 38, 2, F.weiss); b.rechteck(178, 88, 34, 7, F.grau); b.rechteck(178, 97, 34, 7, F.grau); b.rechteck(193, 91, 4, 1, F.dunkelgrau); b.rechteck(193, 100, 4, 1, F.dunkelgrau);

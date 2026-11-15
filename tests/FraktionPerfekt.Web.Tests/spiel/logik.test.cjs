@@ -125,19 +125,27 @@ test('Reisen nur zu bekannten Orten; nach dem Tempeltor führt die Schule direkt
     assert.equal(z.szene, 'tempel');
 });
 
-test('Pixel-Grundlage: Dithering mischt zwei Farben, Verlauf trifft Anfangs- und Endfarbe', () => {
-    require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'pixel.js'));
-    const { Puffer } = globalThis.Pixel;
-    const p = new Puffer(8, 8);
-    p.mische(0, 0, 8, 8, [0, 0, 0], [255, 255, 255], 0.5);
-    let weiss = 0;
-    for (let y = 0; y < 8; y++) { for (let x = 0; x < 8; x++) { if (p.lies(x, y)[0] === 255) { weiss++; } } }
-    assert.equal(weiss, 32);
-    const v = new Puffer(4, 10);
-    v.verlauf(0, 0, 4, 10, [[10, 10, 10], [200, 200, 200]]);
-    assert.deepEqual(v.lies(0, 0), [10, 10, 10]);
-    assert.deepEqual(v.lies(0, 9), [200, 200, 200]);
-    v.setze(-1, 50, [1, 2, 3]); // außerhalb: kein Fehler
+test('Grafiken: alle Bilder liegen in assets/, jede Szene und jeder Spielstand hat ein Bild, Hotspots liegen im Bild', () => {
+    const fs = require('node:fs');
+    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+    const assets = path.join(__dirname, '..', '..', '..', 'assets');
+    for (const n of G.NAMEN) { assert.ok(fs.existsSync(path.join(assets, n + '.png')), `fehlt: ${n}.png`); }
+    for (const gid of Object.keys(S.GEGENSTAENDE)) { assert.ok(G.ICONS.includes(gid), `kein Icon für ${gid}`); }
+    const z = S.neuerZustand();
+    const pruefe = () => {
+        assert.ok(G.NAMEN.includes(G.hintergrund(z).replace('.png', '')), `${z.szene}: ${G.hintergrund(z)}`);
+        for (const o of G.ueberlagerungen(z, 1.3)) { assert.ok(G.NAMEN.includes(o.bild), o.bild); }
+        for (const h of S.sichtbareHotspots(z)) {
+            const r = G.R(h, z);
+            assert.ok(r.x >= 0 && r.y >= 0 && r.x + r.b <= G.B + 1 && r.y + r.h <= G.H + 1 && r.b > 4 && r.h > 4, `${z.szene}/${h.id} außerhalb: ${JSON.stringify(r)}`);
+        }
+    };
+    pruefe();
+    for (const schritt of S.KOMPLETTLOESUNG) { S.schritt(z, schritt); pruefe(); }
+    for (const n of ['joe', 'joe_hut', 'chani', 'hohlbein']) {
+        for (const zustand of ['stehen', 'gehen', 'reden', 'benutzen', 'erschrocken']) { assert.ok(G.NAMEN.includes(G.rahmen(n, zustand, 7, true).bild)); }
+        for (const a of ['neutral', 'lacht', 'erschrocken']) { assert.ok(G.NAMEN.includes(G.portraet(n, a).bild)); }
+    }
 });
 
 test('Erkennungsmelodie: Fanfare, unverändertes Haydn-Zitat, Schluss; Stimmung stimmt', () => {

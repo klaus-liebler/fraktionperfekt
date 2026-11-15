@@ -124,3 +124,81 @@ export function figurenSheets(joe, chani) {
         ['kemper_spritesheet_32x64.png', kemper(chani)]
     ];
 }
+
+// ---------- Zusatzposen, Porträts, Joe mit Hut ----------
+const LIPPEN = [[160, 60, 50], [204, 112, 112]];
+const AUGEN = [[0, 0, 0], [80, 120, 168]];
+
+function rahmen(sheet, i) { const b = new Bild(32, 64); b.einsetzen(sheet, 0, 0, { ausschnitt: [i * 32, 0, 32, 64] }); return b; }
+
+function haeufigste(b, y0, y1) {
+    const z = new Map();
+    for (let y = y0; y <= y1; y++) { for (let x = 0; x < b.b; x++) { const p = b.lies(x, y); if (p[3]) { const k = p.slice(0, 3).join(','); z.set(k, (z.get(k) || 0) + 1); } } }
+    const [k] = [...z.entries()].sort((a, c) => c[1] - a[1])[0];
+    return k.split(',').map(Number);
+}
+
+function mundAuf(b, zaehne) {
+    for (let y = 8; y < 24; y++) {
+        const xs = []; for (let x = 0; x < 32; x++) { if (LIPPEN.some((c) => gleich(b.lies(x, y), c))) { xs.push(x); } }
+        if (xs.length) { for (const x of xs) { b.setze(x, y, [72, 16, 16]); b.setze(x, y + 1, [72, 16, 16]); } if (zaehne) { for (const x of xs.slice(1, -1)) { b.setze(x, y, F.weiss); } } return; }
+    }
+}
+
+function augenZu(b, haut) {
+    const dunkel = [Math.round(haut[0] * 0.75), Math.round(haut[1] * 0.7), Math.round(haut[2] * 0.7)];
+    for (let y = 7; y < 15; y++) { for (let x = 0; x < 32; x++) { const p = b.lies(x, y); if (AUGEN.some((c) => gleich(p, c)) || (gleich(p, [252, 252, 252]) && y >= 9 && y <= 12)) { b.setze(x, y, dunkel); } } }
+}
+
+function arm(b, stufe, ding) {
+    const y = 27; let vorn = -1; for (let x = 31; x >= 0; x--) { if (b.lies(x, y)[3]) { vorn = x; break; } }
+    if (vorn < 0) { return; }
+    const jacke = b.lies(vorn - 1, 31).slice(0, 3), haut = haeufigste(b, 9, 14), lang = stufe === 1 ? 4 : 8;
+    b.rechteck(vorn - 1, y - 1, lang + 1, 3, jacke); b.rechteck(vorn + lang, y - 1, 2, 3, haut);
+    if (stufe === 2 && ding === 'kartusche') { b.rechteck(vorn + lang + 2, y - 1, 5, 2, F.weiss); b.setze(vorn + lang + 7, y - 1, F.orange); }
+    if (stufe === 2 && ding === 'handy') { b.rechteck(vorn + lang, y - 6, 2, 5, F.fastschwarz); b.setze(vorn + lang, y - 5, F.himmel); }
+}
+
+function armeHoch(b) {
+    const y = 32; let l = -1, r = -1; for (let x = 0; x < 32; x++) { if (b.lies(x, y)[3]) { if (l < 0) { l = x; } r = x; } }
+    const jacke = b.lies(l + 1, 30).slice(0, 3), haut = haeufigste(b, 9, 14);
+    for (let yy = 23; yy <= 44; yy++) { for (let x = l; x < l + 3; x++) { b.loesche(x, yy); } for (let x = r - 2; x <= r; x++) { b.loesche(x, yy); } }
+    b.rechteck(l - 1, 12, 3, 13, jacke); b.rechteck(l - 1, 9, 3, 3, haut); b.rechteck(r - 1, 12, 3, 13, jacke); b.rechteck(r - 1, 9, 3, 3, haut);
+}
+
+/** Posen-Sheet 192×64: Reden (zu/offen), Benutzen (2 Stufen), Erschrocken, Blinzeln. */
+export function posen(sheet, ding) {
+    const vorne = () => rahmen(sheet, 0), seite = () => rahmen(sheet, 3);
+    const haut = haeufigste(vorne(), 9, 14);
+    const bilder = [vorne(), (() => { const b = vorne(); mundAuf(b); return b; })(),
+        (() => { const b = seite(); arm(b, 1, ding); return b; })(), (() => { const b = seite(); arm(b, 2, ding); return b; })(),
+        (() => { const b = vorne(); armeHoch(b); mundAuf(b); return b; })(), (() => { const b = vorne(); augenZu(b, haut); return b; })()];
+    const s = new Bild(192, 64); bilder.forEach((b, i) => s.einsetzen(b, i * 32, 0)); return s;
+}
+
+/** Porträt-Sheet 192×64: drei 64×64-Köpfe (neutral, lacht, erschrocken), aus dem Frontalbild doppelt vergrößert. */
+export function portraets(sheet, hintergrund) {
+    const s = new Bild(192, 64);
+    const haut = haeufigste(rahmen(sheet, 0), 9, 14);
+    const varianten = [(b) => b, (b) => { augenZu(b, haut); mundAuf(b, true); return b; }, (b) => { mundAuf(b); return b; }];
+    varianten.forEach((fn, i) => {
+        s.rechteck(i * 64, 0, 64, 64, hintergrund || F.sand); s.rechteck(i * 64, 56, 64, 8, F.sand2);
+        s.einsetzen(fn(rahmen(sheet, 0)), i * 64, 2, { skala: 2, ausschnitt: [0, 0, 32, 31] });
+    });
+    return s;
+}
+
+/** Joe mit Filzhut und Umhängetasche mit Kartuschen – für alle Bilder eines Sheets. */
+export function mitHut(sheet) {
+    const b = kopie(sheet);
+    for (let i = 0; i < 6; i++) {
+        const x0 = i * 32; let oben = -1;
+        for (let y = 0; y < 20 && oben < 0; y++) { for (let x = x0; x < x0 + 32; x++) { if (b.lies(x, y)[3]) { oben = y; break; } } }
+        let l = 99, r = -1; for (let x = x0; x < x0 + 32; x++) { if (b.lies(x, oben + 4)[3]) { l = Math.min(l, x); r = Math.max(r, x); } }
+        if (r < 0) { continue; }
+        b.rechteck(l + 1, 0, r - l - 1, oben + 4, F.braun); b.rechteck(l + 1, oben + 3, r - l - 1, 1, F.holzdunkel); b.rechteck(l - 2, oben + 4, r - l + 5, 1, F.holz); b.rechteck(l + 3, 0, 2, 2, [160, 104, 56]);
+        const links = linkesteSpalte(b, x0, 36);
+        if (links !== null) { b.rechteck(links - 3, 36, 5, 7, F.braun); b.rechteck(links - 3, 36, 5, 1, F.holzhell); b.rechteck(links - 2, 34, 2, 2, F.weiss); b.setze(links - 2, 33, F.orange); for (let y = 24; y < 36; y++) { b.setze(links + Math.round((y - 24) * 0.4), y, F.holzdunkel); } }
+    }
+    return b;
+}

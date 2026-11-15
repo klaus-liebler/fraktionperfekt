@@ -33,11 +33,11 @@
 
     // Orte auf der Reisekarte (x/y in Prozent der Karte)
     const ORTE = {
-        buero: { name: 'Zukunftsschmiede', x: 52, y: 46 },
-        archiv: { name: 'Rathausarchiv', x: 48, y: 40 },
-        ems: { name: 'Ems-Ufer', x: 38, y: 56 },
-        baustelle: { name: 'Baustelle Badsanierung', x: 64, y: 64 },
-        schule: { name: 'Martin-Luther-Grundschule', x: 72, y: 34 }
+        buero: { name: 'Zukunftsschmiede', x: 51.8, y: 27.9 },
+        archiv: { name: 'Rathausarchiv', x: 47.2, y: 35 },
+        ems: { name: 'Ems-Ufer', x: 35.3, y: 29.9 },
+        baustelle: { name: 'Baustelle Badsanierung', x: 64.3, y: 82.1 },
+        schule: { name: 'Martin-Luther-Grundschule', x: 47.6, y: 24.2 }
     };
 
     const SIEGEL = ['siegel_legislative', 'siegel_exekutive', 'siegel_judikative'];
@@ -81,7 +81,7 @@
             einstieg: 'Die Zukunftsschmiede in der Marktstraße, Montagabend nach der Fraktionssitzung. Auf dem Tisch liegt ein Umschlag ohne Absender.',
             hotspots: [
                 {
-                    id: 'brief', name: 'Umschlag', x: 40, y: 58, b: 10, h: 7, form: 'brief',
+                    id: 'brief', name: 'Umschlag', x: 39.8, y: 58.3, b: 10.2, h: 8.3, form: 'brief',
                     sichtbar: (z) => !hat(z, 'brief'),
                     ansehen: () => antwort('Ein Umschlag, adressiert an „die Fraktion, die noch Briefe öffnet“.'),
                     benutzen: (z) => {
@@ -90,7 +90,7 @@
                     }
                 },
                 {
-                    id: 'fax', name: 'Faxgerät des Arbeitskreises Digitalisierung', x: 70, y: 46, b: 12, h: 12, form: 'fax',
+                    id: 'fax', name: 'Faxgerät des Arbeitskreises Digitalisierung', x: 68.8, y: 44.4, b: 14.8, h: 25, form: 'fax',
                     ansehen: () => antwort('Das Faxgerät des Arbeitskreises Digitalisierung. Es ist das modernste Gerät im Raum. Daneben ein Zettel: „WLAN-Passwort: siehe Fax“.'),
                     benutzen: (z) => {
                         if (hat(z, 'stadtplan') || z.flags.stadtplanWeg) { return antwort('Das Fax rattert zufrieden. Mehr kommt nicht.'); }
@@ -101,7 +101,7 @@
                     f1: (z) => antwort(istJoe(z) ? 'Joe dichtet den Papiereinzug ab. Das Fax ist jetzt wasserdicht. Und sonst nichts.' : 'Chani: „Ein Gerät dieser Epoche gehört eigentlich ins Museum.“')
                 },
                 {
-                    id: 'regal', name: 'Bücherregal', x: 12, y: 30, b: 12, h: 34, form: 'regal',
+                    id: 'regal', name: 'Bücherregal', x: 12.1, y: 27.8, b: 12.1, h: 41.7, form: 'regal',
                     ansehen: () => antwort('Gesammelte Haushaltspläne, drei Ausgaben der Geschäftsordnung und ein Ordner „Ideen 2015“ (leer).'),
                     benutzen: (z) => {
                         if (hat(z, 'geschaeftsordnung')) { return antwort('Der Ordner „Ideen 2015“ ist immer noch leer.'); }
@@ -111,7 +111,7 @@
                     f1: (z) => antwort(istJoe(z) ? 'Joe: „Die Fuge hinter dem Regal ist undicht. Später.“' : 'Chani deutet die Buchrücken: Die Haushaltspläne werden jedes Jahr dicker, die Ideen-Ordner dünner.')
                 },
                 {
-                    id: 'postfach', name: 'Postfach', x: 28, y: 42, b: 8, h: 10, form: 'kasten',
+                    id: 'postfach', name: 'Postfach', x: 27.3, y: 36.1, b: 9.4, h: 16.7, form: 'kasten',
                     ansehen: () => antwort('Das Postfach der Fraktion. Ganz unten liegt etwas.'),
                     benutzen: (z) => {
                         if (hat(z, 'tagesordnung') || z.flags.agGegruendet) { return antwort('Nur noch Werbung für Wahlplakat-Kabelbinder.'); }
@@ -120,7 +120,7 @@
                     }
                 },
                 {
-                    id: 'garderobe', name: 'Garderobe', x: 86, y: 30, b: 8, h: 34, form: 'garderobe',
+                    id: 'garderobe', name: 'Garderobe', x: 85.9, y: 25, b: 8.2, h: 44.4, form: 'garderobe',
                     ansehen: () => antwort('Joes Hut, Joes Lederjacke und eine Taschenlampe mit Werbeaufdruck.'),
                     benutzen: (z) => {
                         if (hat(z, 'taschenlampe')) { return antwort('Der Hut sitzt. Die Jacke knarzt. Alles bereit.'); }
@@ -129,7 +129,7 @@
                     }
                 },
                 {
-                    id: 'tuer', name: 'Tür zur Marktstraße', x: 52, y: 26, b: 10, h: 40, form: 'tuer',
+                    id: 'tuer', name: 'Tür zur Marktstraße', x: 51.6, y: 25, b: 10.9, h: 44.4, form: 'tuer',
                     ansehen: () => antwort('Die Ladentür zur Marktstraße.'),
                     benutzen: (z) => z.flags.briefGelesen ? antwort('Ab zur Karte.', { szene: 'karte' }) : antwort(`${name(z)}: „Erst mal den Umschlag lesen.“`)
                 }
@@ -142,7 +142,8 @@
             einstieg: 'Staub, Neonlicht, Regale bis zur Decke. Vor der Archivtür sitzt Genosse Christian von der SPD, ehrenamtlicher Archivpfleger.',
             hotspots: [
                 {
-                    id: 'christian', name: 'Genosse Christian (SPD)', x: 20, y: 40, b: 9, h: 30, form: 'person', farbe: '#c0392b',
+                    id: 'christian', name: 'Genosse Christian (SPD)', x: 53.9, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#c0392b',
+                    lage: (z) => (z.flags.archivOffen ? { x: 86, y: 48.6, b: 9.4, h: 45.8 } : null),
                     ansehen: () => antwort('Christian. Strickjacke, Thermoskanne, Schlüsselbund. Hält Ordnung für eine Tugend und Arbeitskreise für eine Lebensform.'),
                     reden: (z) => z.flags.agGegruendet
                         ? antwort('Christian: „Wenn ihr Hilfe braucht: Der Gewerkschaftsbus steht bereit. Solidarität hat einen Diesel.“')
@@ -158,13 +159,13 @@
                         : 'Chani startet eine Live-Story. Christian winkt und fragt, ob man das auch ausdrucken kann.')
                 },
                 {
-                    id: 'archivtuer', name: 'Archivtür', x: 44, y: 24, b: 12, h: 44, form: 'tuer',
+                    id: 'archivtuer', name: 'Archivtür', x: 63.7, y: 13.9, b: 27.3, h: 58.3, form: 'tuer',
                     sichtbar: (z) => !z.flags.archivOffen,
                     ansehen: () => antwort('Eine Stahltür. Schild: „Zutritt nur nach Beschluss“.'),
                     benutzen: () => antwort('Abgeschlossen. Christian hat den Schlüssel.')
                 },
                 {
-                    id: 'wappen', name: 'Gemälde „Der Rat von 1949“', x: 66, y: 18, b: 18, h: 22, form: 'bild',
+                    id: 'wappen', name: 'Gemälde „Der Rat von 1949“', x: 63.7, y: 13.9, b: 22.7, h: 29.2, form: 'bild',
                     sichtbar: (z) => z.flags.archivOffen,
                     ansehen: () => antwort('Ein Ölgemälde: der erste Rat nach dem Krieg, darüber das Stadtwappen. Unten eine verblasste Zeile.'),
                     f1: (z) => {
@@ -174,7 +175,7 @@
                     }
                 },
                 {
-                    id: 'protokolle', name: 'Regal mit Ratsprotokollen', x: 46, y: 30, b: 14, h: 38, form: 'regal',
+                    id: 'protokolle', name: 'Regal mit Ratsprotokollen', x: 45.3, y: 19.4, b: 15.6, h: 50, form: 'regal',
                     sichtbar: (z) => z.flags.archivOffen,
                     ansehen: () => antwort('Ratsprotokolle seit 1946, sauber nummeriert.'),
                     benutzen: (z) => {
@@ -185,7 +186,7 @@
                     }
                 },
                 {
-                    id: 'gegner', name: 'Hohlbein und Dröhn (AfD)', x: 78, y: 40, b: 14, h: 30, form: 'gegner',
+                    id: 'gegner', name: 'Hohlbein und Dröhn (AfD)', x: 11.7, y: 48.6, b: 17.2, h: 45.8, form: 'gegner',
                     sichtbar: (z) => z.flags.gegnerArchiv && !z.flags.gegnerArchivFest,
                     ansehen: () => antwort('Kreissprecher Hohlbein und Beisitzer Dröhn. Großes Auftreten, kleines Leseverständnis. Sie versperren den Ausgang.'),
                     reden: () => antwort(['Hohlbein: „Hier steht ‚Ausgang‘. Das heißt bestimmt ‚Ausland‘. Da gehen wir nicht hin.“', 'Dröhn: „Wir bleiben in der Tür stehen, bis die Altparteien den Gral rausrücken!“']),
@@ -201,8 +202,15 @@
                         : 'Chani geht live. Die beiden posieren und erklären zehn Minuten lang das Wort „Altparteien“. Sie stehen dabei aber weiter in der Tür.')
                 },
                 {
-                    id: 'ausgang', name: 'Ausgang', x: 90, y: 24, b: 8, h: 44, form: 'tuer',
-                    ansehen: () => antwort('Der Ausgang. Grünes Schild, Männchen läuft nach rechts.'),
+                    id: 'flurausgang', name: 'Tür zum Treppenhaus', x: 39.8, y: 16.7, b: 11.7, h: 55.6, form: 'tuer',
+                    sichtbar: (z) => !z.flags.archivOffen,
+                    ansehen: () => antwort('Die Tür zum Treppenhaus. Darüber hängt ein grünes Notausgangsschild.'),
+                    benutzen: () => antwort('Zur Karte.', { szene: 'karte' })
+                },
+                {
+                    id: 'ausgang', name: 'Ausgang', x: 0.8, y: 25, b: 10.2, h: 47.2, form: 'tuer',
+                    sichtbar: (z) => z.flags.archivOffen,
+                    ansehen: () => antwort('Die Tür zurück in den Flur.'),
                     benutzen: (z) => (z.flags.gegnerArchiv && !z.flags.gegnerArchivFest)
                         ? antwort('Hohlbein und Dröhn stehen breitbeinig im Ausgang.')
                         : antwort('Zur Karte.', { szene: 'karte' })
@@ -216,7 +224,7 @@
             einstieg: 'Die Ems glitzert. Am Steg liegt ein Ruderboot mit einem selbstgemalten Schild: „Volkseigentum“. Daneben Genossin Joanna von der Linken.',
             hotspots: [
                 {
-                    id: 'joanna', name: 'Genossin Joanna (Linke)', x: 18, y: 40, b: 9, h: 30, form: 'person', farbe: '#8e44ad',
+                    id: 'joanna', name: 'Genossin Joanna (Linke)', x: 12, y: 48.6, b: 9.4, h: 45, form: 'person', farbe: '#8e44ad',
                     ansehen: () => antwort('Joanna. Jutebeutel, Klemmbrett, Umverteilungsliste.'),
                     reden: (z) => {
                         if (hat(z, 'paddel') || z.flags.bootGewonnen) { return antwort('Joanna: „Viel Erfolg! Und wenn ihr den Gral findet: Der gehört allen.“'); }
@@ -236,7 +244,7 @@
                         : 'Chani macht eine Story über das Volkseigentum-Boot. 2000 Aufrufe in drei Minuten.')
                 },
                 {
-                    id: 'bruecke', name: 'Inschrift an der alten Brücke', x: 60, y: 22, b: 22, h: 12, form: 'inschrift',
+                    id: 'bruecke', name: 'Inschrift an der alten Brücke', x: 65, y: 18, b: 17, h: 7, form: 'inschrift',
                     ansehen: () => antwort('In den Brückenpfeiler ist etwas gemeißelt, halb von Moos bedeckt.'),
                     f1: (z) => {
                         if (istJoe(z)) { return antwort('Joe: „Die Fuge im Pfeiler ist seit 1949 nicht nachgearbeitet. Unglaublich.“'); }
@@ -245,7 +253,7 @@
                     }
                 },
                 {
-                    id: 'boot', name: 'Ruderboot „Volkseigentum“', x: 40, y: 64, b: 18, h: 10, form: 'boot',
+                    id: 'boot', name: 'Ruderboot „Volkseigentum“', x: 56.25, y: 69.4, b: 18, h: 9.7, form: 'boot',
                     sichtbar: (z) => !z.flags.bootGewonnen,
                     ansehen: () => antwort('Ein Ruderboot. Flussabwärts tuckert ein Motorboot – Hohlbein und Dröhn haben sich wohl losgeschnitten.'),
                     benutzen: (z) => hat(z, 'paddel')
@@ -253,7 +261,7 @@
                         : antwort('Ohne Paddel wird das eine sehr langsame Verfolgungsjagd.')
                 },
                 {
-                    id: 'pfaehle', name: 'Sieben Pfähle im Wasser', x: 72, y: 56, b: 20, h: 14, form: 'pfaehle',
+                    id: 'pfaehle', name: 'Sieben Pfähle im Wasser', x: 72.7, y: 56, b: 19.5, h: 14, form: 'pfaehle',
                     sichtbar: (z) => z.flags.bootGewonnen,
                     ansehen: () => antwort('Sieben alte Holzpfähle ragen aus dem Wasser.'),
                     benutzen: (z) => {
@@ -264,7 +272,7 @@
                     }
                 },
                 {
-                    id: 'zurkarte', name: 'Weg zur Straße', x: 90, y: 30, b: 8, h: 30, form: 'pfeil',
+                    id: 'zurkarte', name: 'Weg zur Straße', x: 90.6, y: 59.7, b: 9.4, h: 18, form: 'pfeil',
                     benutzen: () => antwort('Zur Karte.', { szene: 'karte' })
                 }
             ]
@@ -276,7 +284,7 @@
             einstieg: 'Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Hohlbein und Dröhn schrauben Wegweiser ab.',
             hotspots: [
                 {
-                    id: 'bauleiter', name: 'Bauleiterin Frau Kemper', x: 14, y: 40, b: 9, h: 30, form: 'person', farbe: '#f39c12',
+                    id: 'bauleiter', name: 'Bauleiterin Frau Kemper', x: 11.7, y: 48.6, b: 9.4, h: 45, form: 'person', farbe: '#f39c12',
                     ansehen: () => antwort('Frau Kemper, Bauleiterin. Helm, Klemmbrett, wenig Zeit.'),
                     reden: (z) => z.flags.helme ? antwort('Kemper: „Helme auf, dann dürft ihr runter. Und nichts anfassen, was teuer aussieht.“') : antwort('Kemper: „Ohne Helm kommt hier keiner in die Grube. Und Helme hab ich nur für Kunden.“'),
                     f2: (z) => {
@@ -286,7 +294,7 @@
                     }
                 },
                 {
-                    id: 'leitung', name: 'Leckende Leitung', x: 46, y: 52, b: 10, h: 8, form: 'rohr',
+                    id: 'leitung', name: 'Leckende Leitung', x: 43.75, y: 53.5, b: 15, h: 9, form: 'rohr',
                     sichtbar: (z) => !z.flags.grubeTrocken,
                     ansehen: () => antwort('Aus einer alten Leitung sprudelt Wasser in die Grube.'),
                     f1: (z) => {
@@ -296,7 +304,7 @@
                     }
                 },
                 {
-                    id: 'grube', name: 'Baugrube', x: 40, y: 62, b: 22, h: 14, form: 'grube',
+                    id: 'grube', name: 'Baugrube', x: 39, y: 61, b: 23.4, h: 15.3, form: 'grube',
                     ansehen: (z) => antwort(z.flags.grubeTrocken ? 'Die Grube ist trocken. Unten liegt etwas Metallisches.' : 'Die Grube steht unter Wasser. Unten glänzt etwas.'),
                     benutzen: (z) => {
                         if (hat(z, 'siegel_judikative')) { return antwort('In der Grube liegt jetzt nur noch ein vergessener Zollstock.'); }
@@ -307,7 +315,7 @@
                     }
                 },
                 {
-                    id: 'gegner', name: 'Hohlbein und Dröhn (AfD)', x: 70, y: 40, b: 14, h: 30, form: 'gegner',
+                    id: 'gegner', name: 'Hohlbein und Dröhn (AfD)', x: 68.75, y: 48.6, b: 17, h: 45, form: 'gegner',
                     sichtbar: (z) => !z.flags.gegnerBaustelleWeg,
                     ansehen: () => antwort('Hohlbein und Dröhn schrauben Wegweiser ab und stapeln sie vor dem Ausgang.'),
                     reden: () => antwort(['Dröhn: „Der Wegweiser nach Münster muss weg. Der zeigt ins Ausland!“', 'Hohlbein: „Wir remigrieren alle Schilder. Auch das hier: ‚Nordwalde‘. Klingt schon so nordisch, der darf bleiben.“']),
@@ -321,7 +329,7 @@
                     }
                 },
                 {
-                    id: 'zurkarte', name: 'Bauzaun-Tor', x: 88, y: 30, b: 9, h: 34, form: 'pfeil',
+                    id: 'zurkarte', name: 'Bauzaun-Tor', x: 88.3, y: 40.3, b: 8.6, h: 32, form: 'pfeil',
                     benutzen: (z) => {
                         if (!z.flags.gegnerBaustelleWeg) { return antwort('Vor dem Tor liegt ein Stapel abgeschraubter Wegweiser. Hohlbein bewacht ihn.'); }
                         if (hat(z, 'siegel_judikative')) { ortFrei(z, 'schule'); }
@@ -337,7 +345,7 @@
             einstieg: 'Ein leerer Schulhof. Am Kellerabgang flattert Absperrband. Davor: Lore von den Grünen, mit Lastenrad und Gutachten.',
             hotspots: [
                 {
-                    id: 'lore', name: 'Lore (Grüne)', x: 22, y: 40, b: 9, h: 30, form: 'person', farbe: '#27ae60',
+                    id: 'lore', name: 'Lore (Grüne)', x: 19.5, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#27ae60',
                     ansehen: () => antwort('Lore. Fahrradhelm, Lastenrad, ein Gutachten unter dem Arm, dick wie ein Haushaltsplan.'),
                     reden: (z) => {
                         if (z.flags.abend && !z.flags.lastenrad) {
@@ -352,7 +360,7 @@
                         : 'Chani macht eine Story über Zwergfledermäuse. Lore ist begeistert und teilt sie sofort.')
                 },
                 {
-                    id: 'uhr', name: 'Schulhofuhr', x: 60, y: 14, b: 10, h: 16, form: 'uhr',
+                    id: 'uhr', name: 'Schulhofuhr', x: 60.9, y: 15.3, b: 8.6, h: 15.3, form: 'uhr',
                     ansehen: (z) => antwort(z.flags.abend ? 'Die Uhr zeigt 20:35.' : 'Die Uhr zeigt 18:10.'),
                     benutzen: (z) => {
                         if (z.flags.abend) { return antwort('Es ist schon Abend.'); }
@@ -361,7 +369,7 @@
                     }
                 },
                 {
-                    id: 'kellergang', name: 'Kellergang', x: 70, y: 36, b: 12, h: 34, form: 'tuer',
+                    id: 'kellergang', name: 'Kellergang', x: 68.75, y: 34, b: 14.8, h: 38, form: 'tuer',
                     ansehen: () => antwort('Ein Kellerabgang mit Absperrband. Dahinter: Dunkelheit.'),
                     benutzen: (z) => {
                         if (!z.flags.abend) { return antwort('Lore hebt das Gutachten: „Seite 212!“'); }
@@ -370,7 +378,7 @@
                     }
                 },
                 {
-                    id: 'zurkarte', name: 'Schultor', x: 4, y: 30, b: 8, h: 34, form: 'pfeil',
+                    id: 'zurkarte', name: 'Schultor', x: 1.6, y: 41.7, b: 10.5, h: 30.6, form: 'pfeil',
                     benutzen: () => antwort('Zur Karte.', { szene: 'karte' })
                 }
             ]
@@ -382,7 +390,7 @@
             einstieg: 'Ein Gewölbe aus Backstein. An der Wand ein Fresko, darunter ein Schloss mit drei drehbaren Symbolen, daneben ein Tor mit drei Vertiefungen.',
             hotspots: [
                 {
-                    id: 'fresko', name: 'Wandfresko', x: 10, y: 14, b: 26, h: 30, form: 'bild',
+                    id: 'fresko', name: 'Wandfresko', x: 9.4, y: 12.5, b: 28, h: 33, form: 'bild',
                     ansehen: () => antwort('Ein Fresko mit drei Bildern übereinander. Sehr verblasst.'),
                     f1: (z) => {
                         if (istJoe(z)) { return antwort('Joe: „Kalkputz. Wer da Silikon drauf macht, hat nichts verstanden.“'); }
@@ -391,7 +399,7 @@
                     }
                 },
                 {
-                    id: 'schloss', name: 'Symbolschloss', x: 44, y: 40, b: 12, h: 14, form: 'schloss',
+                    id: 'schloss', name: 'Symbolschloss', x: 43.75, y: 38.9, b: 13.3, h: 16.7, form: 'schloss',
                     sichtbar: (z) => !hat(z, 'tempelschluessel') && !z.flags.tempelOffen,
                     ansehen: () => antwort('Drei Drehscheiben mit Symbolen: Waage, Buch, Urne.'),
                     benutzen: (z) => {
@@ -400,7 +408,7 @@
                     }
                 },
                 {
-                    id: 'tor', name: 'Tor mit drei Vertiefungen', x: 70, y: 18, b: 18, h: 50, form: 'tor',
+                    id: 'tor', name: 'Tor mit drei Vertiefungen', x: 68.4, y: 15.3, b: 21, h: 57, form: 'tor',
                     ansehen: () => antwort('Ein steinernes Tor. Drei runde Vertiefungen – genau so groß wie die Siegel. Und ein Schlüsselloch.'),
                     benutzen: (z) => {
                         const fehlend = SIEGEL.filter((s) => !hat(z, s));
@@ -411,7 +419,7 @@
                     }
                 },
                 {
-                    id: 'zurueck', name: 'Treppe nach oben', x: 2, y: 56, b: 8, h: 20, form: 'pfeil',
+                    id: 'zurueck', name: 'Treppe nach oben', x: 0, y: 55.6, b: 10, h: 21, form: 'pfeil',
                     benutzen: () => antwort('Zurück auf den Schulhof.', { szene: 'schule' })
                 }
             ]
@@ -423,7 +431,7 @@
             einstieg: 'Eine Halle aus Sandstein, Säulen, Fackeln. Vor euch ein Fallgitter, zwei Bodenplatten und eine Inschrift.',
             hotspots: [
                 {
-                    id: 'inschrift', name: 'Inschrift über dem Fallgitter', x: 34, y: 8, b: 30, h: 8, form: 'inschrift',
+                    id: 'inschrift', name: 'Inschrift über dem Fallgitter', x: 33.2, y: 6.9, b: 32, h: 11.1, form: 'inschrift',
                     sichtbar: (z) => !z.flags.gitterOffen,
                     ansehen: () => antwort('„FRAKTIONSZWANG“ steht über dem Gitter. Darunter kleiner Text.'),
                     f1: (z) => antwort(istJoe(z)
@@ -431,36 +439,36 @@
                         : ['Chani liest: „Wer im Gleichschritt kommt, bleibt draußen. Das Gewissen öffnet das Tor.“', '„Wir müssen auf verschiedenen Platten stehen – jede für sich.“'])
                 },
                 {
-                    id: 'platte_links', name: 'Linke Bodenplatte', x: 22, y: 72, b: 14, h: 6, form: 'platte',
+                    id: 'platte_links', name: 'Linke Bodenplatte', x: 21.9, y: 72.2, b: 14, h: 6.25, form: 'platte',
                     sichtbar: (z) => !z.flags.gitterOffen,
                     benutzen: (z) => platteBetreten(z, 'links')
                 },
                 {
-                    id: 'platte_rechts', name: 'Rechte Bodenplatte', x: 62, y: 72, b: 14, h: 6, form: 'platte',
+                    id: 'platte_rechts', name: 'Rechte Bodenplatte', x: 62.1, y: 72.2, b: 14, h: 6.25, form: 'platte',
                     sichtbar: (z) => !z.flags.gitterOffen,
                     benutzen: (z) => platteBetreten(z, 'rechts')
                 },
                 {
-                    id: 'gitter', name: 'Fallgitter', x: 40, y: 18, b: 18, h: 52, form: 'gitter',
+                    id: 'gitter', name: 'Fallgitter', x: 38.3, y: 18, b: 21.9, h: 54, form: 'gitter',
                     sichtbar: (z) => !z.flags.gitterOffen,
                     ansehen: () => antwort('Ein schweres Fallgitter. Es bewegt sich nur, wenn jemand nicht mitmarschiert.'),
                     benutzen: () => antwort('Rütteln hilft nicht. Das Gitter hat Fraktionsdisziplin.'),
                     f1: (z) => antwort(istJoe(z) ? 'Joe: „Ein Gitter abdichten? Wozu?“' : 'Chani: „Neogotisch. Und sehr symbolisch.“')
                 },
                 {
-                    id: 'tafel', name: 'Tafel der Geschäftsordnung', x: 20, y: 24, b: 14, h: 28, form: 'tafel',
+                    id: 'tafel', name: 'Tafel der Geschäftsordnung', x: 19.1, y: 22.9, b: 15.6, h: 30.6, form: 'tafel',
                     sichtbar: (z) => z.flags.gitterOffen && !z.flags.goGeloest,
                     ansehen: () => antwort('Eine Steintafel mit Fragen zur Geschäftsordnung. Wer alle richtig beantwortet, darf weiter.'),
                     benutzen: (z) => { z.quiz = 0; return antwort('Die Tafel leuchtet auf.', { dialog: 'quiz' }); }
                 },
                 {
-                    id: 'abgrund', name: 'Abgrund', x: 46, y: 50, b: 26, h: 18, form: 'abgrund',
+                    id: 'abgrund', name: 'Abgrund', x: 40.6, y: 72.2, b: 37.5, h: 27.8, form: 'abgrund',
                     sichtbar: (z) => z.flags.goGeloest && !z.flags.brueckeDa,
                     ansehen: () => antwort('Ein Abgrund. Auf der anderen Seite ein Pult mit der Aufschrift: „Die Brücke erscheint für den Antrag, der allen anderen vorgeht.“'),
                     benutzen: () => antwort('Ihr tretet ans Pult. Welchen Antrag stellt ihr?', { dialog: 'bruecke' })
                 },
                 {
-                    id: 'gang', name: 'Langer abschüssiger Gang', x: 76, y: 30, b: 14, h: 40, form: 'tuer',
+                    id: 'gang', name: 'Langer abschüssiger Gang', x: 75.4, y: 27.8, b: 15.6, h: 44.4, form: 'tuer',
                     sichtbar: (z) => z.flags.brueckeDa && !z.flags.kugelGeschafft,
                     ansehen: () => antwort('Ein langer Gang, leicht abschüssig. Am oberen Ende: eine riesige steinerne Wahlkugel. Sie wackelt.'),
                     benutzen: (z) => antwort(['Ein Knirschen. Die Wahlkugel löst sich und rollt los!', z.flags.lastenrad
@@ -468,7 +476,7 @@
                         : '(Rennen! Tippen oder Leertaste/→ für Tempo.)'], { minispiel: 'kugel' })
                 },
                 {
-                    id: 'pokal', name: 'Goldener Pokal auf einem Podest', x: 30, y: 36, b: 10, h: 18, form: 'pokal',
+                    id: 'pokal', name: 'Goldener Pokal auf einem Podest', x: 29.3, y: 36.1, b: 11.7, h: 36, form: 'pokal',
                     sichtbar: (z) => z.flags.kugelGeschafft && !z.ende,
                     ansehen: () => antwort('Ein goldener Pokal, mit Edelsteinen. Hohlbein und Dröhn stürzen aus einem Seitengang darauf zu: „Der Gral! Unserer!“'),
                     benutzen: () => antwort('Hohlbein reißt euch den Pokal aus der Hand. „Aus Gold! Wie früher!“ Auf der Unterseite steht: „Bezirksmeister Kegeln 1987“.'),
@@ -477,7 +485,7 @@
                         : 'Chani: „Pressgold, Fabrikware, um 1987. Das ist nicht der Gral. Der Gral ist das unscheinbare Ding daneben.“')
                 },
                 {
-                    id: 'urne', name: 'Schlichte Holzkiste', x: 60, y: 44, b: 10, h: 14, form: 'urne',
+                    id: 'urne', name: 'Schlichte Holzkiste', x: 58.6, y: 44.4, b: 13.3, h: 27.8, form: 'urne',
                     sichtbar: (z) => z.flags.kugelGeschafft && !z.ende,
                     ansehen: () => antwort('Eine schlichte Holzkiste mit einem Schlitz im Deckel. An einer Schnur hängt ein Bleistift.'),
                     f1: (z) => antwort(istJoe(z)
