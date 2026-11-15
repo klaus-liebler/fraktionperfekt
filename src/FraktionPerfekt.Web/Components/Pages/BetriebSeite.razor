@@ -1,0 +1,109 @@
+@page "/betrieb"
+@using FraktionPerfekt.Application.Betrieb
+@using FraktionPerfekt.Application.Gemeinsam
+@inject Vorgang Vorgang
+
+<PageTitle>Betrieb · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Betrieb und Sicherung</h1>
+        <p class="fp-sub">Tägliche SQLite-Online-Sicherung (01:30 Uhr) mit SHA-256 und automatischem Wiederherstellungstest. Ablauf im Notfall: docs/betrieb.md.</p>
+    </div>
+    <div class="fp-row">
+        <BegruendeterButton Text="Jetzt sichern" Icon="backup" Freigabe="@Rechte.BetriebSteuern(benutzer?.Rolle)" Click="SichernAsync" IsBusy="laeuft" />
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (Rechte.BetriebSteuern(benutzer?.Rolle) is { Erlaubt: false } nein)
+{
+    <div class="fp-alert fp-warn">@nein.Begruendung</div>
+}
+else
+{
+    <section class="fp-card fp-tbl">
+        @if (sicherungen.Count == 0)
+        {
+            <p class="fp-muted">Noch keine Sicherung vorhanden.</p>
+        }
+        else
+        {
+            <table>
+                <thead><tr><th>Zeitpunkt</th><th>Datei</th><th>Größe</th><th>Wiederherstellungstest</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var s in sicherungen)
+                    {
+                        <tr>
+                            <td>@Ortszeit.AlsOrtszeit(s.Am).ToString("dd.MM.yyyy HH:mm")</td>
+                            <td class="fp-mono" title="SHA-256 @s.Sha256">@s.Datei</td>
+                            <td>@(s.Bytes / 1024) KB</td>
+                            <td>
+                                @if (s.Wiederherstellbar == true)
+                                {
+                                    <StatusPille Stil="gut">ok</StatusPille>
+                                }
+                                else
+                                {
+                                    <StatusPille Stil="krit">nicht ok</StatusPille>
+                                }
+                                <span class="fp-small fp-muted">@s.Pruefergebnis</span>
+                            </td>
+                            <td><RadzenButton Text="Erneut prüfen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => PruefenAsync(s.Datei))" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+}
+
+@code {
+    private Benutzer? benutzer;
+    private IReadOnlyList<Sicherungseintrag> sicherungen = [];
+    private string? meldung;
+    private bool fehler;
+    private bool laeuft;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        if (Rechte.BetriebSteuern(benutzer?.Rolle).Erlaubt)
+        {
+            sicherungen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<ISicherung>().ListeAsync());
+        }
+    }
+
+    private async Task SichernAsync()
+    {
+        laeuft = true;
+        try
+        {
+            var e = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<ISicherung>().SichernAsync());
+            (meldung, fehler) = ($"Gesichert: {e.Datei}. Wiederherstellungstest: {e.Pruefergebnis}", e.Wiederherstellbar != true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        laeuft = false;
+        await LadenAsync();
+    }
+
+    private async Task PruefenAsync(string datei)
+    {
+        var e = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<ISicherung>().PruefenAsync(datei));
+        (meldung, fehler) = ($"{e.Datei}: {e.Pruefergebnis}", e.Wiederherstellbar != true);
+        await LadenAsync();
+    }
+}

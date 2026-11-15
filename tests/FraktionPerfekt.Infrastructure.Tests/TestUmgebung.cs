@@ -52,6 +52,7 @@ internal sealed class TestUmgebung : IAsyncDisposable
             .Build();
         var dienste = new ServiceCollection()
             .AddLogging(l => l.SetMinimumLevel(LogLevel.Warning))
+            .AddSingleton<IConfiguration>(konfiguration)
             // Die Uhr läuft bei jedem Abruf ein wenig weiter – wie im Betrieb (deckt veraltete Stichtage auf).
             .AddSingleton<TimeProvider>(new FakeTimeProvider(new DateTimeOffset(2026, 11, 15, 8, 0, 0, TimeSpan.Zero)) { AutoAdvanceAmount = TimeSpan.FromMilliseconds(5) })
             .AddSingleton<IAktuellerBenutzer, TestBenutzer>()

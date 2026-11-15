@@ -9,6 +9,19 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "lan": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7290",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Lan__Aktiv": "true",
+        "Lan__Port": "7290",
+        "ConnectionStrings__FraktionPerfekt": "Data Source=data/fraktionperfekt-lan.db",
+        "Speicher__Logs": "logs/lan"
+      }
     }
   }
 }

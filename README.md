@@ -9,6 +9,10 @@ Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
 | Dokument | Link |
 |---|---|
 | Konzept | https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb |
+| Abnahme (Klick-Drehbuch) | [`docs/abnahme-1.md`](docs/abnahme-1.md) |
+| Betrieb, Sicherung, Wiederherstellung | [`docs/betrieb.md`](docs/betrieb.md) |
+| Sicherheit (OWASP-Checkliste) | [`docs/sicherheit.md`](docs/sicherheit.md) |
+| Handy-Test im LAN (HTTPS) | [`docs/handy-test.md`](docs/handy-test.md) |
 
 ## Voraussetzungen
 
@@ -95,6 +99,18 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
 - **Protokoll nur mit Pseudonymen:** „Person #ABCD1234“ statt Namen; Abwesenheitsgründe erscheinen nie in Protokoll oder
   Nachrichten und sind nur für die Person selbst und die Administration sichtbar.
 - **Eindeutige Sortierung** bei begrenzten Abfragen (siehe oben).
+
+## Aus VibeVHS übernommen (Betrieb und Sicherheit)
+
+- **Sicherheitsheader** mit strenger CSP (Skripte nur eigene Dateien plus Hash der Import-Map), `no-store` für Seiten mit
+  Personendaten, **Rate-Limits** auf Anmeldung und Kalender-Abo (`docs/sicherheit.md`).
+- **Tägliche Sicherung** (SQLite-Online-Backup) mit SHA-256 und automatischem **Wiederherstellungstest**, Seite
+  `/betrieb` (Administration), Notfallablauf in `docs/betrieb.md`.
+- **LAN-Profil** mit selbst erzeugtem Zertifikat für den Handy-Test über HTTPS (`docs/handy-test.md`).
+- **Abnahme-Drehbuch** mit Think-aloud, Richtzeiten und Nachgespräch (`docs/abnahme-1.md`).
+- Bewusst nicht übernommen, weil für eine Fraktion mit 10 bis 40 Personen unnötig: virtuelle Listen mit Keyset-Nachladen
+  und FTS5-Suche, Webshop-API mit Proof-of-Work. Das Muster „Anmeldelink per Mail“ (15 Minuten, einmalig, Bestätigung
+  per POST) ist für die echte Anmeldung vorgemerkt.
 
 ## Iteration 1: was es gibt
 

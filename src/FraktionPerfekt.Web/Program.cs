@@ -50,6 +50,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BenutzerKontext>();
 builder.Services.AddScoped<IAktuellerBenutzer, AktuellerBenutzer>();
 builder.Services.AddScoped<Vorgang>();
+builder.Services.AddRateLimits(builder.Configuration);
+
+// Handy-Test im lokalen Netz (Profil "lan"): HTTPS auf allen Schnittstellen, öffentliche Adresse = LAN-IP.
+FraktionPerfekt.Web.LanBetrieb.Einrichten(builder);
 
 builder.Services
     .AddFraktionAnwendung(builder.Configuration)
@@ -82,6 +86,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseSicherheitsheader();
+app.UseRateLimiter();
 app.UseSerilogRequestLogging();
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseRequestLocalization("de-DE");

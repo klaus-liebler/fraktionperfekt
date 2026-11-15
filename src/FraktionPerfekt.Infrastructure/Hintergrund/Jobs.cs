@@ -38,6 +38,19 @@ internal sealed class VertretungsfristenJob(VertretungDienst vertretung, ILogger
     }
 }
 
+/// <summary>Tägliche Datensicherung mit Wiederherstellungstest.</summary>
+[DisallowConcurrentExecution]
+internal sealed class SicherungJob(Application.Betrieb.ISicherung sicherung, ILogger<SicherungJob> log) : IJob
+{
+    public static readonly JobKey Schluessel = new("sicherung", "automatik");
+
+    public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken)
+    {
+        var e = await sicherung.SichernAsync(cancellationToken);
+        log.LogInformation("Sicherung {Datei}: {Ergebnis}", e.Datei, e.Pruefergebnis);
+    }
+}
+
 /// <summary>Nächtlicher Abgleich mit dem Ratsinformationssystem.</summary>
 [DisallowConcurrentExecution]
 internal sealed class RisAbgleichJob(RisAbgleich abgleich, ILogger<RisAbgleichJob> log) : IJob

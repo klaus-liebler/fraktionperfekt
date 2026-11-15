@@ -311,6 +311,16 @@ public sealed class VertretungDienst(
         await protokoll.ProtokollierenAsync("Vertretung.ManuellBesetzt", $"Vertretung von Hand mit {Pseudonym.Person(vertreterId)} besetzt",
             nameof(Vertretungsfall), fall.Id, abbruch: abbruch);
         await SchrittVerarbeitenAsync(fall, termin, schritt, abbruch);
+        if (await stammdaten.PersonAsync(vertreterId, abbruch) is { } vertreter)
+        {
+            var gremium = await stammdaten.GremiumAsync(fall.GremiumId, abbruch);
+            await postausgang.BenachrichtigenAsync(vertreter, $"Du vertrittst: {gremium?.Kurzname ?? "Sitzung"} am {termin.Beginn:dd.MM.}",
+                $"Der Vorstand hat dich für den {termin.Beginn:dd.MM.} um {termin.Beginn:HH:mm} Uhr als Vertretung eingetragen.",
+                $"Hallo {vertreter.Vorname},\n\nwie besprochen hat der Vorstand dich als Vertretung in der Sitzung „{termin.Titel}“ am "
+                + $"{termin.Beginn:dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr ({termin.Ort ?? "Ort folgt"}) eingetragen. Der Termin steht in deinem Kalender.",
+                $"termine/{termin.Id}", abbruch: abbruch);
+        }
+
         await speicher.SpeichernAsync(abbruch);
     }
 

@@ -72,6 +72,8 @@ public sealed class VertretungAblaufTests
         var melanie = await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonNachKennungAsync("mkock"));
         await u.InAsync(d => d.GetRequiredService<VertretungDienst>().ManuellBesetzenAsync(fall.Id, melanie!.Id));
         (await u.InAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync())).ShouldBeEmpty();
+        (await u.InAsync(d => d.GetRequiredService<INachrichtenSpeicher>().NeuesteAsync(100)))
+            .ShouldContain(n => n.PersonId == melanie!.Id && n.Kanal == Kanal.Push && n.Betreff.StartsWith("Du vertrittst", StringComparison.Ordinal));
         (await u.InAsync(d => d.GetRequiredService<ITerminSpeicher>().TeilnahmeAsync(hfa.Id, melanie!.Id)))!.Status.ShouldBe(Teilnahmestatus.Vertritt);
 
         // Protokoll: nur Pseudonyme, kein Klarname, kein Abwesenheitsgrund.

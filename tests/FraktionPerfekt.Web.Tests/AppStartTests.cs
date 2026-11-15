@@ -102,6 +102,12 @@ public sealed partial class AppStartTests : IAsyncLifetime
         (await http.GetAsync("kalender/abo/falsch.ics", abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await http.GetAsync("manifest.webmanifest", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
 
+        // Sicherheitsheader (CSP mit Hash der Import-Map, kein Framing) und no-store auf dem Kalender-Abo.
+        var kopf = await http.GetAsync("anmelden", abbruch);
+        kopf.Headers.GetValues("Content-Security-Policy").Single().ShouldContain("script-src 'self' 'sha256-");
+        kopf.Headers.GetValues("X-Frame-Options").Single().ShouldBe("DENY");
+        (await http.GetAsync("kalender/abo/falsch.ics", abbruch)).Headers.CacheControl!.NoStore.ShouldBeTrue();
+
         // Testanmeldung als Anna Wewers (Demodaten: für den HFA als Vertretung gefragt).
         var anmelden = await http.GetStringAsync("anmelden", abbruch);
         anmelden.ShouldContain("CDU-Fraktion Greven");

@@ -16,6 +16,9 @@ public static class Rechte
     /// <summary>Eskalierte Vertretungen bearbeiten und Aufgaben des Vorstands erledigen.</summary>
     public static Freigabe VertretungenSteuern(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Vorstand, Rolle.Administration);
 
+    /// <summary>Datensicherung auslösen, prüfen und einsehen.</summary>
+    public static Freigabe BetriebSteuern(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Administration);
+
     /// <summary>Postausgang und Protokoll einsehen.</summary>
     public static Freigabe VerwaltungEinsehen(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Administration, Rolle.Vorstand);
 

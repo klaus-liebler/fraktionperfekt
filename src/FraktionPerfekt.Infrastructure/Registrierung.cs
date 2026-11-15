@@ -32,6 +32,7 @@ public static class Registrierung
         dienste.AddScoped<IVertretungSpeicher>(d => d.GetRequiredService<FraktionSpeicher>());
         dienste.AddScoped<INachrichtenSpeicher, NachrichtenSpeicher>();
         dienste.AddScoped<IAuditProtokoll, AuditProtokoll>();
+        dienste.AddScoped<Application.Betrieb.ISicherung, Betrieb.SqliteSicherung>();
 
         if (!hintergrundjobs)
         {
@@ -51,6 +52,13 @@ public static class Registrierung
 
             q.AddJob<RisAbgleichJob>(j => j.WithIdentity(RisAbgleichJob.Schluessel));
             q.AddTrigger(t => t.ForJob(RisAbgleichJob.Schluessel).WithIdentity("ris-nachts", "automatik").WithCronSchedule("0 30 2 * * ?"));
+
+            if (konfiguration.GetValue("Sicherung:Aktiv", true))
+            {
+                q.AddJob<SicherungJob>(j => j.WithIdentity(SicherungJob.Schluessel));
+                q.AddTrigger(t => t.ForJob(SicherungJob.Schluessel).WithIdentity("sicherung-nachts", "automatik")
+                    .WithCronSchedule(konfiguration["Sicherung:Zeitplan"] ?? "0 30 1 * * ?"));
+            }
         });
         dienste.AddQuartzHostedService(o => o.WaitForJobsToComplete = true);
         return dienste;
