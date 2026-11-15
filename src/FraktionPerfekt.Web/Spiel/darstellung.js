@@ -96,6 +96,11 @@
                 figuren.push({ y: fy, name: n, x: r.x + r.b / 2, zustand: redet ? 'reden' : 'stehen', blick: r.x + r.b / 2 > held.joe.x ? -1 : 1 });
             }
         }
+        if (z.szene === 'tempel' && z.flags.kugelGeschafft) {
+            const wackel = Math.floor(zeit * 3) % 2;
+            figuren.push({ y: 186, name: 'hohlbein', x: 112, zustand: z.ende ? 'benutzen' : 'reden', blick: 1 });
+            figuren.push({ y: 184 - wackel, name: 'droehn', x: z.ende ? 178 : 148, zustand: z.ende ? 'benutzen' : 'stehen', blick: 1 });
+        }
         for (const n of ['joe', 'chani']) {
             const hh = held[n];
             const geht = Math.abs(hh.ziel - hh.x) > 0.5;
@@ -165,7 +170,7 @@
                 if (hs) { const r = SZ.R(hs); textMitSchatten(hs.name, (r.x + r.b / 2) * SKALA, Math.max(28, r.y * SKALA - 8), 20, '#ffe08a', 'center'); }
             }
         }
-        if (z.ende) { g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(0, 0, B * SKALA, H * SKALA); textMitSchatten('ENDE', B * SKALA / 2, H * SKALA / 2, 96, '#ffd54f', 'center'); textMitSchatten(`${z.punkte} Punkte · ${Math.round(z.sekunden / 60)} Minuten`, B * SKALA / 2, H * SKALA / 2 + 54, 30, '#fff', 'center'); }
+        if (z.ende && textbox.hidden) { g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(0, 0, B * SKALA, H * SKALA); textMitSchatten('ENDE', B * SKALA / 2, H * SKALA / 2, 96, '#ffd54f', 'center'); textMitSchatten(`${z.punkte} Punkte · ${Math.round(z.sekunden / 60)} Minuten`, B * SKALA / 2, H * SKALA / 2 + 54, 30, '#fff', 'center'); }
         if (blende) {
             const p = blende.t < 0.5 ? 1 - blende.t * 2 : (blende.t - 0.5) * 2;
             const r = Math.max(0, p) * Math.hypot(B, H) * SKALA / 2;
@@ -217,7 +222,7 @@
         const a = held[z.figur], b = held[z.figur === 'joe' ? 'chani' : 'joe'];
         a.ziel = Math.max(14, Math.min(B - 14, x));
         const seite = a.ziel > b.x ? -1 : 1;
-        b.ziel = Math.max(14, Math.min(B - 14, a.ziel + seite * 20));
+        b.ziel = Math.max(14, Math.min(B - 14, a.ziel + seite * 24));
         laufAuftrag = danachTun || null;
     }
 

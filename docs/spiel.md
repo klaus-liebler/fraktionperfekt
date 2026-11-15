@@ -13,11 +13,28 @@ als Karikatur-Typen. Spielzeit etwa 20–40 Minuten.
   `src/FraktionPerfekt.Web/Spiel/` und werden nur über den geschützten Endpunkt ausgeliefert.
 - Nach dem Aktualisieren des Codes die laufende Anwendung **neu starten**.
 
+## Grafik (ab Iteration 10)
+
+Look der Point-and-Click-Adventures der frühen 90er, aber komplett eigene Gestaltung: interne Auflösung 320×200,
+ganzzahlig hochskaliert, feste Palette, Verläufe und Licht per geordnetem Dithering, alles im Code erzeugt
+(`pixel.js` Palette und Pixelpuffer, `figuren.js` Figuren, Porträts und Icons, `szenen.js` Hintergründe, Animationen,
+Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen nicht im Repository.
+
+- Figuren ca. 58 px mit Laufanimation (6 Bilder, links/rechts), Stehen mit Blinzeln, Reden, Benutzen.
+- Porträts 96×96 im Textfeld mit Mimik (neutral, lacht, erschrocken).
+- Szenen mit Animationen: blinkendes Fax, Staub im Archiv, Wasser und Enten auf der Ems, tropfendes Leck, Fledermäuse,
+  flackernde Fackeln; leichte Parallaxe; Irisblende beim Szenenwechsel; Reisekarte mit roter Reiselinie.
+- Screenshots aller Szenen: [`docs/spiel-screenshots/`](spiel-screenshots/).
+
 ## Bedienung
 
-- **Maus/Touch:** Dinge in der Szene antippen → Menü mit Ansehen, Benutzen/Nehmen, Reden, den zwei Fähigkeiten der
-  aktiven Figur und „➜ Gegenstand“ (Gegenstand damit benutzen/geben). Text antippen = weiter.
-- **Tastatur:** ←/→ Dinge auswählen, Enter öffnen, 1–5 Aktion, Tab oder F Figur wechseln, Enter/Leertaste Text weiter,
+- **Verbleiste** unten: Gehe zu, Schau an, Nimm, Benutze, Rede mit, Gib und die zwei Fähigkeiten der aktiven Figur; die
+  Satzzeile zeigt, was passiert („Benutze Mustertagesordnung mit Genosse Rolf“). Gegenstände: Verb „Benutze“ oder „Gib“
+  wählen, dann Icon im Inventar, dann das Ziel.
+- **Tippen/Klicken** in der Szene: Die Figur läuft hin und führt das gewählte Verb aus; mit „Gehe zu“ die naheliegende
+  Aktion (Personen ansprechen, Ausgänge benutzen, sonst ansehen). **Langes Drücken** öffnet das Verbmenü am Objekt.
+  Gespräche mit Personen bieten Antworten zur Auswahl.
+- **Tastatur:** 1–8 Verb, ←/→ Dinge auswählen, Enter ausführen, Tab oder F Figur wechseln, Enter/Leertaste Text weiter,
   Esc oder P Pause.
 - **Figuren** (unten umschalten): **Joe** – Kartusche (abdichten, festkleben), Verkaufsgespräch. **Chani** – Deuten
   (Inschriften, Gemälde, Wappen), Live-Story (lenkt ab).

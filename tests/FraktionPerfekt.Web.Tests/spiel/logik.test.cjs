@@ -124,3 +124,18 @@ test('Reisen nur zu bekannten Orten; nach dem Tempeltor führt die Schule direkt
     S.reisen(z, 'schule');
     assert.equal(z.szene, 'tempel');
 });
+
+test('Pixel-Grundlage: Dithering mischt zwei Farben, Verlauf trifft Anfangs- und Endfarbe', () => {
+    require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'pixel.js'));
+    const { Puffer } = globalThis.Pixel;
+    const p = new Puffer(8, 8);
+    p.mische(0, 0, 8, 8, [0, 0, 0], [255, 255, 255], 0.5);
+    let weiss = 0;
+    for (let y = 0; y < 8; y++) { for (let x = 0; x < 8; x++) { if (p.lies(x, y)[0] === 255) { weiss++; } } }
+    assert.equal(weiss, 32);
+    const v = new Puffer(4, 10);
+    v.verlauf(0, 0, 4, 10, [[10, 10, 10], [200, 200, 200]]);
+    assert.deepEqual(v.lies(0, 0), [10, 10, 10]);
+    assert.deepEqual(v.lies(0, 9), [200, 200, 200]);
+    v.setze(-1, 50, [1, 2, 3]); // außerhalb: kein Fehler
+});
