@@ -371,3 +371,16 @@ p .fp-eintrag { display: inline-block; }
 .fp-handy input { font: inherit; padding: 10px; min-height: 44px; border: 1px solid var(--fp-line); border-radius: 8px; width: 100%; }
 .fp-handy label { font-weight: 600; }
 .fp-handy .fp-btn { min-height: 48px; justify-content: center; font-size: 16px; }
+
+/* Anträge, Abstimmungen, Markdown */
+.fp-markdown h2 { font-size: 17px; margin: 10px 0 4px; }
+.fp-markdown h3 { font-size: 15px; margin: 10px 0 4px; }
+.fp-markdown h4 { font-size: 14px; margin: 8px 0 4px; }
+.fp-markdown p { margin: 0 0 8px; }
+.fp-entfernt { background: var(--fp-crit-weak); color: var(--fp-crit); text-decoration: line-through; }
+.fp-eingefuegt { background: var(--fp-good-weak); color: var(--fp-good); }
+.fp-vergleich-text { white-space: pre-wrap; border: 1px solid var(--fp-line); border-radius: 8px; padding: 10px; background: var(--fp-bg); }
+.fp-zitat { font-style: italic; color: var(--fp-muted); border-left: 3px solid var(--fp-cadenabbia); padding-left: 8px; }
+label.fp-option { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--fp-line); border-radius: 8px; cursor: pointer; }
+label.fp-option.sel { border-color: var(--fp-rhoendorf); background: var(--fp-cadenabbia-hell); }
+.fp-ueberfaellig { border-left: 3px solid var(--fp-crit); padding-left: 8px; }

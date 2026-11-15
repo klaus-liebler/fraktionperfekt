@@ -9,7 +9,7 @@ Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
 | Dokument | Link |
 |---|---|
 | Konzept | https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb |
-| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md) |
+| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md) |
 | Betrieb, Sicherung, Wiederherstellung | [`docs/betrieb.md`](docs/betrieb.md) |
 | Sicherheit (OWASP-Checkliste) | [`docs/sicherheit.md`](docs/sicherheit.md) |
 | Handy-Test im LAN (HTTPS) | [`docs/handy-test.md`](docs/handy-test.md) |
@@ -154,6 +154,27 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   - Fristen-Job mit `IFristenpruefung` je Modul.
   - Logo aus `CDU-Gesamtlogo_transparent_RGB.png` (nur skaliert) in Kopfzeile, Favicon, PWA-Icons (192/512) und
     PDF-Briefkopf (`wwwroot/marke`).
+
+## Iteration 3: Anträge, Abstimmungen, Umfragen, Terminfindung
+
+- **Anträge** (`/antraege`, Modul 3):
+  - Status-Ablauf mit erlaubten Übergängen: Idee → Entwurf → in Abstimmung → beschlossen/abgelehnt → eingereicht →
+    im Gremium beraten → erledigt, dazu zurückziehen.
+  - Der Text ist Markdown in **Fassungen** (nie überschrieben), mit wortweisem **Vergleich**.
+  - **Kommentare** mit Zitat. **Änderungsvorschläge**: Die Stelle muss eindeutig vorkommen; Annehmen erzeugt eine neue
+    Fassung; entscheiden dürfen Autor:in oder Vorstand.
+  - **Fraktionsabstimmung** mit Frist und Quorum: stimmberechtigt sind die Ratsmitglieder. Das Ergebnis setzt den Status
+    und legt einen Fraktionsbeschluss an.
+  - Einreichen mit Nummer `A-JJJJ-NNN`, Zuordnung zu Gremium und Sitzung, **PDF im Fraktionslayout**
+    (`/antraege/{id}/antrag.pdf`).
+  - Anstehende Anträge hängen automatisch als TOP an der nächsten Fraktionssitzung.
+- **Abstimmungen und Umfragen** (`/abstimmungen`, Modul 13):
+  - Arten: Meinungsbild (Ja/Nein/Enthaltung), Umfrage (eigene Antworten, optional Mehrfachauswahl), Terminfindung
+    (Zeitpunkte).
+  - Stimmen bis zur Frist änderbar; das Protokoll vermerkt nur, *dass* abgestimmt wurde.
+  - Abschluss durch die Erstellerin bzw. den Ersteller oder den Vorstand, sonst automatisch bei Fristablauf (Fristen-Job).
+  - Nach einer Terminfindung schlagen die nächsten Schritte „Termin anlegen“ mit vorausgefülltem Kalender vor.
+- Startseite: „Bitte abstimmen“ und Schnellaktionen „Antrag starten“, „Fraktionssitzung einladen“.
 
 ## Gestaltung
 

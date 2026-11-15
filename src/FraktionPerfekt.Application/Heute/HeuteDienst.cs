@@ -19,10 +19,11 @@ public sealed record HeuteAnsicht(
     IReadOnlyList<TerminZeile> OffeneZusagen,
     IReadOnlyList<Aufgabe> Aufgaben,
     IReadOnlyList<AufgabeZeile> MeineAufgaben,
+    IReadOnlyList<Abstimmungen.UmfrageZeile> OffeneAbstimmungen,
     int OffeneVertretungen,
     IReadOnlyList<Schnellaktion> Schnellaktionen)
 {
-    public bool NichtsZuTun => Vertretungsanfragen.Count == 0 && OffeneZusagen.Count == 0 && Aufgaben.Count == 0 && MeineAufgaben.Count == 0;
+    public bool NichtsZuTun => Vertretungsanfragen.Count == 0 && OffeneZusagen.Count == 0 && Aufgaben.Count == 0 && MeineAufgaben.Count == 0 && OffeneAbstimmungen.Count == 0;
 }
 
 /// <summary>Startseite „Heute“: nur, was jetzt zu tun ist – jeweils mit Ein-Klick-Antwort.</summary>
@@ -30,6 +31,7 @@ public sealed class HeuteDienst(
     KalenderDienst kalender,
     VertretungDienst vertretung,
     AufgabenDienst aufgaben,
+    Abstimmungen.UmfrageDienst umfragen,
     IAktuellerBenutzer benutzer,
     TimeProvider uhr)
 {
@@ -53,12 +55,15 @@ public sealed class HeuteDienst(
             offeneZusagen,
             await aufgaben.KorbAsync(abbruch),
             (await aufgaben.UebersichtAsync(abbruch)).Meine.Take(6).ToList(),
+            await umfragen.OffenFuerMichAsync(abbruch),
             steuert ? (await vertretung.OffeneVertretungenAsync(abbruch)).Count : 0,
             [
                 new("Abwesenheit melden", "abwesenheit?neu=1", "event_busy", Rechte.AbwesenheitMelden(wer.Rolle)),
                 new("Termin anlegen", "kalender?neu=1", "event", Rechte.TermineAnlegen(wer.Rolle)),
                 new("Raum buchen", "ressourcen", "meeting_room", Freigabe.Geplant("Die Raumbuchung", "2")),
-                new("Antrag starten", "antraege", "description", Freigabe.Geplant("Das Antragsmodul", "2")),
+                new("Antrag starten", "antraege?neu=1", "description",
+                    wer.Rolle is Domain.Personen.Rolle.Helferin ? Freigabe.Nein("Helfer:innen schreiben nicht an Anträgen mit.") : Freigabe.Ja),
+                new("Fraktionssitzung einladen", "sitzungen", "groups", Rechte.SitzungenSteuern(wer.Rolle)),
             ]);
     }
 }

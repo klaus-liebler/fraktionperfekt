@@ -1,0 +1,120 @@
+@page "/antraege"
+@using FraktionPerfekt.Application.Antraege
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Antraege
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+
+<PageTitle>Anträge · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Anträge</h1>
+        <p class="fp-sub">Idee → Entwurf → Fraktionsabstimmung → beschlossen → eingereicht → im Gremium beraten → erledigt.</p>
+    </div>
+    <BegruendeterButton Text="Antrag starten" Icon="add" Freigabe="@(benutzer?.Rolle is Rolle.Helferin ? Freigabe.Nein("Helfer:innen schreiben nicht an Anträgen mit.") : Freigabe.Ja)"
+                        Click="@(() => formular = true)" />
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert fp-crit" role="alert">@meldung</div>
+}
+
+@if (formular)
+{
+    <section class="fp-card fp-einschub">
+        <h2>Neuer Antrag</h2>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl" for="a-titel">Titel</label><RadzenTextBox id="a-titel" @bind-Value="titel" /></div>
+            <div class="fp-field"><label class="fp-lbl">Ziel-Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="a-thema">Politikfeld</label><RadzenTextBox id="a-thema" @bind-Value="thema" Placeholder="z. B. Schule und Bildung" /></div>
+        </div>
+        <div class="fp-field"><label class="fp-lbl" for="a-text">Antragstext (Markdown: ## Überschrift, - Aufzählung, **fett**)</label>
+            <RadzenTextArea id="a-text" @bind-Value="text" Rows="8" Style="width:100%" /></div>
+        <div class="fp-row">
+            <BegruendeterButton Text="Anlegen" Icon="save" Freigabe="@(string.IsNullOrWhiteSpace(titel) ? Freigabe.Nein("Bitte einen Titel eingeben.") : Freigabe.Ja)" Click="AnlegenAsync" />
+            <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
+        </div>
+    </section>
+}
+
+<div class="fp-filter">
+    <span class="fp-filter-lbl">Status</span>
+    <button class="fp-chip @(filter is null ? "on" : null)" @onclick="@(() => filter = null)">alle</button>
+    @foreach (var s in Enum.GetValues<Antragsstatus>())
+    {
+        var n = liste.Count(z => z.Antrag.Status == s);
+        if (n > 0)
+        {
+            <button class="fp-chip @(filter == s ? "on" : null)" @onclick="@(() => filter = s)">@s.Anzeigename() <span class="fp-chip-n">@n</span></button>
+        }
+    }
+</div>
+
+<section class="fp-card fp-tbl">
+    <table>
+        <thead><tr><th>Antrag</th><th>Status</th><th>Gremium</th><th>Autor</th><th>Fassungen</th><th>Geändert</th></tr></thead>
+        <tbody>
+            @foreach (var z in liste.Where(z => filter is null || z.Antrag.Status == filter))
+            {
+                <tr>
+                    <td><a href="antraege/@z.Antrag.Id"><b>@z.Antrag.Titel</b></a> @if (z.Antrag.Nummer is not null) { <span class="fp-small fp-muted">@z.Antrag.Nummer</span> }
+                        @if (z.OffeneVorschlaege > 0) { <StatusPille Stil="warn">@z.OffeneVorschlaege Vorschläge offen</StatusPille> }</td>
+                    <td><StatusPille Stil="@Stil(z.Antrag.Status)">@z.Antrag.Status.Anzeigename()</StatusPille></td>
+                    <td>@z.Gremium</td>
+                    <td>@z.Autor</td>
+                    <td>@z.Fassungen</td>
+                    <td class="fp-small">@FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(z.Antrag.GeaendertAm).ToString("dd.MM.yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@code {
+    private sealed record GremiumWahl(Guid Id, string Name);
+
+    [SupplyParameterFromQuery(Name = "neu")]
+    private int? Neu { get; set; }
+
+    private Benutzer? benutzer;
+    private IReadOnlyList<AntragZeile> liste = [];
+    private IReadOnlyList<GremiumWahl> gremien = [];
+    private Antragsstatus? filter;
+    private bool formular;
+    private string? titel;
+    private string? text;
+    private string? thema;
+    private Guid? gremium;
+    private string? meldung;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        formular = Neu == 1;
+        gremien = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().GremienAsync())).Select(g => new GremiumWahl(g.Id, g.Name)).ToList();
+        liste = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AntragDienst>().ListeAsync());
+    }
+
+    private async Task AnlegenAsync()
+    {
+        try
+        {
+            var a = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AntragDienst>().AnlegenAsync(titel!, text ?? string.Empty, gremium, thema));
+            Navigation.NavigateTo($"antraege/{a.Id}");
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+    }
+
+    internal static string Stil(Antragsstatus s) => s switch
+    {
+        Antragsstatus.Beschlossen or Antragsstatus.Eingereicht or Antragsstatus.Erledigt => "gut",
+        Antragsstatus.InAbstimmung or Antragsstatus.ImGremium => "info",
+        Antragsstatus.Abgelehnt or Antragsstatus.Zurueckgezogen => "krit",
+        _ => "neutral",
+    };
+}

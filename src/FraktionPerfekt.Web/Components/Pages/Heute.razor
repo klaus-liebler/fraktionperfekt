@@ -79,6 +79,20 @@ else
             </section>
         }
 
+        @if (ansicht.OffeneAbstimmungen.Count > 0)
+        {
+            <section class="fp-card fp-hervor">
+                <h2>Bitte abstimmen <span class="fp-zahl">@ansicht.OffeneAbstimmungen.Count</span></h2>
+                @foreach (var u in ansicht.OffeneAbstimmungen)
+                {
+                    <div class="fp-anfrage">
+                        <a href="abstimmungen/@u.Umfrage.Id"><b>@u.Umfrage.Titel</b></a>
+                        <span class="fp-small fp-muted">bis @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(u.Umfrage.Frist).ToString("dd.MM., HH:mm") Uhr · @u.Teilnehmende von @u.Umfrage.Berechtigte haben abgestimmt</span>
+                    </div>
+                }
+            </section>
+        }
+
         @if (ansicht.MeineAufgaben.Count > 0)
         {
             <section class="fp-card">

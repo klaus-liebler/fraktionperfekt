@@ -1,0 +1,257 @@
+@page "/antraege/{Id:guid}"
+@using FraktionPerfekt.Application.Antraege
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Antraege
+@using FraktionPerfekt.Domain.Termine
+@inject Vorgang Vorgang
+@inject TimeProvider Uhr
+
+<PageTitle>Antrag · FraktionPerfekt</PageTitle>
+
+<a class="fp-zurueck" href="antraege">← Anträge</a>
+
+@if (d is null)
+{
+    <p class="fp-muted">Lade …</p>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <h1>@d.Antrag.Titel</h1>
+            <p class="fp-sub">@(d.Antrag.Nummer is null ? "" : $"{d.Antrag.Nummer} · ")von @d.Autor@(d.Gremium is null ? "" : $" · an {d.Gremium}")@(d.Antrag.Thema is null ? "" : $" · {d.Antrag.Thema}")
+                @if (d.Sitzung is { } s) { <span> · beraten in <a href="termine/@s.Id">@s.Titel am @s.Beginn.ToString("dd.MM.yyyy")</a></span> }</p>
+        </div>
+        <div class="fp-row">
+            <StatusPille Stil="@Antraege.Stil(d.Antrag.Status)">@d.Antrag.Status.Anzeigename()</StatusPille>
+            <a class="fp-btn" href="antraege/@Id/antrag.pdf" target="_blank">PDF</a>
+        </div>
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+    }
+
+    @if (schritte.Count > 0)
+    {
+        <NaechsteSchritte Schritte="schritte" />
+    }
+
+    <section class="fp-card">
+        <h2>Status</h2>
+        <div class="fp-row">
+            @foreach (var st in d.Statusschritte)
+            {
+                <BegruendeterButton Text="@st.Titel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Freigabe="@st.Freigabe" Click="@(() => StatusAsync(st.Ziel))" />
+            }
+        </div>
+        @if (d.Antrag.Status == Antragsstatus.Entwurf || d.Abstimmung is not null)
+        {
+            <h3>Fraktionsabstimmung</h3>
+            @if (d.Abstimmung is { } u)
+            {
+                <p><a href="abstimmungen/@u.Umfrage.Id">@u.Umfrage.Titel</a> · Frist @Ortszeit.AlsOrtszeit(u.Umfrage.Frist).ToString("dd.MM. HH:mm") · @u.Ergebnis.Text</p>
+            }
+            else
+            {
+                <div class="fp-form">
+                    <div class="fp-field"><label class="fp-lbl">Frist</label><RadzenDatePicker TValue="DateTime" @bind-Value="frist" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+                    <div class="fp-field"><label class="fp-lbl">Quorum (% der Ratsmitglieder)</label><RadzenNumeric TValue="int" @bind-Value="quorum" Min="0" Max="100" /></div>
+                </div>
+                <BegruendeterButton Text="Fraktionsabstimmung starten" Icon="how_to_vote" Freigabe="@d.AbstimmungStarten" Click="AbstimmungAsync" />
+            }
+        }
+        @if (d.Antrag.Status is Antragsstatus.Beschlossen or Antragsstatus.Eingereicht or Antragsstatus.ImGremium)
+        {
+            <h3 id="zuordnen">Gremium und Sitzung</h3>
+            <div class="fp-row">
+                <RadzenDropDown TValue="Guid?" @bind-Value="sitzung" Data="@sitzungen" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="Sitzung wählen" Style="min-width:320px" />
+                <RadzenButton Text="Zuordnen" Size="ButtonSize.Small" Click="@(() => AusfuehrenAsync(s => s.ZuordnenAsync(Id, null, sitzung), "Sitzung zugeordnet."))" />
+            </div>
+        }
+    </section>
+
+    <div class="fp-split">
+        <section class="fp-card">
+            <h2>Text <span class="fp-zahl">Fassung @d.Aktuell.Nummer</span></h2>
+            @if (bearbeiten)
+            {
+                <RadzenTextArea @bind-Value="entwurf" Rows="14" Style="width:100%" />
+                <div class="fp-row">
+                    <RadzenTextBox @bind-Value="fassungNotiz" Placeholder="Was wurde geändert?" Style="min-width:260px" />
+                    <RadzenButton Text="Als neue Fassung speichern" Icon="save" Click="FassungAsync" />
+                    <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => bearbeiten = false)" />
+                </div>
+            }
+            else
+            {
+                <Markdown Text="@d.Aktuell.Text" />
+                <BegruendeterButton Text="Text bearbeiten" Size="ButtonSize.Small" Icon="edit" Freigabe="@d.TextBearbeiten" Click="@(() => { entwurf = d.Aktuell.Text; bearbeiten = true; })" />
+            }
+
+            <h3>Fassungen vergleichen</h3>
+            <div class="fp-row">
+                <RadzenDropDown TValue="int" @bind-Value="vergleichVon" Data="@d.Fassungen.Select(f => f.Nummer).ToList()" Style="width:90px" aria-label="Von Fassung" />
+                <span>→</span>
+                <RadzenDropDown TValue="int" @bind-Value="vergleichBis" Data="@d.Fassungen.Select(f => f.Nummer).ToList()" Style="width:90px" aria-label="Bis Fassung" />
+            </div>
+            <p class="fp-vergleich-text">
+                @foreach (var st in Textvergleich.Vergleichen(d.Fassungen.FirstOrDefault(f => f.Nummer == vergleichVon)?.Text ?? "", d.Fassungen.FirstOrDefault(f => f.Nummer == vergleichBis)?.Text ?? ""))
+                {
+                    <span class="@(st.Art == Vergleichsart.Entfernt ? "fp-entfernt" : st.Art == Vergleichsart.Eingefuegt ? "fp-eingefuegt" : null)">@st.Text</span>
+                }
+            </p>
+            <ul class="fp-kompakt fp-small">
+                @foreach (var f in d.Fassungen.AsEnumerable().Reverse())
+                {
+                    <li>Fassung @f.Nummer · @Ortszeit.AlsOrtszeit(f.Am).ToString("dd.MM.yyyy HH:mm") · @f.Notiz</li>
+                }
+            </ul>
+        </section>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+            <section class="fp-card">
+                <h2>Änderungsvorschläge</h2>
+                @foreach (var v in d.Vorschlaege)
+                {
+                    <div class="fp-anfrage">
+                        <span><span class="fp-entfernt">@v.Vorschlag.Alt</span> → <span class="fp-eingefuegt">@v.Vorschlag.Neu</span></span>
+                        <span class="fp-small fp-muted">@v.Person · @v.Vorschlag.Begruendung · @v.Vorschlag.Status</span>
+                        @if (v.Vorschlag.Status == Vorschlagsstatus.Offen)
+                        {
+                            <div class="fp-row">
+                                <BegruendeterButton Text="Annehmen" Size="ButtonSize.ExtraSmall" Freigabe="@v.Entscheiden" Click="@(() => AusfuehrenAsync(s => s.VorschlagEntscheidenAsync(v.Vorschlag.Id, true), "Übernommen – neue Fassung."))" />
+                                <BegruendeterButton Text="Ablehnen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@v.Entscheiden" Click="@(() => AusfuehrenAsync(s => s.VorschlagEntscheidenAsync(v.Vorschlag.Id, false), "Abgelehnt."))" />
+                            </div>
+                        }
+                    </div>
+                }
+                @if (d.Antrag.Status.TextAenderbar())
+                {
+                    <details>
+                        <summary>Änderung vorschlagen</summary>
+                        <div class="fp-field"><label class="fp-lbl">Textstelle (genau wie im Text)</label><RadzenTextBox @bind-Value="alt" /></div>
+                        <div class="fp-field"><label class="fp-lbl">Ersetzen durch</label><RadzenTextBox @bind-Value="neu" /></div>
+                        <div class="fp-field"><label class="fp-lbl">Begründung</label><RadzenTextBox @bind-Value="begruendung" /></div>
+                        <RadzenButton Text="Vorschlagen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(alt)" Click="@(() => AusfuehrenAsync(s => s.VorschlagenAsync(Id, alt!, neu ?? "", begruendung), "Vorschlag eingereicht."))" />
+                    </details>
+                }
+            </section>
+            <section class="fp-card">
+                <h2>Kommentare</h2>
+                @foreach (var k in d.Kommentare)
+                {
+                    <div class="fp-anfrage @(k.Kommentar.Erledigt ? "fp-muted" : null)">
+                        @if (k.Kommentar.Zitat is not null) { <span class="fp-zitat">„@k.Kommentar.Zitat“</span> }
+                        <span>@k.Kommentar.Text</span>
+                        <span class="fp-small fp-muted">@k.Person · Fassung @k.Kommentar.Fassung · @Ortszeit.AlsOrtszeit(k.Kommentar.Am).ToString("dd.MM. HH:mm")
+                            @if (!k.Kommentar.Erledigt) { <button class="fp-linkbutton" @onclick="@(() => AusfuehrenAsync(s => s.KommentarErledigtAsync(k.Kommentar.Id), null))">erledigt</button> }</span>
+                    </div>
+                }
+                <div class="fp-field"><label class="fp-lbl">Zitat (optional)</label><RadzenTextBox @bind-Value="zitat" /></div>
+                <div class="fp-field"><label class="fp-lbl">Kommentar</label><RadzenTextArea @bind-Value="kommentar" Rows="2" /></div>
+                <RadzenButton Text="Kommentieren" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(kommentar)" Click="@(() => AusfuehrenAsync(s => s.KommentierenAsync(Id, zitat, kommentar!), "Kommentar gespeichert."))" />
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    private sealed record SitzungWahl(Guid Id, string Text);
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private AntragDetail? d;
+    private IReadOnlyList<SitzungWahl> sitzungen = [];
+    private Guid? sitzung;
+    private string? meldung;
+    private bool fehler;
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+    private bool bearbeiten;
+    private string? entwurf;
+    private string? fassungNotiz;
+    private int vergleichVon = 1;
+    private int vergleichBis = 1;
+    private string? alt;
+    private string? neu;
+    private string? begruendung;
+    private string? zitat;
+    private string? kommentar;
+    private DateTime frist;
+    private int quorum = 50;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        frist = Ortszeit.Jetzt(Uhr).Date.AddDays(3).AddHours(20);
+        await LadenAsync();
+        vergleichVon = Math.Max(1, (d?.Aktuell.Nummer ?? 1) - 1);
+        vergleichBis = d?.Aktuell.Nummer ?? 1;
+    }
+
+    private async Task LadenAsync()
+    {
+        d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<AntragDienst>().DetailAsync(Id));
+        sitzungen = (await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<AntragDienst>().PassendeSitzungenAsync(Id)))
+            .Select(t => new SitzungWahl(t.Id, $"{t.Beginn:dd.MM.yyyy} {t.Titel}")).ToList();
+        sitzung = d?.Antrag.SitzungTerminId;
+    }
+
+    private async Task AusfuehrenAsync(Func<AntragDienst, Task> aktion, string? erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(s => aktion(s.GetRequiredService<AntragDienst>()));
+            (meldung, fehler) = (erfolg, false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+        vergleichBis = d?.Aktuell.Nummer ?? 1;
+    }
+
+    private async Task FassungAsync()
+    {
+        await AusfuehrenAsync(s => s.FassungSpeichernAsync(Id, entwurf ?? string.Empty, fassungNotiz), "Neue Fassung gespeichert.");
+        if (!fehler)
+        {
+            bearbeiten = false;
+            fassungNotiz = null;
+        }
+    }
+
+    private async Task AbstimmungAsync()
+    {
+        try
+        {
+            var e = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<AntragDienst>().AbstimmungStartenAsync(Id, Ortszeit.Zeitpunkt(frist), quorum));
+            (meldung, fehler, schritte) = (e.Meldung, false, e.NaechsteSchritte);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task StatusAsync(Antragsstatus ziel)
+    {
+        try
+        {
+            var e = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<AntragDienst>().StatusWechselnAsync(Id, ziel, null));
+            (meldung, fehler, schritte) = (e.Meldung, false, e.NaechsteSchritte);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

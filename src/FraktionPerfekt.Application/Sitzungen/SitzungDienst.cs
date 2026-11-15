@@ -143,6 +143,18 @@ public sealed class SitzungDienst(
             }
         }
 
+        // Anstehende Anträge hängen automatisch an der Fraktionssitzung (je ein TOP).
+        if (art == Sitzungsart.Fraktionssitzung)
+        {
+            var antraege = await daten.ListeAsync(daten.Menge<Domain.Antraege.Antrag>()
+                .Where(a => a.Status == Domain.Antraege.Antragsstatus.Entwurf || a.Status == Domain.Antraege.Antragsstatus.InAbstimmung)
+                .OrderBy(a => a.ErstelltAm).ThenBy(a => a.Id), abbruch);
+            foreach (var a in antraege)
+            {
+                neu.Add(new Top(sitzung.Id, ++position, $"Antrag: {a.Titel}", $"Status: {a.Status}", false, a.AutorPersonId, jetzt, a.Id));
+            }
+        }
+
         neu.ForEach(daten.Hinzufuegen);
         await NeuNummerierenAsync(sitzung.Id, letzterBleibt: "Verschiedenes", abbruch, neu);
         await protokoll.ProtokollierenAsync("Sitzung.Vorbereitet", $"Sitzung zum Termin am {termin.Beginn:dd.MM.yyyy} vorbereitet ({position} TOPs, {uebernommen} vertagt übernommen)",

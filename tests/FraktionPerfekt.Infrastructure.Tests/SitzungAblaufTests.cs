@@ -38,7 +38,8 @@ public sealed class SitzungAblaufTests
         vorbereitet.NaechsteSchritte[0].Titel.ShouldContain("Einladung");
         var sitzung = (await u.InAsync(d => Dienst(d).ZuTerminAsync(erste.Id)))!;
         var detail = (await u.InAsync(d => Dienst(d).DetailAsync(sitzung.Id)))!;
-        detail.Tops.Select(t => t.Top.Titel).ShouldBe(Sitzungsvorlagen.Fraktionssitzung);
+        detail.Tops.Where(t => t.Top.Fest).Select(t => t.Top.Titel).ShouldBe(Sitzungsvorlagen.Fraktionssitzung);
+        detail.Tops.ShouldContain(t => t.Top.AntragId != null && t.Top.Titel.StartsWith("Antrag: ", StringComparison.Ordinal));   // anstehende Anträge hängen an
 
         // Ein Mitglied meldet einen TOP an; er landet vor „Verschiedenes“.
         await u.AnmeldenAsync("awewers");
@@ -59,7 +60,7 @@ public sealed class SitzungAblaufTests
         einladung.Meldung.ShouldContain("14 Personen");
         var post = await u.InAsync(d => d.GetRequiredService<INachrichtenSpeicher>().NeuesteAsync(200));
         post.Count(n => n.Kanal == Kanal.EMail && n.Betreff.StartsWith("Einladung", StringComparison.Ordinal)).ShouldBe(14);
-        post.First(n => n.Kanal == Kanal.EMail && n.Betreff.StartsWith("Einladung", StringComparison.Ordinal)).Inhalt.ShouldContain("TOP 6 Rathausstraße");
+        post.First(n => n.Kanal == Kanal.EMail && n.Betreff.StartsWith("Einladung", StringComparison.Ordinal)).Inhalt.ShouldContain("Rathausstraße: Radfahrstreifen");
 
         // Zusage einer Person, dann Sitzungsmodus: Anwesenheit aus Rückmeldungen.
         await u.AnmeldenAsync("awewers");

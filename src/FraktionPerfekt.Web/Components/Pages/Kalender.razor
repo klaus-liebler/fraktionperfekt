@@ -158,6 +158,12 @@
     [SupplyParameterFromQuery(Name = "neu")]
     private int? NeuParameter { get; set; }
 
+    [SupplyParameterFromQuery(Name = "beginn")]
+    private DateTime? BeginnParameter { get; set; }
+
+    [SupplyParameterFromQuery(Name = "titel")]
+    private string? TitelParameter { get; set; }
+
     private sealed record ArtAuswahl(Terminart Wert, string Text);
 
     // Rats- und Ausschusssitzungen kommen aus dem RIS und werden hier nicht angelegt.
@@ -197,7 +203,8 @@
         heute = Ortszeit.Heute(Uhr);
         monat = new DateOnly(heute.Year, heute.Month, 1);
         formular = NeuParameter == 1 && Rechte.TermineAnlegen(benutzer.Rolle).Erlaubt;
-        neu.Beginn = heute.AddDays(7).ToDateTime(new TimeOnly(19, 0));
+        neu.Beginn = BeginnParameter ?? heute.AddDays(7).ToDateTime(new TimeOnly(19, 0));
+        neu.Titel = TitelParameter ?? neu.Titel;
         (gremien, personen) = await Vorgang.AusfuehrenAsync(async d =>
         {
             var s = d.GetRequiredService<StammdatenDienst>();

@@ -1,0 +1,119 @@
+@page "/abstimmungen"
+@using FraktionPerfekt.Application.Abstimmungen
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Domain.Abstimmungen
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+@inject TimeProvider Uhr
+
+<PageTitle>Abstimmungen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Abstimmungen, Umfragen, Terminfindung</h1>
+        <p class="fp-sub">Schnelle Meinungsbilder, Umfragen und Terminfindung in der Fraktion. Antragsabstimmungen starten am Antrag.</p>
+    </div>
+    <BegruendeterButton Text="Neu" Icon="add" Freigabe="@(benutzer?.Rolle is Rolle.Helferin ? Freigabe.Nein("Helfer:innen starten keine Fraktionsabstimmungen.") : Freigabe.Ja)" Click="@(() => formular = true)" />
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert fp-crit" role="alert">@meldung</div>
+}
+
+@if (formular)
+{
+    <section class="fp-card fp-einschub">
+        <h2>Neue Abstimmung</h2>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl">Art</label>
+                <RadzenDropDown TValue="Umfrageart" @bind-Value="art" Data="@Arten" TextProperty="Text" ValueProperty="Wert" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="u-titel">Frage / Titel</label><RadzenTextBox id="u-titel" @bind-Value="titel" /></div>
+            <div class="fp-field"><label class="fp-lbl">Frist</label><RadzenDatePicker TValue="DateTime" @bind-Value="frist" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+            <div class="fp-field"><label class="fp-lbl">Quorum (%)</label><RadzenNumeric TValue="int" @bind-Value="quorum" Min="0" Max="100" /></div>
+        </div>
+        @if (art == Umfrageart.Umfrage)
+        {
+            <div class="fp-field"><label class="fp-lbl">Antworten (eine je Zeile)</label><RadzenTextArea @bind-Value="optionen" Rows="4" /></div>
+            <label><input type="checkbox" @bind="mehrfach" /> Mehrfachauswahl</label>
+        }
+        else if (art == Umfrageart.Terminfindung)
+        {
+            <div class="fp-field"><label class="fp-lbl">Terminvorschläge</label>
+                <div class="fp-row">
+                    <RadzenDatePicker TValue="DateTime" @bind-Value="vorschlag" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" />
+                    <RadzenButton Text="Hinzufügen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => zeitpunkte.Add(vorschlag))" />
+                </div>
+                <span class="fp-small">@string.Join(" · ", zeitpunkte.Order().Select(z => z.ToString("ddd dd.MM. HH:mm")))</span>
+            </div>
+        }
+        <div class="fp-row">
+            <BegruendeterButton Text="Starten" Icon="send" Freigabe="@(string.IsNullOrWhiteSpace(titel) ? Freigabe.Nein("Bitte eine Frage eingeben.") : Freigabe.Ja)" Click="AnlegenAsync" />
+            <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
+        </div>
+    </section>
+}
+
+<section class="fp-card fp-tbl">
+    <table>
+        <thead><tr><th>Frage</th><th>Art</th><th>Frist</th><th>Beteiligung</th><th>Stand</th></tr></thead>
+        <tbody>
+            @foreach (var z in liste)
+            {
+                <tr>
+                    <td><a href="abstimmungen/@z.Umfrage.Id"><b>@z.Umfrage.Titel</b></a> @if (!z.IchHabeAbgestimmt && z.Umfrage.Offen(Uhr.GetUtcNow())) { <StatusPille Stil="warn">noch nicht abgestimmt</StatusPille> }</td>
+                    <td>@Arten.First(a => a.Wert == z.Umfrage.Art).Text</td>
+                    <td>@Ortszeit.AlsOrtszeit(z.Umfrage.Frist).ToString("dd.MM. HH:mm")</td>
+                    <td>@z.Teilnehmende von @z.Umfrage.Berechtigte</td>
+                    <td>@(z.Umfrage.Status == Umfragestatus.Offen ? "offen" : z.Umfrage.Ergebnis)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@code {
+    private sealed record ArtWahl(Umfrageart Wert, string Text);
+
+    private static readonly IReadOnlyList<ArtWahl> Arten =
+    [
+        new(Umfrageart.Meinungsbild, "Meinungsbild (Ja/Nein/Enthaltung)"), new(Umfrageart.Umfrage, "Umfrage"),
+        new(Umfrageart.Terminfindung, "Terminfindung"), new(Umfrageart.Antragsabstimmung, "Antragsabstimmung"),
+    ];
+
+    private Benutzer? benutzer;
+    private IReadOnlyList<UmfrageZeile> liste = [];
+    private bool formular;
+    private Umfrageart art = Umfrageart.Meinungsbild;
+    private string? titel;
+    private string? optionen;
+    private bool mehrfach;
+    private DateTime frist;
+    private DateTime vorschlag;
+    private int quorum;
+    private readonly List<DateTime> zeitpunkte = [];
+    private string? meldung;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        frist = Ortszeit.Jetzt(Uhr).Date.AddDays(3).AddHours(20);
+        vorschlag = Ortszeit.Jetzt(Uhr).Date.AddDays(7).AddHours(19);
+        liste = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<UmfrageDienst>().ListeAsync());
+    }
+
+    private async Task AnlegenAsync()
+    {
+        try
+        {
+            var neu = new NeueUmfrage(titel!, null, art == Umfrageart.Antragsabstimmung ? Umfrageart.Meinungsbild : art, Ortszeit.Zeitpunkt(frist), quorum, mehrfach,
+                (optionen ?? string.Empty).Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), zeitpunkte);
+            var u = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<UmfrageDienst>().AnlegenAsync(neu));
+            Navigation.NavigateTo($"abstimmungen/{u.Id}");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            meldung = ex.Message;
+        }
+    }
+}

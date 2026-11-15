@@ -21,5 +21,18 @@ internal static class DokumentEndpunkte
                 $"{d.Termin.Beginn:dddd, dd.MM.yyyy, HH:mm} Uhr · {d.Termin.Ort} · {d.Sitzung.Status.Anzeigename()}", text));
             return Results.File(bytes, "application/pdf", $"protokoll-{d.Termin.Beginn:yyyy-MM-dd}.pdf");
         }).RequireAuthorization();
+
+        app.MapGet("/antraege/{id:guid}/antrag.pdf", async (Guid id, FraktionPerfekt.Application.Antraege.AntragDienst antraege) =>
+        {
+            try
+            {
+                var (datei, bytes) = await antraege.PdfAsync(id);
+                return Results.File(bytes, "application/pdf", datei);
+            }
+            catch (InvalidOperationException)
+            {
+                return Results.NotFound();
+            }
+        }).RequireAuthorization();
     }
 }

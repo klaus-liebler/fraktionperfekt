@@ -26,6 +26,28 @@ public static class GrevenerThemen
         "Der Haushalt 2026 weist ein wachsendes Defizit aus. Bei rund 180 Mio. Euro geplanten Bauinvestitionen fehlt eine verbindliche "
         + "Prioritätenliste. Die Badsanierung wollen die Stadtwerke eigenständig stemmen.";
 
+    public const string AntragElternbefragung1 =
+        "## Beschlussvorschlag\n\nDer Rat beauftragt die Verwaltung, vor einer Entscheidung über die Schließung von Grundschulstandorten "
+        + "eine Befragung der Eltern durchzuführen.\n\n## Begründung\n\nDie geplante Neuordnung der Grundschullandschaft betrifft viele Familien.";
+
+    public const string AntragElternbefragung2 =
+        "## Beschlussvorschlag\n\nDer Rat beauftragt die Verwaltung, vor einer Entscheidung über die Schließung von Grundschulstandorten "
+        + "eine Befragung der Eltern durchzuführen. Dabei sind die Schulwege und der Ganztagsanspruch ab 2026 ausdrücklich abzufragen.\n\n"
+        + "## Begründung\n\nDie geplante Neuordnung der Grundschullandschaft betrifft viele Familien. Auch die Zukunft des Grundstücks der "
+        + "Martin-Luther-Grundschule sollte erst nach der Befragung entschieden werden.";
+
+    public const string AntragGanztag =
+        "## Beschlussvorschlag\n\nDie Verwaltung prüft, welche Räume in bestehenden Schulgebäuden für die Ganztagsbetreuung genutzt werden können, "
+        + "und legt das Ergebnis bis zum Schuljahr 2026/27 vor.\n\n## Begründung\n\n- Rechtsanspruch auf Ganztag ab 2026\n- knapper Haushalt: "
+        + "vorhandene Räume vor Neubau";
+
+    public const string AntragPrioritaeten =
+        "## Beschlussvorschlag\n\nFür die geplanten Bauinvestitionen von rund 180 Mio. Euro legt die Verwaltung eine verbindliche Prioritätenliste "
+        + "vor, die der Rat jährlich beschließt.\n\n## Begründung\n\nDer Haushalt 2026 weist ein wachsendes Defizit aus. Ohne Prioritäten "
+        + "drohen Projekte gleichzeitig zu starten und sich gegenseitig zu verteuern.";
+
+    public const string AntragRadweg = "- Radfahrstreifen statt Hochbordradweg?\n- Sicherheit an den Einmündungen\n- Ortstermin abwarten";
+
     public static readonly string[] Arbeitskreistops =
     [
         "Ganztagsanspruch ab 2026: Raumbedarf je Grundschule, Rückmeldungen der Schulleitungen",
