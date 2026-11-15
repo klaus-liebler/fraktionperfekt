@@ -250,7 +250,7 @@ public sealed class KalenderUndRisTests
         var heute = await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync());
         heute.Vertretungsanfragen.ShouldHaveSingleItem();     // Demodaten: Anna ist für den HFA gefragt
         heute.OffeneZusagen.ShouldNotBeEmpty();               // Fraktionssitzungen ohne Antwort
-        heute.Schnellaktionen.Single(s => s.Titel == "Raum buchen").Freigabe.Erlaubt.ShouldBeFalse();
+        heute.Schnellaktionen.Single(s => s.Titel == "Raum buchen").Freigabe.Erlaubt.ShouldBeTrue();
 
         var asb = (await u.InAsync(d => d.GetRequiredService<KalenderDienst>().TermineAsync(new DateOnly(2026, 11, 15), new DateOnly(2027, 1, 31))))
             .First(z => z.Termin.Art == Terminart.Ausschusssitzung && z.Beteiligung == Beteiligung.Ordentlich && !z.Abwesend);

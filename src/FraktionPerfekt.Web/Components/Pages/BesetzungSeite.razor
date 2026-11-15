@@ -1,0 +1,189 @@
+@page "/besetzung"
+@page "/besetzung/{Id:guid}"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Termine
+@using FraktionPerfekt.Domain.Termine
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+@inject TimeProvider Uhr
+
+<PageTitle>Terminbesetzung · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Terminbesetzung</h1>
+        <p class="fp-sub">Wer vertritt die Fraktion bei Vereinsjubiläen, Bürgerversammlungen und Infoabenden?</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (TerminParameter is not null && d is null && Id is null)
+{
+    <section class="fp-card fp-einschub">
+        <h2>Besetzungsanfrage: @(neuTermin?.Titel)</h2>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl">Gewünschte Zahl N</label><RadzenNumeric TValue="int" @bind-Value="plaetze" Min="1" /></div>
+            <div class="fp-field"><label class="fp-lbl">Meldefrist</label><RadzenDatePicker TValue="DateTime" @bind-Value="frist" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+            <div class="fp-field"><label class="fp-lbl">Verfahren</label>
+                <RadzenDropDown TValue="Besetzungsmodus" @bind-Value="modus" Data="@Modi" TextProperty="Text" ValueProperty="Wert" /></div>
+        </div>
+        <div class="fp-field"><label class="fp-lbl">Hinweis</label><RadzenTextBox @bind-Value="hinweis" /></div>
+        <BegruendeterButton Text="An alle senden" Icon="send" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)" Click="AnlegenAsync" />
+    </section>
+}
+
+@if (d is not null)
+{
+    <section class="fp-card">
+        <h2><a href="termine/@d.Termin.Id">@d.Termin.Titel</a></h2>
+        <p>@d.Termin.Beginn.ToString("dddd, dd.MM.yyyy, HH:mm") Uhr · @d.Termin.Ort · @d.Bestaetigt von @d.Anfrage.Plaetze Plätzen besetzt · Meldung bis @Ortszeit.AlsOrtszeit(d.Anfrage.Frist).ToString("dd.MM. HH:mm")
+            · @(d.Anfrage.Modus == Besetzungsmodus.WerZuerstKommt ? "wer zuerst kommt" : "Vorstand bestätigt")</p>
+        @if (d.Anfrage.Hinweis is not null) { <p class="fp-small">@d.Anfrage.Hinweis</p> }
+        <div class="fp-row">
+            <BegruendeterButton Text="Ich gehe hin" Icon="front_hand" Freigabe="@d.InteresseMelden" Click="InteresseAsync" />
+            <BegruendeterButton Text="Doch nicht" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Zurueckziehen" Click="@(() => AusfuehrenAsync(s => s.ZurueckziehenAsync(d.Anfrage.Id), "Zurückgezogen; wer auf der Warteliste steht, rückt nach."))" />
+        </div>
+        <div class="fp-list">
+            @foreach (var m in d.Meldungen)
+            {
+                <div>
+                    <span class="fp-grow">@m.Person <span class="fp-small fp-muted">gemeldet @Ortszeit.AlsOrtszeit(m.Meldung.Am).ToString("dd.MM. HH:mm")</span></span>
+                    <StatusPille Stil="@(m.Meldung.Status == Meldungsstatus.Bestaetigt ? "gut" : m.Meldung.Status == Meldungsstatus.Interessiert ? "info" : "neutral")">@m.Meldung.Status</StatusPille>
+                    @if (m.Meldung.Status == Meldungsstatus.Interessiert && d.Anfrage.Modus == Besetzungsmodus.VorstandBestaetigt)
+                    {
+                        <BegruendeterButton Text="Bestätigen" Size="ButtonSize.ExtraSmall" Freigabe="@m.Bestaetigen" Click="@(() => AusfuehrenAsync(s => s.BestaetigenAsync(m.Meldung.Id, true), "Bestätigt."))" />
+                        <BegruendeterButton Text="Absagen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)" Click="@(() => AusfuehrenAsync(s => s.BestaetigenAsync(m.Meldung.Id, false), "Abgesagt."))" />
+                    }
+                </div>
+            }
+        </div>
+    </section>
+    <section class="fp-card">
+        <h2>Kurzbericht</h2>
+        @if (d.Anfrage.Bericht is not null)
+        {
+            <p style="white-space:pre-line">@d.Anfrage.Bericht</p>
+        }
+        <RadzenTextArea @bind-Value="bericht" Rows="3" Placeholder="Wer war da, was wurde besprochen, was ist zu tun?" Disabled="@(!d.BerichtSchreiben.Erlaubt)" Style="width:100%" />
+        <BegruendeterButton Text="Bericht speichern" Size="ButtonSize.Small" Freigabe="@d.BerichtSchreiben.Und(() => string.IsNullOrWhiteSpace(bericht) ? Freigabe.Nein("Bitte einen Text eingeben.") : Freigabe.Ja)"
+                            Click="@(() => AusfuehrenAsync(s => s.BerichtAsync(d.Anfrage.Id, bericht!), "Bericht gespeichert."))" />
+    </section>
+}
+
+@if (Id is null && TerminParameter is null)
+{
+    <section class="fp-card fp-tbl">
+        <table>
+            <thead><tr><th>Termin</th><th>Datum</th><th>Besetzt</th><th>Interessiert</th><th>Ich</th></tr></thead>
+            <tbody>
+                @foreach (var z in liste)
+                {
+                    <tr>
+                        <td><a href="besetzung/@z.Anfrage.Id">@z.Termin.Titel</a></td>
+                        <td>@z.Termin.Beginn.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@z.Bestaetigt / @z.Anfrage.Plaetze</td>
+                        <td>@z.Interessiert</td>
+                        <td>@(z.Meine?.Status.ToString() ?? "–")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private sealed record ModusWahl(Besetzungsmodus Wert, string Text);
+
+    private static readonly IReadOnlyList<ModusWahl> Modi = [new(Besetzungsmodus.VorstandBestaetigt, "Vorstand bestätigt"), new(Besetzungsmodus.WerZuerstKommt, "Wer zuerst kommt")];
+
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    [SupplyParameterFromQuery(Name = "termin")]
+    private Guid? TerminParameter { get; set; }
+
+    private Benutzer? benutzer;
+    private BesetzungDetail? d;
+    private IReadOnlyList<BesetzungZeile> liste = [];
+    private Termin? neuTermin;
+    private int plaetze = 2;
+    private DateTime frist;
+    private Besetzungsmodus modus = Besetzungsmodus.VorstandBestaetigt;
+    private string? hinweis;
+    private string? bericht;
+    private string? meldung;
+    private bool fehler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        if (Id is { } id)
+        {
+            d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BesetzungDienst>().DetailAsync(id));
+        }
+        else if (TerminParameter is { } t)
+        {
+            d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BesetzungDienst>().ZuTerminAsync(t));
+            neuTermin = (await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<KalenderDienst>().TerminAsync(t)))?.Zeile.Termin;
+            frist = neuTermin is null ? Ortszeit.Jetzt(Uhr).AddDays(3) : neuTermin.Beginn.AddDays(-2);
+        }
+        else
+        {
+            liste = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BesetzungDienst>().ListeAsync());
+        }
+
+        bericht ??= d?.Anfrage.Bericht;
+    }
+
+    private async Task AnlegenAsync()
+    {
+        try
+        {
+            var a = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BesetzungDienst>().AnlegenAsync(TerminParameter!.Value, plaetze, Ortszeit.Zeitpunkt(frist), modus, hinweis));
+            Navigation.NavigateTo($"besetzung/{a.Id}");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+    }
+
+    private async Task InteresseAsync()
+    {
+        try
+        {
+            var text = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BesetzungDienst>().InteresseMeldenAsync(d!.Anfrage.Id));
+            (meldung, fehler) = (text, false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task AusfuehrenAsync(Func<BesetzungDienst, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(s => aktion(s.GetRequiredService<BesetzungDienst>()));
+            (meldung, fehler) = (erfolg, false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

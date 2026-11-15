@@ -1,0 +1,199 @@
+@page "/ressourcen"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Ressourcen
+@using FraktionPerfekt.Domain.Ressourcen
+@inject Vorgang Vorgang
+@inject TimeProvider Uhr
+
+<PageTitle>Raumbuchung · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Räume und Ressourcen</h1>
+        <p class="fp-sub">Fraktionsräume, Beamer, Infostand, Lastenrad, Dienstwagen, Pavillon. Konflikte werden sofort erkannt; manche Ressourcen gibt die Geschäftsführung frei.</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (schritte.Count > 0)
+{
+    <NaechsteSchritte Schritte="schritte" />
+}
+
+@if (freigaben.Count > 0)
+{
+    <section class="fp-card fp-hervor">
+        <h2>Warten auf Freigabe <span class="fp-zahl">@freigaben.Count</span></h2>
+        @foreach (var z in freigaben)
+        {
+            <div class="fp-anfrage">
+                <span><b>@z.Ressource</b> · @z.Buchung.Von.ToString("ddd dd.MM., HH:mm")–@z.Buchung.Bis.ToString("HH:mm") · @z.Buchung.Zweck · @z.Person</span>
+                <div class="fp-row">
+                    <BegruendeterButton Text="Freigeben" Size="ButtonSize.ExtraSmall" Freigabe="@z.Entscheiden" Click="@(() => AusfuehrenAsync(s => s.EntscheidenAsync(z.Buchung.Id, true, null), "Freigegeben."))" />
+                    <BegruendeterButton Text="Ablehnen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Entscheiden" Click="@(() => AusfuehrenAsync(s => s.EntscheidenAsync(z.Buchung.Id, false, null), "Abgelehnt."))" />
+                </div>
+            </div>
+        }
+    </section>
+}
+
+<section class="fp-card fp-einschub">
+    <h2>Buchen</h2>
+    <div class="fp-form">
+        <div class="fp-field"><label class="fp-lbl">Ressource</label>
+            <RadzenDropDown TValue="Guid?" @bind-Value="ressource" Data="@ressourcen.Where(r => r.Aktiv).Select(r => new Wahl(r.Id, $"{r.Name}{(r.FreigabeNoetig ? " (mit Freigabe)" : "")}")).ToList()" TextProperty="Text" ValueProperty="Id" /></div>
+        <div class="fp-field"><label class="fp-lbl">Von</label><RadzenDatePicker TValue="DateTime" @bind-Value="von" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+        <div class="fp-field"><label class="fp-lbl">Bis</label><RadzenDatePicker TValue="DateTime" @bind-Value="bis" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="b-zweck">Zweck</label><RadzenTextBox id="b-zweck" @bind-Value="zweck" /></div>
+    </div>
+    @if (terminId is not null)
+    {
+        <p class="fp-small fp-muted">Die Buchung hängt am Termin „@zweck“.</p>
+    }
+    <BegruendeterButton Text="Buchen" Icon="event_available"
+                        Freigabe="@(ressource is null ? Freigabe.Nein("Bitte eine Ressource wählen.") : string.IsNullOrWhiteSpace(zweck) ? Freigabe.Nein("Bitte den Zweck angeben.") : bis <= von ? Freigabe.Nein("Das Ende liegt vor dem Beginn.") : Freigabe.Ja)"
+                        Click="BuchenAsync" />
+</section>
+
+<section class="fp-card">
+    <div class="fp-row" style="justify-content:space-between">
+        <h2>Belegung</h2>
+        <div class="fp-row">
+            <RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => WocheAsync(-7))" title="Vorherige Woche" />
+            <span>@woche.ToString("dd.MM.") – @woche.AddDays(6).ToString("dd.MM.yyyy")</span>
+            <RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => WocheAsync(7))" title="Nächste Woche" />
+        </div>
+    </div>
+    <div class="fp-tbl">
+        <table>
+            <thead><tr><th>Ressource</th>@for (var i = 0; i < 7; i++) { <th>@woche.AddDays(i).ToString("ddd dd.MM.")</th> }</tr></thead>
+            <tbody>
+                @foreach (var r in ressourcen.Where(r => r.Aktiv))
+                {
+                    <tr>
+                        <td><b>@r.Name</b><br /><span class="fp-small fp-muted">@r.Art@(r.FreigabeNoetig ? " · Freigabe" : "")</span></td>
+                        @for (var i = 0; i < 7; i++)
+                        {
+                            var tag = woche.AddDays(i).ToDateTime(TimeOnly.MinValue);
+                            <td>
+                                @foreach (var z in belegung.Where(z => z.Buchung.RessourceId == r.Id && z.Buchung.Blockiert && z.Buchung.Ueberschneidet(tag, tag.AddDays(1))))
+                                {
+                                    <span class="fp-eintrag @(z.Buchung.Status == Buchungsstatus.Angefragt ? "oeffentlich" : "sitzung")" title="@($"{z.Buchung.Zweck} · {z.Person}")">
+                                        <b>@z.Buchung.Von.ToString("HH:mm")</b> @z.Buchung.Zweck
+                                    </span>
+                                    @if (z.Stornieren.Erlaubt)
+                                    {
+                                        <button class="fp-linkbutton fp-small" @onclick="@(() => AusfuehrenAsync(s => s.StornierenAsync(z.Buchung.Id), "Storniert."))">stornieren</button>
+                                    }
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="fp-small fp-muted">Farben: <span class="fp-eintrag sitzung">gebucht</span> <span class="fp-eintrag oeffentlich">wartet auf Freigabe</span></p>
+</section>
+
+@if (Rechte.StammdatenPflegen(benutzer?.Rolle).Erlaubt)
+{
+    <details class="fp-card">
+        <summary>Neue Ressource anlegen</summary>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl">Name</label><RadzenTextBox @bind-Value="neuName" /></div>
+            <div class="fp-field"><label class="fp-lbl">Art</label><RadzenDropDown TValue="Ressourcenart" @bind-Value="neuArt" Data="@(Enum.GetValues<Ressourcenart>())" /></div>
+            <div class="fp-field"><label><input type="checkbox" @bind="neuFreigabe" /> Buchungen brauchen Freigabe</label></div>
+        </div>
+        <RadzenButton Text="Anlegen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(neuName)" Click="@(() => AusfuehrenAsync(s => s.RessourceAnlegenAsync(neuName!, neuArt, null, neuFreigabe), "Ressource angelegt."))" />
+    </details>
+}
+
+@code {
+    private sealed record Wahl(Guid Id, string Text);
+
+    [SupplyParameterFromQuery(Name = "termin")]
+    private Guid? TerminParameter { get; set; }
+
+    private Benutzer? benutzer;
+    private IReadOnlyList<Ressource> ressourcen = [];
+    private IReadOnlyList<BuchungZeile> belegung = [];
+    private IReadOnlyList<BuchungZeile> freigaben = [];
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+    private DateOnly woche;
+    private Guid? ressource;
+    private Guid? terminId;
+    private DateTime von;
+    private DateTime bis;
+    private string? zweck;
+    private string? meldung;
+    private bool fehler;
+    private string? neuName;
+    private Ressourcenart neuArt = Ressourcenart.Raum;
+    private bool neuFreigabe;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        var heute = Ortszeit.Heute(Uhr);
+        woche = heute.AddDays(-(((int)heute.DayOfWeek + 6) % 7));
+        (von, bis) = (heute.AddDays(1).ToDateTime(new TimeOnly(18, 0)), heute.AddDays(1).ToDateTime(new TimeOnly(21, 0)));
+        if (TerminParameter is { } t && await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RessourcenDienst>().VorschlagAusTerminAsync(t)) is { } v)
+        {
+            (terminId, zweck, von, bis) = (v.TerminId, v.Zweck, v.Von, v.Bis);
+            woche = DateOnly.FromDateTime(v.Von).AddDays(-(((int)v.Von.DayOfWeek + 6) % 7));
+        }
+
+        ressourcen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RessourcenDienst>().RessourcenAsync());
+        ressource = ressourcen.FirstOrDefault(r => r.Art == Ressourcenart.Raum)?.Id;
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        var start = woche.ToDateTime(TimeOnly.MinValue);
+        belegung = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RessourcenDienst>().BelegungAsync(start, start.AddDays(7)));
+        freigaben = Rechte.StammdatenPflegen(benutzer?.Rolle).Erlaubt ? await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RessourcenDienst>().OffeneFreigabenAsync()) : [];
+        ressourcen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RessourcenDienst>().RessourcenAsync());
+    }
+
+    private async Task WocheAsync(int tage)
+    {
+        woche = woche.AddDays(tage);
+        await LadenAsync();
+    }
+
+    private async Task AusfuehrenAsync(Func<RessourcenDienst, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => aktion(d.GetRequiredService<RessourcenDienst>()));
+            (meldung, fehler) = (erfolg, false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task BuchenAsync()
+    {
+        try
+        {
+            var e = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RessourcenDienst>().BuchenAsync(ressource!.Value, von, bis, zweck!, terminId));
+            (meldung, fehler, schritte) = (e.Meldung, false, e.NaechsteSchritte);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

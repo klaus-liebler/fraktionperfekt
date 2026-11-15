@@ -24,5 +24,14 @@ public sealed partial class FraktionDbContext
         Iteration4(modelBuilder);
     }
 
-    static partial void Iteration4(ModelBuilder modelBuilder);
+    private static void Iteration4(ModelBuilder modelBuilder)
+    {
+        Einfach<Domain.Ressourcen.Ressource>(modelBuilder, "Ressourcen");
+        Einfach<Domain.Ressourcen.Buchung>(modelBuilder, "Buchungen", b => b.HasIndex(x => new { x.RessourceId, x.Von }));
+        Einfach<Domain.Termine.Besetzungsanfrage>(modelBuilder, "Besetzungsanfragen", b => b.HasIndex(x => x.TerminId).IsUnique());
+        Einfach<Domain.Termine.Besetzungsmeldung>(modelBuilder, "Besetzungsmeldungen", b => b.HasIndex(x => new { x.AnfrageId, x.PersonId }).IsUnique());
+        Iteration5(modelBuilder);
+    }
+
+    static partial void Iteration5(ModelBuilder modelBuilder);
 }

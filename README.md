@@ -9,7 +9,7 @@ Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
 | Dokument | Link |
 |---|---|
 | Konzept | https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb |
-| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md) |
+| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md), [`docs/abnahme-4.md`](docs/abnahme-4.md) |
 | Betrieb, Sicherung, Wiederherstellung | [`docs/betrieb.md`](docs/betrieb.md) |
 | Sicherheit (OWASP-Checkliste) | [`docs/sicherheit.md`](docs/sicherheit.md) |
 | Handy-Test im LAN (HTTPS) | [`docs/handy-test.md`](docs/handy-test.md) |
@@ -175,6 +175,22 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   - Abschluss durch die Erstellerin bzw. den Ersteller oder den Vorstand, sonst automatisch bei Fristablauf (Fristen-Job).
   - Nach einer Terminfindung schlagen die nächsten Schritte „Termin anlegen“ mit vorausgefülltem Kalender vor.
 - Startseite: „Bitte abstimmen“ und Schnellaktionen „Antrag starten“, „Fraktionssitzung einladen“.
+
+## Iteration 4: Terminbesetzung, Räume und Ressourcen
+
+- **Räume und Ressourcen** (`/ressourcen`, Modul 2):
+  - Ressourcen: Fraktionsbüro, Besprechungsraum, Beamer, Infostand mit Pavillon, Lastenrad, Dienstwagen.
+  - Wochen-Belegungsplan. Buchungen mit **Konfliktprüfung**; die Meldung nennt, wer gebucht hat und wofür.
+  - Optionale **Freigabe** durch die Geschäftsführung: Die Anfrage blockiert bereits und erzeugt eine Aufgabe im Korb
+    Administration; die Entscheidung geht per Push an die buchende Person.
+  - Buchung am Termin mit Vorbelegung (± 30 Minuten), z. B. als Folgeschritt „Raum buchen“ nach dem Anlegen einer
+    Fraktionssitzung.
+- **Terminbesetzung** (`/besetzung`, Modul 5):
+  - Eine Einladung mit N Plätzen geht per Push an alle; Mitglieder melden Interesse mit einem Klick (Startseite
+    „Wer geht hin?“).
+  - Verfahren „Vorstand bestätigt“ oder „wer zuerst kommt“ mit Warteliste und automatischem Nachrücken.
+  - Bestätigte haben den Termin als Zusage im Kalender.
+  - Nach dem Termin erscheint der Folgeschritt **„Kurzbericht anlegen“** auf der Startseite.
 
 ## Gestaltung
 

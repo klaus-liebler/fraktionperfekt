@@ -93,6 +93,32 @@ else
             </section>
         }
 
+        @if (ansicht.OffeneBesetzungen.Count > 0)
+        {
+            <section class="fp-card">
+                <h2>Wer geht hin? <span class="fp-zahl">@ansicht.OffeneBesetzungen.Count</span></h2>
+                @foreach (var b in ansicht.OffeneBesetzungen)
+                {
+                    <div class="fp-anfrage">
+                        <a href="besetzung/@b.Anfrage.Id"><b>@b.Termin.Titel</b></a>
+                        <span class="fp-small fp-muted">@b.Termin.Beginn.ToString("ddd dd.MM., HH:mm") Uhr · @b.Bestaetigt von @b.Anfrage.Plaetze Plätzen besetzt</span>
+                        <div class="fp-row"><RadzenButton Text="Ich gehe hin" Size="ButtonSize.Small" Icon="front_hand" Click="@(() => InteresseAsync(b.Anfrage.Id))" /></div>
+                    </div>
+                }
+            </section>
+        }
+
+        @if (ansicht.BerichtOffen.Count > 0)
+        {
+            <section class="fp-card">
+                <h2>Kurzbericht anlegen <span class="fp-zahl">@ansicht.BerichtOffen.Count</span></h2>
+                @foreach (var b in ansicht.BerichtOffen)
+                {
+                    <div class="fp-anfrage"><a href="besetzung/@b.Anfrage.Id"><b>@b.Termin.Titel</b></a><span class="fp-small fp-muted">@b.Termin.Beginn.ToString("dd.MM.yyyy") – wie war es?</span></div>
+                }
+            </section>
+        }
+
         @if (ansicht.MeineAufgaben.Count > 0)
         {
             <section class="fp-card">
@@ -176,6 +202,20 @@ else
             var ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().AntwortenAsync(terminId, zusage));
             meldung = zusage ? "Zugesagt." : "Abgesagt.";
             schritte = ergebnis.NaechsteSchritte;
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task InteresseAsync(Guid anfrageId)
+    {
+        try
+        {
+            meldung = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<BesetzungDienst>().InteresseMeldenAsync(anfrageId));
         }
         catch (InvalidOperationException ex)
         {

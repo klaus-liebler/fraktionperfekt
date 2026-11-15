@@ -59,6 +59,11 @@ else
             {
                 <a href="vertretungen/termin/@t.Id">Vertretungen für diese Sitzung</a>
             }
+            @if (t.Art.IstOeffentlich())
+            {
+                <a href="besetzung?termin=@t.Id">Terminbesetzung: wer vertritt die Fraktion?</a>
+            }
+            <a href="ressourcen?termin=@t.Id">Raum oder Material buchen</a>
             @if (t.Art is Terminart.Fraktionssitzung or Terminart.Arbeitskreis or Terminart.Ratssitzung or Terminart.Ausschusssitzung)
             {
                 <a href="@(sitzungId is { } sid ? $"sitzungen/{sid}" : $"sitzungen?termin={t.Id}")">@(sitzungId is null ? "Tagesordnung und Protokoll anlegen" : "Tagesordnung und Protokoll")</a>

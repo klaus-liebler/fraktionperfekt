@@ -135,6 +135,7 @@ public sealed class Demodaten(
         // 6. Stufe 2 und folgende Module
         await SitzungsDemodaten.AnlegenAsync(daten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
         await AntragsDemodaten.AnlegenAsync(daten, stammdaten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
+        await RessourcenDemodaten.AnlegenAsync(daten, termine, personen, heute, uhr.GetUtcNow(), abbruch);
 
         await protokoll.ProtokollierenAsync("Demodaten.Angelegt",
             $"Demofraktion angelegt: {personen.Count} Personen, {anzahlTermine} eigene Termine, {ris.Zusammenfassung}, {faelle} Vertretungsfälle", abbruch: abbruch);
