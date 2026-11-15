@@ -61,6 +61,19 @@ else
             </section>
         }
 
+        @if (ansicht.Hinweise is { Count: > 0 } hinweise)
+        {
+            <section class="fp-card">
+                <h2>Steht an <span class="fp-zahl">@hinweise.Count</span></h2>
+                @foreach (var h in hinweise)
+                {
+                    <div class="fp-anfrage">
+                        <span><span class="fp-pill fp-p-@h.Stil">@h.Bereich</span> <a href="@h.Ziel"><b>@h.Titel</b></a>@if (h.Text is not null) { <span class="fp-small fp-muted"> · @h.Text</span> }</span>
+                    </div>
+                }
+            </section>
+        }
+
         @if (ansicht.OffeneZusagen.Count > 0)
         {
             <section class="fp-card">

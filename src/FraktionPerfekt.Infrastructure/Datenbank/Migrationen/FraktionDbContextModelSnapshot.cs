@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261115181330_Iteration7WahlkampfFinanzen";
+    public override string LastMigrationId => "20261115182728_Iteration8Feinschliff";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -1129,6 +1129,45 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("Pressemitteilungen");
             });
 
+        modelBuilder.Entity("FraktionPerfekt.Domain.Postausgang.PushAbo", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Auth")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Endpunkt")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("ErstelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Geraet")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("P256dh")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("ZuletztZugestelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Endpunkt")
+                    .IsUnique();
+
+                b.HasIndex("PersonId");
+
+                b.ToTable("PushAbos");
+            });
+
         modelBuilder.Entity("FraktionPerfekt.Domain.Ressourcen.Buchung", b =>
             {
                 b.Property<Guid>("Id")
@@ -1594,6 +1633,28 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("Termine");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Termine.TerminErinnerung", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("TerminId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("TerminId", "PersonId")
+                    .IsUnique();
+
+                b.ToTable("TerminErinnerungen");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Vertretung.Abwesenheit", b =>

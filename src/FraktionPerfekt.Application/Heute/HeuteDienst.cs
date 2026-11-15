@@ -23,9 +23,10 @@ public sealed record HeuteAnsicht(
     IReadOnlyList<BesetzungZeile> OffeneBesetzungen,
     IReadOnlyList<BesetzungZeile> BerichtOffen,
     int OffeneVertretungen,
-    IReadOnlyList<Schnellaktion> Schnellaktionen)
+    IReadOnlyList<Schnellaktion> Schnellaktionen,
+    IReadOnlyList<Hinweis>? Hinweise = null)
 {
-    public bool NichtsZuTun => Vertretungsanfragen.Count == 0 && OffeneZusagen.Count == 0 && Aufgaben.Count == 0 && MeineAufgaben.Count == 0 && OffeneAbstimmungen.Count == 0 && OffeneBesetzungen.Count == 0 && BerichtOffen.Count == 0;
+    public bool NichtsZuTun => (Hinweise is null || Hinweise.Count == 0) && Vertretungsanfragen.Count == 0 && OffeneZusagen.Count == 0 && Aufgaben.Count == 0 && MeineAufgaben.Count == 0 && OffeneAbstimmungen.Count == 0 && OffeneBesetzungen.Count == 0 && BerichtOffen.Count == 0;
 }
 
 /// <summary>Startseite „Heute“: nur, was jetzt zu tun ist – jeweils mit Ein-Klick-Antwort.</summary>
@@ -35,6 +36,7 @@ public sealed class HeuteDienst(
     AufgabenDienst aufgaben,
     Abstimmungen.UmfrageDienst umfragen,
     BesetzungDienst besetzung,
+    HinweisDienst hinweise,
     IAktuellerBenutzer benutzer,
     TimeProvider uhr)
 {
@@ -51,6 +53,9 @@ public sealed class HeuteDienst(
             .Take(8).ToList();
         var offeneZusagen = zeilen.Where(z => z.WartetAufAntwort).Take(6).ToList();
         var steuert = Rechte.VertretungenSteuern(wer.Rolle).Erlaubt;
+        var politik = wer.Rolle is Domain.Personen.Rolle.Helferin or null
+            ? Freigabe.Nein("Nur für Mitglieder, sachkundige Bürger:innen, Vorstand und Geschäftsführung.")
+            : Freigabe.Ja;
         return new HeuteAnsicht(
             wer.Name,
             meine,
@@ -69,6 +74,14 @@ public sealed class HeuteDienst(
                 new("Antrag starten", "antraege?neu=1", "description",
                     wer.Rolle is Domain.Personen.Rolle.Helferin ? Freigabe.Nein("Helfer:innen schreiben nicht an Anträgen mit.") : Freigabe.Ja),
                 new("Fraktionssitzung einladen", "sitzungen", "groups", Rechte.SitzungenSteuern(wer.Rolle)),
-            ]);
+                new("Anfrage schreiben", "anfragen", "help", politik),
+                new("Bürgeranliegen erfassen", "anliegen", "support_agent", politik),
+                new("Pressemitteilung", "presse", "campaign", politik),
+                new("Wiki durchsuchen", "wiki", "menu_book", Freigabe.Ja),
+                new("Datei ablegen", "dateien", "upload_file", Freigabe.Ja),
+                new("Plakat erfassen", "handy/plakat", "add_location_alt", Freigabe.Ja),
+                new("Auslage einreichen", "auslagen", "receipt_long", Freigabe.Ja),
+            ],
+            await hinweise.LadenAsync(abbruch));
     }
 }

@@ -23,11 +23,14 @@
                 }
             }
         </nav>
-        <div class="fp-foot">Iteration 1 · MVP-Teil<br />Entwicklungsstand, Mock-Anbindungen</div>
+        <div class="fp-foot">Stufe 2 · Iteration 8<br />Entwicklungsstand, Mock-Anbindungen</div>
     </aside>
     <div class="fp-main">
         <div class="fp-streifen" aria-hidden="true"></div>
         <header class="fp-top">
+            <form method="get" action="suche" class="fp-inline fp-kopfsuche" role="search">
+                <input name="q" type="search" class="fp-input" placeholder="Suchen …" aria-label="Alles durchsuchen" />
+            </form>
             <a class="fp-link" href="handy" title="Schlanke Handy-Ansicht (statisch, schnell bei schlechtem Netz)">Handy-Ansicht</a>
             <AuthorizeView>
                 <Authorized>
@@ -102,7 +105,7 @@
         new("Wahlkampf", "Plakate, Gebiete, Schichten", "wahlkampf"),
         new("Finanzen", "Kasse und Budget", "finanzen", Rechte.FinanzenEinsehen),
         new("Finanzen", "Meine Auslagen", "auslagen"),
-        new("Persönlich", "Kalender-Abo", "kalender-abo"),
+        new("Persönlich", "Kalender-Abo und Push", "kalender-abo"),
         new("Verwaltung", "Postausgang", "postausgang", Rechte.VerwaltungEinsehen),
         new("Verwaltung", "Protokoll", "protokoll", Rechte.VerwaltungEinsehen),
         new("Verwaltung", "Betrieb und Sicherung", "betrieb", Rechte.BetriebSteuern),

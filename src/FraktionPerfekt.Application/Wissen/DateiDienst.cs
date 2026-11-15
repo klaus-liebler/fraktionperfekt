@@ -100,6 +100,18 @@ public sealed class DateiDienst(
             .ToList();
     }
 
+    /// <summary>Dateien nach Namen finden (globale Suche), mit denselben Rechten wie die Ordneransicht.</summary>
+    public async Task<IReadOnlyList<DateiZeile>> SuchenAsync(IReadOnlyCollection<string> woerter, CancellationToken abbruch = default)
+    {
+        var wer = await benutzer.ErmittelnAsync(abbruch);
+        var sichtbar = await SichtbarAsync(wer, abbruch);
+        return (await daten.ListeAsync(daten.Menge<Datei>().Where(d => d.GeloeschtAm == null).OrderByDescending(d => d.Am).ThenBy(d => d.Id), abbruch))
+            .Where(d => sichtbar(d.GremiumId, d.Vertraulich) && (wer.Rolle is not Rolle.Helferin || d.Ordner == "Wahlkampf")
+                        && woerter.All(w => d.Name.Contains(w, StringComparison.CurrentCultureIgnoreCase) || d.Ordner.Contains(w, StringComparison.CurrentCultureIgnoreCase)))
+            .Select(d => new DateiZeile(d, string.Empty, Freigabe.Nein("In der Ordneransicht löschen.")))
+            .ToList();
+    }
+
     public async Task<Datei> HochladenAsync(string ordner, string dateiname, Stream inhalt, Guid? gremiumId, bool vertraulich, string? bezugArt = null,
         Guid? bezugId = null, CancellationToken abbruch = default)
     {

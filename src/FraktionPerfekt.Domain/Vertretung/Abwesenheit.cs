@@ -50,4 +50,7 @@ public sealed class Abwesenheit
 
     /// <summary>„Ich bin doch da“: Die Abwesenheit gilt nicht mehr; offene Vertretungsanfragen werden zurückgezogen.</summary>
     public void Zurueckziehen(DateTimeOffset jetzt) => ZurueckgezogenAm ??= jetzt;
+
+    /// <summary>Löschfrist: Der Grund (z. B. Krankheit) ist nur kurz nötig.</summary>
+    public void GrundEntfernen() => Grund = null;
 }

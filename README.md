@@ -1,7 +1,8 @@
 # FraktionPerfekt
 
-Webbasiertes System für eine kommunalpolitische Fraktion (Stadt Greven, NRW): Termine, Sitzungen, Vertretungen und
-später Anträge, Protokolle und Wahlkampf an einem Ort statt in Messenger-Gruppen, Verteilern und Tabellen. Internes
+Webbasiertes System für eine kommunalpolitische Fraktion (Stadt Greven, NRW): Termine, Sitzungen, Vertretungen,
+Anträge, Protokolle, Wissen, politische Arbeit, Wahlkampf und Finanzen an einem Ort statt in Messenger-Gruppen,
+Verteilern und Tabellen. Internes
 Werkzeug, auf dem Handy genauso nutzbar wie am Rechner.
 
 Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
@@ -9,7 +10,7 @@ Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
 | Dokument | Link |
 |---|---|
 | Konzept | https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb |
-| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md), [`docs/abnahme-4.md`](docs/abnahme-4.md) |
+| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md), [`docs/abnahme-4.md`](docs/abnahme-4.md), [`5`](docs/abnahme-5.md), [`6`](docs/abnahme-6.md), [`7`](docs/abnahme-7.md), [`8`](docs/abnahme-8.md); **Gesamt:** [`docs/abnahme-gesamt.md`](docs/abnahme-gesamt.md) |
 | Betrieb, Sicherung, Wiederherstellung | [`docs/betrieb.md`](docs/betrieb.md) |
 | Sicherheit (OWASP-Checkliste) | [`docs/sicherheit.md`](docs/sicherheit.md) |
 | Handy-Test im LAN (HTTPS) | [`docs/handy-test.md`](docs/handy-test.md) |
@@ -45,11 +46,11 @@ dotnet run --project tools\Testdaten -- C:\temp\demo.db
 | Katrin Albers | Administration | Rollen und Vertretungsrang pflegen, RIS-Abgleich, Postausgang, Protokoll |
 | Thomas Brinkmann | Vorstand, Mitglied | Aufgabe „Vertretung offen“ (eskaliert), Vertretung selbst eintragen |
 | Sabine Hölscher | Vorstand, Mitglied | Abwesenheit melden → Vertretung anfragen |
-| Markus Terhaar | Kassier, Mitglied | Rollenwechsel |
+| Markus Terhaar | Kassier, Mitglied | Kasse und Budget, Auslagen freigeben und auszahlen, Spenden |
 | Anna Wewers | Mitglied | ist als Vertretung für den HFA gefragt (Startseite und `/handy`) |
 | Jens Overmeyer, Petra Lammers, Dirk Schulze-Eling, Melanie Kock, Stefan Grüter, Ralf Niehues | Mitglied | |
 | Lena Hagedorn, Yusuf Demir, Claudia Rensing | Sachkundige Bürger:innen | |
-| Felix Bäumer, Nora Feldhaus | Helfer:innen | sehen nur öffentliche und Wahlkampftermine |
+| Felix Bäumer, Nora Feldhaus | Helfer:innen | Wahlkampf: Plakate am Handy, Schichten, Gebiete, Auslagen |
 
 Demodaten: sieben fiktive Grevener Gremien aus dem RIS-Mock (Rat, Haupt- und Finanzausschuss, Ausschuss für Schule und
 Bildung, Ausschuss für Stadtentwicklung und Verkehr, Soziales, Klima, Rechnungsprüfung) mit ordentlichen Mitgliedern und
@@ -192,6 +193,30 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   - Bestätigte haben den Termin als Zusage im Kalender.
   - Nach dem Termin erscheint der Folgeschritt **„Kurzbericht anlegen“** auf der Startseite.
 
+## Iteration 8: Feinschliff
+
+- **Startseite „Heute“**: neuer Block **„Steht an“** mit Hinweisen aus allen Modulen, die nicht schon als Aufgabe im Korb
+  liegen (eigene Infostand-Schichten und Gebiete, überfällige Anfragen, Pressemitteilungen kurz vor dem Termin ohne
+  Freigabe, offene KI-Vorschläge, Plakate nach der Wahl, offene Zuwendungsbestätigungen). **Schnellaktionen** für alle
+  Module (Anfrage, Bürgeranliegen, Pressemitteilung, Wiki, Datei, Plakat, Auslage …), gesperrte mit Begründung.
+- **Folgeschritte**: Jede Aktion, die jemand anderes erledigen muss, legt eine Aufgabe mit Frist in den passenden Korb
+  und schließt sie automatisch, sobald es erledigt ist (Übersicht in `docs/abnahme-gesamt.md`).
+- **Globale Suche** in der Kopfzeile (`/suche`): Termine, Personen, Gremien, Anträge, Beschlüsse, Anfragen, Anliegen,
+  Presse, Kontakte, Wiki, Dateien – mit den Rechten des jeweiligen Moduls.
+- **PWA**: Service Worker (`wwwroot/sw.js`) hält die App-Hülle vor (Stil, Logo, Leaflet), Seiten kommen immer frisch
+  vom Server, ohne Netz erscheint `offline.html`. App-Shortcuts: Heute, Abwesenheit, Plakat, Auslage, Suche.
+- **Web Push (VAPID)** als echter Adapter neben dem Mock: `Push:Art=WebPush`. Verschlüsselung nach RFC 8291
+  (aes128gcm) und VAPID (RFC 8292) ohne Fremdbibliothek; Schlüssel aus `Push:Vapid:Oeffentlich/Privat` oder einmalig
+  erzeugt in `data/vapid.json`. Geräte melden sich unter **Kalender-Abo und Push** an; abgelaufene Abos (404/410)
+  werden entfernt.
+- **ICS für alle Terminarten**: „In meinen Kalender“ an jedem Termin (`/termine/{id}/termin.ics`); das Kalender-Abo
+  enthält zusätzlich die eigenen Infostand-Schichten (auch für Helfer:innen).
+- **Erinnerung vor Sitzungen**: etwa 24 Stunden vorher eine Push-Mitteilung an alle, die dabei sind (ordentlich,
+  vertretend, zugesagt), genau einmal, nicht bei Absage oder Abwesenheit.
+- **Löschfristen** (stündliche Fristenprüfung): Abwesenheitsgrund 3 Monate nach Ende, Abwesenheit ohne Vertretungsfall
+  12 Monate nach Ende; Bürgeranliegen (Name, Kontakt) 12 Monate nach Erledigung; Wahlkampfdaten (abgehängte Plakate mit
+  Foto, Schichteinträge) nach einem halben Jahr.
+
 ## Iteration 7: Wahlkampf und Finanzen
 
 - **Wahlkampf** (`/wahlkampf`, Modul 17; Helfer:innen arbeiten voll mit):
@@ -294,9 +319,12 @@ Nicht verwenden: QuestPDF, Nager.Date, MediatR, AutoMapper, FluentAssertions. Ve
 
 ## Offen / nächste Schritte
 
-- Echte Anmeldung (Passkeys, Anmeldelink per Mail), echte Zustellung (SMTP, Web Push/VAPID), OParl-Adapter für das
-  Grevener RIS (Freischaltung und Server-IP beim Bot-Schutz klären).
-- Service Worker und App-Hülle (Capacitor); das Manifest ist vorbereitet.
-- Personen und Gremien anlegen/bearbeiten in der Oberfläche (bisher Demodaten und RIS-Abgleich; Rang und Rollen sind pflegbar).
-- Löschkonzept für Abwesenheiten (z. B. nach 12 Monaten), Erinnerungen vor Sitzungen.
-- Stufe 2 laut Konzept: Raumbuchung, Anträge, Protokolle, Terminbesetzung öffentlicher Termine.
+- **Echte Anmeldung** (Passkeys, Anmeldelink per Mail) statt Testanmeldung; Sicherheitsprüfung vor dem Echtbetrieb
+  (in Stufe 2 bewusst ausgeklammert).
+- **Echte Mail** (SMTP-Adapter); Web Push, OParl, WebDAV/Nextcloud sind als echte Adapter vorhanden, aber nur gegen
+  Testdaten geprüft: OParl-Freischaltung beim Grevener RIS, Nextcloud-Zugang und VAPID-Kontakt klären.
+- **Echte KI** als weiterer Adapter für `IKiAssistent` (Anbieter mit AVV oder selbst gehostet); bisher regelbasierter Mock.
+- Personen und Gremien in der Oberfläche anlegen/bearbeiten (bisher Demodaten und RIS-Abgleich).
+- App-Hülle für die Stores (Capacitor) und iOS-Push über die installierte PWA testen.
+- Fachlich prüfen: Spenden (nur Wahlkampfkasse, Grenzen nach PartG), Abhängfristen der Sondernutzungserlaubnis,
+  Löschfristen mit dem Datenschutz abstimmen.

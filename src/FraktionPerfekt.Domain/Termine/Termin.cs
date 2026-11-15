@@ -160,3 +160,25 @@ public sealed class Teilnahme
         GeantwortetAm = am;
     }
 }
+
+/// <summary>Vermerk, dass eine Person an einen Termin erinnert wurde (genau einmal).</summary>
+public sealed class TerminErinnerung
+{
+    private TerminErinnerung()
+    {
+    }
+
+    public TerminErinnerung(Guid terminId, Guid personId, DateTimeOffset am)
+    {
+        Id = Gemeinsam.Ids.Neu();
+        (TerminId, PersonId, Am) = (terminId, personId, am);
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid TerminId { get; private set; }
+
+    public Guid PersonId { get; private set; }
+
+    public DateTimeOffset Am { get; private set; }
+}

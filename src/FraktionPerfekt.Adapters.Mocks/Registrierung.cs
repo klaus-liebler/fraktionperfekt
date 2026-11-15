@@ -14,7 +14,10 @@ public static class Registrierung
         dienste.Configure<TestanmeldungOptionen>(konfiguration.GetSection(TestanmeldungOptionen.Abschnitt));
         dienste.AddSingleton<Zugangsschutz>();
         dienste.AddSingleton<IZustellKanal, MockMailKanal>();
-        dienste.AddSingleton<IZustellKanal, MockPushKanal>();
+        if (!string.Equals(konfiguration["Push:Art"], "WebPush", StringComparison.OrdinalIgnoreCase))
+        {
+            dienste.AddSingleton<IZustellKanal, MockPushKanal>();
+        }
         dienste.TryAddSingleton<IRisSchnittstelle, MockRis>();
         dienste.AddScoped<Testdaten.Demodaten>();
         dienste.TryAddSingleton<Application.Wissen.IKiAssistent, MockKi>();

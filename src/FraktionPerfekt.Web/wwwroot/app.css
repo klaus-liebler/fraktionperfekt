@@ -398,3 +398,8 @@ label.fp-option.sel { border-color: var(--fp-rhoendorf); background: var(--fp-ca
 @media (max-width: 600px) { .fp-karte { height: 320px; } }
 .fp-budget .fp-balken-zeile { grid-template-columns: minmax(110px, 1fr) minmax(60px, 1.4fr) auto; }
 .fp-budget .fp-balken-zahl { white-space: nowrap; font-size: 13px; }
+
+/* Iteration 8 */
+.fp-kopfsuche input { width: 220px; padding: 5px 10px; border-radius: 16px; }
+@media (max-width: 700px) { .fp-kopfsuche input { width: 130px; } }
+.fp-offline { max-width: 520px; margin: 40px auto; padding: 16px; }

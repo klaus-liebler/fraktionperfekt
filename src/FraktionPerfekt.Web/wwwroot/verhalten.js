@@ -36,3 +36,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }, () => { }, { timeout: 10000 });
     });
 });
+
+// Service Worker (App-Hülle offline, Web Push).
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { }); });
+}
+//   data-push-aktivieren   Klick: Erlaubnis holen, Push-Abo anlegen (VAPID-Schlüssel in data-schluessel), beim Server anmelden
+document.addEventListener('click', async (e) => {
+    const knopf = e.target.closest && e.target.closest('[data-push-aktivieren]');
+    if (!knopf) { return; }
+    const status = document.querySelector('[data-push-status]');
+    const melden = (t) => { if (status) { status.textContent = t; } };
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) { melden('Dieser Browser unterstützt kein Web Push.'); return; }
+    try {
+        if (await Notification.requestPermission() !== 'granted') { melden('Mitteilungen wurden nicht erlaubt.'); return; }
+        const reg = await navigator.serviceWorker.register('sw.js');
+        await navigator.serviceWorker.ready;
+        const b64 = knopf.dataset.schluessel.replace(/-/g, '+').replace(/_/g, '/');
+        const roh = atob(b64 + '='.repeat((4 - b64.length % 4) % 4));
+        const schluessel = Uint8Array.from(roh, (c) => c.charCodeAt(0));
+        const abo = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: schluessel });
+        const json = abo.toJSON();
+        const antwort = await fetch('push/abo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys, geraet: navigator.userAgent.substring(0, 120) })
+        });
+        melden(antwort.ok ? 'Push ist auf diesem Gerät aktiv. Bitte Seite neu laden.' : 'Anmeldung fehlgeschlagen (' + antwort.status + ').');
+    } catch (fehler) {
+        melden('Push konnte nicht aktiviert werden: ' + fehler.message);
+    }
+});

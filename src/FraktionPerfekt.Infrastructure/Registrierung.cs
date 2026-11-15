@@ -55,6 +55,15 @@ public static class Registrierung
         }
 
 
+        // Echter Web Push (VAPID) nur auf Wunsch; Schlüssel aus der Konfiguration oder einmalig erzeugt in data/vapid.json.
+        if (string.Equals(konfiguration["Push:Art"], "WebPush", StringComparison.OrdinalIgnoreCase))
+        {
+            var vapid = VapidLaden(konfiguration, basisVerzeichnis);
+            var pushClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            dienste.AddSingleton(vapid);
+            dienste.AddScoped<IZustellKanal>(d => new Postausgang.WebPushKanal(d.GetRequiredService<IDaten>(), vapid, pushClient, d.GetRequiredService<TimeProvider>()));
+        }
+
         // Echtes RIS über OParl nur auf ausdrücklichen Wunsch; sonst registrieren die Mocks das simulierte RIS.
         if (string.Equals(konfiguration["Ris:Art"], "OParl", StringComparison.OrdinalIgnoreCase))
         {
@@ -100,5 +109,26 @@ public static class Registrierung
         });
         dienste.AddQuartzHostedService(o => o.WaitForJobsToComplete = true);
         return dienste;
+    }
+
+    private static VapidSchluessel VapidLaden(IConfiguration konfiguration, string basisVerzeichnis)
+    {
+        var betreff = konfiguration["Push:Vapid:Betreff"] ?? "mailto:geschaeftsstelle@fraktion.example";
+        if (konfiguration["Push:Vapid:Oeffentlich"] is { Length: > 0 } o && konfiguration["Push:Vapid:Privat"] is { Length: > 0 } p)
+        {
+            return new VapidSchluessel(o, p, betreff);
+        }
+
+        var datei = Path.GetFullPath(Path.Combine(basisVerzeichnis, konfiguration["Push:Vapid:Datei"] ?? "data/vapid.json"));
+        if (File.Exists(datei))
+        {
+            var gespeichert = System.Text.Json.JsonSerializer.Deserialize<VapidSchluessel>(File.ReadAllText(datei))!;
+            return gespeichert with { Betreff = betreff };
+        }
+
+        var (oeffentlich, privat) = Postausgang.WebPush.SchluesselErzeugen();
+        Directory.CreateDirectory(Path.GetDirectoryName(datei)!);
+        File.WriteAllText(datei, System.Text.Json.JsonSerializer.Serialize(new VapidSchluessel(oeffentlich, privat, betreff)));
+        return new VapidSchluessel(oeffentlich, privat, betreff);
     }
 }

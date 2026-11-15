@@ -1,0 +1,49 @@
+@page "/suche"
+@using FraktionPerfekt.Application.Suche
+@inject Vorgang Vorgang
+
+<PageTitle>Suche · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Suche</h1>
+        <p class="fp-sub">Termine, Personen, Gremien, Anträge, Beschlüsse, Anfragen, Anliegen, Presse, Kontakte, Wiki und Dateien – jeweils nur, was Sie im Modul sehen dürfen.</p>
+    </div>
+</div>
+
+<form method="get" action="suche" class="fp-card fp-einschub">
+    <div class="fp-form">
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="suche-q">Suchbegriff</label><input id="suche-q" name="q" class="fp-input" value="@Q" autofocus /></div>
+    </div>
+    <button type="submit" class="fp-btn fp-btn-haupt">Suchen</button>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(Q))
+{
+    @if (treffer.Count == 0)
+    {
+        <p class="fp-leer">Nichts gefunden zu „@Q“.</p>
+    }
+    @foreach (var gruppe in treffer.GroupBy(t => t.Bereich))
+    {
+        <section class="fp-card">
+            <h2>@gruppe.Key <span class="fp-zahl">@gruppe.Count()</span></h2>
+            <ul class="fp-kompakt">
+                @foreach (var t in gruppe)
+                {
+                    <li><a href="@t.Ziel"><b>@t.Titel</b></a>@if (t.Text is not null) { <span class="fp-small fp-muted"> · @t.Text</span> }</li>
+                }
+            </ul>
+        </section>
+    }
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? Q { get; set; }
+
+    private IReadOnlyList<Suchergebnis> treffer = [];
+
+    protected override async Task OnParametersSetAsync()
+        => treffer = string.IsNullOrWhiteSpace(Q) ? [] : await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<SucheDienst>().SuchenAsync(Q));
+}

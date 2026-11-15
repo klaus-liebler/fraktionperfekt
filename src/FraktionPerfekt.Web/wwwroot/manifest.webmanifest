@@ -1,7 +1,7 @@
 {
   "name": "FraktionPerfekt – CDU-Fraktion Greven",
   "short_name": "Fraktion",
-  "description": "Termine, Sitzungen und Vertretungen der Fraktion",
+  "description": "Termine, Sitzungen, Anträge, Wahlkampf und Finanzen der Fraktion",
   "lang": "de",
   "start_url": "/handy",
   "scope": "/",
@@ -9,12 +9,39 @@
   "background_color": "#F4F7F8",
   "theme_color": "#FFFFFF",
   "icons": [
-    { "src": "marke/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "marke/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    {
+      "src": "marke/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "marke/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ],
   "shortcuts": [
-    { "name": "Abwesenheit melden", "url": "/handy/abwesenheit" },
-    { "name": "Heute", "url": "/handy" },
-    { "name": "Kalender", "url": "/kalender" }
+    {
+      "name": "Heute",
+      "url": "/handy"
+    },
+    {
+      "name": "Abwesenheit melden",
+      "url": "/handy/abwesenheit"
+    },
+    {
+      "name": "Plakat erfassen",
+      "url": "/handy/plakat"
+    },
+    {
+      "name": "Auslage einreichen",
+      "url": "/handy/auslage"
+    },
+    {
+      "name": "Suche",
+      "url": "/suche"
+    }
   ]
 }

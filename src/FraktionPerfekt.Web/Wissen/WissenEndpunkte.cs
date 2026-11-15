@@ -29,6 +29,30 @@ internal static class WissenEndpunkte
                 ? Results.File(d.Inhalt, d.Datei.Typ, d.Datei.Name, enableRangeProcessing: true)
                 : Results.NotFound()).RequireAuthorization();
 
+        app.MapGet("/termine/{id:guid}/termin.ics", async (Guid id, FraktionPerfekt.Application.Termine.KalenderDienst kalender) =>
+            await kalender.TerminKalenderAsync(id) is { } ics
+                ? Results.File(Encoding.UTF8.GetBytes(ics), "text/calendar; charset=utf-8", "termin.ics")
+                : Results.NotFound()).RequireAuthorization();
+
+        // Web Push: Gerät anmelden (Abo aus pushManager.subscribe)
+        app.MapPost("/push/abo", async (PushAnmeldung a, FraktionPerfekt.Application.Postausgang.PushAboDienst push) =>
+        {
+            if (push.OeffentlicherSchluessel is null)
+            {
+                return Results.BadRequest(new { Fehler = "Push ist im Simulationsbetrieb." });
+            }
+
+            try
+            {
+                await push.AnmeldenAsync(a.Endpoint, a.Keys.P256dh, a.Keys.Auth, a.Geraet);
+                return Results.Ok(new { Meldung = "Push ist auf diesem Gerät aktiv." });
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { Fehler = ex.Message });
+            }
+        }).RequireAuthorization();
+
         var api = app.MapGroup("/api/wiki").AddEndpointFilter(KiSchluesselPruefen).DisableAntiforgery();
         api.MapGet("/seiten", async (WikiDienst wiki) => Results.Ok((await wiki.KiSeitenAsync()).Select(Kurz)));
         api.MapGet("/seiten/{id:guid}", async (Guid id, WikiDienst wiki) =>
@@ -49,6 +73,10 @@ internal static class WissenEndpunkte
 
         app.MapPost("/mcp", Mcp).AddEndpointFilter(KiSchluesselPruefen).DisableAntiforgery();
     }
+
+    private sealed record PushSchluesselTeil(string P256dh, string Auth);
+
+    private sealed record PushAnmeldung(string Endpoint, PushSchluesselTeil Keys, string? Geraet);
 
     private sealed record VorschlagAnfrage(Guid SeiteId, Vorschlagsart Art, string Begruendung, string? NeuerText);
 

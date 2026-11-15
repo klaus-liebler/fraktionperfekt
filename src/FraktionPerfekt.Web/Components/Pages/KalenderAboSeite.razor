@@ -1,13 +1,14 @@
 @page "/kalender-abo"
 @using FraktionPerfekt.Application.Termine
 @using FraktionPerfekt.Domain.Termine
+@using FraktionPerfekt.Application.Postausgang
 @inject Vorgang Vorgang
 
-<PageTitle>Kalender-Abo · FraktionPerfekt</PageTitle>
+<PageTitle>Kalender und Push · FraktionPerfekt</PageTitle>
 
 <div class="fp-head">
     <div>
-        <h1>Kalender-Abo</h1>
+        <h1>Kalender-Abo und Push</h1>
         <p class="fp-sub">Ihre Termine im Kalender des Handys oder Rechners – ohne zweiten Kalender zu pflegen.</p>
     </div>
 </div>
@@ -63,13 +64,51 @@
     </div>
 </section>
 
+<section class="fp-card">
+    <h2>Push-Mitteilungen auf diesem Gerät</h2>
+    @if (pushSchluessel is null)
+    {
+        <p>Push läuft im Simulationsbetrieb: Mitteilungen stehen im Postausgang, verlassen das System aber nicht (Push:Art=WebPush schaltet echten Web Push ein).</p>
+    }
+    else
+    {
+        <p>Erinnerungen vor Sitzungen, Vertretungsanfragen und Aufgaben als Mitteilung – auch wenn die App geschlossen ist. Am iPhone erst „Zum Home-Bildschirm“ hinzufügen.</p>
+        <button type="button" class="fp-btn fp-btn-haupt" data-push-aktivieren data-schluessel="@pushSchluessel">Push auf diesem Gerät aktivieren</button>
+        <p class="fp-small" data-push-status></p>
+    }
+    @if (pushAbos.Count > 0)
+    {
+        <h3>Angemeldete Geräte</h3>
+        <ul class="fp-kompakt">
+            @foreach (var a in pushAbos)
+            {
+                <li>@(a.Geraet ?? "Gerät") · seit @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(a.ErstelltAm).ToString("dd.MM.yyyy")
+                    <button class="fp-linkbutton fp-small" @onclick="@(() => PushAbmeldenAsync(a.Id))">abmelden</button></li>
+            }
+        </ul>
+    }
+</section>
+
 @code {
     private IReadOnlyList<KalenderAbo> abos = [];
+    private IReadOnlyList<FraktionPerfekt.Domain.Postausgang.PushAbo> pushAbos = [];
+    private string? pushSchluessel;
     private AboLink? neu;
 
     protected override Task OnInitializedAsync() => LadenAsync();
 
-    private async Task LadenAsync() => abos = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().MeineAbosAsync());
+    private async Task LadenAsync()
+    {
+        abos = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().MeineAbosAsync());
+        pushAbos = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<PushAboDienst>().MeineAsync());
+        pushSchluessel = await Vorgang.AusfuehrenAsync(d => Task.FromResult(d.GetRequiredService<PushAboDienst>().OeffentlicherSchluessel));
+    }
+
+    private async Task PushAbmeldenAsync(Guid id)
+    {
+        await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<PushAboDienst>().AbmeldenAsync(id));
+        await LadenAsync();
+    }
 
     private async Task AnlegenAsync()
     {

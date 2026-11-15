@@ -75,5 +75,16 @@ public sealed partial class FraktionDbContext
         });
         Einfach<Domain.Finanzen.Spende>(modelBuilder, "Spenden", b => b.Ignore(x => x.QuittungFaellig));
         Einfach<Domain.Finanzen.Auslage>(modelBuilder, "Auslagen", b => b.HasIndex(x => x.Status));
+        Iteration8(modelBuilder);
+    }
+
+    private static void Iteration8(ModelBuilder modelBuilder)
+    {
+        Einfach<Domain.Termine.TerminErinnerung>(modelBuilder, "TerminErinnerungen", b => b.HasIndex(x => new { x.TerminId, x.PersonId }).IsUnique());
+        Einfach<Domain.Postausgang.PushAbo>(modelBuilder, "PushAbos", b =>
+        {
+            b.HasIndex(x => x.Endpunkt).IsUnique();
+            b.HasIndex(x => x.PersonId);
+        });
     }
 }

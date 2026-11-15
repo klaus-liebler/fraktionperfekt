@@ -20,6 +20,8 @@ public static class Registrierung
         dienste.AddScoped<Vertretung.VertretungDienst>();
         dienste.AddScoped<Aufgaben.AufgabenDienst>();
         dienste.AddScoped<Heute.HeuteDienst>();
+        dienste.AddScoped<Heute.HinweisDienst>();
+        dienste.AddScoped<Suche.SucheDienst>();
         dienste.AddScoped<Sitzungen.SitzungDienst>();
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Aufgaben", d.GetRequiredService<Aufgaben.AufgabenDienst>().ErinnernAsync));
         dienste.AddScoped<Abstimmungen.UmfrageDienst>();
@@ -40,6 +42,10 @@ public static class Registrierung
         dienste.AddScoped<Wahlkampf.WahlkampfDienst>();
         dienste.AddScoped<Finanzen.FinanzDienst>();
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Wahlkampf", d.GetRequiredService<Wahlkampf.WahlkampfDienst>().FristenPruefenAsync));
+        dienste.AddScoped<Termine.Sitzungserinnerung>();
+        dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Sitzungserinnerung", d.GetRequiredService<Termine.Sitzungserinnerung>().ErinnernAsync));
+        dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Abwesenheiten-Löschfrist", d.GetRequiredService<Termine.Sitzungserinnerung>().AbwesenheitenLoeschfristAsync));
+        dienste.AddScoped<Postausgang.PushAboDienst>();
         return dienste;
     }
 }
