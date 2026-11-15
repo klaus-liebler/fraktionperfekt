@@ -1,0 +1,81 @@
+@page "/handy"
+@attribute [ExcludeFromInteractiveRouting]
+@layout HandyLayout
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Heute
+@inject HeuteDienst Heute
+
+<PageTitle>Heute · FraktionPerfekt</PageTitle>
+
+@if (Meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">
+        @Meldung
+        @if (Vertretung is { } terminId)
+        {
+            <form method="post" action="handy-aktion/termin/@terminId/vertretung" style="margin-top:8px">
+                <AntiforgeryToken />
+                <button type="submit" class="fp-btn fp-btn-haupt">Vertretung anfragen</button>
+            </form>
+        }
+    </div>
+}
+
+@if (ansicht is not null)
+{
+    @foreach (var a in ansicht.Vertretungsanfragen)
+    {
+        <article class="fp-handy-karte fp-hervor">
+            <h2>Vertretung gesucht</h2>
+            <div><b>@a.Gremium</b></div>
+            <div>@a.Termin.Beginn.ToString("dddd, dd.MM., HH:mm") Uhr · für @a.Vertretene</div>
+            <div class="fp-small fp-muted">Antwort bis @Ortszeit.AlsOrtszeit(a.Frist).ToString("dd.MM., HH:mm") Uhr</div>
+            <form method="post" action="handy-aktion/anfrage/@a.AnfrageId/antwort" class="fp-handy-knoepfe">
+                <AntiforgeryToken />
+                <button type="submit" name="zusage" value="ja" class="fp-btn fp-btn-haupt">Ich vertrete</button>
+                <button type="submit" name="zusage" value="nein" class="fp-btn">Kann nicht</button>
+            </form>
+        </article>
+    }
+
+    @foreach (var z in ansicht.OffeneZusagen)
+    {
+        <article class="fp-handy-karte">
+            <h2>@z.Termin.Titel</h2>
+            <div>@z.Termin.Beginn.ToString("dddd, dd.MM., HH:mm") Uhr · @z.Termin.Ort</div>
+            <form method="post" action="handy-aktion/termin/@z.Termin.Id/antwort" class="fp-handy-knoepfe">
+                <AntiforgeryToken />
+                <button type="submit" name="zusage" value="ja" class="fp-btn fp-btn-haupt">Zusagen</button>
+                <button type="submit" name="zusage" value="nein" class="fp-btn">Absagen</button>
+            </form>
+        </article>
+    }
+
+    @if (ansicht.NichtsZuTun)
+    {
+        <article class="fp-handy-karte"><h2>Nichts offen</h2><p class="fp-muted">Keine Anfragen, keine offenen Zusagen.</p></article>
+    }
+
+    <h2 style="margin:8px 0 0">Meine nächsten Termine</h2>
+    @foreach (var z in ansicht.NaechsteTermine)
+    {
+        <article class="fp-handy-karte">
+            <div><b>@z.Termin.Beginn.ToString("ddd dd.MM., HH:mm")</b> · @z.Termin.Titel</div>
+            <div class="fp-small fp-muted">@z.Termin.Ort</div>
+            <TerminStatus Zeile="z" />
+        </article>
+    }
+    <a class="fp-btn" href="handy/abwesenheit">Abwesenheit melden</a>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? Meldung { get; set; }
+
+    [SupplyParameterFromQuery]
+    private Guid? Vertretung { get; set; }
+
+    private HeuteAnsicht? ansicht;
+
+    protected override async Task OnInitializedAsync() => ansicht = await Heute.LadenAsync();
+}

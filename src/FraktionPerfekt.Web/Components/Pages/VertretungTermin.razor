@@ -1,0 +1,116 @@
+@page "/vertretungen/termin/{TerminId:guid}"
+@using FraktionPerfekt.Application.Vertretung
+@inject Vorgang Vorgang
+
+<PageTitle>Vertretung · FraktionPerfekt</PageTitle>
+
+<a class="fp-zurueck" href="vertretungen">← Offene Vertretungen</a>
+
+@if (lage is null)
+{
+    <p class="fp-muted">@(geladen ? "Für diesen Termin gibt es keine Gremienbesetzung." : "Lade …")</p>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <h1>Vertretung: @lage.Gremium.Kurzname am @lage.Termin.Beginn.ToString("dd.MM.yyyy")</h1>
+            <p class="fp-sub"><a href="termine/@lage.Termin.Id">@lage.Termin.Titel</a> · @lage.Termin.Beginn.ToString("HH:mm") Uhr · @lage.Termin.Ort</p>
+        </div>
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert fp-info" role="status">@meldung</div>
+    }
+
+    @if (schritte.Count > 0)
+    {
+        <NaechsteSchritte Schritte="schritte" />
+    }
+
+    <div class="fp-split">
+        <section class="fp-card">
+            <h2>Ordentliche Mitglieder der Fraktion</h2>
+            <div class="fp-list">
+                @foreach (var s in lage.Sitze)
+                {
+                    <div>
+                        <span class="fp-grow"><b>@s.Name</b>
+                            @if (s.Vertreter is not null)
+                            {
+                                <span class="fp-small fp-muted"> · vertreten durch @s.Vertreter</span>
+                            }
+                        </span>
+                        @if (s.Abwesend)
+                        {
+                            <StatusPille Stil="warn">abwesend</StatusPille>
+                        }
+                        else if (s.Abgesagt)
+                        {
+                            <StatusPille Stil="warn">abgesagt</StatusPille>
+                        }
+                        @if (s.Fall is { } f)
+                        {
+                            <VertretungsStatus Status="f.Status" />
+                            <a class="fp-small" href="vertretungen/fall/@f.Id">Verlauf</a>
+                        }
+                        else
+                        {
+                            <BegruendeterButton Text="Vertretung anfragen" Size="ButtonSize.Small" Icon="send" Freigabe="@s.Anfragen" Click="@(() => AnfragenAsync(s.PersonId))" />
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+        <section class="fp-card">
+            <h2>Stellvertretungen in Rangfolge</h2>
+            @if (lage.Stellvertretungen.Count == 0)
+            {
+                <p class="fp-muted">Keine Stellvertretungen hinterlegt.</p>
+            }
+            <ol class="fp-kompakt">
+                @foreach (var s in lage.Stellvertretungen)
+                {
+                    <li>@s.Name @(s.Abwesend ? "(abwesend, wird übersprungen)" : "")</li>
+                }
+            </ol>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid TerminId { get; set; }
+
+    private TerminVertretungen? lage;
+    private bool geladen;
+    private string? meldung;
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+
+    protected override Task OnParametersSetAsync() => LadenAsync();
+
+    private async Task LadenAsync()
+    {
+        lage = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().TerminAsync(TerminId));
+        geladen = true;
+    }
+
+    private async Task AnfragenAsync(Guid personId)
+    {
+        try
+        {
+            var fall = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().FuerTerminAnfragenAsync(TerminId, personId));
+            meldung = fall.Status == FraktionPerfekt.Domain.Vertretung.Vertretungsstatus.Eskaliert
+                ? "Es gibt keine verfügbare Stellvertretung. Der Vorstand hat eine Aufgabe bekommen."
+                : "Die erste Stellvertretung ist gefragt. Ohne Antwort geht die Anfrage automatisch weiter.";
+            schritte = [new NaechsterSchritt("Verlauf ansehen", $"vertretungen/fall/{fall.Id}", Hauptschritt: true), new NaechsterSchritt("Zur Startseite", "")];
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+}

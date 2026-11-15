@@ -1,0 +1,37 @@
+@page "/personen"
+@using FraktionPerfekt.Application.Stammdaten
+@inject Vorgang Vorgang
+
+<PageTitle>Personen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Personen</h1>
+        <p class="fp-sub">Mitglieder, sachkundige Bürger:innen, Geschäftsführung und Helfer:innen der Fraktion.</p>
+    </div>
+</div>
+
+<section class="fp-card fp-tbl">
+    <table>
+        <thead><tr><th>Name</th><th>Rollen</th><th>Ordentlich</th><th>Stellvertretung</th><th>RIS</th></tr></thead>
+        <tbody>
+            @foreach (var p in personen)
+            {
+                <tr class="@(p.Aktiv ? null : "fp-muted")">
+                    <td><a href="personen/@p.Id"><b>@p.Sortiername</b></a></td>
+                    <td>@foreach (var r in p.Rollen) { <StatusPille Stil="info">@r.Anzeigename()</StatusPille> }</td>
+                    <td>@p.Ordentlich</td>
+                    <td>@p.Stellvertretung</td>
+                    <td>@(p.AusDemRis ? "verknüpft" : "–")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@code {
+    private IReadOnlyList<PersonZeile> personen = [];
+
+    protected override async Task OnInitializedAsync()
+        => personen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().PersonenAsync());
+}

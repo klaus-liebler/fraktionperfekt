@@ -1,0 +1,22 @@
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Domain.Gemeinsam
+
+@* Uhr-Symbol mit der bitemporalen Historie (gültig von/bis, erfasst am/von, Art, Grund). Ersetzte Erfassungen blass. *@
+<details class="fp-verlauf">
+    <summary title="Verlauf anzeigen" aria-label="Verlauf anzeigen"><RadzenIcon Icon="history" /></summary>
+    <ul>
+        @foreach (var v in Versionen)
+        {
+            <li class="@(v.ErsetztAm is null ? null : "fp-tl-ersetzt")">
+                <b>@v.Wert</b> · gültig @v.GueltigVon.ToString("dd.MM.yyyy")@(v.GueltigBis is { } bis ? $" bis {bis.AddDays(-1):dd.MM.yyyy}" : " offen")
+                <br /><span class="fp-small fp-muted">@Erfassung.Anzeigename(v.Erfassungsart), erfasst @Ortszeit.AlsOrtszeit(v.ErfasstAm).ToString("dd.MM.yyyy HH:mm") von @v.ErfasstVon: @v.Grund
+                    @(v.ErsetztAm is { } e ? $" (ersetzt {Ortszeit.AlsOrtszeit(e):dd.MM.yyyy})" : "")</span>
+            </li>
+        }
+    </ul>
+</details>
+
+@code {
+    [Parameter, EditorRequired]
+    public IEnumerable<IHistorienwert> Versionen { get; set; } = [];
+}

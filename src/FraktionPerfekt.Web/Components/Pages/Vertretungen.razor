@@ -1,0 +1,73 @@
+@page "/vertretungen"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Vertretung
+@using FraktionPerfekt.Domain.Vertretung
+@inject Vorgang Vorgang
+
+<PageTitle>Offene Vertretungen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Sitzungen mit offener Vertretung</h1>
+        <p class="fp-sub">Rats- und Ausschusssitzungen der nächsten Wochen, in denen ein ordentliches Mitglied fehlt und noch niemand zugesagt hat.</p>
+    </div>
+</div>
+
+@if (liste is null)
+{
+    <p class="fp-muted">Lade …</p>
+}
+else if (liste.Count == 0)
+{
+    <section class="fp-card"><p>Alle Sitzungen sind besetzt.</p></section>
+}
+else
+{
+    <section class="fp-card fp-tbl">
+        <table>
+            <thead><tr><th>Sitzung</th><th>Gremium</th><th>Es fehlt</th><th>Stand</th><th>Gefragt</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var v in liste)
+                {
+                    <tr>
+                        <td>@v.Termin.Beginn.ToString("ddd dd.MM., HH:mm")</td>
+                        <td><a href="termine/@v.Termin.Id">@v.Gremium.Kurzname</a></td>
+                        <td>@v.Vertretene</td>
+                        <td><VertretungsStatus Status="v.Fall?.Status" /></td>
+                        <td class="fp-small">
+                            @if (v.Gefragt is not null)
+                            {
+                                <span>@v.Gefragt (@v.Gefragte. von @v.Kandidaten), bis @Ortszeit.AlsOrtszeit(v.Frist!.Value).ToString("dd.MM. HH:mm")</span>
+                            }
+                            else if (v.Fall is null)
+                            {
+                                <span class="fp-muted">@v.Kandidaten Stellvertretungen verfügbar</span>
+                            }
+                            else
+                            {
+                                <span>alle @v.Kandidaten gefragt</span>
+                            }
+                        </td>
+                        <td>
+                            @if (v.Fall is { } f)
+                            {
+                                <a href="vertretungen/fall/@f.Id">Verlauf</a>
+                            }
+                            else
+                            {
+                                <a href="vertretungen/termin/@v.Termin.Id">Anfragen</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private IReadOnlyList<OffeneVertretung>? liste;
+
+    protected override async Task OnInitializedAsync()
+        => liste = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().OffeneVertretungenAsync());
+}

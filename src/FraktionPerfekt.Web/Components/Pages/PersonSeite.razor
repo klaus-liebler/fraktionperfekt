@@ -1,0 +1,120 @@
+@page "/personen/{Id:guid}"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Gremien
+@inject Vorgang Vorgang
+@inject TimeProvider Uhr
+
+<PageTitle>Person · FraktionPerfekt</PageTitle>
+
+<a class="fp-zurueck" href="personen">← Personen</a>
+
+@if (detail is null)
+{
+    <p class="fp-muted">Lade …</p>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <h1>@detail.Person.Anzeigename</h1>
+            <p class="fp-sub">@string.Join(", ", detail.Rollen.Select(r => r.Anzeigename()))</p>
+        </div>
+        <a class="fp-btn" href="kalender">Termine im Kalender (Filter Person)</a>
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert fp-info" role="status">@meldung</div>
+    }
+
+    <div class="fp-split">
+        <section class="fp-card">
+            <h2>Mandate und Mitgliedschaften</h2>
+            <div class="fp-list">
+                @foreach (var m in detail.Mitgliedschaften)
+                {
+                    <div class="@(m.Funktion is null ? "fp-muted" : null)">
+                        <span class="fp-grow"><a href="gremien/@m.GremiumId">@m.Gremium</a></span>
+                        <span>@(m.Funktion switch { Funktion.Ordentlich => "ordentlich", Funktion.Stellvertretung => $"Stellvertretung, Rang {m.Rang}", _ => "beendet" })</span>
+                        <Verlauf Versionen="m.Verlauf" />
+                    </div>
+                }
+            </div>
+        </section>
+        <section class="fp-card">
+            <h2>Angaben</h2>
+            <dl class="fp-dl">
+                <dt>Anmeldename</dt><dd>@(detail.Person.Benutzerkennung ?? "–")</dd>
+                <dt>E-Mail</dt><dd>@(detail.Person.EMail ?? "–")</dd>
+                <dt>RIS</dt><dd>@(detail.Person.RisId is null ? "nicht verknüpft" : "verknüpft")</dd>
+            </dl>
+            <h3>Rollen <Verlauf Versionen="detail.RollenVerlauf" /></h3>
+            <div class="fp-auswahl">
+                @foreach (var r in Enum.GetValues<Rolle>())
+                {
+                    <label><input type="checkbox" checked="@gewaehlt.Contains(r)" disabled="@(!Rechte.StammdatenPflegen(benutzer?.Rolle).Erlaubt)"
+                                  @onchange="@(e => Umschalten(r, e.Value is true))" /> @r.Anzeigename()</label>
+                }
+            </div>
+            <div class="fp-row">
+                <RadzenDatePicker TValue="DateTime" @bind-Value="ab" DateFormat="dd.MM.yyyy" aria-label="Gültig ab" />
+                <BegruendeterButton Text="Rollen ab Datum ändern" Icon="save" Size="ButtonSize.Small"
+                                    Freigabe="@Rechte.StammdatenPflegen(benutzer?.Rolle).Und(() => gewaehlt.SetEquals(detail.Rollen) ? Freigabe.Nein("Keine Änderung.") : Freigabe.Ja)"
+                                    Click="RollenSpeichernAsync" />
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Benutzer? benutzer;
+    private PersonDetail? detail;
+    private HashSet<Rolle> gewaehlt = [];
+    private DateTime ab;
+    private string? meldung;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        ab = Ortszeit.Heute(Uhr).ToDateTime(TimeOnly.MinValue);
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        detail = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().PersonAsync(Id));
+        gewaehlt = detail?.Rollen.ToHashSet() ?? [];
+    }
+
+    private void Umschalten(Rolle rolle, bool an)
+    {
+        if (an)
+        {
+            gewaehlt.Add(rolle);
+        }
+        else
+        {
+            gewaehlt.Remove(rolle);
+        }
+    }
+
+    private async Task RollenSpeichernAsync()
+    {
+        try
+        {
+            var rollen = gewaehlt.ToList();
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().RollenAendernAsync(Id, rollen, DateOnly.FromDateTime(ab), "Rollen geändert"));
+            meldung = $"Rollen ab {ab:dd.MM.yyyy} geändert. Wirksam bei der nächsten Anmeldung der Person.";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+}

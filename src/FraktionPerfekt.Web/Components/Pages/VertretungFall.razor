@@ -1,0 +1,114 @@
+@page "/vertretungen/fall/{Id:guid}"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Vertretung
+@using FraktionPerfekt.Domain.Vertretung
+@inject Vorgang Vorgang
+
+<PageTitle>Vertretungsfall · FraktionPerfekt</PageTitle>
+
+<a class="fp-zurueck" href="vertretungen">← Offene Vertretungen</a>
+
+@if (detail is null)
+{
+    <p class="fp-muted">@(geladen ? "Diesen Vertretungsfall gibt es nicht oder Sie dürfen ihn nicht sehen." : "Lade …")</p>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <h1>Vertretung für @detail.Vertretene</h1>
+            <p class="fp-sub"><a href="termine/@detail.Termin.Id">@detail.Gremium.Name</a> · @detail.Termin.Beginn.ToString("dddd, dd.MM.yyyy, HH:mm") Uhr</p>
+        </div>
+        <VertretungsStatus Status="detail.Fall.Status" />
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert fp-info" role="status">@meldung</div>
+    }
+
+    <div class="fp-split">
+        <section class="fp-card">
+            <h2>Verlauf der Anfragen</h2>
+            @if (detail.Vertreter is not null)
+            {
+                <div class="fp-alert fp-info"><b>@detail.Vertreter</b> vertritt in dieser Sitzung.</div>
+            }
+            <div class="fp-list">
+                @foreach (var a in detail.Anfragen)
+                {
+                    <div>
+                        <span class="fp-zeit">@a.Reihenfolge.</span>
+                        <span class="fp-grow"><b>@a.Person</b><br />
+                            <span class="fp-small fp-muted">gefragt @Ortszeit.AlsOrtszeit(a.Gestellt).ToString("dd.MM. HH:mm"), Frist @Ortszeit.AlsOrtszeit(a.Frist).ToString("dd.MM. HH:mm")
+                                @(a.Beantwortet is { } b ? $", Antwort {Ortszeit.AlsOrtszeit(b):dd.MM. HH:mm}" : "")</span></span>
+                        @switch (a.Status)
+                        {
+                            case Anfragestatus.Offen: <StatusPille Stil="info">wartet</StatusPille> break;
+                            case Anfragestatus.Zugesagt: <StatusPille Stil="gut">zugesagt</StatusPille> break;
+                            case Anfragestatus.Abgelehnt: <StatusPille Stil="neutral">kann nicht</StatusPille> break;
+                            case Anfragestatus.Abgelaufen: <StatusPille Stil="warn">keine Antwort</StatusPille> break;
+                            default: <StatusPille Stil="neutral">zurückgezogen</StatusPille> break;
+                        }
+                    </div>
+                }
+                @foreach (var n in detail.NochNichtGefragt)
+                {
+                    <div class="fp-muted"><span class="fp-zeit">–</span><span class="fp-grow">@n.Name</span><span class="fp-small">noch nicht gefragt</span></div>
+                }
+            </div>
+            @if (detail.Anfragen.Count == 0 && detail.NochNichtGefragt.Count == 0)
+            {
+                <p class="fp-muted">Es gab keine verfügbare Stellvertretung (alle abwesend oder keine hinterlegt).</p>
+            }
+        </section>
+
+        <section class="fp-card">
+            <h2>Vorstand: Vertretung selbst eintragen</h2>
+            <p class="fp-small fp-muted">Nach Rücksprache (z. B. Telefonat) eine Person direkt eintragen. Eine offene Anfrage wird zurückgezogen.</p>
+            <RadzenDropDown TValue="Guid?" @bind-Value="auswahl" Data="@detail.Waehlbar" TextProperty="Name" ValueProperty="Id" AllowFiltering="true"
+                            Placeholder="Person wählen" Disabled="@(!detail.ManuellBesetzen.Erlaubt)" Style="width:100%" />
+            <BegruendeterButton Text="Als Vertretung eintragen" Icon="how_to_reg"
+                                Freigabe="@detail.ManuellBesetzen.Und(() => auswahl is null ? Freigabe.Nein("Bitte zuerst eine Person wählen.") : Freigabe.Ja)"
+                                Click="BesetzenAsync" />
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private FallDetail? detail;
+    private bool geladen;
+    private Guid? auswahl;
+    private string? meldung;
+
+    protected override Task OnParametersSetAsync() => LadenAsync();
+
+    private async Task LadenAsync()
+    {
+        detail = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().FallAsync(Id));
+        geladen = true;
+    }
+
+    private async Task BesetzenAsync()
+    {
+        if (auswahl is not { } personId)
+        {
+            return;
+        }
+
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().ManuellBesetzenAsync(Id, personId));
+            meldung = "Vertretung eingetragen. Die vertretene Person wurde benachrichtigt, die Aufgabe ist erledigt.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+}

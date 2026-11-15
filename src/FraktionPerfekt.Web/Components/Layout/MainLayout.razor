@@ -1,0 +1,123 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+<RadzenComponents />
+
+<div class="fp-app">
+    <aside class="fp-side">
+        <Marke />
+        <nav class="fp-nav" aria-label="Hauptnavigation">
+            @foreach (var gruppe in Navigationspunkte.GroupBy(n => n.Gruppe))
+            {
+                <div class="fp-grp">@gruppe.Key</div>
+                @foreach (var punkt in gruppe)
+                {
+                    @if (Gesperrt(punkt) is { } grund)
+                    {
+                        <span class="fp-why fp-nav-off" tabindex="0" data-why="@grund" aria-disabled="true">@punkt.Titel</span>
+                    }
+                    else
+                    {
+                        <NavLink href="@punkt.Ziel" Match="@(punkt.Ziel == "" ? NavLinkMatch.All : NavLinkMatch.Prefix)" ActiveClass="on">@punkt.Titel</NavLink>
+                    }
+                }
+            }
+        </nav>
+        <div class="fp-foot">Iteration 1 · MVP-Teil<br />Entwicklungsstand, Mock-Anbindungen</div>
+    </aside>
+    <div class="fp-main">
+        <div class="fp-streifen" aria-hidden="true"></div>
+        <header class="fp-top">
+            <a class="fp-link" href="handy" title="Schlanke Handy-Ansicht (statisch, schnell bei schlechtem Netz)">Handy-Ansicht</a>
+            <AuthorizeView>
+                <Authorized>
+                    <div class="fp-role">
+                        <span>Angemeldet als <b>@benutzer?.Name</b></span>
+                        @if (benutzer is { Rollen.Count: > 1 })
+                        {
+                            <form method="post" action="rolle-wechseln" class="fp-inline">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="zurueck" value="@AktuellerPfad" />
+                                <label for="rolle-wahl">Rolle</label>
+                                <select id="rolle-wahl" name="rolle" class="fp-select" data-auto-absenden
+                                        title="Aktive Rolle wechseln: Aufgaben und Rechte richten sich nach ihr.">
+                                    @foreach (var r in benutzer.Rollen)
+                                    {
+                                        <option value="@r" selected="@(r == benutzer.Rolle)">@r.Anzeigename()</option>
+                                    }
+                                </select>
+                                <noscript><button type="submit" class="fp-linkbutton">wechseln</button></noscript>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="fp-why" tabindex="0" data-why="Ihrem Konto ist nur diese eine Rolle zugeordnet.">Rolle <b>@benutzer?.Rolle?.Anzeigename()</b></span>
+                        }
+                        <a href="anmelden" class="fp-link" title="Mit einem anderen Testkonto anmelden">Konto wechseln</a>
+                        <form method="post" action="abmelden" class="fp-inline">
+                            <AntiforgeryToken />
+                            <button type="submit" class="fp-linkbutton">Abmelden</button>
+                        </form>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+            <span class="fp-proto" title="Alle Mails und Push-Mitteilungen werden nur simuliert; nichts verlässt das System. Das RIS ist ein Mock.">Entwicklung · Mock-Anbindungen</span>
+        </header>
+        <main class="fp-content">
+            @Body
+        </main>
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    Es ist ein unerwarteter Fehler aufgetreten.
+    <a href="." class="reload">Neu laden</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private sealed record Navigationspunkt(string Gruppe, string Titel, string Ziel, Func<Rolle?, Freigabe>? Recht = null, string? Geplant = null);
+
+    private static readonly IReadOnlyList<Navigationspunkt> Navigationspunkte =
+    [
+        new("Übersicht", "Heute", ""),
+        new("Übersicht", "Kalender", "kalender"),
+        new("Übersicht", "Aufgaben", "aufgaben", Rechte.VertretungenSteuern),
+        new("Sitzungen", "Abwesenheit melden", "abwesenheit", Rechte.AbwesenheitMelden),
+        new("Sitzungen", "Offene Vertretungen", "vertretungen", r => r is Rolle.Helferin ? Freigabe.Nein("Nur für Mitglieder, sachkundige Bürger:innen, Vorstand und Administration.") : Freigabe.Ja),
+        new("Sitzungen", "Anträge", "antraege", Geplant: "2"),
+        new("Sitzungen", "Protokolle", "protokolle", Geplant: "2"),
+        new("Fraktion", "Gremien und Mandate", "gremien", r => r is Rolle.Helferin ? Freigabe.Nein("Helfer:innen sehen nur Wahlkampf und öffentliche Termine.") : Freigabe.Ja),
+        new("Fraktion", "Personen", "personen", r => r is Rolle.Helferin ? Freigabe.Nein("Helfer:innen sehen nur Wahlkampf und öffentliche Termine.") : Freigabe.Ja),
+        new("Fraktion", "Raumbuchung", "ressourcen", Geplant: "2"),
+        new("Fraktion", "Wahlkampf", "wahlkampf", Geplant: "3"),
+        new("Persönlich", "Kalender-Abo", "kalender-abo"),
+        new("Verwaltung", "Postausgang", "postausgang", Rechte.VerwaltungEinsehen),
+        new("Verwaltung", "Protokoll", "protokoll", Rechte.VerwaltungEinsehen),
+    ];
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? Anmeldung { get; set; }
+
+    private Benutzer? benutzer;
+
+    private string AktuellerPfad => Navigation.ToBaseRelativePath(Navigation.Uri);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Anmeldung is not null)
+        {
+            benutzer = FraktionPerfekt.Adapters.Mocks.MockAnmeldung.AlsBenutzer((await Anmeldung).User);
+        }
+    }
+
+    private string? Gesperrt(Navigationspunkt punkt)
+    {
+        if (punkt.Geplant is { } stufe)
+        {
+            return Freigabe.Geplant(punkt.Titel, stufe).Begruendung;
+        }
+
+        return punkt.Recht?.Invoke(benutzer?.Rolle) is { Erlaubt: false } nein ? nein.Begruendung : null;
+    }
+}

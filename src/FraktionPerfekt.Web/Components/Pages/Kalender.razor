@@ -1,0 +1,266 @@
+@page "/kalender"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Application.Termine
+@using FraktionPerfekt.Domain.Termine
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+@inject TimeProvider Uhr
+
+<PageTitle>Kalender · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Kalender</h1>
+        <p class="fp-sub">Fraktion, Rat, Ausschüsse, Arbeitskreise und öffentliche Termine. Sitzungen der Stadt kommen aus dem RIS.</p>
+    </div>
+    <div class="fp-row">
+        <BegruendeterButton Text="Termin anlegen" Icon="add" Freigabe="@Rechte.TermineAnlegen(benutzer?.Rolle)" Click="@(() => formular = true)" />
+        <a class="fp-btn" href="kalender-abo">Im eigenen Kalender abonnieren</a>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">@meldung</div>
+}
+
+@if (schritte.Count > 0)
+{
+    <NaechsteSchritte Schritte="schritte" />
+}
+
+@if (formular)
+{
+    <section class="fp-card fp-einschub" aria-label="Neuer Termin">
+        <h2>Neuer Termin</h2>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl" for="t-titel">Titel</label><RadzenTextBox id="t-titel" @bind-Value="neu.Titel" /></div>
+            <div class="fp-field">
+                <label class="fp-lbl" for="t-art">Art</label>
+                <RadzenDropDown id="t-art" TValue="Terminart" @bind-Value="neu.Art" Data="@terminarten" TextProperty="Text" ValueProperty="Wert" />
+            </div>
+            <div class="fp-field"><label class="fp-lbl" for="t-beginn">Beginn</label><RadzenDatePicker id="t-beginn" TValue="DateTime" @bind-Value="neu.Beginn" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="t-dauer">Dauer (Minuten)</label><RadzenNumeric id="t-dauer" TValue="int" @bind-Value="neu.Dauer" Min="15" Step="15" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="t-ort">Ort</label><RadzenTextBox id="t-ort" @bind-Value="neu.Ort" /></div>
+            <div class="fp-field">
+                <label class="fp-lbl" for="t-gremium">Gremium (optional)</label>
+                <RadzenDropDown id="t-gremium" TValue="Guid?" @bind-Value="neu.GremiumId" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" Placeholder="kein Gremium" />
+            </div>
+        </div>
+        <div class="fp-field"><label class="fp-lbl" for="t-beschreibung">Beschreibung</label><RadzenTextArea id="t-beschreibung" @bind-Value="neu.Beschreibung" Rows="2" /></div>
+        <div class="fp-row">
+            <BegruendeterButton Text="Anlegen" Icon="save" Freigabe="@AnlegenFreigabe" Click="AnlegenAsync" />
+            <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
+        </div>
+    </section>
+}
+
+<section class="fp-card">
+    <div class="fp-row" style="justify-content:space-between">
+        <div class="fp-row">
+            <RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => MonatAsync(-1))" title="Vorheriger Monat" />
+            <h2 style="min-width:150px;text-align:center">@monat.ToString("MMMM yyyy")</h2>
+            <RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => MonatAsync(1))" title="Nächster Monat" />
+            <RadzenButton Text="Heute" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => MonatAsync(0))" />
+        </div>
+        <div class="fp-row">
+            <button class="fp-chip @(liste ? null : "on")" @onclick="@(() => liste = false)">Monat</button>
+            <button class="fp-chip @(liste ? "on" : null)" @onclick="@(() => liste = true)">Liste</button>
+        </div>
+    </div>
+    <div class="fp-filter">
+        <span class="fp-filter-lbl">Gremium</span>
+        <RadzenDropDown TValue="Guid?" Value="@gremiumFilter" ValueChanged="@((Guid? g) => FilterAsync(g, personFilter))" Data="@gremien" TextProperty="Name" ValueProperty="Id"
+                        AllowClear="true" Placeholder="alle Gremien" Style="min-width:240px" />
+        <span class="fp-filter-lbl">Person</span>
+        <RadzenDropDown TValue="Guid?" Value="@personFilter" ValueChanged="@((Guid? p) => FilterAsync(gremiumFilter, p))" Data="@personen" TextProperty="Name" ValueProperty="Id"
+                        AllowClear="true" AllowFiltering="true" Placeholder="alle Personen" Style="min-width:220px" />
+        @if (benutzer?.PersonId is { } ich)
+        {
+            <button class="fp-chip @(personFilter == ich ? "on" : null)" @onclick="@(() => FilterAsync(gremiumFilter, personFilter == ich ? null : ich))">Nur meine</button>
+        }
+    </div>
+
+    @if (liste)
+    {
+        <div class="fp-list" data-liste="kalender">
+            @if (zeilen.Count == 0)
+            {
+                <p class="fp-muted">Keine Termine in diesem Monat.</p>
+            }
+            @foreach (var z in zeilen)
+            {
+                <div>
+                    <span class="fp-zeit">@z.Termin.Beginn.ToString("ddd dd.MM.")<br /><span class="fp-small fp-muted">@z.Termin.Beginn.ToString("HH:mm")–@z.Termin.Ende.ToString("HH:mm")</span></span>
+                    <span class="fp-grow">
+                        <a href="termine/@z.Termin.Id"><b>@z.Termin.Titel</b></a>
+                        <br /><span class="fp-small fp-muted">@z.Termin.Art.Anzeigename()@(z.Gremium is null ? "" : $" · {z.Gremium}") · @z.Termin.Ort</span>
+                    </span>
+                    <TerminStatus Zeile="z" />
+                    @if (z.Antworten.Erlaubt && z.Beteiligung != Beteiligung.Vertritt)
+                    {
+                        <span class="fp-row">
+                            <RadzenButton Text="Zusagen" Size="ButtonSize.ExtraSmall" ButtonStyle="@(z.MeinStatus == Teilnahmestatus.Zugesagt ? ButtonStyle.Primary : ButtonStyle.Light)" Click="@(() => AntwortenAsync(z.Termin.Id, true))" />
+                            <RadzenButton Text="Absagen" Size="ButtonSize.ExtraSmall" ButtonStyle="@(z.MeinStatus == Teilnahmestatus.Abgesagt ? ButtonStyle.Primary : ButtonStyle.Light)" Click="@(() => AntwortenAsync(z.Termin.Id, false))" />
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="fp-monat" role="grid" aria-label="Monatsansicht">
+            @foreach (var wt in new[] { "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So" })
+            {
+                <div class="fp-monat-kopf" role="columnheader">@wt</div>
+            }
+            @for (var tag = ErsterTagImRaster; tag <= LetzterTagImRaster; tag = tag.AddDays(1))
+            {
+                var t = tag;
+                <div class="fp-monat-tag @(t.Month != monat.Month ? "fremd" : null) @(t == heute ? "heute" : null)" role="gridcell">
+                    <span class="fp-monat-nr">@t.Day</span>
+                    @foreach (var z in zeilen.Where(z => z.Termin.Tag == t))
+                    {
+                        <a href="termine/@z.Termin.Id" class="fp-eintrag @Klasse(z)" title="@($"{z.Termin.Beginn:HH:mm} {z.Termin.Titel}")">
+                            <b>@z.Termin.Beginn.ToString("HH:mm")</b> @(z.GremiumKurz ?? z.Termin.Titel)
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+        <p class="fp-small fp-muted">Farben: <span class="fp-eintrag sitzung">Rat/Ausschuss</span> <span class="fp-eintrag fraktion">Fraktion</span>
+            <span class="fp-eintrag oeffentlich">öffentlich/Wahlkampf</span> <span class="fp-eintrag offen">Vertretung offen</span> <span class="fp-eintrag aus">abgesagt</span></p>
+    }
+</section>
+
+@code {
+    private sealed class Neu
+    {
+        public string Titel { get; set; } = string.Empty;
+
+        public Terminart Art { get; set; } = Terminart.Fraktionssitzung;
+
+        public DateTime Beginn { get; set; }
+
+        public int Dauer { get; set; } = 120;
+
+        public string? Ort { get; set; } = "Fraktionsbüro, Rathaus Greven";
+
+        public Guid? GremiumId { get; set; }
+
+        public string? Beschreibung { get; set; }
+    }
+
+    private sealed record Auswahl(Guid Id, string Name);
+
+    [SupplyParameterFromQuery(Name = "neu")]
+    private int? NeuParameter { get; set; }
+
+    private sealed record ArtAuswahl(Terminart Wert, string Text);
+
+    // Rats- und Ausschusssitzungen kommen aus dem RIS und werden hier nicht angelegt.
+    private static readonly IReadOnlyList<ArtAuswahl> terminarten = Enum.GetValues<Terminart>()
+        .Where(a => !a.IstGremiensitzung()).Select(a => new ArtAuswahl(a, a.Anzeigename())).ToList();
+
+    private Benutzer? benutzer;
+    private DateOnly heute;
+    private DateOnly monat;
+    private bool liste;
+    private bool formular;
+    private Guid? gremiumFilter;
+    private Guid? personFilter;
+    private IReadOnlyList<TerminZeile> zeilen = [];
+    private IReadOnlyList<Auswahl> gremien = [];
+    private IReadOnlyList<Auswahl> personen = [];
+    private Neu neu = new();
+    private string? meldung;
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+
+    private DateOnly ErsterTagImRaster => monat.AddDays(-(((int)monat.DayOfWeek + 6) % 7));
+
+    private DateOnly LetzterTagImRaster
+    {
+        get
+        {
+            var letzter = monat.AddMonths(1).AddDays(-1);
+            return letzter.AddDays((7 - (int)letzter.DayOfWeek) % 7);
+        }
+    }
+
+    private Freigabe AnlegenFreigabe => string.IsNullOrWhiteSpace(neu.Titel) ? Freigabe.Nein("Bitte einen Titel eingeben.") : Rechte.TermineAnlegen(benutzer?.Rolle);
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        heute = Ortszeit.Heute(Uhr);
+        monat = new DateOnly(heute.Year, heute.Month, 1);
+        formular = NeuParameter == 1 && Rechte.TermineAnlegen(benutzer.Rolle).Erlaubt;
+        neu.Beginn = heute.AddDays(7).ToDateTime(new TimeOnly(19, 0));
+        (gremien, personen) = await Vorgang.AusfuehrenAsync(async d =>
+        {
+            var s = d.GetRequiredService<StammdatenDienst>();
+            return ((IReadOnlyList<Auswahl>)(await s.GremienAsync()).Select(g => new Auswahl(g.Id, g.Name)).ToList(),
+                (IReadOnlyList<Auswahl>)(await s.PersonenAsync()).Where(p => p.Aktiv).Select(p => new Auswahl(p.Id, p.Sortiername)).ToList());
+        });
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+        => zeilen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>()
+            .TermineAsync(ErsterTagImRaster, LetzterTagImRaster, new Kalenderfilter(gremiumFilter, personFilter)));
+
+    private async Task MonatAsync(int schritt)
+    {
+        monat = schritt == 0 ? new DateOnly(heute.Year, heute.Month, 1) : monat.AddMonths(schritt);
+        await LadenAsync();
+    }
+
+    private async Task FilterAsync(Guid? gremium, Guid? person)
+    {
+        gremiumFilter = gremium;
+        personFilter = person;
+        await LadenAsync();
+    }
+
+    private async Task AntwortenAsync(Guid terminId, bool zusage)
+    {
+        try
+        {
+            var ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().AntwortenAsync(terminId, zusage));
+            meldung = zusage ? "Zugesagt." : "Abgesagt.";
+            schritte = ergebnis.NaechsteSchritte;
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task AnlegenAsync()
+    {
+        try
+        {
+            var (termin, folgeschritte) = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().AnlegenAsync(
+                new NeuerTermin(neu.Titel, neu.Art, neu.Beginn, neu.Beginn.AddMinutes(neu.Dauer), neu.Ort, neu.GremiumId, neu.Beschreibung)));
+            meldung = $"„{termin.Titel}“ am {termin.Beginn:dd.MM.yyyy HH:mm} angelegt.";
+            schritte = folgeschritte;
+            formular = false;
+            neu = new Neu { Beginn = neu.Beginn };
+            monat = new DateOnly(termin.Beginn.Year, termin.Beginn.Month, 1);
+            await LadenAsync();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            meldung = ex.Message;
+        }
+    }
+
+    private static string Klasse(TerminZeile z) => z.Termin.Abgesagt ? "aus"
+        : z.OffeneVertretungen > 0 ? "offen"
+        : z.Termin.Art.IstGremiensitzung() ? "sitzung"
+        : z.Termin.Art.IstOeffentlich() ? "oeffentlich" : "fraktion";
+}

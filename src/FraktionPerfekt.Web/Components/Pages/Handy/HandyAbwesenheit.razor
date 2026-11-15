@@ -1,0 +1,73 @@
+@page "/handy/abwesenheit"
+@attribute [ExcludeFromInteractiveRouting]
+@layout HandyLayout
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Vertretung
+@inject VertretungDienst Vertretung
+@inject TimeProvider Uhr
+
+<PageTitle>Abwesenheit melden · FraktionPerfekt</PageTitle>
+
+@if (Meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">@Meldung</div>
+}
+
+@if (ergebnis is not null)
+{
+    <article class="fp-handy-karte">
+        <h1 style="font-size:20px;margin:0 0 6px">Abwesend @ergebnis.Abwesenheit.Von.ToString("dd.MM.") – @ergebnis.Abwesenheit.Bis.ToString("dd.MM.yyyy")</h1>
+        @if (ergebnis.Sitzungen.Count == 0)
+        {
+            <p>Keine Sitzungen betroffen.</p>
+        }
+        @foreach (var s in ergebnis.Sitzungen)
+        {
+            <div>@s.Termin.Beginn.ToString("ddd dd.MM., HH:mm") · <b>@s.Gremium.Kurzname</b> · <VertretungsStatus Status="s.Fall?.Status" /></div>
+        }
+        @if (ergebnis.Sitzungen.Any(s => s.Fall is null) && ergebnis.Abwesenheit.Aktiv)
+        {
+            <form method="post" action="handy-aktion/abwesenheit/@ergebnis.Abwesenheit.Id/anfragen" style="margin-top:10px">
+                <AntiforgeryToken />
+                <button type="submit" class="fp-btn fp-btn-haupt">@ergebnis.NaechsteSchritte[0].Titel</button>
+            </form>
+        }
+    </article>
+    <a class="fp-btn" href="handy">Zur Übersicht</a>
+}
+else
+{
+    <article class="fp-handy-karte">
+        <h1 style="font-size:20px;margin:0 0 6px">Abwesenheit melden</h1>
+        <form method="post" action="handy-aktion/abwesenheit">
+            <AntiforgeryToken />
+            <label for="von">Von</label>
+            <input id="von" name="von" type="date" required value="@heute" />
+            <label for="bis">Bis (einschließlich)</label>
+            <input id="bis" name="bis" type="date" required value="@heute" />
+            <label for="grund">Grund (optional, nur für Sie und die Geschäftsführung)</label>
+            <input id="grund" name="grund" type="text" placeholder="z. B. Urlaub" />
+            <button type="submit" class="fp-btn fp-btn-haupt">Eintragen</button>
+        </form>
+    </article>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    private Guid? Id { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? Meldung { get; set; }
+
+    private Abwesenheitsergebnis? ergebnis;
+    private string heute = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        heute = Ortszeit.Heute(Uhr).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        if (Id is { } id)
+        {
+            ergebnis = await Vertretung.AbwesenheitAsync(id);
+        }
+    }
+}

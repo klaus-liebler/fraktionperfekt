@@ -1,0 +1,37 @@
+@using FraktionPerfekt.Application.Termine
+@using FraktionPerfekt.Domain.Termine
+
+@* Kurzer Status eines Termins aus Sicht der angemeldeten Person. *@
+@if (Zeile.Termin.Abgesagt)
+{
+    <StatusPille Stil="krit">abgesagt</StatusPille>
+}
+else if (Zeile.Beteiligung == Beteiligung.Vertritt)
+{
+    <StatusPille Stil="info">Sie vertreten</StatusPille>
+}
+else if (Zeile.Abwesend && Zeile.Beteiligung == Beteiligung.Ordentlich)
+{
+    <StatusPille Stil="warn">abwesend</StatusPille>
+}
+else if (Zeile.MeinStatus == Teilnahmestatus.Zugesagt)
+{
+    <StatusPille Stil="gut">zugesagt</StatusPille>
+}
+else if (Zeile.MeinStatus == Teilnahmestatus.Abgesagt)
+{
+    <StatusPille Stil="neutral">abgesagt</StatusPille>
+}
+else if (Zeile.WartetAufAntwort)
+{
+    <StatusPille Stil="warn">Antwort offen</StatusPille>
+}
+@if (Zeile.OffeneVertretungen > 0)
+{
+    <StatusPille Stil="krit">Vertretung offen</StatusPille>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public TerminZeile Zeile { get; set; } = default!;
+}

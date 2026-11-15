@@ -1,0 +1,72 @@
+@page "/aufgaben"
+@using FraktionPerfekt.Application.Aufgaben
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Domain.Aufgaben
+@inject Vorgang Vorgang
+
+<PageTitle>Aufgaben · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Aufgaben</h1>
+        <p class="fp-sub">Korb der aktiven Rolle. In Iteration 1: Vertretungen, für die niemand zugesagt hat (Eskalation an den Vorstand).</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">@meldung</div>
+}
+
+<section class="fp-card">
+    @if (aufgaben.Count == 0)
+    {
+        <p class="fp-muted">Keine offenen Aufgaben im Korb „@(benutzer?.Rolle?.Anzeigename())“.</p>
+    }
+    <div class="fp-list">
+        @foreach (var a in aufgaben)
+        {
+            <div>
+                <span class="fp-grow">
+                    <a href="@a.Ziel"><b>@a.Titel</b></a>
+                    <br /><span class="fp-small fp-muted">@a.Beschreibung</span>
+                    @if (a.FaelligAm is { } f)
+                    {
+                        <br /><span class="fp-small">fällig @Ortszeit.AlsOrtszeit(f).ToString("dd.MM.yyyy HH:mm")</span>
+                    }
+                </span>
+                <StatusPille Stil="info">@a.Zustaendig.Anzeigename()</StatusPille>
+                <RadzenButton Text="Erledigt" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => ErledigenAsync(a.Id))" />
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private Benutzer? benutzer;
+    private IReadOnlyList<Aufgabe> aufgaben = [];
+    private string? meldung;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync() => aufgaben = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync());
+
+    private async Task ErledigenAsync(Guid id)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AufgabenDienst>().ErledigenAsync(id, "von Hand erledigt"));
+            meldung = "Aufgabe erledigt.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+}

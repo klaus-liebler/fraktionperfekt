@@ -1,0 +1,51 @@
+@page "/protokoll"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Protokoll
+@inject Vorgang Vorgang
+
+<PageTitle>Protokoll · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Protokoll</h1>
+        <p class="fp-sub">Wer hat wann was getan – nur mit Pseudonymen („Person #…“), nie mit Klarnamen oder Abwesenheitsgründen.</p>
+    </div>
+</div>
+
+@if (Rechte.VerwaltungEinsehen(benutzer?.Rolle) is { Erlaubt: false } nein)
+{
+    <div class="fp-alert fp-warn">@nein.Begruendung</div>
+}
+else
+{
+    <section class="fp-card fp-tbl">
+        <table>
+            <thead><tr><th>Zeit</th><th>Wer</th><th>Aktion</th><th>Beschreibung</th></tr></thead>
+            <tbody>
+                @foreach (var e in eintraege)
+                {
+                    <tr class="@(e.Erfolgreich ? null : "fp-fehlerzeile")">
+                        <td class="fp-small">@Ortszeit.AlsOrtszeit(e.Zeitpunkt).ToString("dd.MM. HH:mm:ss")</td>
+                        <td class="fp-small">@e.Benutzer@(e.Rolle is null ? "" : $" ({e.Rolle})")</td>
+                        <td class="fp-mono">@e.Aktion</td>
+                        <td>@e.Beschreibung</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private Benutzer? benutzer;
+    private IReadOnlyList<AuditEintrag> eintraege = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        if (Rechte.VerwaltungEinsehen(benutzer.Rolle).Erlaubt)
+        {
+            eintraege = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<IAuditProtokoll>().NeuesteAsync(300));
+        }
+    }
+}

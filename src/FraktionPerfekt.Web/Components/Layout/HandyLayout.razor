@@ -1,0 +1,40 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+@* Handy-Seiten: statisch gerendert (kein SignalR), große Ziele, kaum JavaScript – schnell auch bei schlechtem Netz. *@
+
+<div class="fp-handy">
+    <div class="fp-streifen" aria-hidden="true"></div>
+    <header class="fp-handy-kopf">
+        <span style="flex:1"><Marke /></span>
+        <AuthorizeView>
+            <Authorized>
+                <span class="fp-small">@context.User.Identity?.Name</span>
+            </Authorized>
+        </AuthorizeView>
+    </header>
+    <nav class="fp-handy-nav" aria-label="Handy-Navigation">
+        @foreach (var (pfad, text) in Punkte)
+        {
+            <a href="@pfad" class="@(Aktiv(pfad) ? "active" : null)" aria-current="@(Aktiv(pfad) ? "page" : null)">@text</a>
+        }
+    </nav>
+    <main class="fp-handy-inhalt">
+        @Body
+    </main>
+</div>
+
+@code {
+    private static readonly (string Pfad, string Text)[] Punkte =
+    [
+        ("handy", "Heute"),
+        ("handy/abwesenheit", "Abwesend"),
+        ("", "Volle Ansicht"),
+    ];
+
+    private bool Aktiv(string pfad)
+    {
+        var hier = Navigation.ToBaseRelativePath(Navigation.Uri).Split('?')[0].TrimEnd('/');
+        return pfad.Length > 0 && (pfad == "handy" ? hier == "handy" || hier.StartsWith("handy/anfrage", StringComparison.Ordinal) : hier.StartsWith(pfad, StringComparison.Ordinal));
+    }
+}

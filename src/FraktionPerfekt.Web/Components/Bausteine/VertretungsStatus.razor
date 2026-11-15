@@ -1,0 +1,15 @@
+@using FraktionPerfekt.Domain.Vertretung
+
+@switch (Status)
+{
+    case null: <StatusPille Stil="warn">noch nicht angefragt</StatusPille> break;
+    case Vertretungsstatus.Angefragt: <StatusPille Stil="info">angefragt</StatusPille> break;
+    case Vertretungsstatus.Besetzt: <StatusPille Stil="gut">besetzt</StatusPille> break;
+    case Vertretungsstatus.Eskaliert: <StatusPille Stil="krit">beim Vorstand</StatusPille> break;
+    case Vertretungsstatus.Entfallen: <StatusPille Stil="neutral">entfallen</StatusPille> break;
+}
+
+@code {
+    [Parameter]
+    public Vertretungsstatus? Status { get; set; }
+}

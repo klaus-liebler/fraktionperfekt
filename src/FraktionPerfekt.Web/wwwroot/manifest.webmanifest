@@ -1,0 +1,19 @@
+{
+  "name": "FraktionPerfekt – CDU-Fraktion Greven",
+  "short_name": "Fraktion",
+  "description": "Termine, Sitzungen und Vertretungen der Fraktion",
+  "lang": "de",
+  "start_url": "/handy",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F4F7F8",
+  "theme_color": "#1E2A3A",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Abwesenheit melden", "url": "/handy/abwesenheit" },
+    { "name": "Heute", "url": "/handy" },
+    { "name": "Kalender", "url": "/kalender" }
+  ]
+}

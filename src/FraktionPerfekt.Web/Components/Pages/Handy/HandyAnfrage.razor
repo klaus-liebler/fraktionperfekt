@@ -1,0 +1,63 @@
+@page "/handy/anfrage/{Id:guid}"
+@attribute [ExcludeFromInteractiveRouting]
+@layout HandyLayout
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Vertretung
+@using FraktionPerfekt.Domain.Vertretung
+@inject VertretungDienst Vertretung
+
+@* Ziel der Push-Mitteilung „Vertretung gesucht“ mit Aktionsknopf „Ich vertrete“. *@
+
+<PageTitle>Vertretungsanfrage · FraktionPerfekt</PageTitle>
+
+@if (Meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">@Meldung</div>
+}
+
+@if (anfrage is not { } a)
+{
+    <article class="fp-handy-karte">Diese Anfrage gibt es nicht oder sie richtet sich an eine andere Person.</article>
+}
+else
+{
+    <article class="fp-handy-karte fp-hervor">
+        <h1 style="font-size:20px;margin:0 0 6px">Vertretung gesucht</h1>
+        <div><b>@a.Anfrage.Gremium</b></div>
+        <div>@a.Anfrage.Termin.Titel</div>
+        <div>@a.Anfrage.Termin.Beginn.ToString("dddd, dd.MM.yyyy, HH:mm") Uhr · @a.Anfrage.Termin.Ort</div>
+        <div>für @a.Anfrage.Vertretene</div>
+        @if (a.Status == Anfragestatus.Offen)
+        {
+            <div class="fp-small fp-muted">Bitte antworten bis @Ortszeit.AlsOrtszeit(a.Anfrage.Frist).ToString("dd.MM., HH:mm") Uhr. Ohne Antwort geht die Anfrage an die nächste Person.</div>
+            <form method="post" action="handy-aktion/anfrage/@a.Anfrage.AnfrageId/antwort" class="fp-handy-knoepfe">
+                <AntiforgeryToken />
+                <button type="submit" name="zusage" value="ja" class="fp-btn fp-btn-haupt">Ich vertrete</button>
+                <button type="submit" name="zusage" value="nein" class="fp-btn">Kann nicht</button>
+            </form>
+        }
+        else
+        {
+            <p><b>@(a.Status switch
+            {
+                Anfragestatus.Zugesagt => "Sie haben zugesagt. Danke!",
+                Anfragestatus.Abgelehnt => "Sie haben abgesagt.",
+                Anfragestatus.Abgelaufen => "Die Antwortfrist ist abgelaufen.",
+                _ => "Die Anfrage hat sich erledigt.",
+            })</b></p>
+        }
+    </article>
+}
+<a class="fp-btn" href="handy">Zur Übersicht</a>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? Meldung { get; set; }
+
+    private (MeineAnfrage Anfrage, Anfragestatus Status)? anfrage;
+
+    protected override async Task OnInitializedAsync() => anfrage = await Vertretung.AnfrageAsync(Id);
+}

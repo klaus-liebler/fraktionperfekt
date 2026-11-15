@@ -1,0 +1,125 @@
+@page "/anmelden"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout LeeresLayout
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using FraktionPerfekt.Adapters.Mocks
+@using FraktionPerfekt.Application.Gemeinsam
+@inject NavigationManager Navigation
+@inject Zugangsschutz Schutz
+@inject IStammdatenSpeicher Stammdaten
+@inject TimeProvider Uhr
+@inject ILogger<Anmelden> Log
+
+<PageTitle>Anmelden · FraktionPerfekt</PageTitle>
+
+<div class="fp-login">
+    <Marke />
+    <h1>Anmelden</h1>
+    <div class="fp-alert fp-warn">
+        <b>Testanmeldung.</b> Wählen Sie ein Konto. Wer mehrere Rollen hat (z. B. Vorstand und Mitglied), wechselt die aktive
+        Rolle nach der Anmeldung oben rechts. Im Betrieb ersetzt die Anmeldung per Passkey (Face ID, Fingerabdruck) diese Seite.
+    </div>
+
+    @if (Fehler is not null)
+    {
+        <div class="fp-alert fp-crit" role="alert">@Fehler</div>
+    }
+
+    @if (konten.Count == 0)
+    {
+        <div class="fp-alert fp-crit" role="alert">Es sind noch keine Konten angelegt (Demodaten:Anlegen in appsettings.Development.json).</div>
+    }
+
+    <form method="post" @formname="anmelden" @onsubmit="AnmeldenAsync">
+        <AntiforgeryToken />
+        @if (Schutz.ZugangscodeNoetig)
+        {
+            <div class="fp-field" style="max-width:320px">
+                <label class="fp-lbl" for="zugangscode">Zugangscode für das Testsystem</label>
+                <input id="zugangscode" name="Zugangscode" type="password" autocomplete="current-password" required class="fp-input" />
+            </div>
+        }
+        <div class="fp-list">
+            @foreach (var (person, rollen) in konten)
+            {
+                <div>
+                    <span class="fp-grow">
+                        <b>@person.Anzeigename</b>
+                        <br />
+                        <span class="fp-row" style="gap:4px;margin-top:4px">
+                            @foreach (var rolle in rollen)
+                            {
+                                <StatusPille Stil="info">@rolle.Anzeigename()</StatusPille>
+                            }
+                        </span>
+                    </span>
+                    <button type="submit" name="Login" value="@person.Benutzerkennung" class="fp-btn">Anmelden</button>
+                </div>
+            }
+        </div>
+    </form>
+    <p class="fp-small fp-muted">Alle Personen sind erfunden. Ähnlichkeiten mit realen Personen sind zufällig.</p>
+</div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm(FormName = "anmelden")]
+    private string? Login { get; set; }
+
+    [SupplyParameterFromForm(FormName = "anmelden")]
+    private string? Zugangscode { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? Fehler { get; set; }
+
+    private IReadOnlyList<(Person Person, IReadOnlyList<Rolle> Rollen)> konten = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var heute = Ortszeit.Heute(Uhr);
+        var jetzt = Uhr.GetUtcNow();
+        konten = (await Stammdaten.PersonenAsync())
+            .Where(p => p.Aktiv && p.Benutzerkennung is not null)
+            .Select(p => (p, p.RollenAm(heute, jetzt)))
+            .Where(x => x.Item2.Count > 0)
+            .OrderBy(x => x.Item2.Min()).ThenBy(x => x.p.Nachname, StringComparer.CurrentCulture)
+            .ToList();
+    }
+
+    private async Task AnmeldenAsync()
+    {
+        if (!Schutz.ZugangscodePruefen(Zugangscode))
+        {
+            Log.LogWarning("Testanmeldung mit falschem Zugangscode abgelehnt");
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            Fehler = "Der Zugangscode stimmt nicht.";
+            return;
+        }
+
+        var person = string.IsNullOrWhiteSpace(Login) ? null : await Stammdaten.PersonNachKennungAsync(Login);
+        var rollen = person?.RollenAm(Ortszeit.Heute(Uhr), Uhr.GetUtcNow()) ?? [];
+        if (person is not { Aktiv: true } || rollen.Count == 0)
+        {
+            Fehler = "Dieses Konto gibt es nicht oder es hat keine Rolle.";
+            return;
+        }
+
+        var benutzer = new Benutzer(person.Benutzerkennung!, person.Anzeigename, rollen.Min(), rollen, person.Id);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+            MockAnmeldung.Anmelden(benutzer, CookieAuthenticationDefaults.AuthenticationScheme));
+        Log.LogInformation("Testanmeldung: {Pseudonym}", FraktionPerfekt.Domain.Gemeinsam.Pseudonym.Person(person.Id));
+        Navigation.NavigateTo(SicheresZiel(ReturnUrl));
+    }
+
+    private static string SicheresZiel(string? ziel)
+        => !string.IsNullOrEmpty(ziel) && ziel.StartsWith('/') && !ziel.StartsWith("//", StringComparison.Ordinal)
+           && !ziel.StartsWith("/anmelden", StringComparison.OrdinalIgnoreCase)
+            ? ziel.TrimStart('/')
+            : "./";
+}

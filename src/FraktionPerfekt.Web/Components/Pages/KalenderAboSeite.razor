@@ -1,0 +1,86 @@
+@page "/kalender-abo"
+@using FraktionPerfekt.Application.Termine
+@using FraktionPerfekt.Domain.Termine
+@inject Vorgang Vorgang
+
+<PageTitle>Kalender-Abo · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Kalender-Abo</h1>
+        <p class="fp-sub">Ihre Termine im Kalender des Handys oder Rechners – ohne zweiten Kalender zu pflegen.</p>
+    </div>
+</div>
+
+<section class="fp-card">
+    <h2>So geht es</h2>
+    <ol class="fp-kompakt">
+        <li>„Neuen Abo-Link erzeugen“ tippen. Der Link wird nur <b>jetzt einmal</b> angezeigt.</li>
+        <li>Am iPhone/Mac: „Zum Kalender hinzufügen“ öffnet die Kalender-App. Bei Google Kalender: „Per URL hinzufügen“ und den https-Link einfügen
+            (Google aktualisiert Abos nur alle paar Stunden).</li>
+        <li>Link verloren oder weitergegeben? Neuen Link erzeugen – der alte funktioniert dann nicht mehr.</li>
+    </ol>
+    <p class="fp-small fp-muted">Im Abo stehen Sitzungen, in denen Sie ordentliches Mitglied sind oder vertreten, und Termine, denen Sie zugesagt haben.
+        Gespeichert wird nur ein Hash des Links.</p>
+    <div class="fp-row">
+        <RadzenButton Text="Neuen Abo-Link erzeugen" Icon="link" Click="AnlegenAsync" />
+    </div>
+    @if (neu is not null)
+    {
+        <div class="fp-alert fp-info">
+            <div class="fp-row" style="margin-bottom:8px">
+                <a class="fp-btn" href="@neu.Webcal">Zum Kalender hinzufügen</a>
+            </div>
+            <label class="fp-lbl" for="abo-link">Link zum Kopieren (https)</label>
+            <input id="abo-link" class="fp-input" style="width:100%" readonly value="@neu.Https" data-markieren />
+        </div>
+    }
+</section>
+
+<section class="fp-card">
+    <h2>Meine Abo-Links</h2>
+    @if (abos.Count == 0)
+    {
+        <p class="fp-muted">Noch kein Abo angelegt.</p>
+    }
+    <div class="fp-list">
+        @foreach (var a in abos)
+        {
+            <div>
+                <span class="fp-grow">Angelegt am @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(a.ErstelltAm).ToString("dd.MM.yyyy HH:mm")
+                    <br /><span class="fp-small fp-muted">@(a.ZuletztAbgerufenAm is { } z ? $"zuletzt abgerufen {FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(z):dd.MM.yyyy HH:mm}" : "noch nicht abgerufen")</span></span>
+                @if (a.Aktiv)
+                {
+                    <StatusPille Stil="gut">gültig</StatusPille>
+                    <RadzenButton Text="Widerrufen" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => WiderrufenAsync(a.Id))" />
+                }
+                else
+                {
+                    <StatusPille Stil="neutral">widerrufen</StatusPille>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private IReadOnlyList<KalenderAbo> abos = [];
+    private AboLink? neu;
+
+    protected override Task OnInitializedAsync() => LadenAsync();
+
+    private async Task LadenAsync() => abos = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().MeineAbosAsync());
+
+    private async Task AnlegenAsync()
+    {
+        neu = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().AboAnlegenAsync());
+        await LadenAsync();
+    }
+
+    private async Task WiderrufenAsync(Guid id)
+    {
+        await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().AboWiderrufenAsync(id));
+        neu = null;
+        await LadenAsync();
+    }
+}

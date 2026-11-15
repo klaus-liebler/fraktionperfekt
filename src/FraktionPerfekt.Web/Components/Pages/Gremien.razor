@@ -1,0 +1,69 @@
+@page "/gremien"
+@using FraktionPerfekt.Application.Ris
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Gremien
+@inject Vorgang Vorgang
+
+<PageTitle>Gremien und Mandate · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Gremien und Mandate</h1>
+        <p class="fp-sub">Städtische Gremien und Mandate kommen aus dem Ratsinformationssystem (nächtlicher Abgleich). Fraktionsintern gepflegt wird nur der Vertretungsrang.</p>
+    </div>
+    <div class="fp-row">
+        <BegruendeterButton Text="Jetzt mit RIS abgleichen" Icon="sync" Freigabe="@Rechte.StammdatenPflegen(benutzer?.Rolle)" Click="AbgleichenAsync" IsBusy="laeuft" />
+    </div>
+</div>
+
+@if (ergebnis is not null)
+{
+    <div class="fp-alert fp-info" role="status">
+        <b>@ergebnis.Quelle:</b> @ergebnis.Zusammenfassung.
+        @if (ergebnis.NichtZugeordnet.Count > 0)
+        {
+            <br /><span>Im RIS, aber ohne Person hier: @string.Join(", ", ergebnis.NichtZugeordnet)</span>
+        }
+    </div>
+}
+
+<section class="fp-card fp-tbl">
+    <table>
+        <thead><tr><th>Gremium</th><th>Art</th><th>Quelle</th><th>Ordentlich</th><th>Stellvertretung</th></tr></thead>
+        <tbody>
+            @foreach (var g in gremien)
+            {
+                <tr>
+                    <td><a href="gremien/@g.Id"><b>@g.Name</b></a> <span class="fp-small fp-muted">@g.Kurzname</span></td>
+                    <td>@g.Art</td>
+                    <td>@(g.AusDemRis ? "RIS" : "Fraktion")</td>
+                    <td>@g.Ordentlich</td>
+                    <td>@g.Stellvertretung</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@code {
+    private Benutzer? benutzer;
+    private IReadOnlyList<GremiumZeile> gremien = [];
+    private RisAbgleichErgebnis? ergebnis;
+    private bool laeuft;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync() => gremien = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().GremienAsync());
+
+    private async Task AbgleichenAsync()
+    {
+        laeuft = true;
+        ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RisAbgleich>().AbgleichenAsync());
+        laeuft = false;
+        await LadenAsync();
+    }
+}

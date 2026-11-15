@@ -1,0 +1,19 @@
+@using FraktionPerfekt.Application.Gemeinsam
+@using Microsoft.Extensions.Options
+@inject IOptions<FraktionOptionen> Optionen
+
+@*
+    Kopfzeilen-Marke: Text plus Platzhalter für das Logo der Fraktion. Es wird bewusst KEIN Parteilogo eingebunden oder
+    nachgezeichnet; die Logodatei liefert die Fraktion selbst (dann hier als <img> einsetzen, Pfad in Fraktion:Logo).
+*@
+<div class="fp-brand" title="@Optionen.Value.Anzeigename">
+    @if (Optionen.Value.Logo is { Length: > 0 } logo)
+    {
+        <img src="@logo" alt="" class="fp-logo" />
+    }
+    else
+    {
+        <span class="fp-logo-platzhalter" title="Platzhalter: Logo wird später als Datei geliefert (Fraktion:Logo)" aria-hidden="true">Logo</span>
+    }
+    <span class="fp-brand-text"><b>@Optionen.Value.Anzeigename</b><span>FraktionPerfekt</span></span>
+</div>

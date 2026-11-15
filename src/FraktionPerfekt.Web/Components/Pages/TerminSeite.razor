@@ -1,0 +1,139 @@
+@page "/termine/{Id:guid}"
+@using FraktionPerfekt.Application.Termine
+@using FraktionPerfekt.Domain.Termine
+@using FraktionPerfekt.Domain.Vertretung
+@inject Vorgang Vorgang
+
+<PageTitle>Termin · FraktionPerfekt</PageTitle>
+
+<a class="fp-zurueck" href="kalender">← Zum Kalender</a>
+
+@if (detail is null)
+{
+    <p class="fp-muted">@(geladen ? "Diesen Termin gibt es nicht oder Sie dürfen ihn nicht sehen." : "Lade …")</p>
+}
+else
+{
+    var t = detail.Zeile.Termin;
+    <div class="fp-head">
+        <div>
+            <h1>@t.Titel</h1>
+            <p class="fp-sub">@t.Art.Anzeigename()@(detail.Zeile.Gremium is null ? "" : $" · {detail.Zeile.Gremium}") · @t.Beginn.ToString("dddd, dd.MM.yyyy, HH:mm")–@t.Ende.ToString("HH:mm") Uhr</p>
+        </div>
+        <div class="fp-row">
+            <TerminStatus Zeile="detail.Zeile" />
+        </div>
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert fp-info" role="status">@meldung</div>
+    }
+
+    @if (schritte.Count > 0)
+    {
+        <NaechsteSchritte Schritte="schritte" />
+    }
+
+    <div class="fp-split">
+        <section class="fp-card">
+            <h2>Angaben</h2>
+            <dl class="fp-dl">
+                <dt>Ort</dt><dd>@(t.Ort ?? "–")</dd>
+                <dt>Quelle</dt><dd>@(t.RisId is null ? $"angelegt von {t.AngelegtVon}" : "Ratsinformationssystem (wird beim Abgleich aktualisiert)")</dd>
+                @if (t.Beschreibung is not null)
+                {
+                    <dt>Hinweis</dt><dd style="white-space:pre-line">@t.Beschreibung</dd>
+                }
+            </dl>
+            @if (detail.Zeile.Beteiligung != Beteiligung.Vertritt)
+            {
+                <div class="fp-row">
+                    <BegruendeterButton Text="Zusagen" Icon="check" Freigabe="@detail.Zeile.Antworten" Click="@(() => AntwortenAsync(true))"
+                                        ButtonStyle="@(detail.Zeile.MeinStatus == Teilnahmestatus.Zugesagt ? ButtonStyle.Primary : ButtonStyle.Light)" />
+                    <BegruendeterButton Text="Absagen" Icon="close" Freigabe="@detail.Zeile.Antworten" Click="@(() => AntwortenAsync(false))"
+                                        ButtonStyle="@(detail.Zeile.MeinStatus == Teilnahmestatus.Abgesagt ? ButtonStyle.Primary : ButtonStyle.Light)" />
+                </div>
+            }
+            @if (t.Art.IstGremiensitzung())
+            {
+                <a href="vertretungen/termin/@t.Id">Vertretungen für diese Sitzung</a>
+            }
+        </section>
+
+        <section class="fp-card">
+            <h2>Teilnahme <span class="fp-zahl">@detail.Zeile.Zusagen zugesagt</span></h2>
+            @if (detail.Teilnehmende.Count == 0)
+            {
+                <p class="fp-muted">Noch keine Rückmeldungen.</p>
+            }
+            <div class="fp-list">
+                @foreach (var p in detail.Teilnehmende.OrderBy(p => p.Beteiligung).ThenBy(p => p.Rang ?? 0).ThenBy(p => p.Name))
+                {
+                    <div>
+                        <span class="fp-grow">
+                            <b>@p.Name</b>
+                            <span class="fp-small fp-muted">
+                                @(p.Beteiligung switch
+                                {
+                                    Beteiligung.Ordentlich => "ordentliches Mitglied",
+                                    Beteiligung.Stellvertretung => $"Stellvertretung, Rang {p.Rang}",
+                                    Beteiligung.Vertritt => $"vertritt {p.Vertritt}",
+                                    _ => "",
+                                })
+                            </span>
+                        </span>
+                        @if (p.Abwesend && p.Beteiligung == Beteiligung.Ordentlich)
+                        {
+                            <StatusPille Stil="warn">abwesend</StatusPille>
+                        }
+                        @switch (p.Status)
+                        {
+                            case Teilnahmestatus.Zugesagt: <StatusPille Stil="gut">zugesagt</StatusPille> break;
+                            case Teilnahmestatus.Abgesagt: <StatusPille Stil="neutral">abgesagt</StatusPille> break;
+                            case Teilnahmestatus.Vertritt: <StatusPille Stil="info">vertritt</StatusPille> break;
+                        }
+                    </div>
+                }
+            </div>
+            @foreach (var f in detail.Vertretungen.Where(f => f.Status != Vertretungsstatus.Entfallen))
+            {
+                <div class="fp-small"><a href="vertretungen/fall/@f.Id">Vertretungsfall</a>: <VertretungsStatus Status="f.Status" /></div>
+            }
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private TerminDetail? detail;
+    private bool geladen;
+    private string? meldung;
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+
+    protected override Task OnParametersSetAsync() => LadenAsync();
+
+    private async Task LadenAsync()
+    {
+        detail = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().TerminAsync(Id));
+        geladen = true;
+    }
+
+    private async Task AntwortenAsync(bool zusage)
+    {
+        try
+        {
+            var ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().AntwortenAsync(Id, zusage));
+            meldung = zusage ? "Zugesagt." : "Abgesagt.";
+            schritte = ergebnis.NaechsteSchritte;
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+}

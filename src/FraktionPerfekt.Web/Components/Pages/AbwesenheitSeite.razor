@@ -1,0 +1,224 @@
+@page "/abwesenheit"
+@page "/abwesenheit/{Id:guid}"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Vertretung
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+@inject TimeProvider Uhr
+
+<PageTitle>Abwesenheit · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Abwesenheit melden</h1>
+        <p class="fp-sub">Das System findet Ihre Sitzungen im Zeitraum und fragt auf Wunsch Ihre Stellvertretungen in Rangfolge an.</p>
+    </div>
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (ergebnis is not null)
+{
+    <NaechsteSchritte Schritte="ergebnis.NaechsteSchritte" />
+    <section class="fp-card">
+        <h2>Abwesend vom @ergebnis.Abwesenheit.Von.ToString("dd.MM.yyyy") bis @ergebnis.Abwesenheit.Bis.ToString("dd.MM.yyyy")
+            @if (!ergebnis.Abwesenheit.Aktiv)
+            {
+                <StatusPille Stil="neutral">zurückgezogen</StatusPille>
+            }
+        </h2>
+        @if (ergebnis.Sitzungen.Count == 0)
+        {
+            <p class="fp-muted">In diesem Zeitraum haben Sie keine Sitzungen als ordentliches Mitglied.</p>
+        }
+        else
+        {
+            <p>Betroffene Sitzungen (Sie sind ordentliches Mitglied):</p>
+        }
+        <div class="fp-list">
+            @foreach (var s in ergebnis.Sitzungen)
+            {
+                <div>
+                    <span class="fp-zeit">@s.Termin.Beginn.ToString("ddd dd.MM.")<br /><span class="fp-small fp-muted">@s.Termin.Beginn.ToString("HH:mm")</span></span>
+                    <span class="fp-grow"><a href="termine/@s.Termin.Id"><b>@s.Gremium.Name</b></a><br /><span class="fp-small fp-muted">@s.Termin.Titel</span></span>
+                    <VertretungsStatus Status="s.Fall?.Status" />
+                    @if (s.Fall is { } f)
+                    {
+                        <a class="fp-small" href="vertretungen/fall/@f.Id">Verlauf</a>
+                    }
+                </div>
+            }
+        </div>
+        <div class="fp-row">
+            <BegruendeterButton Text="Vertretung anfragen" Icon="send" Freigabe="@AnfragenFreigabe" Click="AnfragenAsync" />
+            @if (ergebnis.Abwesenheit.Aktiv)
+            {
+                <RadzenButton Text="Ich bin doch da (zurückziehen)" ButtonStyle="ButtonStyle.Light" Click="ZurueckziehenAsync" />
+            }
+        </div>
+    </section>
+}
+else
+{
+    <section class="fp-card fp-einschub">
+        <h2>Neue Abwesenheit</h2>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl" for="a-von">Von</label><RadzenDatePicker id="a-von" TValue="DateTime" @bind-Value="von" DateFormat="dd.MM.yyyy" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="a-bis">Bis (einschließlich)</label><RadzenDatePicker id="a-bis" TValue="DateTime" @bind-Value="bis" DateFormat="dd.MM.yyyy" /></div>
+            <div class="fp-field">
+                <label class="fp-lbl" for="a-grund">Grund (optional, privat)</label>
+                <RadzenTextBox id="a-grund" @bind-Value="grund" Placeholder="z. B. Urlaub" />
+                <span class="fp-small fp-muted">Sehen nur Sie und die Geschäftsführung. Nicht in Nachrichten oder Protokoll. Gesundheitsangaben bitte weglassen.</span>
+            </div>
+        </div>
+        <div class="fp-row">
+            <BegruendeterButton Text="Abwesenheit eintragen" Icon="event_busy" Freigabe="@EintragenFreigabe" Click="EintragenAsync" />
+        </div>
+    </section>
+}
+
+<section class="fp-card">
+    <h2>Meine Abwesenheiten</h2>
+    @if (meine.Count == 0)
+    {
+        <p class="fp-muted">Keine Abwesenheiten eingetragen.</p>
+    }
+    <div class="fp-list">
+        @foreach (var z in meine)
+        {
+            <div>
+                <span class="fp-grow">
+                    <a href="abwesenheit/@z.Abwesenheit.Id"><b>@z.Abwesenheit.Von.ToString("dd.MM.yyyy") – @z.Abwesenheit.Bis.ToString("dd.MM.yyyy")</b></a>
+                    @if (z.Grund is not null)
+                    {
+                        <span class="fp-small fp-muted"> · @z.Grund (privat)</span>
+                    }
+                </span>
+                @if (!z.Abwesenheit.Aktiv)
+                {
+                    <StatusPille Stil="neutral">zurückgezogen</StatusPille>
+                }
+                else
+                {
+                    <span class="fp-small">@z.Sitzungen Sitzungen · @z.Besetzt vertreten · @z.Offen offen</span>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    [SupplyParameterFromQuery(Name = "anfragen")]
+    private int? Anfragen { get; set; }
+
+    private Benutzer? benutzer;
+    private DateTime von;
+    private DateTime bis;
+    private string? grund;
+    private Abwesenheitsergebnis? ergebnis;
+    private IReadOnlyList<AbwesenheitZeile> meine = [];
+    private string? meldung;
+    private bool fehler;
+    private bool angefragtNachNavigation;
+
+    private Freigabe EintragenFreigabe => Rechte.AbwesenheitMelden(benutzer?.Rolle).Und(() => bis < von
+        ? Freigabe.Nein("„Bis“ liegt vor „von“.")
+        : DateOnly.FromDateTime(bis) < Ortszeit.Heute(Uhr) ? Freigabe.Nein("Der Zeitraum liegt vollständig in der Vergangenheit.") : Freigabe.Ja);
+
+    private Freigabe AnfragenFreigabe => ergebnis is null || !ergebnis.Abwesenheit.Aktiv
+        ? Freigabe.Nein("Die Abwesenheit wurde zurückgezogen.")
+        : ergebnis.Sitzungen.Count == 0 ? Freigabe.Nein("Im Zeitraum gibt es keine Sitzungen, in denen Sie ordentliches Mitglied sind.")
+        : ergebnis.Sitzungen.All(s => s.Fall is not null) ? Freigabe.Nein("Für alle betroffenen Sitzungen läuft bereits eine Anfrage oder sie ist besetzt.")
+        : Freigabe.Ja;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        var heute = Ortszeit.Heute(Uhr).ToDateTime(TimeOnly.MinValue);
+        if (von == default)
+        {
+            (von, bis) = (heute, heute);
+        }
+
+        ergebnis = Id is { } id ? await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().AbwesenheitAsync(id)) : null;
+        if (Id is not null && ergebnis is null)
+        {
+            (meldung, fehler) = ("Diese Abwesenheit gibt es nicht oder sie gehört einer anderen Person.", true);
+        }
+
+        await MeineLadenAsync();
+
+        // „Vertretung anfragen“ aus den nächsten Schritten: einmal ausführen (nur interaktiv, nicht beim Vorrendern).
+        if (Anfragen == 1 && RendererInfo.IsInteractive && !angefragtNachNavigation && AnfragenFreigabe.Erlaubt)
+        {
+            angefragtNachNavigation = true;
+            await AnfragenAsync();
+            Navigation.NavigateTo($"abwesenheit/{Id}", replace: true);
+        }
+        else if (Anfragen != 1)
+        {
+            angefragtNachNavigation = false;
+        }
+    }
+
+    private async Task MeineLadenAsync() => meine = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().MeineAbwesenheitenAsync());
+
+    private async Task EintragenAsync()
+    {
+        try
+        {
+            ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>()
+                .EintragenAsync(DateOnly.FromDateTime(von), DateOnly.FromDateTime(bis), grund));
+            (meldung, fehler) = ($"Abwesenheit eingetragen. {ergebnis.Sitzungen.Count} Sitzung(en) betroffen.", false);
+            Navigation.NavigateTo($"abwesenheit/{ergebnis.Abwesenheit.Id}", replace: false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await MeineLadenAsync();
+    }
+
+    private async Task AnfragenAsync()
+    {
+        if (ergebnis is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var abwesenheitId = ergebnis.Abwesenheit.Id;
+            var faelle = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().AnfragenAsync(abwesenheitId));
+            (meldung, fehler) = ($"Vertretung für {faelle.Count} Sitzung(en) angefragt. Die Stellvertretungen bekommen eine Mitteilung; ohne Antwort geht es automatisch weiter.", false);
+            ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().AbwesenheitAsync(abwesenheitId));
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await MeineLadenAsync();
+    }
+
+    private async Task ZurueckziehenAsync()
+    {
+        if (ergebnis is null)
+        {
+            return;
+        }
+
+        var abwesenheitId = ergebnis.Abwesenheit.Id;
+        await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().ZurueckziehenAsync(abwesenheitId));
+        (meldung, fehler) = ("Abwesenheit zurückgezogen. Laufende Anfragen sind beendet, Gefragte wurden informiert.", false);
+        ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().AbwesenheitAsync(abwesenheitId));
+        await MeineLadenAsync();
+    }
+}

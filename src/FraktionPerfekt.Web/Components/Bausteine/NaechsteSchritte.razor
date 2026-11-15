@@ -1,0 +1,37 @@
+@inject NavigationManager Navigation
+
+@*
+    "Nächste sinnvolle Schritte": nach jeder Aktion werden die naheliegenden Folgeschritte angeboten.
+*@
+@if (Schritte.Count > 0)
+{
+    <section class="fp-next" aria-label="@Titel">
+        <h3>@Titel</h3>
+        <div class="fp-row">
+            @foreach (var schritt in Schritte)
+            {
+                <span title="@schritt.Hinweis">
+                    <BegruendeterButton Text="@schritt.Titel"
+                                        Icon="@(schritt.Hauptschritt ? "arrow_forward" : null)"
+                                        ButtonStyle="@(schritt.Hauptschritt ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                        Size="ButtonSize.Small"
+                                        Freigabe="@schritt.Status"
+                                        Click="@(() => Navigation.NavigateTo(schritt.Ziel, forceLoad: IstDatei(schritt.Ziel)))" />
+                </span>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string Titel { get; set; } = "Nächste sinnvolle Schritte";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<NaechsterSchritt> Schritte { get; set; } = [];
+
+    /// <summary>Downloads (Kalenderdatei, PDF, JSON) brauchen einen echten Seitenaufruf statt der Blazor-Navigation.</summary>
+    private static bool IstDatei(string ziel) => ziel.Split('?')[0] is var pfad
+        && (pfad.EndsWith(".ics", StringComparison.OrdinalIgnoreCase) || pfad.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)
+            || pfad.EndsWith(".json", StringComparison.OrdinalIgnoreCase));
+}

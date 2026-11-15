@@ -1,0 +1,69 @@
+@page "/postausgang"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Postausgang
+@inject Vorgang Vorgang
+
+<PageTitle>Postausgang · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Postausgang</h1>
+        <p class="fp-sub">Jede Mail und jede Push-Mitteilung läuft hierüber. In der Entwicklung wird nur simuliert; nichts verlässt das System.</p>
+    </div>
+</div>
+
+@if (Rechte.VerwaltungEinsehen(benutzer?.Rolle) is { Erlaubt: false } nein)
+{
+    <div class="fp-alert fp-warn">@nein.Begruendung</div>
+}
+else
+{
+    <section class="fp-card fp-tbl">
+        <table>
+            <thead><tr><th>Erstellt</th><th>Kanal</th><th>An</th><th>Betreff</th><th>Status</th></tr></thead>
+            <tbody>
+                @foreach (var n in nachrichten)
+                {
+                    <tr>
+                        <td class="fp-small">@Ortszeit.AlsOrtszeit(n.ErstelltAm).ToString("dd.MM. HH:mm:ss")</td>
+                        <td>@(n.Kanal == Kanal.Push ? "Push" : "Mail")</td>
+                        <td>@n.EmpfaengerAnzeige</td>
+                        <td>
+                            <details>
+                                <summary>@n.Betreff</summary>
+                                <pre class="fp-code">@n.Inhalt</pre>
+                                @if (n.Link is not null)
+                                {
+                                    <span class="fp-small">Link: @n.Link @(n.Aktion is null ? "" : $"· Knopf „{n.Aktion}“")</span>
+                                }
+                            </details>
+                        </td>
+                        <td>
+                            @switch (n.Status)
+                            {
+                                case NachrichtenStatus.Zugestellt: <StatusPille Stil="gut">zugestellt</StatusPille> break;
+                                case NachrichtenStatus.Wartend: <StatusPille Stil="info">wartet</StatusPille> break;
+                                default: <StatusPille Stil="krit">fehlgeschlagen</StatusPille> break;
+                            }
+                            <span class="fp-small fp-muted">@n.Rueckmeldung</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private Benutzer? benutzer;
+    private IReadOnlyList<AusgehendeNachricht> nachrichten = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        if (Rechte.VerwaltungEinsehen(benutzer.Rolle).Erlaubt)
+        {
+            nachrichten = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<INachrichtenSpeicher>().NeuesteAsync(200));
+        }
+    }
+}

@@ -1,0 +1,173 @@
+@page "/"
+@using FraktionPerfekt.Application.Heute
+@using FraktionPerfekt.Application.Termine
+@using FraktionPerfekt.Application.Vertretung
+@using FraktionPerfekt.Domain.Termine
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+
+<PageTitle>Heute · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Heute</h1>
+        <p class="fp-sub">@(ansicht is null ? "" : $"Hallo {ansicht.Name.Split(' ')[0]}, das steht an.")</p>
+    </div>
+    @if (ansicht is not null)
+    {
+        <div class="fp-row" aria-label="Schnellaktionen">
+            @foreach (var a in ansicht.Schnellaktionen)
+            {
+                <BegruendeterButton Text="@a.Titel" Icon="@a.Symbol" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Freigabe="@a.Freigabe"
+                                    Click="@(() => Navigation.NavigateTo(a.Ziel))" />
+            }
+        </div>
+    }
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert fp-info" role="status">@meldung</div>
+}
+
+@if (schritte.Count > 0)
+{
+    <NaechsteSchritte Schritte="schritte" />
+}
+
+@if (ansicht is null)
+{
+    <p class="fp-muted">Lade …</p>
+}
+else
+{
+    <div class="fp-wsa">
+        @if (ansicht.Vertretungsanfragen.Count > 0)
+        {
+            <section class="fp-card fp-hervor">
+                <h2>Vertretung gesucht <span class="fp-zahl">@ansicht.Vertretungsanfragen.Count</span></h2>
+                @foreach (var a in ansicht.Vertretungsanfragen)
+                {
+                    <div class="fp-anfrage">
+                        <div><b>@a.Gremium</b> · @a.Termin.Beginn.ToString("dddd, dd.MM., HH:mm") Uhr</div>
+                        <div class="fp-small fp-muted">für @a.Vertretene · bitte antworten bis @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(a.Frist).ToString("dd.MM., HH:mm") Uhr</div>
+                        <div class="fp-row">
+                            <RadzenButton Text="Ich vertrete" Icon="check" Size="ButtonSize.Small" Click="@(() => VertretungAntwortenAsync(a.AnfrageId, true))" />
+                            <RadzenButton Text="Kann nicht" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => VertretungAntwortenAsync(a.AnfrageId, false))" />
+                            <a class="fp-link" href="termine/@a.Termin.Id">Details</a>
+                        </div>
+                    </div>
+                }
+            </section>
+        }
+
+        @if (ansicht.OffeneZusagen.Count > 0)
+        {
+            <section class="fp-card">
+                <h2>Bitte zu- oder absagen <span class="fp-zahl">@ansicht.OffeneZusagen.Count</span></h2>
+                @foreach (var z in ansicht.OffeneZusagen)
+                {
+                    <div class="fp-anfrage">
+                        <div><b>@z.Termin.Titel</b></div>
+                        <div class="fp-small fp-muted">@z.Termin.Beginn.ToString("ddd, dd.MM., HH:mm") Uhr · @z.Termin.Ort</div>
+                        <div class="fp-row">
+                            <RadzenButton Text="Zusagen" Icon="check" Size="ButtonSize.Small" Click="@(() => TerminAntwortenAsync(z.Termin.Id, true))" />
+                            <RadzenButton Text="Absagen" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => TerminAntwortenAsync(z.Termin.Id, false))" />
+                        </div>
+                    </div>
+                }
+            </section>
+        }
+
+        @if (ansicht.Aufgaben.Count > 0 || ansicht.OffeneVertretungen > 0)
+        {
+            <section class="fp-card">
+                <h2>Für den Vorstand <span class="fp-zahl">@ansicht.Aufgaben.Count</span></h2>
+                @foreach (var a in ansicht.Aufgaben)
+                {
+                    <div class="fp-anfrage">
+                        <a href="@a.Ziel"><b>@a.Titel</b></a>
+                        <div class="fp-small fp-muted">@a.Beschreibung</div>
+                    </div>
+                }
+                @if (ansicht.OffeneVertretungen > 0)
+                {
+                    <a href="vertretungen">@ansicht.OffeneVertretungen Sitzungen mit offener Vertretung ansehen</a>
+                }
+            </section>
+        }
+
+        @if (ansicht.NichtsZuTun)
+        {
+            <section class="fp-card">
+                <h2>Nichts offen</h2>
+                <p class="fp-muted">Keine Anfragen und keine offenen Zusagen. Schönen Tag!</p>
+            </section>
+        }
+
+        <section class="fp-card">
+            <h2>Meine nächsten Termine</h2>
+            @if (ansicht.NaechsteTermine.Count == 0)
+            {
+                <p class="fp-muted">In den nächsten zwei Wochen keine Termine.</p>
+            }
+            <div class="fp-list">
+                @foreach (var z in ansicht.NaechsteTermine)
+                {
+                    <div>
+                        <span class="fp-zeit">@z.Termin.Beginn.ToString("ddd dd.MM.")<br /><span class="fp-small fp-muted">@z.Termin.Beginn.ToString("HH:mm")</span></span>
+                        <span class="fp-grow">
+                            <a href="termine/@z.Termin.Id"><b>@z.Termin.Titel</b></a>
+                            <br /><span class="fp-small fp-muted">@z.Termin.Ort</span>
+                        </span>
+                        <TerminStatus Zeile="z" />
+                    </div>
+                }
+            </div>
+            <a href="kalender">Zum Kalender</a>
+        </section>
+    </div>
+}
+
+@code {
+    private HeuteAnsicht? ansicht;
+    private string? meldung;
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+
+    protected override Task OnInitializedAsync() => LadenAsync();
+
+    private async Task LadenAsync()
+        => ansicht = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync());
+
+    private async Task TerminAntwortenAsync(Guid terminId, bool zusage)
+    {
+        try
+        {
+            var ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().AntwortenAsync(terminId, zusage));
+            meldung = zusage ? "Zugesagt." : "Abgesagt.";
+            schritte = ergebnis.NaechsteSchritte;
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task VertretungAntwortenAsync(Guid anfrageId, bool zusage)
+    {
+        try
+        {
+            var ergebnis = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<VertretungDienst>().AntwortenAsync(anfrageId, zusage));
+            meldung = ergebnis.Meldung;
+            schritte = ergebnis.NaechsteSchritte;
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+    }
+}
