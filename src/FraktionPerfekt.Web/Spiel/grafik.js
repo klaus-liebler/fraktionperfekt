@@ -46,7 +46,7 @@
     function ueberlagerungen(z, t) {
         const f = z.flags, o = [];
         const teil = (bild, i, b, h, x, y) => o.push({ bild, sx: i * b, sy: 0, b, h, x, y });
-        if (z.szene === 'ems' && !f.bootGewonnen) { teil('ruderboot_46x14', 0, 46, 14, 144, 100 + (Math.floor(t * 1.5) % 2)); }
+        if (z.szene === 'ems' && !f.bootGewonnen) { teil('ruderboot_46x14', 0, 46, 14, 144, 93 + (Math.floor(t * 1.5) % 2)); }
         if (z.szene === 'baustelle' && !f.grubeTrocken) { teil('leck_26x12_x3', Math.floor(t * 6) % 3, 26, 12, 118, 76); }
         if (z.szene === 'schule') {
             teil('uhr_zeiger_26x23_x2', f.abend ? 1 : 0, 26, 23, 154, 20);

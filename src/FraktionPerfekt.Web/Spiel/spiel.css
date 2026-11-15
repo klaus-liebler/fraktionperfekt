@@ -42,7 +42,7 @@ button:hover, button:focus-visible { background: #5d4037; outline: 2px solid #ff
 /* Leiste im klassischen Stil: Satzzeile, Verben, Figuren, Inventar */
 #leiste { position: fixed; left: 0; right: 0; bottom: 0; background: #160d07; border-top: 3px solid #5d4037; padding: 4px 8px 6px; }
 #satz { min-height: 22px; color: #9fe0ff; font-weight: bold; font-size: 16px; text-align: center; letter-spacing: .5px; }
-#leistenreihe { display: flex; gap: 10px; align-items: center; overflow-x: auto; white-space: nowrap; }
+#leistenreihe { display: flex; gap: 10px; align-items: center; }
 #verben { display: grid; grid-template-columns: repeat(4, auto); gap: 3px; }
 .verb { font-size: 14px; padding: 3px 8px; border-color: #6d4c41; color: #e8d6b0; background: #24150c; box-shadow: none; font-weight: bold; }
 .verb.aktiv { background: #c9a227; color: #160d07; border-color: #ffd54f; }
@@ -52,7 +52,7 @@ button:hover, button:focus-visible { background: #5d4037; outline: 2px solid #ff
 .figur { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px 6px; font-size: 12px; color: #e8d6b0; background: #24150c; border-color: #6d4c41; box-shadow: none; }
 .figur .mini { width: 40px; height: 40px; image-rendering: pixelated; }
 .figur.aktiv { border-color: #ffd54f; background: #4a3016; color: #ffd54f; }
-#inventar { display: flex; gap: 4px; flex-wrap: nowrap; }
+#inventar { display: flex; gap: 4px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
 .ding { padding: 2px; background: #24150c; border-color: #6d4c41; box-shadow: none; }
 .ding .icon { width: 40px; height: 40px; image-rendering: pixelated; display: block; }
 .ding.aktiv { border-color: #9fe0ff; background: #12324a; }
@@ -68,3 +68,5 @@ button:hover, button:focus-visible { background: #5d4037; outline: 2px solid #ff
     #portrait canvas { width: 64px; height: 64px; }
     #punkte { display: none; }
 }
+#verben, #figuren, #rechts { flex: none; }
+#verben button, #punkte { white-space: nowrap; }

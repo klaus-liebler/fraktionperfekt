@@ -22,8 +22,10 @@
     let verb = 'gehe', objekt = null;          // gewähltes Verb und Gegenstand („Benutze X mit …“)
     let blende = null;                          // { t, ziel } Irisblende
     let zeit = 0, geladen = false;
-    const START_JOE = 36, START_CHANI = 56;
-    const held = { joe: { x: START_JOE, ziel: START_JOE, blick: 1, schritt: 0 }, chani: { x: START_CHANI, ziel: START_CHANI, blick: 1, schritt: 0 } };
+    // Startplatz: rechts neben den Personen am linken Bildrand; im Büro links vom Schreibtisch, damit der Umschlag sichtbar bleibt
+    const startX = (szene) => (szene === 'buero' ? [64, 84] : szene === 'tempel' && z && z.flags.kugelGeschafft ? [116, 136] : [92, 112]);
+    function aufStart() { const [j, c] = startX(z ? z.szene : 'buero'); held.joe.x = held.joe.ziel = j; held.chani.x = held.chani.ziel = c; held.joe.blick = held.chani.blick = 1; }
+    const held = { joe: { x: 64, ziel: 64, blick: 1, schritt: 0 }, chani: { x: 84, ziel: 84, blick: 1, schritt: 0 } };
     let laufAuftrag = null;                     // wird nach Ankunft ausgeführt
     let sprecher = null, sprecherSchreck = false; // für Sprechanimation
     const R = (h) => G.R(h, z);
@@ -100,7 +102,7 @@
             const f = Math.floor(zeit * 10 + fx) % 3;
             t2.fillStyle = f === 0 ? 'rgb(252,152,56)' : f === 1 ? 'rgb(252,216,120)' : 'rgb(252,252,188)';
             t2.fillRect(fx + (f === 2 ? 0 : 1), fy - 9 - f, 1 + (f === 1 ? 1 : 0), 2);
-            t2.globalAlpha = 0.1 + f * 0.03; t2.fillStyle = 'rgb(255,200,100)'; t2.beginPath(); t2.arc(fx + 1, fy - 4, 16 + f, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1;
+            t2.globalAlpha = 0.05 + f * 0.02; t2.fillStyle = 'rgb(255,200,100)'; t2.beginPath(); t2.arc(fx + 1, fy - 4, 16 + f, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1;
         }
         // Wasser glitzert
         if (z.szene === 'ems') { for (let i = 0; i < 10; i++) { const x = Math.round((i * 47 + zeit * 8 * (1 + (i % 3))) % B), y = 96 + (i * 13) % 40; t2.fillStyle = 'rgb(188,228,252)'; t2.fillRect(x, y, 3 + (i % 2), 1); } }
@@ -122,8 +124,8 @@
         }
         if (z.szene === 'tempel' && z.flags.kugelGeschafft) {
             const wackel = Math.floor(zeit * 3) % 2;
-            figuren.push({ y: BODEN - 4, name: 'hohlbein', x: 110, zustand: z.ende ? 'erschrocken' : 'reden', blick: 1 });
-            figuren.push({ y: BODEN - 5 - wackel, name: 'droehn', x: z.ende ? 186 : 140, zustand: z.ende ? 'erschrocken' : 'stehen', blick: 1 });
+            figuren.push({ y: BODEN - 4, name: 'hohlbein', x: z.ende ? 214 : 196, zustand: z.ende ? 'erschrocken' : 'reden', blick: -1 });
+            figuren.push({ y: BODEN - 5 - wackel, name: 'droehn', x: z.ende ? 240 : 222, zustand: z.ende ? 'erschrocken' : 'stehen', blick: -1 });
         }
         for (const n of ['joe', 'chani']) {
             const hh = held[n];
@@ -161,7 +163,7 @@
             const n = Math.max(8, Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 2)), bis = Math.floor(t * n);
             const bogen = (u) => ({ x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u - Math.sin(u * Math.PI) * 10 });
             t2.fillStyle = 'rgb(188,0,0)';
-            for (let i = 0; i <= bis; i++) { if (i % 3 === 2) { continue; } const p = bogen(i / n); t2.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 2); }
+            for (let i = 0; i <= bis; i++) { const p = bogen(i / n); if (i % 3 === 2 || Math.hypot(p.x - a.x, p.y - a.y) < 6 || Math.hypot(p.x - b.x, p.y - b.y) < 6) { continue; } t2.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 2); }
             const p = bogen(t);
             t2.fillStyle = 'rgb(60,30,20)'; t2.fillRect(Math.round(p.x) - 3, Math.round(p.y) - 9, 7, 3); t2.fillRect(Math.round(p.x) - 2, Math.round(p.y) - 12, 5, 3);
         }
@@ -190,14 +192,14 @@
         }
         const vy = spurY(1) + Math.sin(zeit * 1.5) * 26;
         oberkoerper('hohlbein', B - 66, vy - 30); oberkoerper('droehn', B - 46, vy - 32);
-        teil({ bild: 'motorboot_64x24', sx: 0, b: 64, h: 24, x: B - 70, y: vy - 2 });
+        t2.save(); t2.translate(2 * (B - 70) + 64, 0); t2.scale(-1, 1); teil({ bild: 'motorboot_64x24', sx: 0, b: 64, h: 24, x: B - 70, y: vy - 2 }); t2.restore(); // Bug nach links
         t2.fillStyle = 'rgb(188,228,252)'; for (let i = 0; i < 5; i++) { t2.fillRect(B - 6 + i * 2, vy + 14 + (Math.floor(zeit * 20 + i) % 3), 2, 1); }
     }
 
     function zeichneKugel(sim) {
         const weg = (p) => 30 + p * (B - 90);
         streifen('minispiel_gang_512x144', sim.pos * 400);
-        const sx = weg(sim.pos), kx = weg(sim.kugel) - 30, boden = 132;
+        const sx = weg(sim.pos), kx = weg(sim.kugel) - 44, boden = 132;
         const lauf = Math.floor(zeit * 12);
         if (sim.lastenrad) {
             teil({ bild: 'lastenrad_48x32', sx: 0, b: 48, h: 32, x: sx - 22, y: boden - 30 });
@@ -253,7 +255,7 @@
             if (blende) { blende.t += dt * 1.6; if (blende.t >= 0.5 && !blende.gewechselt) { blende.gewechselt = true; blende.wechsel(); } if (blende.t >= 1) { blende = null; } }
             if (mini && textbox.hidden && dialogEl.hidden) {
                 if (mini.art === 'boot') { S.bootSchritt(mini, dt, eingabeBoot); eingabeBoot = null; } else { S.kugelSchritt(mini, dt, eingabeKugel); eingabeKugel = false; }
-                if (mini.status !== 'laeuft') { const art = mini.art, ok = mini.status === 'gewonnen'; mini = null; klang(ok ? 'erfolg' : 'fehler'); ergebnis(S.minispielEnde(z, art, ok)); if (!ok) { danach = { minispiel: art }; } }
+                if (mini.status !== 'laeuft') { const art = mini.art, ok = mini.status === 'gewonnen'; mini = null; klang(ok ? 'erfolg' : 'fehler'); ergebnis(S.minispielEnde(z, art, ok)); if (ok && art === 'kugel') { aufStart(); } if (!ok) { danach = { minispiel: art }; } }
             }
             if (reise) { reise.t += dt * 0.9; if (reise.t >= 1.15) { const ziel = reise.nach; reise = null; szenenwechsel(() => { const v = z.szene; ergebnis(S.reisen(z, ziel), v); }); } }
             laufen(dt);
@@ -326,7 +328,7 @@
         if (z.szene !== vorher) {
             if (z.szene !== 'karte' && S.SZENEN[z.szene] && !(e.text || []).includes(S.SZENEN[z.szene].einstieg)) { warteschlange.push(S.SZENEN[z.szene].einstieg); }
             if (S.ORTE[vorher]) { letzterOrt = vorher; }
-            held.joe.x = held.joe.ziel = START_JOE; held.chani.x = held.chani.ziel = START_CHANI; held.joe.blick = held.chani.blick = 1;
+            aufStart();
             plaetze.schreiben('auto', z);
         }
         if (e.ende) { plaetze.schreiben('auto', z); if (window.Musik && window.Musik.an) { window.Musik.spielen(true); } else { klang('ende'); } }
@@ -535,7 +537,7 @@
         z = zustand; mini = null; reise = null; blende = null; pausiert = false; laufAuftrag = null;
         menueEl.hidden = true; titelEl.hidden = true; dialogEl.hidden = true; kontextEl.hidden = true;
         warteschlange = []; danach = null; verb = 'gehe'; objekt = null;
-        held.joe.x = held.joe.ziel = START_JOE; held.chani.x = held.chani.ziel = START_CHANI;
+        aufStart();
         letzterOrt = S.ORTE[z.szene] ? z.szene : 'buero';
         $('leiste').hidden = false;
         leisteAktualisieren();

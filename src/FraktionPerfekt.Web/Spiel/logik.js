@@ -253,7 +253,7 @@
                     }
                 },
                 {
-                    id: 'boot', name: 'Ruderboot „Volkseigentum“', x: 56.25, y: 69.4, b: 18, h: 9.7, form: 'boot',
+                    id: 'boot', name: 'Ruderboot „Volkseigentum“', x: 56.25, y: 64.6, b: 18, h: 9.7, form: 'boot',
                     sichtbar: (z) => !z.flags.bootGewonnen,
                     ansehen: () => antwort('Ein Ruderboot. Flussabwärts tuckert ein Motorboot – Hohlbein und Dröhn haben sich wohl losgeschnitten.'),
                     benutzen: (z) => hat(z, 'paddel')
