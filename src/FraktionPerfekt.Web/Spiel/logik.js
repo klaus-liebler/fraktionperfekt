@@ -508,7 +508,7 @@
         z.ende = true; z.flags.ende = true; punkte(z, 'finale', 50);
         const hilfe = [];
         hilfe.push(z.flags.agGegruendet ? 'Genosse Rolf fährt mit dem Gewerkschaftsbus vor: „Solidarität!“' : 'Ein Bus hupt draußen.');
-        hilfe.push(z.flags.lastenrad ? 'Mia schiebt das Lastenrad heran: „Die Urne kommt in die Kiste, nicht in den Kofferraum.“' : '');
+        hilfe.push(z.flags.lastenrad ? 'Mia schiebt das Lastenrad heran: „Die Urne fährt im Lastenkorb – angeschnallt.“' : '');
         hilfe.push(z.flags.stadtplanWeg ? 'Tanja hat den Tragegurt organisiert: „Gemeinsam tragen. Alle.“' : '');
         return antwort([
             'Hohlbein jubelt über seinen Kegelpokal. Dröhn ruft: „Den Rest remigrieren wir auch!“ – und versucht, die Wahlurne allein hochzuheben.',
