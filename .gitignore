@@ -493,3 +493,6 @@ data/
 *.db-wal
 logs/
 
+
+# OSM-Rohabruf (groß); die Karte nutzt greven-osm-kompakt.json
+tools/Grafik/daten/greven-osm.json

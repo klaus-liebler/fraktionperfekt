@@ -1,5 +1,14 @@
 # Spiel-Grafikliste: was da ist, was fehlt
 
+> **Stand 15.11.2026, abends:** Alle Einträge sind erzeugt, und zwar per Skript `node tools/Grafik/erzeuge.mjs`
+> (reproduzierbar, ohne Fremdpakete; Ausgabe nach `assets/`). Neugenerierungen tragen das Suffix `_v2`; Klaus'
+> Originale bleiben unverändert. Übersicht zur Freigabe: [`docs/spiel-screenshots/grafik-uebersicht.png`](spiel-screenshots/grafik-uebersicht.png),
+> Einzelbilder `docs/spiel-screenshots/grafik-*.png`. Noch nicht im Spiel eingebaut (wartet auf Freigabe).
+> Das Parteibüro ist die **Zukunftsschmiede** in der Marktstraße (`buero_zukunftsschmiede_v2_256x144.png`, Ladenlokal mit
+> Schaufenster, ohne Parteilogo). Die Reisekarte entsteht aus **OpenStreetMap**-Daten (© OpenStreetMap-Mitwirkende,
+> ODbL; einmaliger Abruf, `tools/Grafik/daten/`). Noch offen: Zusatzposen (Reden, Benutzen, Erschrocken) und Porträts
+> im 256er-Stil.
+
 Stand: 15.11.2026. Grundlage: Klaus' Grafiken in `assets/` und alle Orte, Figuren, Gegenstände und Minispiele des
 Spiels (`src/FraktionPerfekt.Web/Spiel/logik.js`, `docs/spiel.md`). Das Spiel ist noch nicht umgebaut; diese Liste
 beschreibt nur, welche Grafiken für den Umbau gebraucht werden.

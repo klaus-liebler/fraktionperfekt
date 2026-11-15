@@ -75,3 +75,19 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
 - Tests: `tests/FraktionPerfekt.Web.Tests/spiel/logik.test.cjs` (node --test), eingebunden in `dotnet test` über
   `SpielTests` (ohne Node übersprungen). Geprüft u. a.: Die Komplettlösung führt bis zum Ende, Rätsel (Schloss, Gitter,
   Quiz), Speichern/Laden mit Abwehr fremder Daten, Speicher, der Ausnahmen wirft, und beide Minispiele.
+
+## Grafiken im Stil der Vorlagen (Freigabe ausstehend)
+
+`node tools/Grafik/erzeuge.mjs` erzeugt alle fehlenden Grafiken nach `assets/` (256×144, Figuren 6 × 32×64), passend zu
+Klaus' Vorlagen. Übersicht: `docs/spiel-screenshots/grafik-uebersicht.png`, Liste: `docs/spiel-grafikliste.md`.
+
+Die Reisekarte basiert auf Daten von **OpenStreetMap** (© OpenStreetMap-Mitwirkende, Lizenz ODbL 1.0). Die Daten wurden
+einmalig per Overpass-API abgerufen (`tools/Grafik/daten/abfrage.overpassql`) und als `greven-osm-kompakt.json`
+gespeichert; die Namensnennung steht auf der Karte und im Abspann.
+
+## Erkennungsmelodie
+
+Eigene Abenteuer-Fanfare (Blechbläser, punktierter Marsch, C-Dur), darin als würdiges Zitat die erste Phrase von Joseph
+Haydns Melodie von 1797 (gemeinfrei; Melodie der Nationalhymne), unverändert und ohne Text, dann Fanfaren-Schluss mit
+Pauke. Erzeugt per WebAudio (`Spiel/musik.js`). Sie läuft auf dem Titelbild und kurz im Finale und lässt sich dort und im
+Pausemenü abschalten und leiser stellen. Filmmusik wird nicht zitiert.
