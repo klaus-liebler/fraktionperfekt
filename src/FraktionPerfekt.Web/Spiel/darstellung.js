@@ -23,8 +23,8 @@
     let blende = null;                          // { t, ziel } Irisblende
     let zeit = 0, geladen = false;
     // Startplatz: rechts neben den Personen am linken Bildrand; im Büro links vom Schreibtisch, damit der Umschlag sichtbar bleibt
-    const startX = (szene) => (szene === 'buero' ? [64, 84] : szene === 'tempel' && z && z.flags.kugelGeschafft ? [116, 136] : [92, 112]);
-    function aufStart() { const [j, c] = startX(z ? z.szene : 'buero'); held.joe.x = held.joe.ziel = j; held.chani.x = held.chani.ziel = c; held.joe.blick = held.chani.blick = 1; }
+    // Startplätze kommen aus Grafik.startplaetze: nie vor oder hinter einer anderen Person
+    function aufStart() { const p = z && z.szene !== 'karte' ? G.startplaetze(z, S.sichtbareHotspots(z)) : { joe: 64, chani: 90 }; const j = p.joe, c = p.chani; held.joe.x = held.joe.ziel = j; held.chani.x = held.chani.ziel = c; held.joe.blick = held.chani.blick = 1; }
     const held = { joe: { x: 64, ziel: 64, blick: 1, schritt: 0 }, chani: { x: 84, ziel: 84, blick: 1, schritt: 0 } };
     let laufAuftrag = null;                     // wird nach Ankunft ausgeführt
     let sprecher = null, sprecherSchreck = false; // für Sprechanimation
@@ -36,19 +36,39 @@
     try { ton = window.localStorage.getItem('fp-spiel-ton') !== 'aus'; } catch (_) { ton = true; }
 
     // ---------- Ton ----------
-    let audio = null;
+    // Effekte: jede Note mit weicher Hüllkurve (Attack/Release ≥ 5 ms, Ende bei 0), Tiefpass, gemeinsamer Bus mit Headroom
+    // und Kompressor; Knoten werden nach dem Ende getrennt. So knackt es auch im Kopfhörer nicht.
+    let audio = null, effektBus = null;
+    function bus() {
+        audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+        if (!effektBus) {
+            const k = audio.createDynamicsCompressor();
+            k.threshold.value = -20; k.knee.value = 12; k.ratio.value = 8; k.attack.value = 0.003; k.release.value = 0.15;
+            effektBus = audio.createGain(); effektBus.gain.value = 0.5;
+            effektBus.connect(k).connect(audio.destination);
+        }
+        if (audio.state === 'suspended') { audio.resume(); }
+        return effektBus;
+    }
     function klang(art) {
         if (!ton) { return; }
         try {
-            audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-            const t = audio.currentTime;
-            const folge = { klick: [[660, 0.04]], schritt: [[110, 0.02]], erfolg: [[523, 0.09], [659, 0.09], [784, 0.16]], fehler: [[220, 0.12], [165, 0.18]], kartusche: [[80, 0.2], [60, 0.15]], ende: [[523, 0.14], [659, 0.14], [784, 0.14], [1046, 0.4]], blende: [[300, 0.06], [200, 0.08]] }[art] || [[440, 0.05]];
+            const ziel = bus(), t = audio.currentTime + 0.01;
+            const folge = { klick: [[660, 0.05]], schritt: [[140, 0.05]], erfolg: [[523, 0.1], [659, 0.1], [784, 0.18]], fehler: [[220, 0.14], [165, 0.2]], kartusche: [[90, 0.22], [65, 0.18]], ende: [[523, 0.15], [659, 0.15], [784, 0.15], [1046, 0.4]], blende: [[300, 0.07], [200, 0.09]] }[art] || [[440, 0.06]];
+            const spitze = art === 'schritt' ? 0.012 : art === 'klick' ? 0.03 : 0.05;
             let start = t;
             for (const [f, d] of folge) {
-                const o = audio.createOscillator(), v = audio.createGain();
-                o.type = art === 'kartusche' ? 'sawtooth' : 'square'; o.frequency.value = f;
-                v.gain.setValueAtTime(art === 'schritt' ? 0.015 : 0.05, start); v.gain.exponentialRampToValueAtTime(0.001, start + d);
-                o.connect(v).connect(audio.destination); o.start(start); o.stop(start + d); start += d * 0.9;
+                const o = audio.createOscillator(), filter = audio.createBiquadFilter(), v = audio.createGain();
+                o.type = art === 'kartusche' ? 'sawtooth' : art === 'schritt' ? 'triangle' : 'square'; o.frequency.value = f;
+                filter.type = 'lowpass'; filter.frequency.value = art === 'schritt' ? 500 : 2200;
+                v.gain.setValueAtTime(0, start);
+                v.gain.linearRampToValueAtTime(spitze, start + 0.006);
+                v.gain.setValueAtTime(spitze, start + d * 0.5);
+                v.gain.linearRampToValueAtTime(0, start + d);
+                o.connect(filter).connect(v).connect(ziel);
+                o.start(start); o.stop(start + d + 0.02);
+                o.onended = () => { o.disconnect(); filter.disconnect(); v.disconnect(); };
+                start += d * 0.9;
             }
         } catch (_) { /* ohne Ton */ }
     }
@@ -71,12 +91,7 @@
 
     // ---------- Figurenlage ----------
     const BODEN = G.BODEN;
-    function heldenZiel(h) { const r = R(h); return Math.max(14, Math.min(B - 14, r.x + r.b / 2)); }
-
-    function npcName(h) {
-        if (h.form === 'gegner') { return 'gegner'; }
-        return { christian: 'christian', joanna: 'joanna', lore: 'lore', bauleiter: 'kemper' }[h.id] || null;
-    }
+    const npcName = G.npcName;
 
     // ---------- Zeichnen ----------
     function teil(t) { const b = G.bild(t.bild); if (b) { t2.drawImage(b, t.sx, t.sy || 0, t.b, t.h, Math.round(t.x), Math.round(t.y), t.b, t.h); } }
@@ -108,24 +123,12 @@
         if (z.szene === 'ems') { for (let i = 0; i < 10; i++) { const x = Math.round((i * 47 + zeit * 8 * (1 + (i % 3))) % B), y = 96 + (i * 13) % 40; t2.fillStyle = 'rgb(188,228,252)'; t2.fillRect(x, y, 3 + (i % 2), 1); } }
         // Personen (NPC)
         const figuren = [];
-        for (const h of hs) {
-            const n = npcName(h);
-            if (!n) { continue; }
-            const r = R(h);
-            const fy = Math.min(BODEN - 2, r.y + r.h);
-            const redet = sprecher === h.id && !textbox.hidden;
-            const zustand = redet ? (sprecherSchreck ? 'erschrocken' : 'reden') : 'stehen';
-            if (n === 'gegner') {
-                figuren.push({ y: fy, name: 'hohlbein', x: r.x + r.b * 0.3, zustand, blick: -1 });
-                figuren.push({ y: fy - 1, name: 'droehn', x: r.x + r.b * 0.72, zustand, blick: -1 });
-            } else {
-                figuren.push({ y: fy, name: n, x: r.x + r.b / 2, zustand, blick: r.x + r.b / 2 > held.joe.x ? -1 : 1 });
-            }
-        }
-        if (z.szene === 'tempel' && z.flags.kugelGeschafft) {
-            const wackel = Math.floor(zeit * 3) % 2;
-            figuren.push({ y: BODEN - 4, name: 'hohlbein', x: z.ende ? 214 : 196, zustand: z.ende ? 'erschrocken' : 'reden', blick: -1 });
-            figuren.push({ y: BODEN - 5 - wackel, name: 'droehn', x: z.ende ? 240 : 222, zustand: z.ende ? 'erschrocken' : 'stehen', blick: -1 });
+        for (const p of G.npcPlaetze(z, hs)) {
+            const redet = (sprecher === p.id || (sprecher === 'gegner' && p.id === 'finale')) && !textbox.hidden;
+            let zustand = redet ? (sprecherSchreck ? 'erschrocken' : 'reden') : 'stehen';
+            if (p.id === 'finale') { zustand = z.ende ? 'erschrocken' : p.name === 'hohlbein' ? 'reden' : 'stehen'; }
+            const wackel = p.id === 'finale' && p.name === 'droehn' ? Math.floor(zeit * 3) % 2 : 0;
+            figuren.push({ y: p.y - wackel, name: p.name, x: p.x, zustand, blick: p.x > held[z.figur].x ? -1 : 1 });
         }
         for (const n of ['joe', 'chani']) {
             const hh = held[n];
@@ -281,11 +284,20 @@
         if (laufAuftrag && Math.abs(a.ziel - a.x) <= 0.5) { const f = laufAuftrag; laufAuftrag = null; f(); }
     }
 
-    function gehe(x, danachTun) {
+    /** Taucht eine Person dort auf, wo jemand steht (z. B. die Gegner im Archiv), treten die Helden zur Seite. */
+    function ausweichen() {
+        if (!z || z.szene === 'karte' || laufAuftrag) { return; }
+        const npc = G.npcPlaetze(z, S.sichtbareHotspots(z)).map((p) => p.x);
         const a = held[z.figur], b = held[z.figur === 'joe' ? 'chani' : 'joe'];
-        a.ziel = Math.max(14, Math.min(B - 14, x));
-        const seite = a.ziel > b.x ? -1 : 1;
-        b.ziel = Math.max(14, Math.min(B - 14, a.ziel + seite * 24));
+        a.ziel = G.freiesZiel(a.ziel, npc);
+        b.ziel = G.freiesZiel(b.ziel, npc.concat([a.ziel]));
+    }
+
+    /** Gehen zu einem Hotspot oder einer x-Position; Stehplätze überlappen nie mit anderen Personen. */
+    function gehe(ziel, danachTun) {
+        const a = held[z.figur], b = held[z.figur === 'joe' ? 'chani' : 'joe'];
+        const p = G.standplaetze(z, S.sichtbareHotspots(z), ziel, a.x, b.x);
+        a.ziel = p.aktiv; b.ziel = p.begleit;
         laufAuftrag = danachTun || null;
     }
 
@@ -333,6 +345,7 @@
         }
         if (e.ende) { plaetze.schreiben('auto', z); if (window.Musik && window.Musik.an) { window.Musik.spielen(true); } else { klang('ende'); } }
         hover = null; auswahl = -1;
+        ausweichen();
         zeigeText();
     }
 
@@ -386,7 +399,7 @@
         if (langDruck) { kontextZeigen(h, px, py); return; }
         const v = verb, o = objekt;
         verb = 'gehe'; objekt = null;
-        gehe(heldenZiel(h), () => {
+        gehe(h, () => {
             held[z.figur].blick = (R(h).x + R(h).b / 2) >= held[z.figur].x ? 1 : -1;
             if (o) { handlung('gegenstand', h, o); return; }
             const art = v === 'gehe' ? standard(h) : v === 'nimm' || v === 'benutze' ? 'benutzen' : v === 'gib' ? null : v;
@@ -401,8 +414,8 @@
         kontextEl.replaceChildren();
         const kopf = document.createElement('div'); kopf.className = 'kopf'; kopf.textContent = h.name; kontextEl.appendChild(kopf);
         const f = S.FIGUREN[z.figur].faehigkeiten;
-        [['ansehen', 'Schau an'], ['benutzen', 'Nimm / Benutze'], ['reden', 'Rede mit'], ['f1', f[0]], ['f2', f[1]]].forEach(([art, t], i) => knopf(`${i + 1}. ${t}`, () => gehe(heldenZiel(h), () => (art === 'reden' && npcName(h) ? gespraechZeigen(h) : handlung(art, h)))));
-        for (const gid of z.inventar) { knopf(`➜ ${S.GEGENSTAENDE[gid].name}`, () => gehe(heldenZiel(h), () => handlung('gegenstand', h, gid))); }
+        [['ansehen', 'Schau an'], ['benutzen', 'Nimm / Benutze'], ['reden', 'Rede mit'], ['f1', f[0]], ['f2', f[1]]].forEach(([art, t], i) => knopf(`${i + 1}. ${t}`, () => gehe(h, () => (art === 'reden' && npcName(h) ? gespraechZeigen(h) : handlung(art, h)))));
+        for (const gid of z.inventar) { knopf(`➜ ${S.GEGENSTAENDE[gid].name}`, () => gehe(h, () => handlung('gegenstand', h, gid))); }
         knopf('Abbrechen', () => { });
         const r = leinwand.getBoundingClientRect(), bu = $('buehne').getBoundingClientRect();
         kontextEl.hidden = false;
@@ -435,8 +448,9 @@
             const k = document.createElement('button'); k.type = 'button'; k.className = 'ding' + (objekt === gid ? ' aktiv' : ''); k.title = S.GEGENSTAENDE[gid].name; k.setAttribute('aria-label', S.GEGENSTAENDE[gid].name);
             const bild = G.ausschnitt(G.icon(gid), 16, 16); bild.className = 'icon'; k.appendChild(bild);
             k.addEventListener('click', () => {
-                if (!textbox.hidden) { return; }
-                if (verb === 'benutze' || verb === 'gib') { objekt = gid; leisteAktualisieren(); return; }
+                // Ein Klick wählt den Gegenstand sofort – auch wenn noch ein Text offen ist (keine Doppelklick-Falle)
+                if (verb === 'benutze' || verb === 'gib') { objekt = objekt === gid ? null : gid; klang('klick'); leisteAktualisieren(); return; }
+                if (!textbox.hidden) { zeigeText(); return; }
                 ergebnis({ text: [`${S.GEGENSTAENDE[gid].name}: ${S.GEGENSTAENDE[gid].text}`] });
             });
             inventarEl.appendChild(k);
@@ -464,7 +478,12 @@
     leinwand.addEventListener('pointerdown', (ev) => {
         if (!z || pausiert || !titelEl.hidden) { return; }
         ev.preventDefault();
-        if (!textbox.hidden) { zeigeText(); return; }
+        if (!textbox.hidden) {
+            const t = mini ? null : treffer(punktAus(ev));
+            if (G.klickBeiText(verb, objekt, !!(t && t.hotspot)) === 'weiter') { zeigeText(); return; }
+            while (!textbox.hidden) { zeigeText(); }    // Text abschließen, dann gilt der Klick der Aktion
+            if (!dialogEl.hidden || mini) { return; }
+        }
         if (mini) { const p = punktAus(ev); if (mini.art === 'boot') { eingabeBoot = p.y < H / 2 ? 'hoch' : 'runter'; } else { eingabeKugel = true; } return; }
         if (blockiert()) { return; }
         kontextEl.hidden = true;

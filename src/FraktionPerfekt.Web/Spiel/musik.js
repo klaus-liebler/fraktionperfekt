@@ -36,6 +36,7 @@
     const KURZ = { tempo: 100, teile: [STUECK.teile[1], STUECK.teile[2]] };
 
     let ctx = null, haupt = null, laeuft = [];
+    const PEGEL = 0.55;   // Headroom: viele Stimmen summieren sich, der Kompressor fängt Spitzen ab
     let lautstaerke = 0.5, an = true;
     try { an = wurzel.localStorage ? wurzel.localStorage.getItem('fp-spiel-musik') !== 'aus' : true; lautstaerke = Number(wurzel.localStorage.getItem('fp-spiel-lautstaerke') || 0.5); } catch (_) { /* Standard */ }
 
@@ -59,14 +60,17 @@
         v.gain.exponentialRampToValueAtTime(0.0001, zeit + dauer + 0.08);
         o.connect(filter).connect(v).connect(haupt);
         o.start(zeit); o.stop(zeit + dauer + 0.1);
+        o.onended = () => { o.disconnect(); filter.disconnect(); v.disconnect(); };
         laeuft.push(o);
     }
 
     function pauke(zeit, laut) {
         const o = ctx.createOscillator(), v = ctx.createGain();
         o.type = 'sine'; o.frequency.setValueAtTime(110, zeit); o.frequency.exponentialRampToValueAtTime(55, zeit + 0.3);
-        v.gain.setValueAtTime(0.35 * laut, zeit); v.gain.exponentialRampToValueAtTime(0.0001, zeit + 0.5);
-        o.connect(v).connect(haupt); o.start(zeit); o.stop(zeit + 0.55); laeuft.push(o);
+        v.gain.setValueAtTime(0.0001, zeit); v.gain.linearRampToValueAtTime(0.35 * laut, zeit + 0.005); v.gain.exponentialRampToValueAtTime(0.0001, zeit + 0.5);
+        o.connect(v).connect(haupt); o.start(zeit); o.stop(zeit + 0.55);
+        o.onended = () => { o.disconnect(); v.disconnect(); };
+        laeuft.push(o);
     }
 
     /** Spielt das Stück (oder die Kurzfassung fürs Finale). Gibt die Gesamtdauer in Sekunden zurück. */
@@ -76,8 +80,11 @@
             ctx = ctx || new (wurzel.AudioContext || wurzel.webkitAudioContext)();
             if (ctx.state === 'suspended') { ctx.resume(); }
             stoppen();
-            haupt = ctx.createGain(); haupt.gain.value = lautstaerke; haupt.connect(ctx.destination);
-            let t = ctx.currentTime + 0.05;
+            // Jede Wiedergabe bekommt eine eigene Summe → Kompressor → Ausgang; die alte wird ausgeblendet (kein Knacken).
+            const kompressor = ctx.createDynamicsCompressor();
+            kompressor.threshold.value = -16; kompressor.knee.value = 10; kompressor.ratio.value = 6; kompressor.attack.value = 0.004; kompressor.release.value = 0.2;
+            haupt = ctx.createGain(); haupt.gain.value = lautstaerke * PEGEL; haupt.connect(kompressor).connect(ctx.destination);
+            let t = ctx.currentTime + 0.12;
             for (const teil of (kurz ? KURZ : STUECK).teile) {
                 const viertel = 60 / teil.tempo;
                 let z = t;
@@ -100,13 +107,18 @@
         } catch (_) { return 0; }
     }
 
+    /** Weich ausblenden (40 ms) statt hart abschneiden, dann die Oszillatoren anhalten und die alte Summe trennen. */
     function stoppen() {
-        for (const o of laeuft) { try { o.stop(); } catch (_) { /* schon aus */ } }
-        laeuft = [];
+        if (!ctx || !haupt) { laeuft = []; return; }
+        const jetzt = ctx.currentTime, alt = haupt, alteStimmen = laeuft;
+        alt.gain.cancelScheduledValues(jetzt); alt.gain.setValueAtTime(alt.gain.value, jetzt); alt.gain.linearRampToValueAtTime(0, jetzt + 0.04);
+        for (const o of alteStimmen) { try { o.stop(jetzt + 0.05); } catch (_) { /* schon aus */ } }
+        setTimeout(() => { try { alt.disconnect(); } catch (_) { /* egal */ } }, 200);
+        laeuft = []; haupt = null;
     }
 
     function setzeAn(wert) { an = !!wert; if (!an) { stoppen(); } speichern(); }
-    function setzeLautstaerke(wert) { lautstaerke = Math.min(1, Math.max(0, Number(wert) || 0)); if (haupt) { haupt.gain.value = lautstaerke; } speichern(); }
+    function setzeLautstaerke(wert) { lautstaerke = Math.min(1, Math.max(0, Number(wert) || 0)); if (haupt && ctx) { haupt.gain.setTargetAtTime(lautstaerke * PEGEL, ctx.currentTime, 0.02); } speichern(); }
 
     const api = { STUECK, KURZ, frequenz, spielen, stoppen, setzeAn, setzeLautstaerke, get an() { return an; }, get lautstaerke() { return lautstaerke; } };
     wurzel.Musik = api;

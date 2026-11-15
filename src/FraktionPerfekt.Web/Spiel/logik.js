@@ -145,13 +145,19 @@
                     id: 'christian', name: 'Genosse Christian (SPD)', x: 53.9, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#c0392b',
                     lage: (z) => (z.flags.archivOffen ? { x: 86, y: 48.6, b: 9.4, h: 45.8 } : null),
                     ansehen: () => antwort('Christian. Strickjacke, Thermoskanne, Schlüsselbund. Hält Ordnung für eine Tugend und Arbeitskreise für eine Lebensform.'),
-                    reden: (z) => z.flags.agGegruendet
-                        ? antwort('Christian: „Wenn ihr Hilfe braucht: Der Gewerkschaftsbus steht bereit. Solidarität hat einen Diesel.“')
-                        : antwort(['Christian: „Ins Archiv? Gerne. Aber erst gründen wir einen Arbeitskreis. Ordentlich, mit Tagesordnung.“', `${name(z)}: „Eine Tagesordnung … hatten wir nicht so etwas im Büro?“`]),
+                    reden: (z) => {
+                        if (z.flags.archivOffen) { return antwort('Christian: „Wenn ihr Hilfe braucht: Der Gewerkschaftsbus steht bereit. Solidarität hat einen Diesel.“'); }
+                        if (z.flags.agGegruendet) {
+                            // Die Tür ist TOP 2 – erst wenn die Sitzung dort angekommen ist, schließt Christian auf.
+                            z.flags.archivOffen = true; punkte(z, 'top2');
+                            return antwort(['Christian: „Dann rufe ich auf: TOP 2, Verschiedenes – Öffnung der Archivtür. Wortmeldungen? Keine. Einstimmig.“', 'Christian schließt die Tür auf. „Das ging ja zügig. Zwölf Minuten!“']);
+                        }
+                        return antwort(['Christian: „Ins Archiv? Gerne. Aber erst gründen wir einen Arbeitskreis. Ordentlich, mit Tagesordnung.“', `${name(z)}: „Eine Tagesordnung … hatten wir nicht so etwas im Büro?“`]);
+                    },
                     gegenstand: {
                         tagesordnung: (z) => {
-                            nehmen(z, 'tagesordnung'); z.flags.agGegruendet = true; z.flags.archivOffen = true; punkte(z, 'ag');
-                            return antwort(['Christian eröffnet die Sitzung. TOP 1: Gründung des Arbeitskreises „Archivöffnung“ – einstimmig.', 'TOP 2: Verschiedenes. Christian schließt die Tür auf. „Das ging ja zügig. Zwölf Minuten!“']);
+                            nehmen(z, 'tagesordnung'); z.flags.agGegruendet = true; punkte(z, 'ag');
+                            return antwort(['Christian eröffnet die Sitzung. TOP 1: Gründung des Arbeitskreises „Archivöffnung“ – einstimmig.', 'Christian: „Die Tür steht unter TOP 2: Verschiedenes. Vorher schließe ich nicht auf – Ordnung muss sein. Sprecht mich an, dann rufe ich TOP 2 auf.“']);
                         }
                     },
                     f2: (z) => antwort(istJoe(z)
@@ -162,7 +168,9 @@
                     id: 'archivtuer', name: 'Archivtür', x: 63.7, y: 13.9, b: 27.3, h: 58.3, form: 'tuer',
                     sichtbar: (z) => !z.flags.archivOffen,
                     ansehen: () => antwort('Eine Stahltür. Schild: „Zutritt nur nach Beschluss“.'),
-                    benutzen: () => antwort('Abgeschlossen. Christian hat den Schlüssel.')
+                    benutzen: (z) => antwort(z.flags.agGegruendet
+                        ? 'Christian: „Nicht so hastig! Die Tür ist TOP 2. Sprecht mich an, dann rufe ich ihn auf.“'
+                        : 'Abgeschlossen. Christian hat den Schlüssel.')
                 },
                 {
                     id: 'wappen', name: 'Gemälde „Der Rat von 1949“', x: 63.7, y: 13.9, b: 22.7, h: 29.2, form: 'bild',
@@ -800,6 +808,7 @@
         ['aktion', 'benutzen', 'tuer'],
         ['reisen', 'archiv'],
         ['aktion', 'gegenstand', 'christian', 'tagesordnung'],
+        ['aktion', 'reden', 'christian'],
         ['figur'],
         ['aktion', 'f1', 'wappen'],
         ['aktion', 'benutzen', 'protokolle'],

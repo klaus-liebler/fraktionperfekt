@@ -148,6 +148,51 @@ test('Grafiken: alle Bilder liegen in assets/, jede Szene und jeder Spielstand h
     }
 });
 
+test('Keine Figur steht vor einer anderen: Start- und Stehplätze überlappen nie (alle Szenen, alle Hotspots)', () => {
+    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+    const pruefeAbstand = (xs, wo) => {
+        for (let i = 0; i < xs.length; i++) { for (let j = i + 1; j < xs.length; j++) { assert.ok(Math.abs(xs[i] - xs[j]) >= G.ABSTAND, `${wo}: ${xs[i]} und ${xs[j]} überlappen`); } }
+        for (const x of xs) { assert.ok(x >= 0 && x <= G.B, `${wo}: ${x} außerhalb`); }
+    };
+    const z = S.neuerZustand();
+    const pruefe = () => {
+        if (z.szene === 'karte') { return; }
+        const hs = S.sichtbareHotspots(z), npc = G.npcPlaetze(z, hs).map((p) => p.x);
+        pruefeAbstand(npc, `${z.szene}: Nebenfiguren`);
+        const st = G.startplaetze(z, hs);
+        pruefeAbstand(npc.concat([st.joe, st.chani]), `${z.szene}: Start`);
+        for (const h of hs) {
+            for (const [von, begleit] of [[10, 40], [G.B - 10, G.B - 40], [G.B / 2, G.B / 2 + 30]]) {
+                const p = G.standplaetze(z, hs, h, von, begleit);
+                pruefeAbstand(npc.concat([p.aktiv, p.begleit]), `${z.szene}/${h.id} von ${von}`);
+            }
+        }
+        for (const x of [0, 60, 128, 200, G.B]) { const p = G.standplaetze(z, hs, x, 128, 100); pruefeAbstand(npc.concat([p.aktiv, p.begleit]), `${z.szene}/x=${x}`); }
+    };
+    pruefe();
+    for (const schritt of S.KOMPLETTLOESUNG) { S.schritt(z, schritt); pruefe(); }
+});
+
+test('Archiv: Christian schließt erst bei TOP 2 auf', () => {
+    const z = S.neuerZustand();
+    for (const schritt of S.KOMPLETTLOESUNG.slice(0, 6)) { S.schritt(z, schritt); }
+    S.reisen(z, 'archiv');
+    S.aktion(z, 'gegenstand', 'christian', 'tagesordnung');
+    assert.equal(z.flags.archivOffen, undefined);
+    assert.match(S.aktion(z, 'benutzen', 'archivtuer').text.join(' '), /TOP 2/);
+    S.aktion(z, 'reden', 'christian');
+    assert.equal(z.flags.archivOffen, true);
+});
+
+test('Bedienung: Verb → Gegenstand → Ziel ohne Zwischenklick, auch wenn noch ein Text steht', () => {
+    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+    assert.equal(G.klickBeiText('gib', 'tagesordnung', true), 'ausfuehren');
+    assert.equal(G.klickBeiText('benutze', 'stadtplan', true), 'ausfuehren');
+    assert.equal(G.klickBeiText('benutze', null, true), 'ausfuehren');
+    assert.equal(G.klickBeiText('gehe', null, true), 'weiter');
+    assert.equal(G.klickBeiText('gib', 'tagesordnung', false), 'weiter');
+});
+
 test('Erkennungsmelodie: Fanfare, unverändertes Haydn-Zitat, Schluss; Stimmung stimmt', () => {
     const M = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'musik.js'));
     assert.deepEqual(M.STUECK.teile.map((t) => t.name), ['Fanfare', 'Haydn-Zitat', 'Schluss']);

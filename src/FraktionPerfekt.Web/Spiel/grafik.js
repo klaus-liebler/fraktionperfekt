@@ -79,6 +79,67 @@
 
     function icon(gid) { const i = ICONS.indexOf(gid); return { bild: 'inventar_icons_16x16', sx: 16 * Math.max(0, i) }; }
 
+    // ---------- Stehplätze: keine Figur steht vor einer anderen ----------
+    const ABSTAND = 24;                      // Mindestabstand zweier Fußpunkte (Körperbreite ≈ 22 px)
+    const RAND_X = 14;
+    const NPC = { christian: 'christian', joanna: 'joanna', lore: 'lore', bauleiter: 'kemper' };
+    function npcName(h) { return h.form === 'gegner' ? 'gegner' : NPC[h.id] || null; }
+
+    /** Plätze der Nebenfiguren (Fußpunkt x/y) für den Spielstand; dieselben Plätze zeichnet die Darstellung. */
+    function npcPlaetze(z, hotspots) {
+        const p = [];
+        for (const h of hotspots) {
+            const n = npcName(h);
+            if (!n) { continue; }
+            const r = R(h, z), mitte = r.x + r.b / 2, fuss = Math.min(BODEN - 2, r.y + r.h);
+            if (n === 'gegner') { p.push({ id: h.id, name: 'hohlbein', x: mitte - ABSTAND / 2, y: fuss }, { id: h.id, name: 'droehn', x: mitte + ABSTAND / 2, y: fuss - 1 }); }
+            else { p.push({ id: h.id, name: n, x: mitte, y: fuss }); }
+        }
+        if (z.szene === 'tempel' && z.flags.kugelGeschafft) {
+            p.push({ id: 'finale', name: 'hohlbein', x: z.ende ? 208 : 196, y: BODEN - 4 }, { id: 'finale', name: 'droehn', x: z.ende ? 236 : 222, y: BODEN - 5 });
+        }
+        return p;
+    }
+
+    /** Nächster freier Platz zu wunsch (Abstand ≥ ABSTAND zu allen belegten Plätzen, innerhalb des Bildes). */
+    function freiesZiel(wunsch, belegt) {
+        const frei = (x) => x >= RAND_X && x <= B - RAND_X && belegt.every((b) => Math.abs(b - x) >= ABSTAND);
+        const w = Math.max(RAND_X, Math.min(B - RAND_X, Math.round(wunsch)));
+        for (let d = 0; d <= B; d++) { if (frei(w - d)) { return w - d; } if (frei(w + d)) { return w + d; } }
+        return w;
+    }
+
+    /** Stehplätze für aktive Figur und Begleitung beim Gang zu einem Hotspot (oder zu einem x ohne Hotspot). */
+    function standplaetze(z, hotspots, ziel, aktivX, begleitX) {
+        const npc = npcPlaetze(z, hotspots).map((p) => p.x);
+        let wunsch;
+        if (typeof ziel === 'number') { wunsch = ziel; }
+        else {
+            const r = R(ziel, z), mitte = r.x + r.b / 2;
+            const eigene = npcPlaetze(z, [ziel]).map((p) => p.x);
+            // Personen spricht man von der Seite an, von der man kommt: daneben stehen, nicht davor
+            wunsch = eigene.length ? (aktivX <= mitte ? Math.min(...eigene) - ABSTAND - 2 : Math.max(...eigene) + ABSTAND + 2) : mitte;
+        }
+        const aktiv = freiesZiel(wunsch, npc);
+        const seite = aktiv > begleitX ? -1 : 1;
+        const begleit = freiesZiel(aktiv + seite * (ABSTAND + 2), npc.concat([aktiv]));
+        return { aktiv, begleit };
+    }
+
+    /** Startplätze beim Betreten einer Szene. */
+    function startplaetze(z, hotspots) {
+        const wunsch = z.szene === 'buero' ? 64 : z.szene === 'tempel' && z.flags.kugelGeschafft ? 116 : 92;
+        const npc = npcPlaetze(z, hotspots).map((p) => p.x);
+        const joe = freiesZiel(wunsch, npc);
+        return { joe, chani: freiesZiel(joe + ABSTAND + 2, npc.concat([joe])) };
+    }
+
+    /**
+     * Klick in die Szene, während noch ein Text steht: Mit gewähltem Verb oder Gegenstand auf einen Hotspot wird der Text
+     * abgeschlossen und die Aktion sofort ausgeführt (kein überflüssiger Zwischenklick); sonst blättert der Klick weiter.
+     */
+    function klickBeiText(verb, objekt, aufHotspot) { return aufHotspot && (!!objekt || verb !== 'gehe') ? 'ausfuehren' : 'weiter'; }
+
     // ---------- nur im Browser ----------
     const bilder = {};
     function laden(basis) {
@@ -98,7 +159,7 @@
         return c;
     }
 
-    const api = { B, H, BODEN, FUSS_X, FUSS_Y, NAMEN, ICONS, R, hintergrund, ueberlagerungen, fackeln, rahmen, portraet, icon, laden, bild, ausschnitt };
+    const api = { B, H, BODEN, FUSS_X, FUSS_Y, NAMEN, ICONS, ABSTAND, R, npcName, npcPlaetze, freiesZiel, standplaetze, startplaetze, klickBeiText, hintergrund, ueberlagerungen, fackeln, rahmen, portraet, icon, laden, bild, ausschnitt };
     wurzel.Grafik = api;
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 })(typeof globalThis !== 'undefined' ? globalThis : this);

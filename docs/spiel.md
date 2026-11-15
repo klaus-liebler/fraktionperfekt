@@ -47,7 +47,7 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
 
 1. **Zukunftsschmiede (Parteibüro, Marktstraße):** Umschlag nehmen. Als **Joe** das Faxgerät benutzen (Stadtplan 1949). Regal benutzen
    (Geschäftsordnung), Postfach benutzen (Mustertagesordnung), Garderobe benutzen (Taschenlampe). Tür → Karte.
-2. **Rathausarchiv:** Christian die **Mustertagesordnung** geben (Arbeitskreis „Archivöffnung“ wird gegründet, Tür offen).
+2. **Rathausarchiv:** Christian die **Mustertagesordnung** geben (TOP 1: Arbeitskreis „Archivöffnung“ wird gegründet), dann **mit Christian reden** – erst bei TOP 2 „Verschiedenes“ schließt er die Archivtür auf.
    **Chani:** Gemälde „Der Rat von 1949“ deuten → „Protokoll 47“. Regal mit Ratsprotokollen benutzen → **Siegel der
    Beschlüsse**. Hohlbein und Dröhn versperren den Ausgang: **Joe**, Kartusche auf die beiden → festgeklebt. Ausgang.
 3. **Ems-Ufer:** Joanna den **Stadtplan** geben (Umverteilung) → Paddel. **Chani:** Inschrift an der Brücke deuten →
