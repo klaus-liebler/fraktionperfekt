@@ -162,6 +162,11 @@ public sealed class MessungTests
             var jetzt = u.Uhr.GetUtcNow();
             var heute = FraktionPerfekt.Application.Gemeinsam.Ortszeit.Heute(u.Uhr);
             var personen = await db.Personen.ToListAsync();
+            foreach (var p in personen)
+            {
+                p.StandHeuteBerechnen(jetzt);   // Stand heute wird beim Laden berechnet (nicht gespeichert)
+            }
+
             var mitgliedschaften = await db.Mitgliedschaften.ToListAsync();
             var termine = await db.Termine.AsNoTracking().ToListAsync();
             for (var i = 1; i < faktor; i++)

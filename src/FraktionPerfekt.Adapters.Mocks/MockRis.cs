@@ -8,8 +8,21 @@ namespace FraktionPerfekt.Adapters.Mocks;
 /// (Organization, Person, Membership, Meeting). Sitzungen folgen einem festen Rhythmus ab einem festen Datum, sind also
 /// reproduzierbar und unabhängig vom Tag des Abrufs.
 /// </summary>
-public sealed class MockRis : IRisSchnittstelle
+public sealed class MockRis(TimeProvider uhr) : IRisSchnittstelle
 {
+    /// <summary>Bezugstag der Sitzungsreihen (Montag); die Reihen wandern in ganzen Wochen mit dem Tagesdatum mit.</summary>
+    private static readonly DateOnly Bezugstag = new(2026, 11, 9);
+
+    /// <summary>Verschiebung in ganzen Wochen: Eine Demo in zwei Wochen zeigt dieselbe Lage (nächste Sitzung, letzte Sitzung).</summary>
+    private int VerschiebungTage
+    {
+        get
+        {
+            var heute = DateOnly.FromDateTime(uhr.GetLocalNow().Date);
+            return (int)Math.Floor((heute.DayNumber - Bezugstag.DayNumber) / 7.0) * 7;
+        }
+    }
+
     public string Quelle => "RIS Greven (Mock)";
 
     public Task<IReadOnlyList<RisGremium>> GremienAsync(CancellationToken abbruch = default)
@@ -42,7 +55,8 @@ public sealed class MockRis : IRisSchnittstelle
         var liste = new List<RisSitzung>();
         foreach (var g in Demofraktion.Gremien)
         {
-            for (var (beginn, nr) = (g.ErsteSitzung, 1); DateOnly.FromDateTime(beginn) <= bis; beginn = beginn.AddDays(g.Rhythmus), nr++)
+            var verschiebung = VerschiebungTage;
+            for (var (beginn, nr) = (g.ErsteSitzung.AddDays(verschiebung), 1); DateOnly.FromDateTime(beginn) <= bis; beginn = beginn.AddDays(g.Rhythmus), nr++)
             {
                 if (DateOnly.FromDateTime(beginn) < von)
                 {

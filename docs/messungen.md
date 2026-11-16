@@ -39,6 +39,26 @@ Auffällig: Liste, Kalender und Suche wachsen etwa linear mit der Datenmenge (al
 `EXPLAIN QUERY PLAN` der Namensliste: Scan über `IX_PersonNamen_DIN5007` ohne zusätzliche Sortierung (Test `Din5007Tests`).
 Eine Fraktion hat unter 100 Personen; die 30 000 zeigen, dass die Sortierung in SQL mit Collation trägt.
 
-## Nach dem Umbau
+## Nach dem Umbau (16.11.2026, Datenbank-Regeln Etappen 1–4)
 
-(folgt)
+Gleiche Messung (`FP_MESSUNG=1` bzw. `=10`) nach Normalisierung, Änderungsvorgängen, BLOB-Ids und neuen Zeitformaten.
+
+| Messpunkt | realistisch vorher → nachher | 10× vorher → nachher |
+|---|---:|---:|
+| Liste: Personen | 16,8 → 20,7 ms | 144,3 → 156,5 ms |
+| Liste: Kalender, aktueller Monat | 25,4 → 38,0 ms | 147,9 → 120,0 ms |
+| Folgeseite: Kalender, Folgemonat | 35,2 → 41,9 ms | 145,4 → 125,9 ms |
+| Filter: Kalender nach Gremium | 30,6 → 37,9 ms | 79,7 → 99,6 ms |
+| Suche „kühlert“ | 105,7 → 123,2 ms | 286,4 → 299,7 ms |
+| Detail: Person | 11,3 → 16,5 ms | 29,4 → 43,3 ms |
+| Detail: Termin | 30,7 → 37,5 ms | 74,7 → 86,8 ms |
+| Ermittlung: Mandatsübersicht | 9,9 → 13,6 ms | 28,7 → 37,1 ms |
+| Ermittlung: Startseite „Heute“ | 74,1 → 90,8 ms | 132,6 → 150,2 ms |
+| Ermittlung: Offene Vertretungen | 27,0 → 31,5 ms | 76,8 → 91,3 ms |
+| Ermittlung: Kalender-Abo (ICS) | 57,0 → 52,4 ms | 138,8 → 153,1 ms |
+| Dateigröße | 1 152 → 1 180 KB | 3 412 → 3 016 KB |
+
+Bewertung: Alle Werte bleiben im Bereich weniger Zehntel Sekunden; die Kosten des Umbaus (Stand heute wird beim Laden aus den Versionen
+berechnet, Änderungsvorgänge per Verweis, Umrechnung der Zeiten) liegen bei realistischer Menge bei wenigen Millisekunden je Abfrage.
+Die Kalenderlisten sind bei zehnfacher Menge schneller (Zeiten als Zahl statt Text), die Datei bei zehnfacher Menge rund 12 % kleiner
+(16-Byte-Ids statt 36-Zeichen-Text, Metadaten nur einmal je Vorgang). Kopien wurden nicht wieder eingeführt.

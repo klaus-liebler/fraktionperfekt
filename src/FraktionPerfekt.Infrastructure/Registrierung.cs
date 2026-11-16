@@ -16,24 +16,34 @@ public static class Registrierung
     /// <param name="strengeAbfragepruefung">Abfragen ohne eindeutige Sortierung brechen ab (Entwicklung, Tests) statt nur protokolliert zu werden.</param>
     /// <param name="basisVerzeichnis">Relative Datenbankpfade werden hierzu aufgelöst (Inhaltsverzeichnis der Anwendung).</param>
     /// <param name="hintergrundjobs">Quartz-Jobs starten (in Tests aus: dort werden die Routinen direkt aufgerufen).</param>
+    /// <summary>Verbindungszeichenfolge mit relativem Pfad zum Basisverzeichnis aufgelöst.</summary>
+    public static string Verbindung(string verbindung, string basisVerzeichnis)
+    {
+        var v = new SqliteConnectionStringBuilder(verbindung);
+        if (!Path.IsPathRooted(v.DataSource) && v.DataSource != ":memory:")
+        {
+            v.DataSource = Path.GetFullPath(Path.Combine(basisVerzeichnis, v.DataSource));
+        }
+
+        return v.ToString();
+    }
+
     public static IServiceCollection AddFraktionInfrastruktur(this IServiceCollection dienste, IConfiguration konfiguration, string basisVerzeichnis,
         bool strengeAbfragepruefung = false, bool hintergrundjobs = true)
     {
-        var verbindung = new SqliteConnectionStringBuilder(konfiguration.GetConnectionString("FraktionPerfekt") ?? "Data Source=data/fraktionperfekt.db");
-        if (!Path.IsPathRooted(verbindung.DataSource) && verbindung.DataSource != ":memory:")
-        {
-            verbindung.DataSource = Path.GetFullPath(Path.Combine(basisVerzeichnis, verbindung.DataSource));
-        }
-
-        dienste.AddDbContext<FraktionDbContext>(o => o.UseSqlite(verbindung.ToString()).Konfigurieren(strengeAbfragepruefung));
+        // Datenbank-Regel 6: Verbindung je Mandant, nicht fest beim Start (jede Anfrage nutzt die Datenbank ihres Mandanten)
+        var standard = konfiguration.GetConnectionString("FraktionPerfekt") ?? "Data Source=data/fraktionperfekt.db";
+        dienste.AddDbContext<FraktionDbContext>((d, o) => o.UseSqlite(Verbindung(d.GetRequiredService<Application.Gemeinsam.IAktuellerMandant>().Mandant.Datenbank ?? standard,
+            basisVerzeichnis)).Konfigurieren(strengeAbfragepruefung));
         dienste.AddScoped<FraktionSpeicher>();
         dienste.AddScoped<IStammdatenSpeicher>(d => d.GetRequiredService<FraktionSpeicher>());
         dienste.AddScoped<ITerminSpeicher>(d => d.GetRequiredService<FraktionSpeicher>());
         dienste.AddScoped<IVertretungSpeicher>(d => d.GetRequiredService<FraktionSpeicher>());
         dienste.AddScoped<INachrichtenSpeicher, NachrichtenSpeicher>();
         dienste.AddScoped<IDaten, Daten>();
-        dienste.AddSingleton<Application.Dokumente.Briefkopf>();
-        dienste.AddSingleton<Application.Dokumente.IPdfErzeugung, Dokumente.MarkdownPdf>();
+        // Briefkopf je Mandant (Name, Zusatz, Logo); die Logodatei wird je Pfad einmal gelesen
+        dienste.AddScoped(d => Dokumente.BriefkopfAusMandant.Erzeugen(d.GetRequiredService<Application.Gemeinsam.IAktuellerMandant>().Mandant, basisVerzeichnis));
+        dienste.AddScoped<Application.Dokumente.IPdfErzeugung, Dokumente.MarkdownPdf>();
         dienste.AddScoped<IAuditProtokoll, AuditProtokoll>();
         dienste.AddScoped<Application.Betrieb.ISicherung, Betrieb.SqliteSicherung>();
         dienste.AddScoped<Application.Wissen.IWikiSuche, Wissen.WikiSuche>();

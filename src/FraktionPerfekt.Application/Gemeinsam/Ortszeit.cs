@@ -1,12 +1,16 @@
 namespace FraktionPerfekt.Application.Gemeinsam;
 
 /// <summary>
-/// Termine sind Wanduhrzeit in Greven. Diese Hilfen rechnen unabhängig von der Zeitzone des Servers (und der Testuhr)
-/// zwischen Zeitpunkt und Ortszeit um.
+/// Zentraler Zeitdienst: Termine sind Wanduhrzeit des Mandanten; gespeichert wird UTC. Die Zeitzone kommt aus der Mandanten-Konfiguration
+/// (<see cref="Festlegen"/>), ersatzweise aus der Systemzeitzone (Server: mit timedatectl setzen). Alle Umrechnungen laufen hier.
+/// Grenze der Vorbereitung: eine Zeitzone je Prozess (alle Mandanten eines Servers in derselben Zeitzone).
 /// </summary>
 public static class Ortszeit
 {
-    public static TimeZoneInfo Zeitzone { get; } = ZeitzoneFinden();
+    public static TimeZoneInfo Zeitzone { get; private set; } = ZeitzoneFinden(null);
+
+    /// <summary>Zeitzone aus der Konfiguration (IANA-Name, z. B. „Europe/Berlin“); leer = Systemzeitzone.</summary>
+    public static void Festlegen(string? zeitzone) => Zeitzone = ZeitzoneFinden(zeitzone);
 
     public static DateTime Jetzt(TimeProvider uhr)
     {
@@ -25,15 +29,15 @@ public static class Ortszeit
 
     public static DateTime AlsOrtszeit(DateTimeOffset zeitpunkt) => TimeZoneInfo.ConvertTime(zeitpunkt, Zeitzone).DateTime;
 
-    private static TimeZoneInfo ZeitzoneFinden()
+    private static TimeZoneInfo ZeitzoneFinden(string? id)
     {
-        try
+        if (string.IsNullOrWhiteSpace(id))
         {
-            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
+            return TimeZoneInfo.Local;
         }
-        catch (TimeZoneNotFoundException)
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
-        }
+
+        return TimeZoneInfo.TryFindSystemTimeZoneById(id, out var zone) ? zone
+            : TimeZoneInfo.TryConvertIanaIdToWindowsId(id, out var windows) && TimeZoneInfo.TryFindSystemTimeZoneById(windows, out var w) ? w
+            : TimeZoneInfo.Local;
     }
 }

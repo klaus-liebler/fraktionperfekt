@@ -13,7 +13,17 @@ public static class DatenbankInitialisierung
     /// </summary>
     public static async Task InitialisierenAsync(IServiceProvider dienste, CancellationToken abbruch = default)
     {
+        // Jede Mandanten-Datenbank migrieren (Datenbank-Regel 6: je Mandant eine eigene Datenbank)
+        foreach (var mandant in dienste.GetRequiredService<IReadOnlyList<Application.Gemeinsam.MandantOptionen>>())
+        {
+            await MandantInitialisierenAsync(dienste, mandant, abbruch);
+        }
+    }
+
+    private static async Task MandantInitialisierenAsync(IServiceProvider dienste, Application.Gemeinsam.MandantOptionen mandant, CancellationToken abbruch)
+    {
         await using var scope = dienste.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<Application.Gemeinsam.MandantAuswahl>().Festlegen(mandant);
         var db = scope.ServiceProvider.GetRequiredService<FraktionDbContext>();
         var log = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DatenbankInitialisierung));
 

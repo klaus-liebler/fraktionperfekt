@@ -6,8 +6,9 @@ Umbau: `docs/messungen.md`.
 
 Je Regel: **Ist** → **Abweichung** → **Etappe**. Etappen nach Abschnitt 8: 1 Kopien entfernen (dazu fehlende Versionierung nach Regel 2
 und Personenfelder nach Regel 7), 2 JSON auflösen, 3 Änderungsvorgänge, 4 Ids und Zeitformate (dazu Mandanten-Vorbereitung),
-5 erneute Messung, 6 Doku des Endstands. Je Etappe ein Commit mit grünen Tests; jede Migration wird auf einer Kopie einer bestehenden
-Datenbank (`VACUUM INTO`) geprüft.
+5 erneute Messung, 6 Doku des Endstands. Etappen 1–4a wurden einzeln committet und ihre Migrationen auf einer Kopie von Klaus' Datenbank geprüft. Danach Vorgabe von Klaus
+(16.11.2026): Es sind nur Testdaten in der Datenbank – alle Migrationen wurden durch **eine frische Initial-Migration** aus dem
+Zielmodell ersetzt (mit FTS-Suchindex und lesbaren Views); die Datenbank wird neu aufgebaut.
 
 ## 1. Keine Kopien, volle Normalisierung
 
@@ -101,6 +102,11 @@ Datenbank (`VACUUM INTO`) geprüft.
   Fremdschlüssel bis zum Abschluss aufgeschoben); auf der Kopie: 186 Spalten, alle umgestellt, Fremdschlüssel und Integrität in Ordnung.
   Ids als Text bleiben nur in Anzeigeformen (URLs, Links in Mails, ICS-UIDs, Bildpfade) und im Suchindex `WikiSuche` (FTS5, aus den
   Wiki-Versionen neu aufbaubar, keine fachliche Kopie).
+- **Etappe 4c erledigt**: Mandanten-Vorbereitung – Konfiguration je Mandant (`Mandant` bzw. `Mandanten`: Name, Zusatz, Region, Logo,
+  Absender, Zeitzone, Datenbank, Hosts), Auswahl je Anfrage über den Host (`MandantAuswahl`), Datenbankverbindung und Briefkopf je Mandant
+  (nicht mehr fest beim Start bzw. als Singleton), Migration aller Mandanten-Datenbanken beim Start, Zeitzone aus der Konfiguration
+  (ersatzweise Systemzeitzone). Offen für echten Mehrmandantenbetrieb: Dateiablage, RIS-Anbindung, Web-Push-Schlüssel und Hintergrundaufträge
+  je Mandant; eine Zeitzone je Prozess. RIS-Mock-Sitzungen wandern in ganzen Wochen mit dem Tagesdatum mit.
 - **Etappe 4b erledigt**: Zeitpunkte als UTC-ms (81 Spalten), Kalendertage als JJJJMMTT mit offenem Ende 99991231 (30 Spalten), Termine,
   Buchungen und Schichten (7 Spalten) als UTC-ms mit Umrechnung je Termin; Test über beide Zeitumstellungen; lesbare Views. Auf der Kopie:
   alle 174 Terminzeiten stimmen nach der Umrechnung mit der amtlichen Zeitzonendatenbank überein, Protokollzeiten unverändert.

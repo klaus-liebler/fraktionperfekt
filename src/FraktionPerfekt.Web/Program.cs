@@ -50,6 +50,17 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BenutzerKontext>();
 builder.Services.AddScoped<IAktuellerBenutzer, AktuellerBenutzer>();
 builder.Services.AddScoped<Vorgang>();
+// Mandant je Anfrage über den Host (Datenbank-Regel 6); Hintergrundaufträge nutzen den Standardmandanten
+builder.Services.AddScoped<FraktionPerfekt.Application.Gemeinsam.IAktuellerMandant>(d =>
+{
+    var auswahl = d.GetRequiredService<FraktionPerfekt.Application.Gemeinsam.MandantAuswahl>();
+    if (d.GetService<IHttpContextAccessor>()?.HttpContext is { } http)
+    {
+        auswahl.Festlegen(auswahl.ZumHost(http.Request.Host.Host));
+    }
+
+    return auswahl;
+});
 builder.Services.AddRateLimits(builder.Configuration);
 
 // Handy-Test im lokalen Netz (Profil "lan"): HTTPS auf allen Schnittstellen, öffentliche Adresse = LAN-IP.
@@ -73,14 +84,6 @@ var app = builder.Build();
 
 await DatenbankInitialisierung.InitialisierenAsync(app.Services);
 
-// Briefkopf für PDFs: Logo der Fraktion (nur skaliert, siehe wwwroot/marke) und Absender aus den Einstellungen.
-var briefkopf = app.Services.GetRequiredService<FraktionPerfekt.Application.Dokumente.Briefkopf>();
-briefkopf.Absender = app.Configuration["Fraktion:Anzeigename"] ?? briefkopf.Absender;
-var logoDruck = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"), "marke", "logo-druck.png");
-if (File.Exists(logoDruck))
-{
-    briefkopf.Logo = await File.ReadAllBytesAsync(logoDruck);
-}
 if (app.Configuration.GetValue("Demodaten:Anlegen", false))
 {
     await using var bereich = app.Services.CreateAsyncScope();
