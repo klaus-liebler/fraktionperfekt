@@ -329,15 +329,12 @@ public static class Spalteneinstufung
             },
             ["MitgliedschaftsVersionen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["FunktionText"] = (Spaltenart.Version, "Funktionsbezeichnung wie im RIS"),
                 ["Amt"] = (Spaltenart.Version, "Vorsitz oder Stellvertretung des Vorsitzes (RIS)"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
                 ["Funktion"] = (Spaltenart.Version, null),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["MitgliedschaftId"] = (Spaltenart.Version, null),
@@ -345,15 +342,12 @@ public static class Spalteneinstufung
             },
             ["PersonAdressen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
                 ["AdressId"] = (Spaltenart.Version, null),
                 ["Bereich"] = (Spaltenart.Version, null),
                 ["Bevorzugt"] = (Spaltenart.Version, null),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["Ort"] = (Spaltenart.Version, null),
@@ -364,29 +358,23 @@ public static class Spalteneinstufung
             },
             ["PersonEMails"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
                 ["AdressId"] = (Spaltenart.Version, null),
                 ["Adresse"] = (Spaltenart.Version, null),
                 ["Bereich"] = (Spaltenart.Version, null),
                 ["Bevorzugt"] = (Spaltenart.Version, null),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["PersonId"] = (Spaltenart.Version, null),
             },
             ["PersonEinwilligungen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
                 ["Erteilt"] = (Spaltenart.Version, null),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["PersonId"] = (Spaltenart.Version, null),
@@ -394,13 +382,10 @@ public static class Spalteneinstufung
             },
             ["PersonMerkmale"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
                 ["Art"] = (Spaltenart.Version, null),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["Inhalt"] = (Spaltenart.Version, null),
@@ -408,14 +393,11 @@ public static class Spalteneinstufung
             },
             ["PersonNamen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["Namenszusatz"] = (Spaltenart.Version, "Namenszusatz („jun.“)"),
                 ["Namensvorsatz"] = (Spaltenart.Version, "Namensvorsatz („von“, „van der“), Collation DIN5007_2; mehrteilige Nachnamen bleiben im Nachnamen"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["Nachname"] = (Spaltenart.Version, null),
@@ -425,29 +407,23 @@ public static class Spalteneinstufung
             },
             ["PersonRollen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["Rolle"] = (Spaltenart.Version, "eine Rolle je Zeilenreihe (Gegenstand)"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["PersonId"] = (Spaltenart.Version, null),
             },
             ["PersonRufnummern"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
                 ["Art"] = (Spaltenart.Version, null),
                 ["Bevorzugt"] = (Spaltenart.Version, null),
                 ["Dienste"] = (Spaltenart.Version, null),
                 ["Einwilligung"] = (Spaltenart.Version, null),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["Nummer"] = (Spaltenart.Version, null),
@@ -759,6 +735,7 @@ public static class Spalteneinstufung
             },
             ["GremiumVersionen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["VorgangId"] = (Spaltenart.Version, "Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
                 ["Name"] = (Spaltenart.Version, "Name laut RIS"),
                 ["Kurzname"] = (Spaltenart.Version, "Kurzname laut RIS"),
@@ -766,11 +743,7 @@ public static class Spalteneinstufung
                 ["GremiumId"] = (Spaltenart.Version, null),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
-                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
                 ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
-                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
-                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
             },
             ["Vertretungskandidaten"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
@@ -778,6 +751,15 @@ public static class Spalteneinstufung
                 ["Position"] = (Spaltenart.Vorgang, "Rangfolge beim Start (1 = zuerst gefragt)"),
                 ["VertretungsfallId"] = (Spaltenart.Vorgang, null),
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel"),
+            },
+            ["Aenderungsvorgaenge"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel"),
+                ["Am"] = (Spaltenart.Vorgang, "Wissenszeit: erfasst am (für alle Versionen des Vorgangs)"),
+                ["Von"] = (Spaltenart.Beleg, "wer erfasst hat (Name und Rolle bzw. Automatik), eingefroren wie im Audit-Protokoll"),
+                ["Art"] = (Spaltenart.Vorgang, "Ersterfassung, Änderung ab Datum, Korrektur, Beendet, Abgrenzung"),
+                ["Grund"] = (Spaltenart.Vorgang, "Grund bzw. Nachweis"),
+                ["ProtokollId"] = (Spaltenart.Vorgang, "Eintrag im Audit-Protokoll desselben Speichervorgangs"),
             },
         };
 

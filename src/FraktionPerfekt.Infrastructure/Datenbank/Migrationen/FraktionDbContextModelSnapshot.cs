@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116215451_ListenAufgeloest";
+    public override string LastMigrationId => "20261116215741_Aenderungsvorgaenge";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -676,6 +676,41 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("Spenden");
             });
 
+        modelBuilder.Entity("FraktionPerfekt.Domain.Gemeinsam.Erfassung", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Art")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Grund")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid?>("ProtokollId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Von")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Am");
+
+                b.HasIndex("ProtokollId");
+
+                b.ToTable("Aenderungsvorgaenge");
+            });
+
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Gremium", b =>
             {
                 b.Property<Guid>("Id")
@@ -709,28 +744,10 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<bool>("Aktiv")
                     .HasColumnType("INTEGER");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
 
                 b.Property<Guid>("GremiumId")
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
                     .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
@@ -749,7 +766,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(300)
                     .HasColumnType("TEXT");
 
+                b.Property<Guid>("VorgangId")
+                    .HasColumnType("TEXT");
+
                 b.HasKey("Id");
+
+                b.HasIndex("VorgangId");
 
                 b.HasIndex("GremiumId", "GueltigVon");
 
@@ -793,19 +815,6 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
 
@@ -816,11 +825,6 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<string>("FunktionText")
                     .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
                     .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
@@ -835,7 +839,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int?>("Rang")
                     .HasColumnType("INTEGER");
 
+                b.Property<Guid>("VorgangId")
+                    .HasColumnType("TEXT");
+
                 b.HasKey("Id");
+
+                b.HasIndex("VorgangId");
 
                 b.HasIndex("MitgliedschaftId", "GueltigVon");
 
@@ -863,26 +872,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<bool>("Bevorzugt")
                     .HasColumnType("INTEGER");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
-                    .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
                     .HasColumnType("TEXT");
@@ -893,9 +884,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("PersonId")
                     .HasColumnType("TEXT");
 
+                b.Property<Guid>("VorgangId")
+                    .HasColumnType("TEXT");
+
                 b.HasKey("Id");
 
                 b.HasIndex("AdressId");
+
+                b.HasIndex("VorgangId");
 
                 b.HasIndex("PersonId", "GueltigVon");
 
@@ -907,29 +903,11 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
 
                 b.Property<bool>("Erteilt")
                     .HasColumnType("INTEGER");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
-                    .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
                     .HasColumnType("TEXT");
@@ -940,12 +918,17 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("PersonId")
                     .HasColumnType("TEXT");
 
+                b.Property<Guid>("VorgangId")
+                    .HasColumnType("TEXT");
+
                 b.Property<string>("Zweck")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
                 b.HasKey("Id");
+
+                b.HasIndex("VorgangId");
 
                 b.HasIndex("PersonId", "GueltigVon");
 
@@ -989,26 +972,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(20)
                     .HasColumnType("TEXT");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
-                    .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
                     .HasColumnType("TEXT");
@@ -1024,7 +989,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("PersonId")
                     .HasColumnType("TEXT");
 
+                b.Property<Guid>("VorgangId")
+                    .HasColumnType("TEXT");
+
                 b.HasKey("Id");
+
+                b.HasIndex("VorgangId");
 
                 b.HasIndex("PersonId", "GueltigVon");
 
@@ -1036,26 +1006,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
-                    .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
                     .HasColumnType("TEXT");
@@ -1073,6 +1025,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("INTEGER");
 
                 b.Property<Guid>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("VorgangId")
                     .HasColumnType("TEXT");
 
                 b.Property<string>("Vorname")
@@ -1094,6 +1049,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
                 b.HasKey("Id");
 
+                b.HasIndex("VorgangId");
+
                 b.HasIndex("PersonId", "GueltigVon");
 
                 b.HasIndex("Nachname", "Vorname", "Vorsatz")
@@ -1107,26 +1064,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
-                    .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
                     .HasColumnType("TEXT");
@@ -1142,7 +1081,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
+                b.Property<Guid>("VorgangId")
+                    .HasColumnType("TEXT");
+
                 b.HasKey("Id");
+
+                b.HasIndex("VorgangId");
 
                 b.HasIndex("PersonId", "GueltigVon");
 
@@ -1165,26 +1109,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<bool>("Bevorzugt")
                     .HasColumnType("INTEGER");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
-                    .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
                     .HasColumnType("TEXT");
@@ -1210,6 +1136,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(200)
                     .HasColumnType("TEXT");
 
+                b.Property<Guid>("VorgangId")
+                    .HasColumnType("TEXT");
+
                 b.Property<string>("Zusatz")
                     .HasMaxLength(200)
                     .HasColumnType("TEXT");
@@ -1217,6 +1146,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id");
 
                 b.HasIndex("AdressId");
+
+                b.HasIndex("VorgangId");
 
                 b.HasIndex("PersonId", "GueltigVon");
 
@@ -1244,26 +1175,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<bool>("Einwilligung")
                     .HasColumnType("INTEGER");
 
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("ErfasstVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Erfassungsart")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
-
-                b.Property<string>("Grund")
-                    .IsRequired()
-                    .HasMaxLength(500)
-                    .HasColumnType("TEXT");
 
                 b.Property<DateOnly?>("GueltigBis")
                     .HasColumnType("TEXT");
@@ -1282,9 +1195,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("PersonId")
                     .HasColumnType("TEXT");
 
+                b.Property<Guid>("VorgangId")
+                    .HasColumnType("TEXT");
+
                 b.HasKey("Id");
 
                 b.HasIndex("NummerId");
+
+                b.HasIndex("VorgangId");
 
                 b.HasIndex("PersonId", "GueltigVon");
 
@@ -2592,6 +2510,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("GremiumId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Mitgliedschaft", b =>
@@ -2616,6 +2542,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("MitgliedschaftId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.EMailAdresse", b =>
@@ -2625,6 +2559,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("PersonId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.Einwilligung", b =>
@@ -2634,6 +2576,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("PersonId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonMerkmal", b =>
@@ -2643,6 +2593,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("PersonId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonName", b =>
@@ -2652,6 +2610,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("PersonId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonRolle", b =>
@@ -2661,6 +2627,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("PersonId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.Postadresse", b =>
@@ -2670,6 +2644,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("PersonId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.Rufnummer", b =>
@@ -2679,6 +2661,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("PersonId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Gemeinsam.Erfassung", "Vorgang")
+                    .WithMany()
+                    .HasForeignKey("VorgangId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.Navigation("Vorgang");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Termine.KalenderAbo", b =>

@@ -12,7 +12,12 @@ Einwilligungen) und zu Gremienmitgliedschaften werden **bitemporal** gespeichert
 | Achse | Spalten | Bedeutung |
 |---|---|---|
 | **Gültigkeitszeit** | `GueltigVon`, `GueltigBis` | Wann galt die Angabe in der Welt? Halboffen: `GueltigVon` einschließlich, `GueltigBis` ausschließlich (leer = offen). |
-| **Erfassungszeit** | `ErfasstAm`, `ErsetztAm` | Wann wusste das System das? Ebenfalls halboffen: ab `ErfasstAm` bis `ErsetztAm` (leer = aktueller Wissensstand). |
+| **Erfassungszeit** | `Aenderungsvorgaenge.Am`, `ErsetztAm` | Wann wusste das System das? Ebenfalls halboffen: ab dem Zeitpunkt des Änderungsvorgangs bis `ErsetztAm` (leer = aktueller Wissensstand). |
+
+**Änderungsvorgänge:** Wann, von wem, wie (Ersterfassung, Änderung ab Datum, Korrektur, Beendet, Abgrenzung) und warum stehen nicht an jeder
+Versionszeile, sondern einmal in `Aenderungsvorgaenge`; jede Version verweist per `VorgangId` darauf. Ein Speichervorgang ist ein
+Vorgang (technische Abgrenzungen bekommen einen eigenen Vorgang mit gleicher Zeit, Person und Grund). `ProtokollId` verbindet den Vorgang mit
+dem Eintrag im Audit-Protokoll desselben Speichervorgangs.
 
 **Versionen werden nie geändert oder gelöscht.** Jede Änderung – auch das Beenden einer Gültigkeit (Umzug, Rolle endet) – setzt
 `ErsetztAm` an der alten Zeile und legt neue Zeilen an. So bleibt beantwortbar, was das System zu einem früheren Zeitpunkt wusste.
@@ -43,10 +48,10 @@ Brief raus. Am 20.09. kommt er zurück, und sie sagt, sie sei schon zum 01.07. u
 Beide Fragen beantwortet dieselbe Abfrage mit Stichtag `:tag` und Wissensstand `:bekannt`:
 
 ```sql
-SELECT a.* FROM PersonAdressen a
+SELECT a.* FROM PersonAdressen a JOIN Aenderungsvorgaenge v ON v.Id = a.VorgangId
 WHERE a.PersonId = :person
   AND a.GueltigVon <= :tag AND (a.GueltigBis IS NULL OR a.GueltigBis > :tag)
-  AND a.ErfasstAm <= :bekannt AND (a.ErsetztAm IS NULL OR a.ErsetztAm > :bekannt);
+  AND v.Am <= :bekannt AND (a.ErsetztAm IS NULL OR a.ErsetztAm > :bekannt);
 ```
 
 Im Code übernimmt das `ZeitlicheHistorie.AlsStichtag(gueltigAm, bekanntAm)`; `Person.StandAm(tag, bekannt)` liefert den ganzen Stand.
@@ -75,6 +80,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 ## Übersicht
 
 - [Abwesenheiten](#abwesenheiten) – 7 Spalten
+- [Aenderungsvorgaenge](#aenderungsvorgaenge) – 6 Spalten
 - [Aenderungsvorschlaege](#aenderungsvorschlaege) – 10 Spalten
 - [Anfragen](#anfragen) – 13 Spalten
 - [Antraege](#antraege) – 13 Spalten
@@ -92,20 +98,20 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Dateien](#dateien) – 14 Spalten
 - [Gebiete](#gebiete) – 10 Spalten
 - [Gremien](#gremien) – 4 Spalten
-- [GremiumVersionen](#gremiumversionen) – 12 Spalten
+- [GremiumVersionen](#gremiumversionen) – 9 Spalten
 - [Haushaltsposten](#haushaltsposten) – 5 Spalten
 - [KalenderAbos](#kalenderabos) – 6 Spalten
 - [Kassenbuchungen](#kassenbuchungen) – 11 Spalten
 - [Kontakte](#kontakte) – 11 Spalten
 - [Mitgliedschaften](#mitgliedschaften) – 4 Spalten
-- [MitgliedschaftsVersionen](#mitgliedschaftsversionen) – 13 Spalten
-- [PersonAdressen](#personadressen) – 16 Spalten
-- [PersonEMails](#personemails) – 13 Spalten
-- [PersonEinwilligungen](#personeinwilligungen) – 11 Spalten
-- [PersonMerkmale](#personmerkmale) – 11 Spalten
-- [PersonNamen](#personnamen) – 14 Spalten
-- [PersonRollen](#personrollen) – 10 Spalten
-- [PersonRufnummern](#personrufnummern) – 15 Spalten
+- [MitgliedschaftsVersionen](#mitgliedschaftsversionen) – 10 Spalten
+- [PersonAdressen](#personadressen) – 13 Spalten
+- [PersonEMails](#personemails) – 10 Spalten
+- [PersonEinwilligungen](#personeinwilligungen) – 8 Spalten
+- [PersonMerkmale](#personmerkmale) – 8 Spalten
+- [PersonNamen](#personnamen) – 11 Spalten
+- [PersonRollen](#personrollen) – 7 Spalten
+- [PersonRufnummern](#personrufnummern) – 12 Spalten
 - [Personen](#personen) – 4 Spalten
 - [Plakate](#plakate) – 13 Spalten
 - [Postausgang](#postausgang) – 16 Spalten
@@ -149,6 +155,21 @@ Klasse: `FraktionPerfekt.Domain.Vertretung.Abwesenheit`
 | ZurueckgezogenAm | INTEGER |  |  | G |  |
 
 Indizes: (PersonId, Von); (Von, Bis)
+
+## Aenderungsvorgaenge
+
+Klasse: `FraktionPerfekt.Domain.Gemeinsam.Erfassung`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | TEXT | ja | PK | G | Schlüssel |
+| Am | INTEGER | ja | Index | G | Wissenszeit: erfasst am (für alle Versionen des Vorgangs) |
+| Art | TEXT(40) | ja |  | G | Ersterfassung, Änderung ab Datum, Korrektur, Beendet, Abgrenzung |
+| Grund | TEXT(500) | ja |  | G | Grund bzw. Nachweis |
+| ProtokollId | TEXT |  | Index | G | Eintrag im Audit-Protokoll desselben Speichervorgangs |
+| Von | TEXT(200) | ja |  | B | wer erfasst hat (Name und Rolle bzw. Automatik), eingefroren wie im Audit-Protokoll |
+
+Indizes: (Am); (ProtokollId)
 
 ## Aenderungsvorschlaege
 
@@ -489,18 +510,15 @@ Klasse: `FraktionPerfekt.Domain.Gremien.GremiumVersion`
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | V | Zeilen-Id = Version |
 | Aktiv | INTEGER | ja |  | V | Gremium aktiv |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
 | GremiumId | TEXT | ja | → Gremien, Index | V |  |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | Kurzname | TEXT(60) | ja |  | V | Kurzname laut RIS |
 | Name | TEXT(300) | ja |  | V | Name laut RIS |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 
-Indizes: (GremiumId, GueltigVon)
+Indizes: (VorgangId); (GremiumId, GueltigVon)
 
 ## Haushaltsposten
 
@@ -592,19 +610,16 @@ Klasse: `FraktionPerfekt.Domain.Gremien.MitgliedschaftsVersion`
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | V | Zeilen-Id = Version |
 | Amt | TEXT(40) | ja |  | V | Vorsitz oder Stellvertretung des Vorsitzes (RIS) |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
 | Funktion | TEXT(40) | ja |  | V |  |
 | FunktionText | TEXT(200) |  |  | V | Funktionsbezeichnung wie im RIS |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | MitgliedschaftId | TEXT | ja | → Mitgliedschaften, Index | V |  |
 | Rang | INTEGER |  |  | V |  |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 
-Indizes: (MitgliedschaftId, GueltigVon)
+Indizes: (VorgangId); (MitgliedschaftId, GueltigVon)
 
 ## PersonAdressen
 
@@ -616,20 +631,17 @@ Klasse: `FraktionPerfekt.Domain.Personen.Postadresse`
 | AdressId | TEXT | ja | Index | V |  |
 | Bereich | TEXT(20) | ja |  | V |  |
 | Bevorzugt | INTEGER | ja |  | V |  |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | Ort | TEXT(100) | ja |  | V |  |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
 | Postleitzahl | TEXT(10) | ja |  | V |  |
 | Strasse | TEXT(200) | ja |  | V |  |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 | Zusatz | TEXT(200) |  |  | V |  |
 
-Indizes: (AdressId); (PersonId, GueltigVon)
+Indizes: (AdressId); (VorgangId); (PersonId, GueltigVon)
 
 ## PersonEMails
 
@@ -642,16 +654,13 @@ Klasse: `FraktionPerfekt.Domain.Personen.EMailAdresse`
 | Adresse | TEXT(320) | ja |  | V |  |
 | Bereich | TEXT(20) | ja |  | V |  |
 | Bevorzugt | INTEGER | ja |  | V |  |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 
-Indizes: (AdressId); (PersonId, GueltigVon)
+Indizes: (AdressId); (VorgangId); (PersonId, GueltigVon)
 
 ## PersonEinwilligungen
 
@@ -660,18 +669,15 @@ Klasse: `FraktionPerfekt.Domain.Personen.Einwilligung`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | V | Zeilen-Id = Version |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
 | Erteilt | INTEGER | ja |  | V |  |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 | Zweck | TEXT(40) | ja |  | V |  |
 
-Indizes: (PersonId, GueltigVon)
+Indizes: (VorgangId); (PersonId, GueltigVon)
 
 ## PersonMerkmale
 
@@ -681,17 +687,14 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonMerkmal`
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | V | Zeilen-Id = Version |
 | Art | TEXT(20) | ja |  | V |  |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | Inhalt | TEXT(320) | ja |  | V |  |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 
-Indizes: (PersonId, GueltigVon)
+Indizes: (VorgangId); (PersonId, GueltigVon)
 
 ## PersonNamen
 
@@ -700,11 +703,7 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonName`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | V | Zeilen-Id = Version |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | Nachname | TEXT(200) | ja | Index | V |  |
@@ -712,9 +711,10 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonName`
 | Namenszusatz | TEXT(30) |  |  | V | Namenszusatz („jun.“) |
 | NurEinName | INTEGER | ja |  | V | laut Ausweis nur ein Name: Vorname bewusst leer |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 | Vorname | TEXT(200) | ja | Index | V |  |
 
-Indizes: (PersonId, GueltigVon); (Nachname, Vorname, Namensvorsatz)
+Indizes: (VorgangId); (PersonId, GueltigVon); (Nachname, Vorname, Namensvorsatz)
 
 ## PersonRollen
 
@@ -723,17 +723,14 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonRolle`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | V | Zeilen-Id = Version |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
 | Rolle | TEXT(40) | ja |  | V | eine Rolle je Zeilenreihe (Gegenstand) |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 
-Indizes: (PersonId, GueltigVon)
+Indizes: (VorgangId); (PersonId, GueltigVon)
 
 ## PersonRufnummern
 
@@ -746,18 +743,15 @@ Klasse: `FraktionPerfekt.Domain.Personen.Rufnummer`
 | Bevorzugt | INTEGER | ja |  | V |  |
 | Dienste | TEXT(40) | ja |  | V |  |
 | Einwilligung | INTEGER | ja |  | V |  |
-| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
-| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
-| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | Nummer | TEXT(40) | ja |  | V |  |
 | NummerId | TEXT | ja | Index | V |  |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
+| VorgangId | TEXT | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 
-Indizes: (NummerId); (PersonId, GueltigVon)
+Indizes: (NummerId); (VorgangId); (PersonId, GueltigVon)
 
 ## Personen
 

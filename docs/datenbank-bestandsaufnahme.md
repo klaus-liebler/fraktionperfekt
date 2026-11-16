@@ -94,6 +94,8 @@ Datenbank (`VACUUM INTO`) geprüft.
   „nur ein Name“, DIN-5007-2-Collation mit Index, Zeitraumkorrektur (Beispiel Frau Muster).
 - **Etappe 2 erledigt**: Rollen als eine Zeilenreihe je Rolle (statt Liste als Text), Vertretungskandidaten als eigene Tabelle mit Position.
   Die Übergangsliste im Architekturtest ist leer.
+- **Etappe 3 erledigt**: Tabelle `Aenderungsvorgaenge` (Am, Von, Art, Grund, ProtokollId); die 9 Versionstabellen verweisen per `VorgangId`
+  darauf. Auf der Kopie von Klaus' Datenbank: 29 Vorgänge statt Metadaten an 581 Zeilen.
 
 ## Entscheidung (16.11.2026)
 

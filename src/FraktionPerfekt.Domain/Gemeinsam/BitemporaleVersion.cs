@@ -15,8 +15,7 @@ public abstract class BitemporaleVersion<TSelf> : IHistorienwert
     /// <summary>Nur für EF Core.</summary>
     protected BitemporaleVersion()
     {
-        Grund = string.Empty;
-        ErfasstVon = string.Empty;
+        Vorgang = null!;
     }
 
     protected BitemporaleVersion(DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
@@ -31,10 +30,7 @@ public abstract class BitemporaleVersion<TSelf> : IHistorienwert
         Id = Ids.Neu();
         GueltigVon = gueltigVon;
         GueltigBis = gueltigBis;
-        ErfasstAm = erfassung.Am;
-        ErfasstVon = string.IsNullOrWhiteSpace(erfassung.Von) ? Erfassung.System : erfassung.Von;
-        Erfassungsart = erfassung.Art;
-        Grund = erfassung.Grund;
+        Vorgang = string.IsNullOrWhiteSpace(erfassung.Von) ? erfassung with { Von = Erfassung.System } : erfassung;
     }
 
     public Guid Id { get; private set; }
@@ -45,19 +41,22 @@ public abstract class BitemporaleVersion<TSelf> : IHistorienwert
     /// <summary>Fachlich gültig bis vor diesen Tag (exklusive); <c>null</c> = unbefristet.</summary>
     public DateOnly? GueltigBis { get; private set; }
 
-    /// <summary>Zeitpunkt, ab dem das System diese Version kennt.</summary>
-    public DateTimeOffset ErfasstAm { get; private set; }
+    /// <summary>Änderungsvorgang (Tabelle Aenderungsvorgaenge): wann, wer, wie, warum.</summary>
+    public Erfassung Vorgang { get; private set; }
 
-    /// <summary>Wer die Version erfasst hat (Name und Rolle oder "Automatik").</summary>
-    public string ErfasstVon { get; private set; }
+    /// <summary>Zeitpunkt, ab dem das System diese Version kennt (aus dem Vorgang).</summary>
+    public DateTimeOffset ErfasstAm => Vorgang.Am;
 
-    public Erfassungsart Erfassungsart { get; private set; }
+    /// <summary>Wer die Version erfasst hat (aus dem Vorgang).</summary>
+    public string ErfasstVon => Vorgang.Von;
+
+    public Erfassungsart Erfassungsart => Vorgang.Art;
 
     /// <summary>Zeitpunkt, ab dem diese Version durch eine andere ersetzt ist; <c>null</c> = aktueller Wissensstand.</summary>
     public DateTimeOffset? ErsetztAm { get; private set; }
 
-    /// <summary>Grund bzw. Nachweis (Pflicht, für die Nachvollziehbarkeit).</summary>
-    public string Grund { get; private set; }
+    /// <summary>Grund bzw. Nachweis (Pflicht, aus dem Vorgang).</summary>
+    public string Grund => Vorgang.Grund;
 
     public bool IstAktuellerWissensstand => ErsetztAm is null;
 
@@ -78,9 +77,6 @@ public abstract class BitemporaleVersion<TSelf> : IHistorienwert
 
     /// <summary>Gleicher fachlicher Wert mit anderer Gültigkeit und neuer Erfassung.</summary>
     protected internal abstract TSelf KopieMit(DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung);
-
-    /// <summary>Anonymisierung: Grund/Nachweis kann Personendaten enthalten und wird überschrieben.</summary>
-    internal void GrundAnonymisieren() => Grund = "anonymisiert";
 
     internal void Ersetzen(DateTimeOffset zeitpunkt)
     {

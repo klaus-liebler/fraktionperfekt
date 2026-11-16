@@ -6,7 +6,12 @@ Einwilligungen) und zu Gremienmitgliedschaften werden **bitemporal** gespeichert
 | Achse | Spalten | Bedeutung |
 |---|---|---|
 | **Gültigkeitszeit** | `GueltigVon`, `GueltigBis` | Wann galt die Angabe in der Welt? Halboffen: `GueltigVon` einschließlich, `GueltigBis` ausschließlich (leer = offen). |
-| **Erfassungszeit** | `ErfasstAm`, `ErsetztAm` | Wann wusste das System das? Ebenfalls halboffen: ab `ErfasstAm` bis `ErsetztAm` (leer = aktueller Wissensstand). |
+| **Erfassungszeit** | `Aenderungsvorgaenge.Am`, `ErsetztAm` | Wann wusste das System das? Ebenfalls halboffen: ab dem Zeitpunkt des Änderungsvorgangs bis `ErsetztAm` (leer = aktueller Wissensstand). |
+
+**Änderungsvorgänge:** Wann, von wem, wie (Ersterfassung, Änderung ab Datum, Korrektur, Beendet, Abgrenzung) und warum stehen nicht an jeder
+Versionszeile, sondern einmal in `Aenderungsvorgaenge`; jede Version verweist per `VorgangId` darauf. Ein Speichervorgang ist ein
+Vorgang (technische Abgrenzungen bekommen einen eigenen Vorgang mit gleicher Zeit, Person und Grund). `ProtokollId` verbindet den Vorgang mit
+dem Eintrag im Audit-Protokoll desselben Speichervorgangs.
 
 **Versionen werden nie geändert oder gelöscht.** Jede Änderung – auch das Beenden einer Gültigkeit (Umzug, Rolle endet) – setzt
 `ErsetztAm` an der alten Zeile und legt neue Zeilen an. So bleibt beantwortbar, was das System zu einem früheren Zeitpunkt wusste.
@@ -37,10 +42,10 @@ Brief raus. Am 20.09. kommt er zurück, und sie sagt, sie sei schon zum 01.07. u
 Beide Fragen beantwortet dieselbe Abfrage mit Stichtag `:tag` und Wissensstand `:bekannt`:
 
 ```sql
-SELECT a.* FROM PersonAdressen a
+SELECT a.* FROM PersonAdressen a JOIN Aenderungsvorgaenge v ON v.Id = a.VorgangId
 WHERE a.PersonId = :person
   AND a.GueltigVon <= :tag AND (a.GueltigBis IS NULL OR a.GueltigBis > :tag)
-  AND a.ErfasstAm <= :bekannt AND (a.ErsetztAm IS NULL OR a.ErsetztAm > :bekannt);
+  AND v.Am <= :bekannt AND (a.ErsetztAm IS NULL OR a.ErsetztAm > :bekannt);
 ```
 
 Im Code übernimmt das `ZeitlicheHistorie.AlsStichtag(gueltigAm, bekanntAm)`; `Person.StandAm(tag, bekannt)` liefert den ganzen Stand.

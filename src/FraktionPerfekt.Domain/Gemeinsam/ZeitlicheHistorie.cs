@@ -129,6 +129,7 @@ public static class ZeitlicheHistorie
         Func<T, bool> betrifft)
         where T : BitemporaleVersion<T>
     {
+        Erfassung? abgrenzung = null;   // ein Vorgang für alle Abgrenzungen dieses Aufrufs
         foreach (var alt in versionen.Where(v => v.IstAktuellerWissensstand && betrifft(v)).ToList())
         {
             var endetVorher = alt.GueltigBis is { } bis && bis <= ab;
@@ -140,9 +141,9 @@ public static class ZeitlicheHistorie
             alt.Ersetzen(jetzt);
             if (alt.GueltigVon < ab)
             {
-                versionen.Add(alt.KopieMit(alt.GueltigVon, ab,
-                    new Erfassung(jetzt, von, alt.IstEndemarke ? Erfassungsart.Beendet : Erfassungsart.Abgrenzung,
-                        alt.IstEndemarke ? alt.Grund : $"Ende der Gültigkeit: {grund}")));
+                versionen.Add(alt.KopieMit(alt.GueltigVon, ab, alt.IstEndemarke
+                    ? new Erfassung(jetzt, von, Erfassungsart.Beendet, alt.Grund)
+                    : abgrenzung ??= new Erfassung(jetzt, von, Erfassungsart.Abgrenzung, $"Ende der Gültigkeit: {grund}")));
             }
         }
     }

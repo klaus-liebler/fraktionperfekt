@@ -92,11 +92,35 @@ public sealed class Din5007Tests
         (await Versuch("SELECT * FROM PersonNamen")).ShouldBeNull();
         (await Versuch("SELECT COUNT(*) FROM Personen")).ShouldBeNull();
         (await Versuch("SELECT * FROM PersonNamen ORDER BY Nachname")).ShouldNotBeNull().ShouldContain("no such collation sequence");
-        (await Versuch("UPDATE PersonNamen SET Grund = Grund")).ShouldBeNull();   // Spalten ohne Collation und ohne Index darauf: geht
+        (await Versuch("UPDATE PersonNamen SET GueltigBis = GueltigBis")).ShouldBeNull();   // Spalten ohne Collation und ohne Index darauf: geht
         (await Versuch("UPDATE PersonNamen SET Nachname = Nachname")).ShouldNotBeNull().ShouldContain("no such collation sequence");
         (await Versuch("INSERT INTO PersonNamen SELECT * FROM PersonNamen WHERE 0")).ShouldNotBeNull().ShouldContain("no such collation sequence");   // schon das Vorbereiten scheitert
         Din5007Kollation.Registrieren(c);
         (await Versuch("SELECT * FROM PersonNamen ORDER BY Nachname")).ShouldBeNull();
         _ = Erfassung.System;
+    }
+}
+
+/// <summary>Datenbank-Regel 3: Ein Speichervorgang ist ein Änderungsvorgang; er verweist auf den Protokolleintrag desselben Speicherns.</summary>
+public sealed class AenderungsvorgangTests
+{
+    [Fact]
+    public async Task Eine_Aenderung_ist_ein_Vorgang_mit_Verweis_aufs_Protokoll()
+    {
+        await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
+        var liz = await u.AnmeldenAsync("lkuehlert");
+        var heute = FraktionPerfekt.Application.Gemeinsam.Ortszeit.Heute(u.Uhr);
+        await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Stammdaten.StammdatenDienst>()
+            .RufnummerSpeichernAsync(liz.Id, null, RufnummerArt.Mobil, "+49 151 0000077", Messagingdienst.Anruf, false, true, heute, false, "neue Nummer"));
+        await u.InAsync(async d =>
+        {
+            var db = d.GetRequiredService<FraktionDbContext>();
+            var nummer = await db.Set<Rufnummer>().Where(r => r.Nummer == "+49 151 0000077").SingleAsync();
+            nummer.Vorgang.Grund.ShouldBe("neue Nummer");
+            nummer.Vorgang.ProtokollId.ShouldNotBeNull();
+            var eintrag = await db.Protokoll.SingleAsync(p => p.Id == nummer.Vorgang.ProtokollId);
+            eintrag.Aktion.ShouldBe("Person.KontaktGeaendert");
+            (await db.Set<Erfassung>().CountAsync(e => e.ProtokollId == eintrag.Id)).ShouldBe(1);
+        });
     }
 }

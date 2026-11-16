@@ -51,6 +51,18 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
+        modelBuilder.Entity<Erfassung>(b =>
+        {
+            b.ToTable("Aenderungsvorgaenge");
+            b.HasKey(e => e.Id);
+            b.Property(e => e.Id).ValueGeneratedNever();
+            b.Property(e => e.Von).HasMaxLength(200);
+            b.Property(e => e.Art).HasConversion<string>().HasMaxLength(40);
+            b.Property(e => e.Grund).HasMaxLength(500);
+            b.HasIndex(e => e.Am);
+            b.HasIndex(e => e.ProtokollId);
+        });
+
         modelBuilder.Entity<Person>(b =>
         {
             b.ToTable("Personen");
@@ -312,12 +324,14 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         NurAnfuegenPruefen();
+        VorgaengeMitProtokollVerbinden();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         NurAnfuegenPruefen();
+        VorgaengeMitProtokollVerbinden();
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
@@ -344,8 +358,13 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.ToTable(tabelle);
             b.HasKey(v => v.Id);
             b.Property(v => v.Id).ValueGeneratedNever();
-            b.Property(v => v.Grund).HasMaxLength(500);
-            b.Property(v => v.ErfasstVon).HasMaxLength(200);
+            // Datenbank-Regel 3: wann/wer/wie/warum stehen im Änderungsvorgang, an der Zeile nur Gültigkeit und ErsetztAm
+            b.HasOne(v => v.Vorgang).WithMany().HasForeignKey("VorgangId").IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(v => v.Vorgang).AutoInclude();
+            b.Ignore(v => v.ErfasstAm);
+            b.Ignore(v => v.ErfasstVon);
+            b.Ignore(v => v.Erfassungsart);
+            b.Ignore(v => v.Grund);
             b.Ignore(v => v.IstAktuellerWissensstand);
             b.Ignore(v => v.IstEndemarke);
             b.Ignore(v => v.Datenart);
@@ -357,12 +376,27 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
         });
     }
 
-    /// <summary>Protokolleinträge und bitemporale Versionen dürfen nur angefügt, nie gelöscht werden; Protokolleinträge nie geändert.</summary>
+    /// <summary>Neue Änderungsvorgänge verweisen auf den Protokolleintrag desselben Speichervorgangs (eine Stelle für wer/wann/was/warum).</summary>
+    private void VorgaengeMitProtokollVerbinden()
+    {
+        var eintrag = ChangeTracker.Entries<AuditEintrag>().Where(e => e.State == EntityState.Added).Select(e => e.Entity).FirstOrDefault();
+        if (eintrag is null)
+        {
+            return;
+        }
+
+        foreach (var v in ChangeTracker.Entries<Erfassung>().Where(e => e.State == EntityState.Added))
+        {
+            v.Entity.ProtokollZuordnen(eintrag.Id);
+        }
+    }
+
+    /// <summary>Protokolleinträge, Änderungsvorgänge und bitemporale Versionen dürfen nur angefügt, nie gelöscht werden; Protokolleinträge und Vorgänge nie geändert.</summary>
     private void NurAnfuegenPruefen()
     {
         var verboten = ChangeTracker.Entries()
-            .Where(e => (e.State == EntityState.Deleted && e.Entity is AuditEintrag or IHistorienwert)
-                        || (e.State == EntityState.Modified && e.Entity is AuditEintrag))
+            .Where(e => (e.State == EntityState.Deleted && e.Entity is AuditEintrag or IHistorienwert or Erfassung)
+                        || (e.State == EntityState.Modified && e.Entity is AuditEintrag or Erfassung))
             .Select(e => e.Entity.GetType().Name)
             .ToList();
         if (verboten.Count > 0)

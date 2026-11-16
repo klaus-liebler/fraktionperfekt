@@ -19,10 +19,32 @@ public enum Erfassungsart
     Abgrenzung,
 }
 
-/// <summary>Wann, von wem, wie und warum eine Version erfasst wurde.</summary>
+/// <summary>
+/// Änderungsvorgang: wann, von wem, wie und warum Versionen erfasst wurden (Tabelle Aenderungsvorgaenge, Datenbank-Regel 3). Alle
+/// Versionen eines Speichervorgangs verweisen auf denselben Vorgang; <see cref="ProtokollId"/> verbindet ihn mit dem Eintrag im
+/// Audit-Protokoll desselben Speichervorgangs (eine Stelle für „wer hat wann was warum geändert“). Jede Abwandlung mit <c>with</c>
+/// (z. B. Art = Korrektur) ist ein eigener Vorgang mit eigener Id.
+/// </summary>
 public sealed record Erfassung(DateTimeOffset Am, string Von, Erfassungsart Art, string Grund)
 {
     public const string System = "System";
+
+    /// <summary>Kennung des Vorgangs.</summary>
+    public Guid Id { get; private init; } = Ids.Neu();
+
+    /// <summary>Eintrag im Audit-Protokoll aus demselben Speichervorgang (falls protokolliert).</summary>
+    public Guid? ProtokollId { get; private set; }
+
+    /// <summary>Abwandlungen (<c>with</c>) sind neue Vorgänge: neue Id, ohne Protokollverweis.</summary>
+    private Erfassung(Erfassung original)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        (Am, Von, Art, Grund) = (original.Am, original.Von, original.Art, original.Grund);
+        Id = Ids.Neu();
+    }
+
+    /// <summary>Verbindet den Vorgang mit dem Protokolleintrag desselben Speichervorgangs.</summary>
+    public void ProtokollZuordnen(Guid protokollId) => ProtokollId ??= protokollId;
 
     public static Erfassung Erst(DateTimeOffset am, string? von = null, string grund = "Ersterfassung")
         => new(am, von ?? System, Erfassungsart.Ersterfassung, grund);
