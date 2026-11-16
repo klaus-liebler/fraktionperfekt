@@ -147,11 +147,11 @@ Klasse: `FraktionPerfekt.Domain.Vertretung.Abwesenheit`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
-| Bis | TEXT | ja | Index | G |  |
+| Bis | INTEGER | ja | Index | G |  |
 | ErfasstAm | INTEGER | ja |  | G |  |
 | Grund | TEXT(500) |  |  | G |  |
 | PersonId | BLOB | ja | → Personen, Index | G |  |
-| Von | TEXT | ja | Index | G |  |
+| Von | INTEGER | ja | Index | G |  |
 | ZurueckgezogenAm | INTEGER |  |  | G |  |
 
 Indizes: (PersonId, Von); (Von, Bis)
@@ -199,11 +199,11 @@ Klasse: `FraktionPerfekt.Domain.Politik.Anfrage`
 | Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
 | Antwort | TEXT |  |  | G |  |
 | AutorPersonId | BLOB | ja |  | G |  |
-| BeantwortetAm | TEXT |  |  | G |  |
-| EingereichtAm | TEXT |  |  | G |  |
+| BeantwortetAm | INTEGER |  |  | G |  |
+| EingereichtAm | INTEGER |  |  | G |  |
 | ErinnertAm | INTEGER |  |  | G |  |
 | ErstelltAm | INTEGER | ja |  | G |  |
-| FristBis | TEXT |  |  | G |  |
+| FristBis | INTEGER |  |  | G |  |
 | GremiumId | BLOB |  |  | G |  |
 | Status | TEXT(40) | ja | Index | G |  |
 | Text | TEXT | ja |  | G |  |
@@ -304,7 +304,7 @@ Klasse: `FraktionPerfekt.Domain.Finanzen.Auslage` – Auslagenbeleg mit Datei (e
 | BelegSchluessel | TEXT |  |  | B |  |
 | BelegTyp | TEXT |  |  | B |  |
 | Betrag | TEXT | ja |  | B |  |
-| Datum | TEXT | ja |  | B |  |
+| Datum | INTEGER | ja |  | B |  |
 | EingereichtAm | INTEGER | ja |  | B |  |
 | EntschiedenVonPersonId | BLOB |  |  | B |  |
 | Kasse | TEXT(40) | ja |  | B |  |
@@ -324,7 +324,7 @@ Klasse: `FraktionPerfekt.Domain.Sitzungen.Beschluss`
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
 | AntragId | BLOB |  |  | G |  |
-| Datum | TEXT | ja | Index | G |  |
+| Datum | INTEGER | ja | Index | G |  |
 | Enthaltung | INTEGER | ja |  | G |  |
 | Ergebnis | TEXT(40) | ja |  | G |  |
 | GremiumId | BLOB |  |  | G |  |
@@ -414,7 +414,7 @@ Klasse: `FraktionPerfekt.Domain.Ressourcen.Buchung`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
-| Bis | TEXT | ja |  | G |  |
+| Bis | INTEGER | ja |  | G |  |
 | EntschiedenVonPersonId | BLOB |  |  | G |  |
 | ErstelltAm | INTEGER | ja |  | G |  |
 | PersonId | BLOB | ja |  | G |  |
@@ -422,7 +422,7 @@ Klasse: `FraktionPerfekt.Domain.Ressourcen.Buchung`
 | Status | TEXT(40) | ja |  | G |  |
 | TerminId | BLOB |  |  | G |  |
 | Vermerk | TEXT |  |  | G |  |
-| Von | TEXT | ja | Index | G |  |
+| Von | INTEGER | ja | Index | G |  |
 | Zweck | TEXT | ja |  | G |  |
 
 Indizes: (RessourceId, Von)
@@ -512,8 +512,8 @@ Klasse: `FraktionPerfekt.Domain.Gremien.GremiumVersion`
 | Aktiv | INTEGER | ja |  | V | Gremium aktiv |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
 | GremiumId | BLOB | ja | → Gremien, Index | V |  |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | Kurzname | TEXT(60) | ja |  | V | Kurzname laut RIS |
 | Name | TEXT(300) | ja |  | V | Name laut RIS |
 | VorgangId | BLOB | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
@@ -557,7 +557,7 @@ Klasse: `FraktionPerfekt.Domain.Finanzen.Kassenbuchung` – Kassenbuch: Buchunge
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | B | Schlüssel (Zeilen-Id) |
 | Betrag | TEXT | ja |  | B |  |
-| Datum | TEXT | ja | Index | B |  |
+| Datum | INTEGER | ja | Index | B |  |
 | Einnahme | INTEGER | ja |  | B |  |
 | ErfasstAm | INTEGER | ja |  | B |  |
 | ErfasstVonPersonId | BLOB | ja |  | B |  |
@@ -613,8 +613,8 @@ Klasse: `FraktionPerfekt.Domain.Gremien.MitgliedschaftsVersion`
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
 | Funktion | TEXT(40) | ja |  | V |  |
 | FunktionText | TEXT(200) |  |  | V | Funktionsbezeichnung wie im RIS |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | MitgliedschaftId | BLOB | ja | → Mitgliedschaften, Index | V |  |
 | Rang | INTEGER |  |  | V |  |
 | VorgangId | BLOB | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
@@ -632,8 +632,8 @@ Klasse: `FraktionPerfekt.Domain.Personen.Postadresse`
 | Bereich | TEXT(20) | ja |  | V |  |
 | Bevorzugt | INTEGER | ja |  | V |  |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | Ort | TEXT(100) | ja |  | V |  |
 | PersonId | BLOB | ja | → Personen, Index | V |  |
 | Postleitzahl | TEXT(10) | ja |  | V |  |
@@ -655,8 +655,8 @@ Klasse: `FraktionPerfekt.Domain.Personen.EMailAdresse`
 | Bereich | TEXT(20) | ja |  | V |  |
 | Bevorzugt | INTEGER | ja |  | V |  |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | PersonId | BLOB | ja | → Personen, Index | V |  |
 | VorgangId | BLOB | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 
@@ -671,8 +671,8 @@ Klasse: `FraktionPerfekt.Domain.Personen.Einwilligung`
 | Id | BLOB | ja | PK | V | Zeilen-Id = Version |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
 | Erteilt | INTEGER | ja |  | V |  |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | PersonId | BLOB | ja | → Personen, Index | V |  |
 | VorgangId | BLOB | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
 | Zweck | TEXT(40) | ja |  | V |  |
@@ -688,8 +688,8 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonMerkmal`
 | Id | BLOB | ja | PK | V | Zeilen-Id = Version |
 | Art | TEXT(20) | ja |  | V |  |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | Inhalt | TEXT(320) | ja |  | V |  |
 | PersonId | BLOB | ja | → Personen, Index | V |  |
 | VorgangId | BLOB | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
@@ -704,8 +704,8 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonName`
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | V | Zeilen-Id = Version |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | Nachname | TEXT(200) | ja | Index | V |  |
 | Namensvorsatz | TEXT(60) |  | Index | V | Namensvorsatz („von“, „van der“), Collation DIN5007_2; mehrteilige Nachnamen bleiben im Nachnamen |
 | Namenszusatz | TEXT(30) |  |  | V | Namenszusatz („jun.“) |
@@ -724,8 +724,8 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonRolle`
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | V | Zeilen-Id = Version |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | PersonId | BLOB | ja | → Personen, Index | V |  |
 | Rolle | TEXT(40) | ja |  | V | eine Rolle je Zeilenreihe (Gegenstand) |
 | VorgangId | BLOB | ja | → Aenderungsvorgaenge, Index | V | Änderungsvorgang (wann, wer, wie, warum), Tabelle Aenderungsvorgaenge |
@@ -744,8 +744,8 @@ Klasse: `FraktionPerfekt.Domain.Personen.Rufnummer`
 | Dienste | TEXT(40) | ja |  | V |  |
 | Einwilligung | INTEGER | ja |  | V |  |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
-| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
-| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| GueltigBis | INTEGER | ja |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | INTEGER | ja | Index | V | Gültigkeit von (einschließlich) |
 | Nummer | TEXT(40) | ja |  | V |  |
 | NummerId | BLOB | ja | Index | V |  |
 | PersonId | BLOB | ja | → Personen, Index | V |  |
@@ -820,7 +820,7 @@ Klasse: `FraktionPerfekt.Domain.Politik.Presseartikel`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
-| Datum | TEXT | ja | Index | G |  |
+| Datum | INTEGER | ja | Index | G |  |
 | ErfasstVonPersonId | BLOB | ja |  | G |  |
 | Link | TEXT |  |  | G |  |
 | Medium | TEXT | ja |  | G |  |
@@ -844,7 +844,7 @@ Klasse: `FraktionPerfekt.Domain.Politik.Pressemitteilung`
 | FreigegebenAm | INTEGER |  |  | G |  |
 | FreigegebenVonPersonId | BLOB |  |  | G |  |
 | GeaendertAm | INTEGER | ja |  | G |  |
-| GeplantAm | TEXT |  |  | G |  |
+| GeplantAm | INTEGER |  |  | G |  |
 | Status | TEXT(40) | ja | Index | G |  |
 | Text | TEXT | ja |  | G |  |
 | Thema | TEXT |  |  | G |  |
@@ -922,11 +922,11 @@ Klasse: `FraktionPerfekt.Domain.Wahlkampf.Schicht`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
-| Bis | TEXT | ja |  | G |  |
+| Bis | INTEGER | ja |  | G |  |
 | Ort | TEXT | ja |  | G |  |
 | Plaetze | INTEGER | ja |  | G |  |
 | TerminId | BLOB |  |  | G |  |
-| Von | TEXT | ja | Index | G |  |
+| Von | INTEGER | ja | Index | G |  |
 
 Indizes: (Von)
 
@@ -975,10 +975,10 @@ Klasse: `FraktionPerfekt.Domain.Finanzen.Spende` – Spendenbeleg: Spender und A
 | Id | BLOB | ja | PK | B | Schlüssel (Zeilen-Id) |
 | Anschrift | TEXT |  |  | B | Anschrift wie auf der Quittung (eingefroren, GoBD) |
 | Betrag | TEXT | ja |  | B |  |
-| Datum | TEXT | ja |  | B |  |
+| Datum | INTEGER | ja |  | B |  |
 | ErfasstVonPersonId | BLOB | ja |  | B |  |
 | Kasse | TEXT(40) | ja |  | B |  |
-| QuittungAm | TEXT |  |  | B |  |
+| QuittungAm | INTEGER |  |  | B |  |
 | Spender | TEXT |  |  | B | Spender wie auf der Quittung (eingefroren, GoBD) |
 | Zweck | TEXT | ja |  | B |  |
 
@@ -1035,9 +1035,9 @@ Klasse: `FraktionPerfekt.Domain.Termine.Termin`
 | AngelegtAm | INTEGER | ja |  | G |  |
 | AngelegtVonPersonId | BLOB |  |  | G | wer angelegt hat; leer = RIS-Abgleich bzw. Automatik |
 | Art | TEXT(40) | ja |  | G |  |
-| Beginn | TEXT | ja | Index | G |  |
+| Beginn | INTEGER | ja | Index | G |  |
 | Beschreibung | TEXT(4000) |  |  | G |  |
-| Ende | TEXT | ja |  | G |  |
+| Ende | INTEGER | ja |  | G |  |
 | GremiumId | BLOB |  | → Gremien, Index | G |  |
 | Ort | TEXT(300) |  |  | G |  |
 | RisId | TEXT(200) |  | eindeutig | G |  |
@@ -1089,7 +1089,7 @@ Klasse: `FraktionPerfekt.Domain.Abstimmungen.UmfrageOption`
 | Position | INTEGER | ja |  | G |  |
 | Text | TEXT | ja |  | G |  |
 | UmfrageId | BLOB | ja | Index | G |  |
-| Zeitpunkt | TEXT |  |  | G |  |
+| Zeitpunkt | INTEGER |  |  | G |  |
 
 Indizes: (UmfrageId)
 

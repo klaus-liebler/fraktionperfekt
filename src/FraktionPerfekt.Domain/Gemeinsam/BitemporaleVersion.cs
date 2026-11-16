@@ -29,7 +29,7 @@ public abstract class BitemporaleVersion<TSelf> : IHistorienwert
         ArgumentException.ThrowIfNullOrWhiteSpace(erfassung.Grund);
         Id = Ids.Neu();
         GueltigVon = gueltigVon;
-        GueltigBis = gueltigBis;
+        GueltigBisSpalte = gueltigBis ?? DateOnly.MaxValue;
         Vorgang = string.IsNullOrWhiteSpace(erfassung.Von) ? erfassung with { Von = Erfassung.System } : erfassung;
     }
 
@@ -39,7 +39,10 @@ public abstract class BitemporaleVersion<TSelf> : IHistorienwert
     public DateOnly GueltigVon { get; private set; }
 
     /// <summary>Fachlich gültig bis vor diesen Tag (exklusive); <c>null</c> = unbefristet.</summary>
-    public DateOnly? GueltigBis { get; private set; }
+    public DateOnly? GueltigBis => GueltigBisSpalte == DateOnly.MaxValue ? null : GueltigBisSpalte;
+
+    /// <summary>Speicherform von <see cref="GueltigBis"/>: offenes Ende als 9999-12-31 (in der Datenbank 99991231, Datenbank-Regel 5).</summary>
+    private DateOnly GueltigBisSpalte { get; set; } = DateOnly.MaxValue;
 
     /// <summary>Änderungsvorgang (Tabelle Aenderungsvorgaenge): wann, wer, wie, warum.</summary>
     public Erfassung Vorgang { get; private set; }

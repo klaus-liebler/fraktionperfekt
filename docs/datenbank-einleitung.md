@@ -65,6 +65,21 @@ in `PersonNamen` sowie das Ändern der Namensspalten scheitert mit „no such co
 lesbaren Views verwenden bzw. nur lesen; Änderungen nur über die Anwendung. Auch `PRAGMA integrity_check` braucht die Collation – mit einer
 falsch nachgebauten Vergleichsregel meldet es fehlende Indexeinträge, obwohl die Datei in Ordnung ist.
 
+### Speicherformen (Datenbank-Regeln 4 und 5)
+
+| Art | Speicherform | Beispiel |
+|---|---|---|
+| Ids | 16-Byte-BLOB, Big-Endian, UUIDv7 (zeitlich sortiert), zentral über `Ids.Neu()` | `X'01A1E6302C7B7544…'` |
+| Zeitpunkte (Erfassung, Protokoll, Fristen) | INTEGER, UTC in Millisekunden seit 1970 | `1794859314079` |
+| Kalendertage (Gültigkeit, Beschlussdatum) | INTEGER `JJJJMMTT`, offenes Ende `99991231` | `20251101` |
+| Termine mit Uhrzeit | INTEGER, UTC-Millisekunden; je Termin mit dem an diesem Tag gültigen Versatz aus der Ortszeit umgerechnet | dienstags 19:00 → Winter 18:00 UTC, Sommer 17:00 UTC |
+
+Umrechnungen zwischen Ortszeit und UTC laufen zentral über `Ortszeit` (Zeitzone aus der Mandanten-Konfiguration, ersatzweise die
+Systemzeitzone). **Lesbare Views** für Prüfungen und externe Werkzeuge: `v_PersonNamen`, `v_PersonMerkmale`, `v_PersonRollen`,
+`v_Mitgliedschaften`, `v_Termine`, `v_Aenderungsvorgaenge`, `v_Protokoll` zeigen Ids als GUID-Text, Tage als `JJJJ-MM-TT` („offen“) und
+Zeitpunkte als UTC-Text; die Namensspalten tragen dort `COLLATE BINARY`, damit die Views auch ohne die Collation `DIN5007_2` lesbar sind
+(eine View, die eine Spalte mit unbekannter Collation durchreicht, scheitert sonst schon beim einfachen Lesen).
+
 ### Keine Kopien
 
 Die Datenbank ist in 3. Normalform: Es gibt keine Spalten, die Werte aus anderen Tabellen oder Versionen kopieren. Der aktuelle Stand

@@ -36,7 +36,7 @@ public sealed class Din5007Tests
         {
             var db = d.GetRequiredService<FraktionDbContext>();
             var tag = new DateOnly(2026, 11, 15);
-            var sql = db.Set<PersonName>().Where(n => n.ErsetztAm == null && n.GueltigVon <= tag && (n.GueltigBis == null || n.GueltigBis > tag))
+            var sql = db.Set<PersonName>().Where(n => n.ErsetztAm == null && n.GueltigVon <= tag && EF.Property<DateOnly>(n, "GueltigBisSpalte") > tag)
                 .OrderBy(n => n.Nachname).ThenBy(n => n.Vorname).ThenBy(n => n.Vorsatz).ThenBy(n => EF.Property<Guid>(n, "PersonId"))
                 .Select(n => EF.Property<Guid>(n, "PersonId")).ToQueryString();
             var c = (SqliteConnection)db.Database.GetDbConnection();

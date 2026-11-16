@@ -43,7 +43,10 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
         ArgumentNullException.ThrowIfNull(configurationBuilder);
 
         // SQLite kennt keinen Zeitstempel mit Offset; als sortierbare Zahl (UTC-Ticks) speichern.
-        configurationBuilder.Properties<DateTimeOffset>().HaveConversion<DateTimeOffsetToBinaryConverter>();
+        // Datenbank-Regel 5: Zeitpunkte UTC in ms seit 1970, Kalendertage als JJJJMMTT, Ortszeiten (Termine) als UTC-ms
+        configurationBuilder.Properties<DateTimeOffset>().HaveConversion<ZeitpunktZuMillisekunden>();
+        configurationBuilder.Properties<DateOnly>().HaveConversion<TagZuZahl>();
+        configurationBuilder.Properties<DateTime>().HaveConversion<OrtszeitZuMillisekunden>();
         // Datenbank-Regel 4: Ids binär (16 Byte, Big-Endian) statt als Text
         configurationBuilder.Properties<Guid>().HaveConversion<GuidZuBlob>();
         configurationBuilder.Properties<Enum>().HaveConversion<string>().HaveMaxLength(40);
@@ -368,6 +371,8 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.Ignore(v => v.Erfassungsart);
             b.Ignore(v => v.Grund);
             b.Ignore(v => v.IstAktuellerWissensstand);
+            b.Ignore(v => v.GueltigBis);
+            b.Property<DateOnly>("GueltigBisSpalte").HasColumnName("GueltigBis");   // offenes Ende = 99991231
             b.Ignore(v => v.IstEndemarke);
             b.Ignore(v => v.Datenart);
             b.Ignore(v => v.Feld);

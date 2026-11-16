@@ -49,7 +49,7 @@ internal sealed class FraktionSpeicher(FraktionDbContext db, TimeProvider uhr) :
     public Task<List<Guid>> NamenslisteAsync(DateOnly tag, CancellationToken abbruch = default, int? hoechstens = null)
     {
         var abfrage = db.Set<PersonName>()
-            .Where(n => n.ErsetztAm == null && n.GueltigVon <= tag && (n.GueltigBis == null || n.GueltigBis > tag))
+            .Where(n => n.ErsetztAm == null && n.GueltigVon <= tag && EF.Property<DateOnly>(n, "GueltigBisSpalte") > tag)
             .OrderBy(n => n.Nachname).ThenBy(n => n.Vorname).ThenBy(n => n.Vorsatz).ThenBy(n => EF.Property<Guid>(n, "PersonId"))
             .Select(n => EF.Property<Guid>(n, "PersonId"));
         return (hoechstens is { } h ? abfrage.Take(h) : abfrage).ToListAsync(abbruch);

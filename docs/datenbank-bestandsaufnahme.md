@@ -101,6 +101,10 @@ Datenbank (`VACUUM INTO`) geprüft.
   Fremdschlüssel bis zum Abschluss aufgeschoben); auf der Kopie: 186 Spalten, alle umgestellt, Fremdschlüssel und Integrität in Ordnung.
   Ids als Text bleiben nur in Anzeigeformen (URLs, Links in Mails, ICS-UIDs, Bildpfade) und im Suchindex `WikiSuche` (FTS5, aus den
   Wiki-Versionen neu aufbaubar, keine fachliche Kopie).
+- **Etappe 4b erledigt**: Zeitpunkte als UTC-ms (81 Spalten), Kalendertage als JJJJMMTT mit offenem Ende 99991231 (30 Spalten), Termine,
+  Buchungen und Schichten (7 Spalten) als UTC-ms mit Umrechnung je Termin; Test über beide Zeitumstellungen; lesbare Views. Auf der Kopie:
+  alle 174 Terminzeiten stimmen nach der Umrechnung mit der amtlichen Zeitzonendatenbank überein, Protokollzeiten unverändert.
+  Hash-Ketten gibt es keine (nur Datei-Prüfsummen der Sicherungen, unabhängig von der Speicherform).
 
 ## Entscheidung (16.11.2026)
 
