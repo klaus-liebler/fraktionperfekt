@@ -6,7 +6,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Bild, F, text, textBreite } from './pixel.mjs';
 import * as HG from './hintergruende.mjs';
-import { figurenSheets, posen, portraets, mitHut } from './figuren.mjs';
+import { figurenSheets, posen, portraets, mitHut, relbeilPortraet } from './figuren.mjs';
 import { objekte, icons } from './objekte.mjs';
 import { karteGreven } from './karte.mjs';
 
@@ -63,6 +63,7 @@ for (const [name, bild] of sheets) {
     speichere(`${name}_posen_32x64.png`, posen(bild, name.startsWith('joe') ? 'kartusche' : name === 'chani' ? 'handy' : null), 'Posen');
     speichere(`${name}_portraet_64x64.png`, portraets(bild, GEGNER.includes(name) ? F.steindunkel : F.sand), 'Porträts');
 }
+speichere('relbeil_portraet_64x64.png', relbeilPortraet(), 'Porträts');
 for (const [name, bild] of objekte()) { speichere(name, bild, 'Objekte'); }
 speichere('inventar_icons_16x16.png', icons(), 'Icons');
 

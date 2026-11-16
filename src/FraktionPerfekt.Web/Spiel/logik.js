@@ -28,8 +28,23 @@
         siegel_legislative: { name: 'Siegel der Beschlüsse', text: 'Ein Siegel mit einem aufgeschlagenen Buch: das, was beschließt.' },
         siegel_exekutive: { name: 'Siegel der Ausführung', text: 'Ein Siegel mit einem Schlüsselbund: das, was ausführt.' },
         siegel_judikative: { name: 'Siegel des Rechts', text: 'Ein Siegel mit einer Waage: das, was richtet.' },
-        tempelschluessel: { name: 'Tempelschlüssel', text: 'Ein schwerer Schlüssel. In den Bart ist „Art. 20“ eingraviert.' }
+        tempelschluessel: { name: 'Tempelschlüssel', text: 'Ein schwerer Schlüssel. In den Bart ist „Art. 20“ eingraviert.' },
+        handy: { name: 'Joes Handy', text: 'Ein Klapphandy, Baujahr 2004, Akku hält drei Wochen. Im Telefonbuch: „Prof. Relbeil“. Benutzen ruft ihn an.' }
     };
+
+    /** Vorstellung der beiden Figuren zu Spielbeginn (und im Menü „Figuren vorstellen“) – nur Fähigkeiten, die das Spiel wirklich braucht. */
+    const VORSTELLUNG = [
+        'Joe: „Ich bin Joe, Fraktionschef – im Hauptberuf Vertreter für Baudichtstoffe. Hut, Lederjacke, Kartusche.“',
+        'Joe: „Meine Kartusche dichtet ab, was undicht ist: Lecks, Fugen – und wenn es sein muss, den Weg für ungebetene Gäste.“',
+        'Joe: „Mein Verkaufsgespräch öffnet Türen. Wer einen Rahmenvertrag wittert, rückt auch mal Helme heraus.“',
+        'Joe: „Und mein Handy: Professor Relbeil weiß immer, wie es weitergeht. Einfach anrufen.“',
+        'Chani: „Ich bin Chani, Social-Media-Referentin der Fraktion und Kunsthistorikerin.“',
+        'Chani: „Deuten: Gemälde, Fresken und alte Inschriften lese ich wie andere Leute Speisekarten.“',
+        'Chani: „Live-Story: Vor laufender Kamera vergessen manche Leute alles andere. Sehr nützlich.“',
+        'Relbeil: „Und ich bin Professor Relbeil – erreichbar über Joes Handy. Ruft an und sagt „Guten Tag!“, dann plaudern wir ein bisschen.“',
+        'Relbeil: „Sagt ihr „Ich brauche deine Hilfe!“, verrate ich euch immer, was als Nächstes zu tun ist. Kostet keine Punkte.“',
+        '(Unten wechselt ihr zwischen Joe und Chani; ihre Fähigkeiten stehen bei den Verben. Esc überspringt die Vorstellung.)'
+    ];
 
     // Orte auf der Reisekarte (x/y in Prozent der Karte)
     const ORTE = {
@@ -47,7 +62,7 @@
             version: VERSION,
             szene: 'buero',
             figur: 'joe',
-            inventar: [],
+            inventar: ['handy'],
             flags: {},
             orte: ['buero'],
             platten: { links: null, rechts: null },
@@ -61,7 +76,8 @@
 
     // ---------- Hilfen ----------
     const hat = (z, g) => z.inventar.indexOf(g) >= 0;
-    const geben = (z, g) => { if (!hat(z, g)) { z.inventar.push(g); } };
+    // „hatte_…“ merkt sich dauerhaft, dass ein Gegenstand schon einmal da war (für Professor Relbeils Hilfe; Gegenstände werden auch weitergegeben)
+    const geben = (z, g) => { if (!hat(z, g)) { z.inventar.push(g); } z.flags['hatte_' + g] = true; };
     const nehmen = (z, g) => { const i = z.inventar.indexOf(g); if (i >= 0) { z.inventar.splice(i, 1); } };
     const ortFrei = (z, o) => { if (z.orte.indexOf(o) < 0) { z.orte.push(o); } };
     const punkte = (z, flag, n) => { if (!z.flags['p_' + flag]) { z.flags['p_' + flag] = true; z.punkte += n || 10; } };
@@ -811,6 +827,7 @@
         if (typeof d.szene === 'string' && (SZENEN[d.szene] || d.szene === 'karte')) { z.szene = d.szene; }
         if (d.figur === 'joe' || d.figur === 'chani') { z.figur = d.figur; }
         if (Array.isArray(d.inventar)) { z.inventar = d.inventar.filter((g) => typeof g === 'string' && GEGENSTAENDE[g]); }
+        if (z.inventar.indexOf('handy') < 0) { z.inventar.unshift('handy'); }   // ältere Spielstände: Joes Handy gehört immer dazu
         if (d.flags && typeof d.flags === 'object') {
             for (const k of Object.keys(d.flags)) { if (/^[a-zA-Z_0-9]+$/.test(k) && d.flags[k] === true) { z.flags[k] = true; } }
         }
@@ -902,6 +919,89 @@
     ];
 
     /** Einen Schritt der Komplettlösung ausführen (für Tests und den Demo-Modus). */
+    // ---------- Joes Handy: Professor Relbeil (fiktive Figur) ----------
+    const PLAUDEREI = [
+        'Relbeil: „Guten Tag, ihr beiden! Ich sitze gerade über einer Fußnote. Sie ist länger als der Text. Wie immer.“',
+        'Relbeil: „Hallo Joe! Ich habe gehört, ihr sucht einen Gral. Das ist gut. Meine Generation hat nur Parkplätze gesucht.“',
+        'Relbeil: „Guten Tag! Kurze Frage: Ist Dichtstoff eigentlich ein Dichter? Nein? Schade. Ich hätte da ein Seminar gehabt.“',
+        'Relbeil: „Ah, Joe. Grüß Chani. Sag ihr, Caravaggio hätte bestimmt auch Live-Storys gemacht.“',
+        'Relbeil: „Guten Tag! Ich kann gerade nicht lange – mein Tee wird sonst kalt, und das wäre wissenschaftlich unverantwortlich.“'
+    ];
+
+    /** Was ein Schritt der Komplettlösung bedeutet, in Worten (für Professor Relbeils Hilfe). */
+    function schrittText(vorher, s) {
+        const hotspot = (id) => { const sz = SZENEN[vorher.szene]; const h = sz && sz.hotspots.find((x) => x.id === id); return h ? h.name : id; };
+        const wer = FIGUREN[vorher.figur].name;
+        switch (s[0]) {
+            case 'reisen': return `Reist über die Karte zu: ${ORTE[s[1]].name}.`;
+            case 'figur': return `Wechselt die Figur – jetzt wird ${vorher.figur === 'joe' ? 'Chani' : 'Joe'} gebraucht.`;
+            case 'minispiel': return s[1] === 'boot' ? 'Gewinnt das Bootsrennen auf der Ems: hoch und runter steuern, den Hindernissen ausweichen.' : 'Rennt vor der Kugel davon – im richtigen Moment springen.';
+            case 'dialog': {
+                const d = dialogInhalt(vorher, s[1]);
+                const o = d && d.optionen.find((x) => x.id === s[2]);
+                return s[1] === 'schloss' ? `Am Symbolschloss als Nächstes: ${o ? o.text : s[2]}.` : `Wählt die Antwort: „${o ? o.text : s[2]}“.`;
+            }
+            default: {
+                const [, art, id, g] = s;
+                if (art === 'f1' || art === 'f2') { return `${wer} soll „${FIGUREN[vorher.figur].faehigkeiten[art === 'f1' ? 0 : 1]}“ bei ${hotspot(id)} einsetzen.`; }
+                if (art === 'gegenstand') { return `Gebt bzw. benutzt „${GEGENSTAENDE[g].name}“ bei ${hotspot(id)}.`; }
+                if (art === 'reden') { return `Sprecht mit ${hotspot(id)}.`; }
+                if (art === 'ansehen') { return `Schaut euch ${hotspot(id)} genau an.`; }
+                return `Benutzt ${hotspot(id)}.`;
+            }
+        }
+    }
+
+    /**
+     * Der nächste Schritt im aktuellen Spielstand: Die Komplettlösung wird von vorn nachgespielt; der erste Schritt, der etwas bringt,
+     * das dem Spielstand noch fehlt (Merkmal, Gegenstand, Ort), ist der nächste. Davor ggf. der Weg in die richtige Szene.
+     */
+    function naechsterSchritt(z) {
+        if (z.ende) { return ['Ihr habt es geschafft! Das Grundgesetz ist in guten Händen. Ich gehe jetzt meinen Tee trinken.']; }
+        // Merkmale und Orte kommen nur hinzu; Gegenstände zählen über „hatte_…“ (sie werden unterwegs auch weitergegeben)
+        const hatte = (g) => z.inventar.includes(g) || z.flags['hatte_' + g];
+        const hatAlles = (x) => Object.keys(x.flags).every((k) => !x.flags[k] || z.flags[k] || (k.startsWith('hatte_') && hatte(k.slice(6))))
+            && x.orte.every((o) => z.orte.includes(o));
+        const nach = neuerZustand();
+        const merkmale = (x) => Object.keys(x.flags).filter((k) => x.flags[k]).length + x.orte.length;
+        let folge = [];   // Schritte seit dem letzten Fortschritt (z. B. Schloss, Bodenplatten, Quiz: erst zusammen bringen sie etwas)
+        for (const s of KOMPLETTLOESUNG) {
+            const vorher = JSON.parse(JSON.stringify(nach));
+            const anzahl = merkmale(nach);
+            schritt(nach, s);
+            folge.push({ s, vorher });
+            if (hatAlles(nach)) {
+                if (merkmale(nach) !== anzahl) { folge = []; }
+                continue;
+            }
+            const erster = folge[0].vorher;
+            const hinweise = [];
+            if (folge[0].s[0] !== 'reisen' && erster.szene !== z.szene) {
+                hinweise.push(ORTE[erster.szene] ? `Reist über die Karte zu: ${ORTE[erster.szene].name}.` : `Geht zu: ${SZENEN[erster.szene] ? SZENEN[erster.szene].titel : erster.szene}.`);
+            }
+            if (folge[0].s[0] !== 'figur' && erster.figur !== z.figur && folge.some((f) => f.s[1] === 'f1' || f.s[1] === 'f2')) {
+                hinweise.push(`Wechselt zu ${FIGUREN[erster.figur].name}.`);
+            }
+            for (const f of folge) {
+                const text = schrittText(f.vorher, f.s);
+                if (hinweise[hinweise.length - 1] !== text) { hinweise.push(text); }
+            }
+            return hinweise;
+        }
+        return ['Ihr seid fast am Ziel. Schaut euch im Tempel um – die letzte Tür wartet.'];
+    }
+
+    /** Joe ruft Professor Relbeil an: „hallo“ = Plauderei, „hilfe“ = der nächste Schritt (kostet keine Punkte). */
+    function anrufen(z, wahl) {
+        if (wahl === 'hilfe') {
+            z.flags.hilfeAnrufe = (z.flags.hilfeAnrufe || 0) + 1;
+            const h = naechsterSchritt(z);
+            return antwort([`Joe: „Professor, ich brauche deine Hilfe!“`, `Relbeil: „Natürlich. ${h.join(' Dann: ')}“`]);
+        }
+        z.flags.plauderei = ((z.flags.plauderei || 0) + 1) % PLAUDEREI.length;
+        return antwort(['Joe: „Guten Tag, Professor!“', PLAUDEREI[z.flags.plauderei]]);
+    }
+
     function schritt(z, s) {
         switch (s[0]) {
             case 'aktion': return aktion(z, s[1], s[2], s[3]);
@@ -914,8 +1014,8 @@
     }
 
     const api = {
-        VERSION, FIGUREN, GEGENSTAENDE, ORTE, SZENEN, SIEGEL, QUIZ, KOMPLETTLOESUNG, RICHTIGE_KOMBINATION,
-        neuerZustand, sichtbareHotspots, aktion, reisen, figurWechseln, dialogInhalt, dialogWahl, minispielEnde,
+        VERSION, FIGUREN, VORSTELLUNG, GEGENSTAENDE, ORTE, SZENEN, SIEGEL, QUIZ, KOMPLETTLOESUNG, RICHTIGE_KOMBINATION,
+        neuerZustand, sichtbareHotspots, aktion, reisen, figurWechseln, dialogInhalt, dialogWahl, minispielEnde, anrufen, naechsterSchritt,
         bootNeu, bootSchritt, bootAutopilot, kugelNeu, kugelSchritt, speichern, laden, speicherplaetze, schritt
     };
     wurzel.GralSpiel = api;

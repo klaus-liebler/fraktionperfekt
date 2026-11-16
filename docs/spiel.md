@@ -26,6 +26,10 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
   flackernde Fackeln; leichte Parallaxe; Irisblende beim Szenenwechsel; Reisekarte mit roter Reiselinie.
 - Screenshots aller Szenen: [`docs/spiel-screenshots/`](spiel-screenshots/); Szenenbilder geänderter Szenen (15–19) erzeugt
   `node tools/Grafik/szenenbilder.mjs` aus denselben Regeln wie das Spiel.
+- Zu Spielbeginn stellen sich Joe, Chani und Professor Relbeil mit ihren Fähigkeiten vor (Esc überspringt; im Pausemenü „Figuren vorstellen“).
+- Joes Handy (immer im Inventar): Antippen oder „Benutze“ ruft Professor Relbeil an (fiktive Figur). „Guten Tag!“ = Plauderei,
+  „Ich brauche deine Hilfe!“ = der nächste Schritt, abgeleitet aus dem Spielstand und der Komplettlösung (kostet keine Punkte).
+- Wer während eines offenen Textes Verben, Figuren oder Gegenstände anklickt, bekommt kurz den Hinweis „Erst zu Ende lesen“.
 - Figuren verschwinden oder wechseln den Platz erst, wenn der zugehörige Text gelesen ist. Hohlbein und Dröhn bleiben nach dem
   Festkleben im Archiv verkleinert und abgedunkelt im Hintergrund stehen (mit schwarzer Klebemasse unter den Schuhen), der Ausgang ist frei.
 - Stadtplan: Station 4 ist das Hallenbad Greven (OSM-Gebäude „Hallenbad Greven“, Am Hallenbad 3); das Freibad steht ohne Nummer auf der Karte.

@@ -12,11 +12,11 @@
         'baustelle_bad', 'baustelle_bad_grube_trocken', 'schulhof_nacht', 'schulflur', 'krypta', 'tempel_eingang', 'tempel_eingang_offen', 'tempel_abgrund',
         'tempel_abgrund_bruecke', 'tempel_finale', 'karte_greven'].map((n) => n + '_256x144');
     const OBJEKTE = ['ruderboot_46x14', 'motorboot_64x24', 'hindernisse_ems_96x24', 'wahlkugel_64x64_x4', 'lastenrad_48x32', 'fledermaeuse_8x6_x4',
-        'leck_26x12_x3', 'uhr_zeiger_26x23_x2', 'tor_siegel_46x72', 'bodenplatte_leuchtend_36x9', 'klebemasse_32x6', 'minispiel_ems_512x144', 'minispiel_gang_512x144', 'inventar_icons_16x16'];
+        'leck_26x12_x3', 'uhr_zeiger_26x23_x2', 'tor_siegel_46x72', 'bodenplatte_leuchtend_36x9', 'klebemasse_32x6', 'relbeil_portraet_64x64', 'minispiel_ems_512x144', 'minispiel_gang_512x144', 'inventar_icons_16x16'];
     const NAMEN = HINTERGRUENDE.concat(OBJEKTE,
         PERSONEN.map((p) => p + '_spritesheet_32x64'), PERSONEN.map((p) => p + '_posen_32x64'), PERSONEN.map((p) => p + '_portraet_64x64'));
 
-    const ICONS = ['brief', 'stadtplan', 'tagesordnung', 'geschaeftsordnung', 'taschenlampe', 'paddel', 'siegel_legislative', 'siegel_exekutive', 'siegel_judikative', 'tempelschluessel'];
+    const ICONS = ['brief', 'stadtplan', 'tagesordnung', 'geschaeftsordnung', 'taschenlampe', 'paddel', 'siegel_legislative', 'siegel_exekutive', 'siegel_judikative', 'tempelschluessel', 'handy'];
     const AUSDRUCK = { neutral: 0, lacht: 1, erschrocken: 2 };
     const FACKELN = { krypta: [[104, 36], [158, 36], [238, 36]], tempel_eingang: [[40, 46], [214, 46]], tempel_eingang_offen: [[40, 46], [214, 46]] };
 
@@ -74,6 +74,7 @@
     }
 
     function portraet(name, ausdruck) {
+        if (name === 'relbeil') { return { bild: 'relbeil_portraet_64x64', sx: 64 * (AUSDRUCK[ausdruck] || 0) }; }   // nur am Telefon, ohne Sprites
         const n = PERSONEN.includes(name) ? name : 'joe';
         return { bild: n + '_portraet_64x64', sx: 64 * (AUSDRUCK[ausdruck] || 0) };
     }

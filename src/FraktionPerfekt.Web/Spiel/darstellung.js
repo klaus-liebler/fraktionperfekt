@@ -311,7 +311,7 @@
     }
 
     // ---------- Text, Porträts, Dialoge ----------
-    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Christian', 'christian'], ['Joanna', 'joanna'], ['Lore', 'lore'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Hohlbein', 'hohlbein'], ['Dröhn', 'droehn']];
+    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Christian', 'christian'], ['Joanna', 'joanna'], ['Lore', 'lore'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Hohlbein', 'hohlbein'], ['Dröhn', 'droehn'], ['Relbeil', 'relbeil']];
     function sprecherAus(zeile) {
         for (const [n, id] of SPRECHER) { if (zeile.startsWith(n + ':') || zeile.startsWith(n + ' ')) { return id; } }
         return null;
@@ -373,6 +373,28 @@
         const e = tun();
         if (vorher && z.szene === szene && (e.text || []).length > 0 && JSON.stringify(vorher) !== JSON.stringify(G.npcPlaetze(z, S.sichtbareHotspots(z)))) { gehalten = gehalten || vorher; }
         return e;
+    }
+
+    /** Joe ruft Professor Relbeil an (Chani lässt Joe telefonieren). */
+    function anrufen() {
+        if (z.figur !== 'joe') { ergebnis({ text: ['Chani: „Das ist Joes Handy. Joe, ruf du an – mit Tasten kann ich nicht.“'] }); return; }
+        klang('klick');
+        auswahlListe('Joe ruft Professor Relbeil an:', [
+            { text: '„Guten Tag!“', tun: () => ergebnis(S.anrufen(z, 'hallo')) },
+            { text: '„Ich brauche deine Hilfe!“', tun: () => ergebnis(S.anrufen(z, 'hilfe')) },
+            { text: 'Auflegen', tun: () => { leisteAktualisieren(); } }
+        ]);
+    }
+
+    /** Kurzer Hinweis, wenn während eines offenen Textes etwas anderes angeklickt wird (blendet sich selbst aus). */
+    let hinweisTimer = null;
+    function lesehinweis() {
+        let el = document.getElementById('lesehinweis');
+        if (!el) { el = document.createElement('div'); el.id = 'lesehinweis'; el.setAttribute('role', 'status'); document.getElementById('buehne').appendChild(el); }
+        el.textContent = 'Erst zu Ende lesen – ein Klick auf den Text blättert weiter.';
+        el.classList.add('sichtbar');
+        clearTimeout(hinweisTimer);
+        hinweisTimer = setTimeout(() => el.classList.remove('sichtbar'), 2200);
     }
 
     /** Gesprächsauswahl mit Personen (Dialogbaum: Wer sind Sie? / Anliegen / Tschüss). */
@@ -450,7 +472,7 @@
         for (const [v] of VERBEN) {
             const k = document.createElement('button'); k.type = 'button'; k.className = 'verb' + (verb === v ? ' aktiv' : '') + (v === 'f1' || v === 'f2' ? ' faehigkeit' : '');
             k.textContent = verbName(v);
-            k.addEventListener('click', () => { verb = v; objekt = null; klang('klick'); leisteAktualisieren(); });
+            k.addEventListener('click', () => { if (!textbox.hidden) { lesehinweis(); } verb = v; objekt = null; klang('klick'); leisteAktualisieren(); });
             verbenEl.appendChild(k);
         }
         figurenEl.replaceChildren();
@@ -458,7 +480,7 @@
             const k = document.createElement('button'); k.type = 'button'; k.className = 'figur' + (z.figur === id ? ' aktiv' : ''); k.title = S.FIGUREN[id].beschreibung; k.setAttribute('aria-pressed', String(z.figur === id));
             const bild = portraetBild(id, 'neutral'); bild.className = 'mini';
             k.append(bild, document.createTextNode(S.FIGUREN[id].name));
-            k.addEventListener('click', () => { if (z.figur !== id && textbox.hidden) { klang('klick'); ergebnis(S.figurWechseln(z)); } });
+            k.addEventListener('click', () => { if (!textbox.hidden) { lesehinweis(); return; } if (z.figur !== id) { klang('klick'); ergebnis(S.figurWechseln(z)); } });
             figurenEl.appendChild(k);
         }
         inventarEl.replaceChildren();
@@ -466,6 +488,11 @@
             const k = document.createElement('button'); k.type = 'button'; k.className = 'ding' + (objekt === gid ? ' aktiv' : ''); k.title = S.GEGENSTAENDE[gid].name; k.setAttribute('aria-label', S.GEGENSTAENDE[gid].name);
             const bild = G.ausschnitt(G.icon(gid), 16, 16); bild.className = 'icon'; k.appendChild(bild);
             k.addEventListener('click', () => {
+                // Joes Handy: Benutzen (oder einfach antippen) ruft Professor Relbeil an
+                if (gid === 'handy' && (verb === 'benutze' || verb === 'gehe')) {
+                    if (!textbox.hidden) { lesehinweis(); return; }
+                    anrufen(); return;
+                }
                 // Ein Klick wählt den Gegenstand sofort – auch wenn noch ein Text offen ist (keine Doppelklick-Falle)
                 if (verb === 'benutze' || verb === 'gib') { objekt = objekt === gid ? null : gid; klang('klick'); leisteAktualisieren(); return; }
                 if (!textbox.hidden) { zeigeText(); return; }
@@ -498,7 +525,7 @@
         ev.preventDefault();
         if (!textbox.hidden) {
             const t = mini ? null : treffer(punktAus(ev));
-            if (G.klickBeiText(verb, objekt, !!(t && t.hotspot)) === 'weiter') { zeigeText(); return; }
+            if (G.klickBeiText(verb, objekt, !!(t && t.hotspot)) === 'weiter') { if (t && t.hotspot && verb === 'gehe' && warteschlange.length > 0) { lesehinweis(); } zeigeText(); return; }
             while (!textbox.hidden) { zeigeText(); }    // Text abschließen, dann gilt der Klick der Aktion
             if (!dialogEl.hidden || mini) { return; }
         }
@@ -529,6 +556,10 @@
 
     document.addEventListener('keydown', (ev) => {
         if (!z || !titelEl.hidden) { return; }
+        // Esc während der Figurenvorstellung: Vorstellung überspringen (statt Pause)
+        if (ev.key === 'Escape' && !textbox.hidden && (warteschlange.some((l) => S.VORSTELLUNG.includes(l)) || S.VORSTELLUNG.includes(textEl.textContent))) {
+            ev.preventDefault(); warteschlange = warteschlange.filter((l) => !S.VORSTELLUNG.includes(l)); zeigeText(); return;
+        }
         if (ev.key === 'Escape' || ev.key === 'p' || ev.key === 'P') { ev.preventDefault(); pauseUmschalten(); return; }
         if (pausiert) { return; }
         if (!textbox.hidden && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); zeigeText(); return; }
@@ -563,6 +594,7 @@
             regler.addEventListener('input', () => window.Musik.setzeLautstaerke(regler.value)); menueEl.appendChild(regler);
         }
         knopf(ton ? 'Ton aus' : 'Ton an', () => { ton = !ton; try { window.localStorage.setItem('fp-spiel-ton', ton ? 'an' : 'aus'); } catch (_) { /* egal */ } menueZeigen(); });
+        knopf('Figuren vorstellen', () => { pauseUmschalten(); ergebnis({ text: S.VORSTELLUNG }); });
         knopf('Neues Spiel', () => starten(S.neuerZustand(), true));
         const zurueck = document.createElement('a'); zurueck.href = '../'; zurueck.textContent = 'Zurück zu FraktionPerfekt'; menueEl.appendChild(zurueck);
         menueEl.hidden = false;
@@ -580,6 +612,7 @@
         leisteAktualisieren();
         if (neu) {
             ergebnis({ text: [
+                ...S.VORSTELLUNG,
                 'Greven, Montagabend in der Zukunftsschmiede an der Marktstraße. Die Fraktionssitzung ist vorbei, die Kekse sind alle.',
                 'Joe: „Chani, hast du den Umschlag auf dem Tisch gesehen? Ohne Absender.“',
                 'Chani: „Und draußen steigen zwei Herren in zu engen Anzügen aus einem Wagen … Das gefällt mir nicht.“',

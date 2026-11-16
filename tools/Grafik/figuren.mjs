@@ -202,3 +202,42 @@ export function mitHut(sheet) {
     }
     return b;
 }
+
+/**
+ * Professor Relbeil (fiktive Figur, nur am Telefon): Porträt 3 × 64×64 wie die übrigen – neutral, lacht, erschrocken.
+ * Freundlicher älterer Professor: Halbglatze mit weißem Haarkranz, runde Brille, Schnurrbart, Fliege, Tweedjackett, Telefonhörer.
+ */
+export function relbeilPortraet() {
+    const s = new Bild(192, 64);
+    for (let i = 0; i < 3; i++) {
+        const x = i * 64;
+        s.rechteck(x, 0, 64, 64, F.sand); s.rechteck(x, 56, 64, 8, F.sand2);
+        // Jackett und Hemd mit Fliege
+        s.polygon([[x + 10, 64], [x + 14, 48], [x + 50, 48], [x + 54, 64]], F.braun);
+        s.polygon([[x + 26, 48], [x + 38, 48], [x + 32, 58]], F.weiss);
+        s.rechteck(x + 28, 48, 8, 3, F.rot); s.rechteck(x + 31, 48, 2, 3, F.dunkelrot);
+        // Kopf
+        s.ellipse(x + 32, 28, 13, 16, F.hautH); s.rechteck(x + 28, 42, 8, 6, F.hautH);
+        s.ellipse(x + 19, 30, 2, 4, F.hautS); s.ellipse(x + 45, 30, 2, 4, F.hautS);
+        // weißer Haarkranz, Halbglatze
+        s.rechteck(x + 18, 20, 4, 10, F.weiss); s.rechteck(x + 42, 20, 4, 10, F.weiss); s.rechteck(x + 21, 15, 3, 5, F.hellgrau); s.rechteck(x + 40, 15, 3, 5, F.hellgrau);
+        // Augenbrauen (erschrocken: hoch)
+        const by = i === 2 ? 21 : 23;
+        s.rechteck(x + 23, by, 6, 1, F.hellgrau); s.rechteck(x + 35, by, 6, 1, F.hellgrau);
+        // runde Brille
+        s.rahmen(x + 22, 25, 8, 7, F.fastschwarz); s.rahmen(x + 34, 25, 8, 7, F.fastschwarz); s.rechteck(x + 30, 27, 4, 1, F.fastschwarz);
+        if (i === 1) { s.rechteck(x + 24, 28, 4, 1, F.fastschwarz); s.rechteck(x + 36, 28, 4, 1, F.fastschwarz); }   // lacht: Augen zu
+        else { s.rechteck(x + 25, 27, 2, 3, F.dunkelblau); s.rechteck(x + 37, 27, 2, 3, F.dunkelblau); }
+        // Nase, Schnurrbart, Mund
+        s.rechteck(x + 31, 30, 2, 5, F.hautS);
+        s.rechteck(x + 26, 36, 12, 2, F.hellgrau);
+        if (i === 0) { s.rechteck(x + 28, 39, 8, 1, F.dunkelrot); }
+        else if (i === 1) { s.rechteck(x + 27, 39, 10, 3, F.dunkelrot); s.rechteck(x + 28, 39, 8, 1, F.weiss); }
+        else { s.ellipse(x + 32, 40, 2, 2, F.dunkelrot); }
+        // Telefonhörer am Ohr (rechts)
+        s.rechteck(x + 46, 24, 5, 14, F.fastschwarz); s.rechteck(x + 44, 22, 6, 4, F.fastschwarz); s.rechteck(x + 44, 36, 6, 4, F.fastschwarz);
+        s.rechteck(x + 48, 40, 6, 8, F.hautH);
+    }
+
+    return s;
+}

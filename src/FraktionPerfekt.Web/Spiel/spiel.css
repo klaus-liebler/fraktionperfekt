@@ -70,3 +70,8 @@ button:hover, button:focus-visible { background: #5d4037; outline: 2px solid #ff
 }
 #verben, #figuren, #rechts { flex: none; }
 #verben button, #punkte { white-space: nowrap; }
+
+/* Kurzer Lesehinweis (blendet sich aus, kein weiterer Text zum Wegklicken) */
+#lesehinweis { position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%); padding: 4px 12px; border-radius: 4px; background: rgba(36, 21, 12, 0.92);
+    color: #ffd54f; font-size: 14px; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.25s; z-index: 5; white-space: nowrap; }
+#lesehinweis.sichtbar { opacity: 1; }

@@ -78,7 +78,7 @@ test('Speichern und Laden: Rundreise, fremde Daten werden verworfen', () => {
     assert.equal(S.laden(JSON.stringify({ version: 99 })), null);
     const boese = S.laden(JSON.stringify({ version: 1, szene: '<script>', inventar: ['gral', 'paddel'], flags: { ende: 'ja', ok: true, '__proto__x': true } }));
     assert.equal(boese.szene, 'buero');
-    assert.deepEqual(boese.inventar, ['paddel']);
+    assert.deepEqual(boese.inventar, ['handy', 'paddel']);   // Joes Handy wird bei alten Ständen ergänzt
     assert.equal(boese.flags.ende, undefined);
 });
 
@@ -258,4 +258,30 @@ test('Service Worker hält das Spiel nie im Cache (sonst laufen nach Änderungen
     const sw = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'wwwroot', 'sw.js'), 'utf8');
     assert.match(sw, /startsWith\('\/spiel\/'\)/);
     assert.doesNotMatch(sw, /fp-huelle-v1'/);
+});
+
+test('Joes Handy: Professor Relbeil nennt an jeder Stelle der Komplettlösung den nächsten Schritt, ohne Punkte zu kosten', () => {
+    const z = S.neuerZustand();
+    assert.ok(z.inventar.includes('handy'));
+    for (const s of S.KOMPLETTLOESUNG) {
+        const punkte = z.punkte;
+        const hilfe = S.anrufen(z, 'hilfe').text.join(' ');
+        assert.match(hilfe, /Relbeil: „Natürlich\. .+“/, `Schritt ${JSON.stringify(s)}`);
+        assert.equal(z.punkte, punkte);
+        S.schritt(z, s);
+    }
+    assert.match(S.anrufen(z, 'hilfe').text.join(' '), /geschafft/);
+    assert.ok(z.punkte >= 400);
+    assert.match(S.anrufen(z, 'hallo').text[1], /^Relbeil:/);
+    // Konkret: am Anfang den Brief, im Archiv nach dem Rätsel die Kartusche bei Hohlbein und Dröhn
+    const neu = S.neuerZustand();
+    assert.match(S.naechsterSchritt(neu).join(' '), /Umschlag/);
+    for (const s of S.KOMPLETTLOESUNG) { if (s[0] === 'aktion' && s[1] === 'f1' && s[2] === 'gegner') { break; } S.schritt(neu, s); }
+    assert.match(S.naechsterSchritt(neu).join(' '), /Kartusche.*Hohlbein/);
+});
+
+test('Vorstellung nennt nur Fähigkeiten, die es im Spiel gibt', () => {
+    const text = S.VORSTELLUNG.join(' ');
+    for (const f of [...S.FIGUREN.joe.faehigkeiten, ...S.FIGUREN.chani.faehigkeiten]) { assert.ok(text.includes(f), f); }
+    assert.ok(text.includes('Relbeil'));
 });

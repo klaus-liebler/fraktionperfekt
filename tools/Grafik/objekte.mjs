@@ -101,7 +101,7 @@ export function objekte() {
 }
 
 export function icons() {
-    const b = new Bild(160, 16);
+    const b = new Bild(176, 16);
     const z = [
         (x) => { b.rechteck(x + 1, 4, 14, 9, F.weiss); b.linie(x + 1, 4, x + 8, 9, F.hellgrau); b.linie(x + 14, 4, x + 8, 9, F.hellgrau); b.rechteck(x + 7, 8, 3, 2, F.rot); },
         (x) => { b.rechteck(x + 1, 2, 14, 12, F.creme); b.linie(x + 4, 2, x + 6, 13, F.blau); b.linie(x + 7, 6, x + 14, 9, F.lehm); b.rechteck(x + 10, 6, 3, 3, F.rot); },
@@ -112,7 +112,11 @@ export function icons() {
         (x) => { b.ellipse(x + 8, 8, 7, 7, F.ocker); b.ellipse(x + 8, 8, 6, 6, F.blau); b.rechteck(x + 5, 6, 7, 4, F.weiss); b.rechteck(x + 8, 6, 1, 4, F.grau); },
         (x) => { b.ellipse(x + 8, 8, 7, 7, F.ocker); b.ellipse(x + 8, 8, 6, 6, F.gruen); b.ellipse(x + 6, 8, 2, 2, F.gelb); b.rechteck(x + 8, 8, 4, 1, F.gelb); b.rechteck(x + 11, 9, 1, 2, F.gelb); },
         (x) => { b.ellipse(x + 8, 8, 7, 7, F.ocker); b.ellipse(x + 8, 8, 6, 6, F.rot); b.rechteck(x + 4, 6, 9, 1, F.gelb); b.rechteck(x + 8, 4, 1, 7, F.gelb); b.rechteck(x + 4, 7, 2, 2, F.gelb); b.rechteck(x + 11, 7, 2, 2, F.gelb); },
-        (x) => { b.ellipse(x + 4, 8, 3, 3, F.ocker); b.setze(x + 4, 8, F.holzdunkel); b.rechteck(x + 7, 7, 8, 2, F.ocker); b.rechteck(x + 11, 9, 1, 2, F.ocker); b.rechteck(x + 13, 9, 1, 3, F.ocker); }
+        (x) => { b.ellipse(x + 4, 8, 3, 3, F.ocker); b.setze(x + 4, 8, F.holzdunkel); b.rechteck(x + 7, 7, 8, 2, F.ocker); b.rechteck(x + 11, 9, 1, 2, F.ocker); b.rechteck(x + 13, 9, 1, 3, F.ocker); },
+        // Joes Klapphandy (aufgeklappt): Display oben, Tasten unten, kleine Antenne
+        (x) => { b.rechteck(x + 5, 1, 6, 6, F.dunkelgrau); b.rechteck(x + 6, 2, 4, 4, F.eisblau); b.rechteck(x + 5, 7, 6, 1, F.fastschwarz); b.rechteck(x + 5, 8, 6, 7, F.grau);
+            for (let j = 0; j < 3; j++) { for (let i = 0; i < 2; i++) { b.setze(x + 6 + i * 3, 9 + j * 2, F.weiss); b.setze(x + 7 + i * 3, 9 + j * 2, F.weiss); } }
+            b.rechteck(x + 11, 0, 1, 3, F.dunkelgrau); }
     ];
     z.forEach((f, i) => f(i * 16));
     return b;
