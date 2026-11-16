@@ -33,7 +33,6 @@ public static class Registrierung
         dienste.AddScoped<Wissen.DateiDienst>();
         dienste.AddScoped<Wissen.WikiDienst>();
         dienste.AddScoped<Wissen.BildDienst>();
-        dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Personen-Zwischenstand", d.GetRequiredService<Stammdaten.StammdatenDienst>().ZwischenstaendeAktualisierenAsync));
         foreach (var b in Wissen.BildBesitzer.Standard())
         {
             dienste.AddSingleton(b);

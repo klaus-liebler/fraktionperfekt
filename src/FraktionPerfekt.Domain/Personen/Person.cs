@@ -7,8 +7,9 @@ namespace FraktionPerfekt.Domain.Personen;
 /// Identität (Id); Name (Vorname, Nachname, Titel), Anrede, Geschlecht, Kontaktdaten, Funktion und Rollen gelten zeitlich und sind
 /// bitemporal versioniert (gültig ab/bis und erfasst/ersetzt). Unterschieden wird „Änderung ab Datum“ (z. B. Heirat, neue Funktion)
 /// von „Korrektur“ (Tippfehler: die betroffene Version wird berichtigt, die alte bleibt als ersetzt sichtbar). Maßgeblich ist
-/// <see cref="StandAm"/>; <see cref="Vorname"/>, <see cref="Nachname"/>, <see cref="Titel"/>, <see cref="Anrede"/>, <see cref="EMail"/>
-/// und <see cref="Mobil"/> sind ein Zwischenstand (heute gültig) für Listen, Suche und Anmeldung.
+/// <see cref="StandAm"/>. <see cref="Vorname"/>, <see cref="Nachname"/>, <see cref="Titel"/>, <see cref="Anrede"/>, <see cref="EMail"/>,
+/// <see cref="Mobil"/>, <see cref="Aktiv"/> und die Ansprache sind der Stand heute: nicht gespeichert, sondern beim Laden aus den
+/// Versionen berechnet (<see cref="StandHeuteBerechnen"/>, Datenbank-Regel 1 „keine Kopien“).
 /// </summary>
 public sealed class Person
 {
@@ -27,22 +28,26 @@ public sealed class Person
     }
 
     /// <param name="gueltigAb">Ab wann die Angaben gelten (Standard: Tag der Anlage).</param>
+    /// <param name="nurEinName">Laut Ausweis nur ein Name: Vorname bleibt leer (bewusst, mit Kennzeichen).</param>
     public Person(string vorname, string nachname, string? eMail, string? benutzerkennung, DateTimeOffset angelegtAm, string? risId = null,
-        Guid? id = null, string? titel = null, string? anrede = null, DateOnly? gueltigAb = null, string? funktion = null, string? von = null)
+        Guid? id = null, string? titel = null, string? anrede = null, DateOnly? gueltigAb = null, string? funktion = null, string? von = null,
+        string? vorsatz = null, string? zusatz = null, bool nurEinName = false)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(vorname);
-        ArgumentException.ThrowIfNullOrWhiteSpace(nachname);
         Id = id ?? Ids.Neu();
-        Vorname = vorname.Trim();
-        Nachname = nachname.Trim();
+        Vorname = string.Empty;
+        Nachname = string.Empty;
         Benutzerkennung = string.IsNullOrWhiteSpace(benutzerkennung) ? null : benutzerkennung.Trim().ToLowerInvariant();
         RisId = risId;
         AngelegtAm = angelegtAm;
-        Aktiv = true;
         var ab = gueltigAb ?? DateOnly.FromDateTime(angelegtAm.UtcDateTime);
         var erst = Erfassung.Erst(angelegtAm, von);
-        _namen.Add(new PersonName(vorname, nachname, titel, ab, null, erst));
+        _namen.Add(new PersonName(vorname, nachname, vorsatz, zusatz, nurEinName, ab, null, erst));
         _merkmale.Add(new PersonMerkmal(PersonMerkmalArt.Anrede, AnredePruefen(anrede), ab, null, erst));
+        if (!string.IsNullOrWhiteSpace(titel))
+        {
+            _merkmale.Add(new PersonMerkmal(PersonMerkmalArt.Titel, titel, ab, null, erst));
+        }
+
         if (!string.IsNullOrWhiteSpace(eMail))
         {
             _emails.Add(new EMailAdresse(Ids.Neu(), Kontaktbereich.Privat, eMail, true, ab, null, erst));
@@ -53,15 +58,25 @@ public sealed class Person
             _merkmale.Add(new PersonMerkmal(PersonMerkmalArt.Funktion, funktion, ab, null, erst));
         }
 
-        ZwischenstandAktualisieren(angelegtAm);
+        StandHeuteBerechnen(angelegtAm);
     }
 
     public Guid Id { get; private set; }
 
+    /// <summary>Vorname (Stand heute); leer bei „nur ein Name laut Ausweis“.</summary>
     public string Vorname { get; private set; }
 
-    /// <summary>Nachname, auch mehrteilig („Große Maestrup“, „Schulte Jochmaring“); danach wird sortiert.</summary>
+    /// <summary>Nachname ohne Vorsatz, auch mehrteilig („Große Maestrup“, „Schulte Jochmaring“); danach wird sortiert (Stand heute).</summary>
     public string Nachname { get; private set; }
+
+    /// <summary>Namensvorsatz („von“, „van der“) – bei der Sortierung nach DIN 5007-2 hinten (Stand heute).</summary>
+    public string? Vorsatz { get; private set; }
+
+    /// <summary>Namenszusatz („jun.“) (Stand heute).</summary>
+    public string? Zusatz { get; private set; }
+
+    /// <summary>Nachname mit Vorsatz für die Anrede („Herr von Berg“).</summary>
+    public string NachnameMitVorsatz => Vorsatz is null ? Nachname : $"{Vorsatz} {Nachname}";
 
     /// <summary>Akademischer Grad („Dr.“) für förmliche Darstellungen (Listen, PDF, „Herr Dr. Schubert“); nicht sortiert und nie in der
     /// Du-Ansprache. Amtsbezeichnungen wie „Prof.“ gehören nicht hierher.</summary>
@@ -78,36 +93,52 @@ public sealed class Person
     /// <summary>Kennung der Person im Ratsinformationssystem (OParl), falls bekannt.</summary>
     public string? RisId { get; private set; }
 
-    public bool Aktiv { get; private set; }
+    /// <summary>Aktiv in der Fraktion (Stand heute; zeitliches Merkmal, Standard: aktiv).</summary>
+    public bool Aktiv { get; private set; } = true;
 
     public DateTimeOffset AngelegtAm { get; private set; }
 
     /// <summary>„Herr“, „Frau“ oder <c>null</c> (keine Angabe/divers).</summary>
     public string? Anrede { get; private set; }
 
-    /// <summary>Persönliche Einstellung: Du oder Sie (Standard: Du).</summary>
+    /// <summary>Persönliche Ansprache: Du oder Sie (Merkmal, Standard: Du).</summary>
     public Anredeform Anredeform { get; private set; }
 
-    /// <summary>Persönliche Einstellung: Stil der Begrüßung (Standard: locker).</summary>
+    /// <summary>Persönliche Ansprache: Stil der Begrüßung (Merkmal, Standard: locker).</summary>
     public Begruessungsstil Begruessungsstil { get; private set; }
 
-    /// <summary>Persönliche Einstellung: akademischen Grad in der Sie-Form nennen (Standard: ja).</summary>
+    /// <summary>Persönliche Ansprache: akademischen Grad in der Sie-Form nennen (Merkmal, Standard: ja).</summary>
     public bool TitelInAnsprache { get; private set; } = true;
 
     /// <summary>
-    /// Wie die Person angesprochen werden möchte (Benutzereinstellung, gilt sofort). Ändert sich dabei die Anrede (Personendatum),
-    /// wird sie ab heute geändert; die bisherige bleibt in der Historie.
+    /// Wie die Person angesprochen werden möchte (eigene Angabe). Anrede, Du/Sie, Stil und „Titel nennen“ sind zeitliche Merkmale und
+    /// werden ab heute geändert; die bisherigen bleiben in der Historie. Unveränderte Angaben erzeugen keine neue Version.
     /// </summary>
     public void AnspracheEinstellen(string? anrede, Anredeform form, Begruessungsstil stil, bool titelInAnsprache, DateTimeOffset? jetzt = null)
     {
-        var neu = AnredePruefen(anrede);
-        if (neu != Anrede)
+        var am = jetzt ?? DateTimeOffset.UtcNow;
+        var heute = DateOnly.FromDateTime(am.UtcDateTime);
+        StandHeuteBerechnen(am);
+        var erfassung = Erfassung.Aenderung(am, "Eigene Angabe in den Einstellungen");
+        if (AnredePruefen(anrede) != Anrede)
         {
-            var am = jetzt ?? DateTimeOffset.UtcNow;
-            AngabeAendern(PersonMerkmalArt.Anrede, neu, DateOnly.FromDateTime(am.UtcDateTime), Erfassung.Aenderung(am, "Eigene Angabe in den Einstellungen"), false);
+            AngabeAendern(PersonMerkmalArt.Anrede, anrede, heute, erfassung, false);
         }
 
-        (Anredeform, Begruessungsstil, TitelInAnsprache) = (form, stil, titelInAnsprache);
+        if (form != Anredeform)
+        {
+            AngabeAendern(PersonMerkmalArt.Anredeform, form.ToString(), heute, erfassung, false);
+        }
+
+        if (stil != Begruessungsstil)
+        {
+            AngabeAendern(PersonMerkmalArt.Begruessungsstil, stil.ToString(), heute, erfassung, false);
+        }
+
+        if (titelInAnsprache != TitelInAnsprache)
+        {
+            AngabeAendern(PersonMerkmalArt.TitelInAnsprache, titelInAnsprache ? "ja" : "nein", heute, erfassung, false);
+        }
     }
 
     private static string? AnredePruefen(string? anrede) => anrede?.Trim() switch
@@ -118,18 +149,26 @@ public sealed class Person
         var a => throw new ArgumentException($"Unbekannte Anrede „{a}“ (Herr, Frau oder keine Angabe).", nameof(anrede)),
     };
 
-    public string Anzeigename => Titel is null ? $"{Vorname} {Nachname}" : $"{Titel} {Vorname} {Nachname}";
+    /// <summary>„Dr. Anna von Berg jun.“</summary>
+    public string Anzeigename => PersonName.Zusammensetzen(Titel, Vorname, Vorsatz, Nachname, Zusatz);
 
-    public string Sortiername => $"{Nachname}, {Vorname}";
+    /// <summary>„Berg, Anna von“ – Anzeige in sortierten Listen.</summary>
+    public string Sortiername => string.IsNullOrEmpty(Vorname) && Vorsatz is null ? Nachname
+        : $"{Nachname}, {string.Join(' ', new[] { Vorname, Vorsatz }.Where(t => !string.IsNullOrEmpty(t)))}";
+
+    /// <summary>Sortierschlüssel nach DIN 5007-2 (Namenslisten): Nachname ohne Vorsatz, dann Vorname, dann Vorsatz; ä = ae, ß = ss.</summary>
+    public string Sortierschluessel => PersonName.Sortierschluessel(Vorname, Vorsatz, Nachname);
 
     /// <summary>Initialen für Avatare: erster Buchstabe des Vornamens und des Nachnamens („Große Maestrup“ → „JG“).</summary>
-    public string Initialen => $"{char.ToUpperInvariant(Vorname[0])}{char.ToUpperInvariant(Nachname[0])}";
+    public string Initialen => string.IsNullOrEmpty(Vorname)
+        ? Nachname[..Math.Min(2, Nachname.Length)].ToUpperInvariant()
+        : $"{char.ToUpperInvariant(Vorname[0])}{char.ToUpperInvariant(Nachname[0])}";
 
-    /// <summary>Titel ab heute (Kurzform von <see cref="NameAendernAb"/>).</summary>
+    /// <summary>Titel ab heute (Kurzform von <see cref="AngabeAendern"/>).</summary>
     public void TitelSetzen(string? titel, DateTimeOffset? jetzt = null)
     {
         var am = jetzt ?? DateTimeOffset.UtcNow;
-        NameAendernAb(Vorname, Nachname, titel, DateOnly.FromDateTime(am.UtcDateTime), Erfassung.Aenderung(am, "Titel"));
+        AngabeAendern(PersonMerkmalArt.Titel, titel, DateOnly.FromDateTime(am.UtcDateTime), Erfassung.Aenderung(am, "Titel"), false);
     }
 
     public IReadOnlyCollection<PersonName> Namen => _namen;
@@ -160,9 +199,15 @@ public sealed class Person
         var einwilligungen = Enum.GetValues<Einwilligungszweck>()
             .Select(z => _einwilligungen.Where(e => e.Zweck == z).AlsStichtag(gueltigAm, bekanntAm))
             .OfType<Einwilligung>().Where(e => !e.IstEndemarke).ToList();
-        return new PersonenStand(gueltigAm, bekanntAm, _namen.AlsStichtag(gueltigAm, bekanntAm), Merkmal(PersonMerkmalArt.Anrede),
+        return new PersonenStand(gueltigAm, bekanntAm, _namen.AlsStichtag(gueltigAm, bekanntAm), Merkmal(PersonMerkmalArt.Titel), Merkmal(PersonMerkmalArt.Anrede),
             Merkmal(PersonMerkmalArt.Geschlecht), Merkmal(PersonMerkmalArt.Funktion), RollenAm(gueltigAm, bekanntAm), adressen, emails, nummern,
-            einwilligungen);
+            einwilligungen)
+        {
+            Aktiv = Merkmal(PersonMerkmalArt.Aktiv) != "inaktiv",
+            Anredeform = Enum.TryParse<Anredeform>(Merkmal(PersonMerkmalArt.Anredeform), out var f) ? f : Anredeform.Du,
+            Begruessungsstil = Enum.TryParse<Begruessungsstil>(Merkmal(PersonMerkmalArt.Begruessungsstil), out var s) ? s : Begruessungsstil.Locker,
+            TitelInAnsprache = Merkmal(PersonMerkmalArt.TitelInAnsprache) != "nein",
+        };
     }
 
     /// <summary>Je Gegenstand (Adresse, Nummer …) die am Stichtag gültige Version, ohne aufgegebene.</summary>
@@ -176,28 +221,61 @@ public sealed class Person
 
     /// <summary>Name zum damaligen Stand (z. B. Autor:in eines alten Antrags); vor der ersten Erfassung der früheste bekannte Name.</summary>
     public string AnzeigenameAm(DateOnly tag, DateTimeOffset bekanntAm)
-        => (_namen.AlsStichtag(tag, bekanntAm) ?? _namen.AktuellerVerlauf().FirstOrDefault())?.Anzeige ?? Anzeigename;
+    {
+        var name = _namen.AlsStichtag(tag, bekanntAm) ?? _namen.AktuellerVerlauf().FirstOrDefault();
+        var titel = _merkmale.Where(m => m.Art == PersonMerkmalArt.Titel).AlsStichtag(tag, bekanntAm)?.WertOderNull;
+        return name is null ? Anzeigename : PersonName.Zusammensetzen(titel, name.Vorname, name.Vorsatz, name.Nachname, name.Zusatz);
+    }
 
     // ---------- Änderungen ----------
 
-    /// <summary>Namensänderung ab einem Datum (z. B. Heirat, neuer Titel). Ältere Vorgänge behalten den damaligen Namen.</summary>
-    public void NameAendernAb(string vorname, string nachname, string? titel, DateOnly ab, Erfassung erfassung)
+    /// <summary>
+    /// Namensänderung ab einem Datum (z. B. Heirat). Ältere Vorgänge behalten den damaligen Namen. Der Titel ist ein eigenes Merkmal;
+    /// weicht er ab, wird er im selben Vorgang mit geändert.
+    /// </summary>
+    public void NameAendernAb(string vorname, string nachname, string? titel, DateOnly ab, Erfassung erfassung, string? vorsatz = null, string? zusatz = null,
+        bool nurEinName = false)
     {
         ArgumentNullException.ThrowIfNull(erfassung);
-        ZeitlicheHistorie.AendernAb(_namen, new PersonName(vorname, nachname, titel, ab, null, erfassung with { Art = Erfassungsart.AenderungAbDatum }));
-        ZwischenstandAktualisieren(erfassung.Am);
+        var bisher = _namen.AlsStichtag(ab, erfassung.Am);
+        if (bisher is null || bisher.Vorname != (vorname ?? string.Empty).Trim() || bisher.Nachname != nachname.Trim() || bisher.Vorsatz != Leer(vorsatz)
+            || bisher.Zusatz != Leer(zusatz) || bisher.NurEinName != nurEinName)
+        {
+            ZeitlicheHistorie.AendernAb(_namen, new PersonName(vorname ?? string.Empty, nachname, vorsatz, zusatz, nurEinName, ab, null, erfassung with { Art = Erfassungsart.AenderungAbDatum }));
+        }
+
+        if (Leer(titel) != _merkmale.Where(m => m.Art == PersonMerkmalArt.Titel).AlsStichtag(ab, erfassung.Am)?.WertOderNull)
+        {
+            AngabeAendern(PersonMerkmalArt.Titel, titel, ab, erfassung, false);
+        }
+
+        StandHeuteBerechnen(erfassung.Am);
     }
 
-    /// <summary>Korrektur eines falsch erfassten Namens für den gesamten Zeitraum der am <paramref name="betroffenAm"/> gültigen Version.</summary>
-    public void NameKorrigieren(string vorname, string nachname, string? titel, DateOnly betroffenAm, Erfassung erfassung)
+    /// <summary>Korrektur eines falsch erfassten Namens (und Titels) für den gesamten Zeitraum der am <paramref name="betroffenAm"/> gültigen Version.</summary>
+    public void NameKorrigieren(string vorname, string nachname, string? titel, DateOnly betroffenAm, Erfassung erfassung, string? vorsatz = null, string? zusatz = null,
+        bool nurEinName = false)
     {
         ArgumentNullException.ThrowIfNull(erfassung);
-        ZeitlicheHistorie.Korrigieren(_namen, betroffenAm,
-            (gv, gb) => new PersonName(vorname, nachname, titel, gv, gb, erfassung with { Art = Erfassungsart.Korrektur }), erfassung.Am);
-        ZwischenstandAktualisieren(erfassung.Am);
+        var bisher = _namen.AlsStichtag(betroffenAm, erfassung.Am);
+        if (bisher is null || bisher.Vorname != (vorname ?? string.Empty).Trim() || bisher.Nachname != nachname.Trim() || bisher.Vorsatz != Leer(vorsatz)
+            || bisher.Zusatz != Leer(zusatz) || bisher.NurEinName != nurEinName)
+        {
+            ZeitlicheHistorie.Korrigieren(_namen, betroffenAm,
+                (gv, gb) => new PersonName(vorname ?? string.Empty, nachname, vorsatz, zusatz, nurEinName, gv, gb, erfassung with { Art = Erfassungsart.Korrektur }), erfassung.Am);
+        }
+
+        if (Leer(titel) != _merkmale.Where(m => m.Art == PersonMerkmalArt.Titel).AlsStichtag(betroffenAm, erfassung.Am)?.WertOderNull)
+        {
+            AngabeAendern(PersonMerkmalArt.Titel, titel, betroffenAm, erfassung, true);
+        }
+
+        StandHeuteBerechnen(erfassung.Am);
     }
 
-    /// <summary>Anrede, Geschlecht oder Funktion: Änderung ab Datum oder Korrektur der am Datum gültigen Angabe (leer = keine Angabe).</summary>
+    private static string? Leer(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+    /// <summary>Titel, Anrede, Geschlecht, Funktion, Aktiv, Ansprache: Änderung ab Datum oder Korrektur der am Datum gültigen Angabe (leer = keine Angabe).</summary>
     public void AngabeAendern(PersonMerkmalArt art, string? wert, DateOnly datum, Erfassung erfassung, bool korrektur)
     {
         ArgumentNullException.ThrowIfNull(erfassung);
@@ -216,24 +294,73 @@ public sealed class Person
             ZeitlicheHistorie.AendernAb(_merkmale, new PersonMerkmal(art, inhalt, datum, null, erfassung with { Art = Erfassungsart.AenderungAbDatum }));
         }
 
-        ZwischenstandAktualisieren(erfassung.Am);
+        StandHeuteBerechnen(erfassung.Am);
     }
 
     /// <summary>
-    /// Zwischenstand (heute gültige Werte) für Listen und Suche neu berechnen. Läuft nach jeder Änderung und nachts, damit
-    /// künftige Änderungen („gültig ab“ in der Zukunft) am Stichtag sichtbar werden.
+    /// Stand heute (Vorname, Nachname, Titel, Anrede, E-Mail, Mobil, Aktiv, Ansprache) aus den Versionen berechnen. Wird nicht gespeichert:
+    /// der Speicher ruft es beim Laden mit der aktuellen Uhrzeit auf, Änderungen rufen es nach jeder Änderung auf.
     /// </summary>
-    public void ZwischenstandAktualisieren(DateTimeOffset jetzt)
+    public void StandHeuteBerechnen(DateTimeOffset jetzt)
     {
         var stand = StandAm(DateOnly.FromDateTime(jetzt.UtcDateTime), jetzt);
         var name = stand.Name ?? _namen.AktuellerVerlauf().FirstOrDefault();
         if (name is not null)
         {
-            (Vorname, Nachname, Titel) = (name.Vorname, name.Nachname, name.Titel);
+            (Vorname, Nachname, Vorsatz, Zusatz) = (name.Vorname, name.Nachname, name.Vorsatz, name.Zusatz);
         }
 
-        (Anrede, EMail, Mobil) = (stand.Anrede, stand.EMail, stand.Mobil);
+        (Titel, Anrede, EMail, Mobil, Aktiv) = (stand.Titel, stand.Anrede, stand.EMail, stand.Mobil, stand.Aktiv);
+        (Anredeform, Begruessungsstil, TitelInAnsprache) = (stand.Anredeform, stand.Begruessungsstil, stand.TitelInAnsprache);
+    }
 
+    /// <summary>
+    /// Korrektur eines Gültigkeitszeitraums (z. B. „Umzugsdatum korrigieren“): Die am <paramref name="betroffenAm"/> gültige Version des
+    /// Gegenstands wird ersetzt durch denselben Wert mit neuem Beginn bzw. Ende; die alte bleibt mit früherem Wissensstand abrufbar.
+    /// </summary>
+    public void ZeitraumKorrigieren(Kontaktart art, Guid id, DateOnly betroffenAm, DateOnly neuVon, DateOnly? neuBis, Erfassung erfassung)
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var korrektur = erfassung with { Art = Erfassungsart.Korrektur };
+        switch (art)
+        {
+            case Kontaktart.Adresse:
+                ZeitlicheHistorie.ZeitraumKorrigieren(_adressen, betroffenAm, neuVon, neuBis, korrektur, a => a.AdressId == id);
+                break;
+            case Kontaktart.EMail:
+                ZeitlicheHistorie.ZeitraumKorrigieren(_emails, betroffenAm, neuVon, neuBis, korrektur, e => e.AdressId == id);
+                break;
+            default:
+                ZeitlicheHistorie.ZeitraumKorrigieren(_rufnummern, betroffenAm, neuVon, neuBis, korrektur, r => r.NummerId == id);
+                break;
+        }
+
+        StandHeuteBerechnen(erfassung.Am);
+    }
+
+    /// <summary>
+    /// Umzugsdatum korrigieren: Die alte Adresse endet, die neue beginnt am <paramref name="neuesDatum"/> statt am bisher erfassten Tag
+    /// (Beispiel Frau Muster in docs/datenbank-einleitung.md).
+    /// </summary>
+    public void UmzugsdatumKorrigieren(Guid alteAdressId, Guid neueAdressId, DateOnly neuesDatum, Erfassung erfassung)
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var neu = _adressen.Where(a => a.AdressId == neueAdressId && a.IstAktuellerWissensstand && !a.IstEndemarke).OrderBy(a => a.GueltigVon).FirstOrDefault()
+            ?? throw new InvalidOperationException("Neue Adresse nicht gefunden.");
+        var bisherigesDatum = neu.GueltigVon;
+        var korrektur = erfassung with { Art = Erfassungsart.Korrektur };
+        // alte Adresse: Version bis zum Umzug und Endemarke ab Umzug
+        var alt = _adressen.Single(a => a.AdressId == alteAdressId && a.IstAktuellerWissensstand && !a.IstEndemarke && a.GueltigBis == bisherigesDatum);
+        var ende = _adressen.SingleOrDefault(a => a.AdressId == alteAdressId && a.IstAktuellerWissensstand && a.IstEndemarke && a.GueltigVon == bisherigesDatum);
+        ZeitlicheHistorie.ZeitraumKorrigieren(_adressen, alt.GueltigVon, alt.GueltigVon, neuesDatum, korrektur, a => a.AdressId == alteAdressId && !a.IstEndemarke);
+        if (ende is not null)
+        {
+            ZeitlicheHistorie.ZeitraumKorrigieren(_adressen, ende.GueltigVon, neuesDatum, ende.GueltigBis, korrektur with { Art = Erfassungsart.Beendet },
+                a => a.AdressId == alteAdressId && a.IstEndemarke);
+        }
+
+        ZeitlicheHistorie.ZeitraumKorrigieren(_adressen, bisherigesDatum, neuesDatum, neu.GueltigBis, korrektur, a => a.AdressId == neueAdressId);
+        StandHeuteBerechnen(erfassung.Am);
     }
 
     public IReadOnlyCollection<PersonRollen> RollenVersionen => _rollen;
@@ -312,7 +439,7 @@ public sealed class Person
             AndereEMailsNichtBevorzugt(id, ab, erfassung);
         }
 
-        ZwischenstandAktualisieren(erfassung.Am);
+        StandHeuteBerechnen(erfassung.Am);
         return id;
     }
 
@@ -335,13 +462,13 @@ public sealed class Person
             AndereEMailsNichtBevorzugt(adressId, datum, erfassung);
         }
 
-        ZwischenstandAktualisieren(erfassung.Am);
+        StandHeuteBerechnen(erfassung.Am);
     }
 
     public void EMailAufgebenAb(Guid adressId, DateOnly ab, Erfassung erfassung)
     {
         Aufgeben(_emails, e => e.AdressId == adressId, ab, erfassung, "E-Mail-Adresse");
-        ZwischenstandAktualisieren(erfassung.Am);
+        StandHeuteBerechnen(erfassung.Am);
     }
 
     public Guid RufnummerHinzufuegen(RufnummerArt art, string nummer, Messagingdienst dienste, bool einwilligung, bool bevorzugt, DateOnly ab,
@@ -355,7 +482,7 @@ public sealed class Person
             AndereNummernNichtBevorzugt(id, ab, erfassung);
         }
 
-        ZwischenstandAktualisieren(erfassung.Am);
+        StandHeuteBerechnen(erfassung.Am);
         return id;
     }
 
@@ -381,13 +508,13 @@ public sealed class Person
             AndereNummernNichtBevorzugt(nummerId, datum, erfassung);
         }
 
-        ZwischenstandAktualisieren(erfassung.Am);
+        StandHeuteBerechnen(erfassung.Am);
     }
 
     public void RufnummerAbmeldenAb(Guid nummerId, DateOnly ab, Erfassung erfassung)
     {
         Aufgeben(_rufnummern, r => r.NummerId == nummerId, ab, erfassung, "Rufnummer");
-        ZwischenstandAktualisieren(erfassung.Am);
+        StandHeuteBerechnen(erfassung.Am);
     }
 
     /// <summary>Einwilligung ab Datum erteilen oder widerrufen; die frühere Angabe bleibt in der Historie (Nachweispflicht).</summary>
@@ -453,9 +580,11 @@ public sealed class Person
 
     public void RisZuordnen(string? risId) => RisId = string.IsNullOrWhiteSpace(risId) ? null : risId.Trim();
 
-    public void Deaktivieren() => Aktiv = false;
+    /// <summary>Ab Datum nicht mehr aktiv in der Fraktion (zeitliches Merkmal; die Historie bleibt).</summary>
+    public void Deaktivieren(DateOnly ab, Erfassung erfassung) => AngabeAendern(PersonMerkmalArt.Aktiv, "inaktiv", ab, erfassung, false);
 
-    public void Aktivieren() => Aktiv = true;
+    /// <summary>Ab Datum wieder aktiv.</summary>
+    public void Aktivieren(DateOnly ab, Erfassung erfassung) => AngabeAendern(PersonMerkmalArt.Aktiv, "aktiv", ab, erfassung, false);
 
     public override string ToString() => Anzeigename;
 }

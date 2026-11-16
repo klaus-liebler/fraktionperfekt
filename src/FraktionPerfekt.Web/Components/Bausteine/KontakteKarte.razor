@@ -122,6 +122,19 @@
                     <RadzenDatePicker TValue="DateTime" @bind-Value="datum" DateFormat="dd.MM.yyyy" /></div>
                 <div class="fp-field fp-grow"><label class="fp-lbl" for="k-grund">Grund</label><RadzenTextBox id="k-grund" @bind-Value="grund" Placeholder="z. B. Umzug, neue Nummer, Tippfehler" /></div>
             </div>
+            @if (bearbeiten is not null && korrektur)
+            {
+                <div class="fp-form">
+                    <div class="fp-field"><label class="fp-lbl">Zeitraum korrigieren: gültig von</label>
+                        <RadzenDatePicker TValue="DateTime?" @bind-Value="neuVon" DateFormat="dd.MM.yyyy" /></div>
+                    <div class="fp-field"><label class="fp-lbl">gültig bis einschließlich (leer = offen)</label>
+                        <RadzenDatePicker TValue="DateTime?" @bind-Value="neuBis" DateFormat="dd.MM.yyyy" /></div>
+                    <div class="fp-field"><label class="fp-lbl">&nbsp;</label>
+                        <BegruendeterButton Text="Zeitraum korrigieren" Icon="date_range" Size="ButtonSize.Small"
+                                            Freigabe="@(neuVon is null ? Freigabe.Nein("Bitte den richtigen Beginn angeben.") : string.IsNullOrWhiteSpace(grund) ? Freigabe.Nein("Bitte einen Grund angeben.") : Freigabe.Ja)"
+                                            Click="ZeitraumAsync" /></div>
+                </div>
+            }
             <div class="fp-row">
                 <BegruendeterButton Text="Speichern" Icon="save" Size="ButtonSize.Small" Freigabe="@SpeichernFreigabe()" Click="SpeichernAsync" />
                 @if (bearbeiten is not null)
@@ -152,6 +165,22 @@
     private string? adresse, nummer, strasse, plz, ort, zusatz, grund, meldung;
     private bool bevorzugt, einwilligung, korrektur;
     private DateTime datum;
+    private DateTime? neuVon, neuBis;
+
+    /// <summary>Gültigkeitszeitraum der am Datum gültigen Version korrigieren (z. B. falsches Umzugsdatum); die alte bleibt im Verlauf.</summary>
+    private async Task ZeitraumAsync()
+    {
+        if (bearbeiten is not { } b || neuVon is not { } von)
+        {
+            return;
+        }
+
+        var betroffen = DateOnly.FromDateTime(datum);
+        DateOnly? bis = neuBis is { } x ? DateOnly.FromDateTime(x).AddDays(1) : null;
+        await AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().KontaktZeitraumKorrigierenAsync(Detail.Person.Id, b.Art, b.Id, betroffen,
+            DateOnly.FromDateTime(von), bis, grund!), "Zeitraum korrigiert. Die alte Erfassung bleibt im Verlauf als ersetzt sichtbar.");
+        Zuruecksetzen();
+    }
 
     protected override void OnInitialized() => datum = Heute.ToDateTime(TimeOnly.MinValue);
 
@@ -210,6 +239,7 @@
         bearbeiten = null;
         (adresse, nummer, strasse, plz, ort, zusatz, grund) = (null, null, null, null, null, null, null);
         (bevorzugt, einwilligung, korrektur) = (false, false, false);
+        (neuVon, neuBis) = (null, null);
         dienste = Messagingdienst.Anruf | Messagingdienst.Sms;
         datum = Heute.ToDateTime(TimeOnly.MinValue);
     }

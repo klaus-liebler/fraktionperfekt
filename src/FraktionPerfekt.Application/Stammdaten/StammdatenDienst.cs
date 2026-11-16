@@ -32,13 +32,6 @@ public sealed record PersonDetail(Person Person, IReadOnlyList<Rolle> Rollen, IR
 /// <summary>Datenhistorie einer Person (Zeitleiste aller Erfassungen); ohne Kontaktdaten, wenn sie nicht sichtbar sind.</summary>
 public sealed record PersonHistorie(Person Person, IReadOnlyList<HistorienEintrag> Eintraege, bool KontakteSichtbar);
 
-/// <summary>Welche Art Kontakt aufgegeben wird.</summary>
-public enum Kontaktart
-{
-    Adresse,
-    EMail,
-    Rufnummer,
-}
 
 /// <summary>Personen, Gremien und Mitgliedschaften (Mandatsübersicht). Funktionen kommen aus dem RIS, der Rang ist fraktionsintern.</summary>
 public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtokoll protokoll, IAktuellerBenutzer benutzer, TimeProvider uhr)
@@ -55,7 +48,6 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
                 staende.Count(s => s.PersonId == p.Id && s.Stand!.Funktion == Funktion.Ordentlich),
                 staende.Count(s => s.PersonId == p.Id && s.Stand!.Funktion == Funktion.Stellvertretung),
                 p.RisId is not null))
-            .OrderBy(p => p.Sortiername, StringComparer.CurrentCulture).ThenBy(p => p.Id)
             .ToList();
     }
 
@@ -329,7 +321,7 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
     public async Task AnspracheSpeichernAsync(string? anrede, Anredeform form, Begruessungsstil stil, bool titelInAnsprache, CancellationToken abbruch = default)
     {
         var person = await IchAsync(abbruch) ?? throw new InvalidOperationException("Diesem Konto ist keine Person zugeordnet.");
-        person.AnspracheEinstellen(anrede, form, stil, titelInAnsprache);
+        person.AnspracheEinstellen(anrede, form, stil, titelInAnsprache, uhr.GetUtcNow());
         await protokoll.ProtokollierenAsync("Person.AnspracheGeaendert", "Eigene Ansprache eingestellt", nameof(Person), person.Id, abbruch: abbruch);
         await speicher.SpeichernAsync(abbruch);
     }
@@ -340,18 +332,18 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
 
     /// <summary>Name ändern ab Datum (z. B. Heirat, neuer Titel) oder korrigieren (Tippfehler, gesamter Zeitraum der betroffenen Version).</summary>
     public async Task NameAendernAsync(Guid personId, string vorname, string nachname, string? titel, DateOnly datum, bool korrektur, string grund,
-        CancellationToken abbruch = default)
+        CancellationToken abbruch = default, string? vorsatz = null, string? zusatz = null, bool nurEinName = false)
     {
         var wer = await PruefenAsync(abbruch);
         var person = await speicher.PersonAsync(personId, abbruch) ?? throw new InvalidOperationException("Person nicht gefunden.");
         var erfassung = korrektur ? Erfassung.Korrektur(uhr.GetUtcNow(), Grund(grund), wer.Anzeige) : Erfassung.Aenderung(uhr.GetUtcNow(), Grund(grund), wer.Anzeige);
         if (korrektur)
         {
-            person.NameKorrigieren(vorname, nachname, titel, datum, erfassung);
+            person.NameKorrigieren(vorname, nachname, titel, datum, erfassung, vorsatz, zusatz, nurEinName);
         }
         else
         {
-            person.NameAendernAb(vorname, nachname, titel, datum, erfassung);
+            person.NameAendernAb(vorname, nachname, titel, datum, erfassung, vorsatz, zusatz, nurEinName);
         }
 
         await protokoll.ProtokollierenAsync(korrektur ? "Person.NameKorrigiert" : "Person.NameGeaendert",
@@ -372,27 +364,13 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
         await speicher.SpeichernAsync(abbruch);
     }
 
-    /// <summary>Nachts: Zwischenstand aller Personen auf heute bringen (künftige Änderungen werden am Stichtag sichtbar).</summary>
-    public async Task<int> ZwischenstaendeAktualisierenAsync(CancellationToken abbruch = default)
+    /// <summary>Gültigkeitszeitraum einer Adresse, E-Mail oder Rufnummer korrigieren (z. B. falsches Umzugsdatum).</summary>
+    public async Task KontaktZeitraumKorrigierenAsync(Guid personId, Kontaktart art, Guid id, DateOnly betroffenAm, DateOnly neuVon, DateOnly? neuBis, string grund,
+        CancellationToken abbruch = default)
     {
-        var jetzt = uhr.GetUtcNow();
-        var geaendert = 0;
-        foreach (var p in await speicher.PersonenAsync(abbruch))
-        {
-            var vorher = (p.Vorname, p.Nachname, p.Titel, p.Anrede, p.EMail, p.Mobil);
-            p.ZwischenstandAktualisieren(jetzt);
-            if ((p.Vorname, p.Nachname, p.Titel, p.Anrede, p.EMail, p.Mobil) != vorher)
-            {
-                geaendert++;
-            }
-        }
-
-        if (geaendert > 0)
-        {
-            await speicher.SpeichernAsync(abbruch);
-        }
-
-        return geaendert;
+        var (person, erfassung) = await KontaktVorbereitenAsync(personId, true, grund, abbruch);
+        person.ZeitraumKorrigieren(art, id, betroffenAm, neuVon, neuBis, erfassung);
+        await KontaktProtokollierenAsync(personId, art.ToString(), $"Zeitraum korrigiert ({neuVon:dd.MM.yyyy}–{(neuBis is { } b ? b.AddDays(-1).ToString("dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture) : "offen")})", abbruch);
     }
 
     private async Task<Benutzer> PruefenAsync(CancellationToken abbruch)

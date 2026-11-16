@@ -2,6 +2,14 @@ using FraktionPerfekt.Domain.Gemeinsam;
 
 namespace FraktionPerfekt.Domain.Personen;
 
+/// <summary>Welche Art Kontakt (Adresse, E-Mail oder Rufnummer).</summary>
+public enum Kontaktart
+{
+    Adresse,
+    EMail,
+    Rufnummer,
+}
+
 /// <summary>Privat oder dienstlich (Adresse, E-Mail).</summary>
 public enum Kontaktbereich
 {

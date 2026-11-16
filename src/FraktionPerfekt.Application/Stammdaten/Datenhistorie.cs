@@ -30,7 +30,7 @@ public sealed record HistorienEintrag(
 public static class Datenhistorie
 {
     /// <summary>Reihenfolge der Filter-Chips.</summary>
-    public static IReadOnlyList<string> Datenarten { get; } = ["Name", "Person", "Funktion", "Rollen", "Adressen", "Telefon", "E-Mail", "Einwilligungen"];
+    public static IReadOnlyList<string> Datenarten { get; } = ["Name", "Person", "Ansprache", "Funktion", "Rollen", "Adressen", "Telefon", "E-Mail", "Einwilligungen"];
 
     /// <summary>Datenarten mit Kontaktdaten (sichtbar nur für die Person selbst, die Geschäftsführung oder mit Einwilligung).</summary>
     public static IReadOnlySet<string> Kontaktdaten { get; } = new HashSet<string>(["Adressen", "Telefon", "E-Mail"], StringComparer.Ordinal);

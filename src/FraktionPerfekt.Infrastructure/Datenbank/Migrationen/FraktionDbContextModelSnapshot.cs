@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116195641_PersonKontakte";
+    public override string LastMigrationId => "20261116213521_PersonOhneKopien";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -915,56 +915,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
 
-                b.Property<bool>("Aktiv")
-                    .HasColumnType("INTEGER");
-
                 b.Property<long>("AngelegtAm")
                     .HasColumnType("INTEGER");
-
-                b.Property<string>("Anrede")
-                    .HasMaxLength(10)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Anredeform")
-                    .IsRequired()
-                    .HasMaxLength(10)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Begruessungsstil")
-                    .IsRequired()
-                    .HasMaxLength(20)
-                    .HasColumnType("TEXT");
 
                 b.Property<string>("Benutzerkennung")
                     .HasMaxLength(100)
                     .HasColumnType("TEXT");
 
-                b.Property<string>("EMail")
-                    .HasMaxLength(320)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Mobil")
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Nachname")
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
                 b.Property<string>("RisId")
-                    .HasMaxLength(200)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Titel")
-                    .HasMaxLength(60)
-                    .HasColumnType("TEXT");
-
-                b.Property<bool>("TitelInAnsprache")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("Vorname")
-                    .IsRequired()
                     .HasMaxLength(200)
                     .HasColumnType("TEXT");
 
@@ -1068,16 +1026,23 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(200)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<bool>("NurEinName")
+                    .HasColumnType("INTEGER");
 
-                b.Property<string>("Titel")
-                    .HasMaxLength(60)
+                b.Property<Guid>("PersonId")
                     .HasColumnType("TEXT");
 
                 b.Property<string>("Vorname")
                     .IsRequired()
                     .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Vorsatz")
+                    .HasMaxLength(60)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Zusatz")
+                    .HasMaxLength(30)
                     .HasColumnType("TEXT");
 
                 b.HasKey("Id");

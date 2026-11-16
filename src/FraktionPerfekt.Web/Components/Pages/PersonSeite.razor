@@ -81,8 +81,8 @@ else
                         <div class="fp-field">
                             <label class="fp-lbl" for="p-feld">Angabe</label>
                             <select id="p-feld" class="fp-select" @bind="feld" @bind:after="FeldGewaehlt">
-                                <option value="Name">Name (Vorname, Nachname, Titel)</option>
-                                @foreach (var art in Enum.GetValues<PersonMerkmalArt>())
+                                <option value="Name">Name (Vorname, Vorsatz, Nachname, Zusatz, Titel)</option>
+                                @foreach (var art in Enum.GetValues<PersonMerkmalArt>().Where(a => !Ansprache(a)))
                                 {
                                     <option value="@art">@Bezeichnung(art)</option>
                                 }
@@ -90,15 +90,28 @@ else
                         </div>
                         @if (feld == "Name")
                         {
-                            <div class="fp-field"><label class="fp-lbl" for="p-vor">Vorname</label><RadzenTextBox id="p-vor" @bind-Value="vorname" /></div>
-                            <div class="fp-field"><label class="fp-lbl" for="p-nach">Nachname</label><RadzenTextBox id="p-nach" @bind-Value="nachname" /></div>
                             <div class="fp-field"><label class="fp-lbl" for="p-titel">Titel (akad. Grad)</label><RadzenTextBox id="p-titel" @bind-Value="titel" Placeholder="z. B. Dr." /></div>
+                            <div class="fp-field"><label class="fp-lbl" for="p-vor">Vorname</label><RadzenTextBox id="p-vor" @bind-Value="vorname" Disabled="nurEinName" /></div>
+                            <div class="fp-field"><label class="fp-lbl" for="p-vorsatz">Vorsatz</label><RadzenTextBox id="p-vorsatz" @bind-Value="vorsatz" Placeholder="z. B. von" Style="width:7em" /></div>
+                            <div class="fp-field"><label class="fp-lbl" for="p-nach">Nachname</label><RadzenTextBox id="p-nach" @bind-Value="nachname" /></div>
+                            <div class="fp-field"><label class="fp-lbl" for="p-zusatz">Zusatz</label><RadzenTextBox id="p-zusatz" @bind-Value="zusatz" Placeholder="z. B. jun." Style="width:6em" /></div>
+                            <div class="fp-field"><label class="fp-lbl">&nbsp;</label><label><input type="checkbox" @bind="nurEinName" /> nur ein Name laut Ausweis</label></div>
                         }
                         else
                         {
                             <div class="fp-field fp-grow"><label class="fp-lbl" for="p-wert">Neuer Wert (leer = keine Angabe)</label><RadzenTextBox id="p-wert" @bind-Value="wert" /></div>
                         }
                     </div>
+                    @if (feld == "Name" && Namenserkennung.TitelImVornamen(vorname) is { } t)
+                    {
+                        <p class="fp-small">Im Vornamen steht „@t.Titel“. <RadzenButton Text="Als Titel übernehmen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light"
+                            Click="@(() => { (titel, vorname) = (t.Titel, t.Ohne); })" /></p>
+                    }
+                    @if (feld == "Name" && Namenserkennung.VorsatzImNachnamen(nachname) is { } v && string.IsNullOrWhiteSpace(vorsatz))
+                    {
+                        <p class="fp-small">Der Nachname beginnt mit „@v.Vorsatz“ (sortiert nach DIN 5007-2 unter „@v.Ohne“). <RadzenButton Text="Als Vorsatz übernehmen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light"
+                            Click="@(() => { (vorsatz, nachname) = (v.Vorsatz, v.Ohne); })" /></p>
+                    }
                     <div class="fp-form">
                         <div class="fp-field">
                             <RadzenRadioButtonList TValue="bool" @bind-Value="korrektur" aria-label="Änderung oder Korrektur">
@@ -148,21 +161,25 @@ else
     private DateTime stichtag;
     private PersonenStand? amStichtag;
     private string feld = "Name";
-    private string? vorname, nachname, titel, wert, grund;
+    private string? vorname, nachname, titel, vorsatz, zusatz, wert, grund;
+    private bool nurEinName;
     private bool korrektur;
     private DateTime datum;
 
-    private static string Bezeichnung(PersonMerkmalArt art) => art switch
-    {
-        PersonMerkmalArt.Anrede => "Anrede",
-        PersonMerkmalArt.Geschlecht => "Geschlecht",
-        _ => "Funktion in der Fraktion",
-    };
+    private static string Bezeichnung(PersonMerkmalArt art) => PersonMerkmal.Bezeichnung(art);
+
+    /// <summary>Die persönliche Ansprache stellt jede Person selbst ein (Seite „Einstellungen“).</summary>
+    private static bool Ansprache(PersonMerkmalArt art) => art is PersonMerkmalArt.Anredeform or PersonMerkmalArt.Begruessungsstil or PersonMerkmalArt.TitelInAnsprache;
 
     private static string? Wert(PersonenStand? s, PersonMerkmalArt art) => s is null ? null : art switch
     {
         PersonMerkmalArt.Anrede => s.Anrede,
         PersonMerkmalArt.Geschlecht => s.Geschlecht,
+        PersonMerkmalArt.Titel => s.Titel,
+        PersonMerkmalArt.Aktiv => s.Aktiv ? "aktiv" : "inaktiv",
+        PersonMerkmalArt.Anredeform => s.Anredeform.ToString(),
+        PersonMerkmalArt.Begruessungsstil => s.Begruessungsstil switch { Begruessungsstil.Foermlich => "förmlich", Begruessungsstil.Neutral => "neutral", _ => "locker" },
+        PersonMerkmalArt.TitelInAnsprache => s.TitelInAnsprache ? "ja" : "nein",
         _ => s.Funktion,
     };
 
@@ -170,7 +187,7 @@ else
     {
         if (detail?.Heute is { } h)
         {
-            (vorname, nachname, titel) = (h.Name?.Vorname, h.Name?.Nachname, h.Name?.Titel);
+            (vorname, nachname, titel, vorsatz, zusatz, nurEinName) = (h.Name?.Vorname, h.Name?.Nachname, h.Titel, h.Name?.Vorsatz, h.Name?.Zusatz, h.Name?.NurEinName ?? false);
             wert = Enum.TryParse<PersonMerkmalArt>(feld, out var art) ? Wert(h, art) : null;
         }
     }
@@ -185,7 +202,7 @@ else
             var tag = DateOnly.FromDateTime(datum);
             if (feld == "Name")
             {
-                await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().NameAendernAsync(Id, vorname ?? "", nachname ?? "", titel, tag, korrektur, grund!));
+                await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().NameAendernAsync(Id, vorname ?? "", nachname ?? "", titel, tag, korrektur, grund!, default, vorsatz, zusatz, nurEinName));
             }
             else
             {

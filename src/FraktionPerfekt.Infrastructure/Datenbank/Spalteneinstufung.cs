@@ -420,8 +420,10 @@ public static class Spalteneinstufung
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["Nachname"] = (Spaltenart.Version, null),
+                ["Vorsatz"] = (Spaltenart.Version, "Namensvorsatz („von“), sortiert nach DIN 5007-2 hinten"),
+                ["Zusatz"] = (Spaltenart.Version, "Namenszusatz („jun.“)"),
+                ["NurEinName"] = (Spaltenart.Version, "laut Ausweis nur ein Name: Vorname bewusst leer"),
                 ["PersonId"] = (Spaltenart.Version, null),
-                ["Titel"] = (Spaltenart.Version, null),
                 ["Vorname"] = (Spaltenart.Version, null),
             },
             ["PersonRollen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
@@ -458,19 +460,9 @@ public static class Spalteneinstufung
             ["Personen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Stammdatum, "Schlüssel (Zeilen-Id)"),
-                ["Aktiv"] = (Spaltenart.Stammdatum, "veränderlich, nicht versioniert – wird Merkmal (Etappe 1)"),
                 ["AngelegtAm"] = (Spaltenart.Stammdatum, "Zeitpunkt der Anlage der Identität"),
-                ["Anrede"] = (Spaltenart.Kopie, "Zwischenstand aus PersonMerkmale – entfällt (Etappe 1)"),
-                ["Anredeform"] = (Spaltenart.Stammdatum, "persönliche Ansprache – wird Merkmal (Etappe 1, Regel 7)"),
-                ["Begruessungsstil"] = (Spaltenart.Stammdatum, "persönliche Ansprache – wird Merkmal (Etappe 1, Regel 7)"),
                 ["Benutzerkennung"] = (Spaltenart.Stammdatum, "Anmeldename (Konto)"),
-                ["EMail"] = (Spaltenart.Kopie, "Zwischenstand aus PersonEMails – entfällt (Etappe 1)"),
-                ["Mobil"] = (Spaltenart.Kopie, "Zwischenstand aus PersonRufnummern – entfällt (Etappe 1)"),
-                ["Nachname"] = (Spaltenart.Kopie, "Zwischenstand aus PersonNamen – entfällt (Etappe 1)"),
                 ["RisId"] = (Spaltenart.Stammdatum, "Kennung im Ratsinformationssystem"),
-                ["Titel"] = (Spaltenart.Kopie, "Zwischenstand aus PersonNamen – entfällt (Etappe 1)"),
-                ["TitelInAnsprache"] = (Spaltenart.Stammdatum, "persönliche Ansprache – wird Merkmal (Etappe 1, Regel 7)"),
-                ["Vorname"] = (Spaltenart.Kopie, "Zwischenstand aus PersonNamen – entfällt (Etappe 1)"),
             },
             ["Plakate"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {

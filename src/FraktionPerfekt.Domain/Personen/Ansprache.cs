@@ -26,18 +26,19 @@ public static class Ansprache
     public static string Begruessung(Person p)
     {
         ArgumentNullException.ThrowIfNull(p);
+        var vorname = string.IsNullOrEmpty(p.Vorname) ? p.NachnameMitVorsatz : p.Vorname;   // nur ein Name laut Ausweis
         if (p.Anredeform == Anredeform.Du)
         {
             return p.Begruessungsstil switch
             {
-                Begruessungsstil.Neutral => $"Guten Tag, {p.Vorname}",
+                Begruessungsstil.Neutral => $"Guten Tag, {vorname}",
                 Begruessungsstil.Foermlich => p.Anrede switch
                 {
-                    "Frau" => $"Liebe {p.Vorname}",
-                    "Herr" => $"Lieber {p.Vorname}",
-                    _ => $"Guten Tag, {p.Vorname}",
+                    "Frau" => $"Liebe {vorname}",
+                    "Herr" => $"Lieber {vorname}",
+                    _ => $"Guten Tag, {vorname}",
                 },
-                _ => $"Hallo {p.Vorname}",
+                _ => $"Hallo {vorname}",
             };
         }
 
@@ -45,10 +46,10 @@ public static class Ansprache
         if (p.Anrede is not ("Herr" or "Frau"))
         {
             // neutrale Form ohne Anrede: voller Name
-            return $"Guten Tag {titel}{p.Vorname} {p.Nachname}";
+            return $"Guten Tag {titel}{PersonName.Zusammensetzen(null, p.Vorname, p.Vorsatz, p.Nachname, null)}";
         }
 
-        var name = $"{p.Anrede} {titel}{p.Nachname}";
+        var name = $"{p.Anrede} {titel}{p.NachnameMitVorsatz}";
         return p.Begruessungsstil switch
         {
             Begruessungsstil.Neutral => $"Guten Tag, {name}",

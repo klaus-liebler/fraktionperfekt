@@ -87,10 +87,10 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [PersonEMails](#personemails) – 13 Spalten
 - [PersonEinwilligungen](#personeinwilligungen) – 11 Spalten
 - [PersonMerkmale](#personmerkmale) – 11 Spalten
-- [PersonNamen](#personnamen) – 12 Spalten
+- [PersonNamen](#personnamen) – 14 Spalten
 - [PersonRollen](#personrollen) – 10 Spalten
 - [PersonRufnummern](#personrufnummern) – 15 Spalten
-- [Personen](#personen) – 14 Spalten
+- [Personen](#personen) – 4 Spalten
 - [Plakate](#plakate) – 13 Spalten
 - [Postausgang](#postausgang) – 16 Spalten
 - [Presseartikel](#presseartikel) – 10 Spalten
@@ -673,9 +673,11 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonName`
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | Nachname | TEXT(200) | ja |  | V |  |
+| NurEinName | INTEGER | ja |  | V | laut Ausweis nur ein Name: Vorname bewusst leer |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
-| Titel | TEXT(60) |  |  | V |  |
 | Vorname | TEXT(200) | ja |  | V |  |
+| Vorsatz | TEXT(60) |  |  | V | Namensvorsatz („von“), sortiert nach DIN 5007-2 hinten |
+| Zusatz | TEXT(30) |  |  | V | Namenszusatz („jun.“) |
 
 Indizes: (PersonId, GueltigVon)
 
@@ -729,19 +731,9 @@ Klasse: `FraktionPerfekt.Domain.Personen.Person`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | S | Schlüssel (Zeilen-Id) |
-| Aktiv | INTEGER | ja |  | S | veränderlich, nicht versioniert – wird Merkmal (Etappe 1) |
 | AngelegtAm | INTEGER | ja |  | S | Zeitpunkt der Anlage der Identität |
-| Anrede | TEXT(10) |  |  | **K** | Zwischenstand aus PersonMerkmale – entfällt (Etappe 1) |
-| Anredeform | TEXT(10) | ja |  | S | persönliche Ansprache – wird Merkmal (Etappe 1, Regel 7) |
-| Begruessungsstil | TEXT(20) | ja |  | S | persönliche Ansprache – wird Merkmal (Etappe 1, Regel 7) |
 | Benutzerkennung | TEXT(100) |  | eindeutig | S | Anmeldename (Konto) |
-| EMail | TEXT(320) |  |  | **K** | Zwischenstand aus PersonEMails – entfällt (Etappe 1) |
-| Mobil | TEXT(40) |  |  | **K** | Zwischenstand aus PersonRufnummern – entfällt (Etappe 1) |
-| Nachname | TEXT(200) | ja |  | **K** | Zwischenstand aus PersonNamen – entfällt (Etappe 1) |
 | RisId | TEXT(200) |  | eindeutig | S | Kennung im Ratsinformationssystem |
-| Titel | TEXT(60) |  |  | **K** | Zwischenstand aus PersonNamen – entfällt (Etappe 1) |
-| TitelInAnsprache | INTEGER | ja |  | S | persönliche Ansprache – wird Merkmal (Etappe 1, Regel 7) |
-| Vorname | TEXT(200) | ja |  | **K** | Zwischenstand aus PersonNamen – entfällt (Etappe 1) |
 
 Indizes: (Benutzerkennung) eindeutig; (RisId) eindeutig
 

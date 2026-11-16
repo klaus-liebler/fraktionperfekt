@@ -24,7 +24,7 @@ public sealed class PersonKontakteTests
         danach.EMails.Count.ShouldBe(2);
         danach.EMails.Single(e => e.Adresse == "katrin@demo.invalid").Bevorzugt.ShouldBeFalse();
 
-        p.ZwischenstandAktualisieren(new DateTimeOffset(2026, 2, 2, 3, 0, 0, TimeSpan.Zero));
+        p.StandHeuteBerechnen(new DateTimeOffset(2026, 2, 2, 3, 0, 0, TimeSpan.Zero));
         p.EMail.ShouldBe("fraktion@demo.invalid");
     }
 

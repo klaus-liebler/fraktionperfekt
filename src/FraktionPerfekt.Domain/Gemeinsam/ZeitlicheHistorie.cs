@@ -106,6 +106,25 @@ public static class ZeitlicheHistorie
         return neu;
     }
 
+    /// <summary>
+    /// Korrektur des Gültigkeitszeitraums: Die am <paramref name="betroffenAm"/> gültige Version (aktueller Wissensstand) wird ersetzt
+    /// durch denselben Wert mit Gültigkeit [<paramref name="neuVon"/>, <paramref name="neuBis"/>). Die alte Version bleibt mit früherem
+    /// Wissensstand abrufbar (Beispiel „Umzugsdatum korrigieren“).
+    /// </summary>
+    public static T ZeitraumKorrigieren<T>(ICollection<T> versionen, DateOnly betroffenAm, DateOnly neuVon, DateOnly? neuBis, Erfassung erfassung,
+        Func<T, bool>? betrifft = null)
+        where T : BitemporaleVersion<T>
+    {
+        ArgumentNullException.ThrowIfNull(versionen);
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var alt = versionen.Where(v => v.IstAktuellerWissensstand && (betrifft?.Invoke(v) ?? true) && v.GiltAm(betroffenAm)).SingleOrDefault()
+            ?? throw new InvalidOperationException($"Am {betroffenAm:dd.MM.yyyy} gilt kein Wert, dessen Zeitraum korrigiert werden könnte.");
+        var neu = alt.KopieMit(neuVon, neuBis, erfassung);
+        alt.Ersetzen(erfassung.Am);
+        versionen.Add(neu);
+        return neu;
+    }
+
     private static void AbgrenzenAb<T>(ICollection<T> versionen, DateOnly ab, DateTimeOffset jetzt, string von, string grund,
         Func<T, bool> betrifft)
         where T : BitemporaleVersion<T>

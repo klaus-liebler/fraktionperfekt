@@ -15,7 +15,6 @@ public sealed class DatenbankArchitekturTests
     /// <summary>Kopien und JSON-Spalten, die der laufende Umbau noch entfernt. Die Liste muss am Ende leer sein.</summary>
     private static readonly HashSet<string> Uebergang = new(StringComparer.Ordinal)
     {
-        "Personen.Vorname", "Personen.Nachname", "Personen.Titel", "Personen.Anrede", "Personen.EMail", "Personen.Mobil",
         "PersonRollen.RollenText", "Vertretungsfaelle.KandidatenText", "Sitzungen.GremiumId", "Sitzungen.Titel",
         "WikiSeiten.Version", "WikiSeiten.GeaendertAm", "Aufgaben.ErledigtVon", "Termine.AngelegtVon", "WikiVorschlaege.Von",
     };

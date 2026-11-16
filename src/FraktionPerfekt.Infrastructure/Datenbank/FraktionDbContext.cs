@@ -56,10 +56,14 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.ToTable("Personen");
             b.HasKey(p => p.Id);
             b.Property(p => p.Id).ValueGeneratedNever();
-            b.Property(p => p.Vorname).HasMaxLength(200);
-            b.Property(p => p.Nachname).HasMaxLength(200);
-            b.Property(p => p.EMail).HasMaxLength(320);
-            b.Property(p => p.Mobil).HasMaxLength(40);
+            // Stand heute: aus den Versionen berechnet, nicht gespeichert (Datenbank-Regel 1)
+            foreach (var n in new[] { nameof(Person.Vorname), nameof(Person.Nachname), nameof(Person.Vorsatz), nameof(Person.Zusatz), nameof(Person.Titel),
+                         nameof(Person.Anrede), nameof(Person.EMail), nameof(Person.Mobil), nameof(Person.Aktiv), nameof(Person.Anredeform),
+                         nameof(Person.Begruessungsstil), nameof(Person.TitelInAnsprache) })
+            {
+                b.Ignore(n);
+            }
+
             b.Property(p => p.Benutzerkennung).HasMaxLength(100);
             b.Property(p => p.RisId).HasMaxLength(200);
             b.HasIndex(p => p.Benutzerkennung).IsUnique();
@@ -67,10 +71,8 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.Ignore(p => p.Anzeigename);
             b.Ignore(p => p.Sortiername);
             b.Ignore(p => p.Initialen);
-            b.Property(p => p.Titel).HasMaxLength(60);
-            b.Property(p => p.Anrede).HasMaxLength(10);
-            b.Property(p => p.Anredeform).HasConversion<string>().HasMaxLength(10);
-            b.Property(p => p.Begruessungsstil).HasConversion<string>().HasMaxLength(20);
+            b.Ignore(p => p.NachnameMitVorsatz);
+            b.Ignore(p => p.Sortierschluessel);
             b.HasMany(p => p.RollenVersionen).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
             b.Navigation(p => p.RollenVersionen).HasField("_rollen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
             b.HasMany(p => p.Namen).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
@@ -91,7 +93,8 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
         {
             b.Property(v => v.Vorname).HasMaxLength(200);
             b.Property(v => v.Nachname).HasMaxLength(200);
-            b.Property(v => v.Titel).HasMaxLength(60);
+            b.Property(v => v.Vorsatz).HasMaxLength(60);
+            b.Property(v => v.Zusatz).HasMaxLength(30);
             b.Ignore(v => v.Anzeige);
         });
         Version<PersonMerkmal>(modelBuilder, "PersonMerkmale", "PersonId", b =>

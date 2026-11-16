@@ -2,7 +2,11 @@ using FraktionPerfekt.Domain.Gemeinsam;
 
 namespace FraktionPerfekt.Domain.Personen;
 
-/// <summary>Eine Version des Namens einer Person (bitemporal): Vorname, Nachname und akademischer Grad gelten gemeinsam ab einem Datum.</summary>
+/// <summary>
+/// Eine Version des Namens einer Person (bitemporal): Vorname, Namensvorsatz („von“), Nachname und Namenszusatz („jun.“) gelten gemeinsam
+/// ab einem Datum. Der Titel ist ein eigenes Merkmal (nie Teil von Vor- oder Nachname). Laut Ausweis nur ein Name: Vorname leer mit
+/// Kennzeichen <see cref="NurEinName"/>.
+/// </summary>
 public sealed class PersonName : BitemporaleVersion<PersonName>
 {
     private PersonName()
@@ -11,25 +15,54 @@ public sealed class PersonName : BitemporaleVersion<PersonName>
         Nachname = string.Empty;
     }
 
-    public PersonName(string vorname, string nachname, string? titel, DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
+    public PersonName(string vorname, string nachname, string? vorsatz, string? zusatz, bool nurEinName, DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
         : base(gueltigVon, gueltigBis, erfassung)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(vorname);
         ArgumentException.ThrowIfNullOrWhiteSpace(nachname);
-        Vorname = vorname.Trim();
+        if (string.IsNullOrWhiteSpace(vorname) && !nurEinName)
+        {
+            throw new ArgumentException("Vorname fehlt. Hat die Person laut Ausweis nur einen Namen, bitte „nur ein Name“ ankreuzen.", nameof(vorname));
+        }
+
+        NurEinName = nurEinName;
+        Vorname = nurEinName ? string.Empty : vorname.Trim();
         Nachname = nachname.Trim();
-        Titel = string.IsNullOrWhiteSpace(titel) ? null : titel.Trim();
+        Vorsatz = string.IsNullOrWhiteSpace(vorsatz) ? null : vorsatz.Trim();
+        Zusatz = string.IsNullOrWhiteSpace(zusatz) ? null : zusatz.Trim();
     }
 
+    /// <summary>Vorname; leer, wenn die Person laut Ausweis nur einen Namen hat.</summary>
     public string Vorname { get; private set; }
 
-    /// <summary>Auch mehrteilig („Schulte Jochmaring“); danach wird sortiert.</summary>
+    /// <summary>Auch mehrteilig („Schulte Jochmaring“), ohne Vorsatz; danach wird sortiert.</summary>
     public string Nachname { get; private set; }
 
-    /// <summary>Akademischer Grad („Dr.“), kein Amt.</summary>
-    public string? Titel { get; private set; }
+    /// <summary>Namensvorsatz („von“, „van der“, „de“).</summary>
+    public string? Vorsatz { get; private set; }
 
-    public string Anzeige => Titel is null ? $"{Vorname} {Nachname}" : $"{Titel} {Vorname} {Nachname}";
+    /// <summary>Namenszusatz („jun.“, „sen.“).</summary>
+    public string? Zusatz { get; private set; }
+
+    /// <summary>Laut Ausweis nur ein Name (Vorname bewusst leer).</summary>
+    public bool NurEinName { get; private set; }
+
+    public string Anzeige => Zusammensetzen(null, Vorname, Vorsatz, Nachname, Zusatz);
+
+    /// <summary>„Dr. Anna von Berg jun.“ (leere Teile entfallen).</summary>
+    public static string Zusammensetzen(string? titel, string? vorname, string? vorsatz, string nachname, string? zusatz)
+        => string.Join(' ', new[] { titel, vorname, vorsatz, nachname, zusatz }.Where(t => !string.IsNullOrWhiteSpace(t)));
+
+    /// <summary>
+    /// Sortierschlüssel nach DIN 5007-2 (Variante 2, Namenslisten): Nachname ohne Vorsatz, dann Vorname, dann Vorsatz; Umlaute als
+    /// ae/oe/ue, ß als ss, ohne Groß-/Kleinschreibung. „von Berg“ steht unter B.
+    /// </summary>
+    public static string Sortierschluessel(string? vorname, string? vorsatz, string nachname)
+    {
+        static string Norm(string? t) => (t ?? string.Empty).ToLowerInvariant()
+            .Replace("ä", "ae", StringComparison.Ordinal).Replace("ö", "oe", StringComparison.Ordinal).Replace("ü", "ue", StringComparison.Ordinal)
+            .Replace("ß", "ss", StringComparison.Ordinal);
+        return $"{Norm(nachname)} {Norm(vorname)} {Norm(vorsatz)}".TrimEnd();
+    }
 
     public override string Datenart => "Name";
 
@@ -40,7 +73,7 @@ public sealed class PersonName : BitemporaleVersion<PersonName>
     public override string Wert => IstEndemarke ? "(beendet)" : Anzeige;
 
     protected internal override PersonName KopieMit(DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
-        => new(Vorname, Nachname, Titel, gueltigVon, gueltigBis, erfassung);
+        => new(Vorname, Nachname, Vorsatz, Zusatz, NurEinName, gueltigVon, gueltigBis, erfassung);
 
     public override string ToString() => Anzeige;
 }
@@ -56,6 +89,21 @@ public enum PersonMerkmalArt
 
     /// <summary>Funktion in der Fraktion (z. B. „Fraktionsvorsitzender“, „Schatzmeister“) – die Rechte ergeben sich aus den Rollen.</summary>
     Funktion,
+
+    /// <summary>Akademischer Grad („Dr.“), nie Teil von Vor- oder Nachname; Amtsbezeichnungen wie „Prof.“ gehören nicht hierher.</summary>
+    Titel,
+
+    /// <summary>„aktiv“ oder „inaktiv“ in der Fraktion (ohne Angabe: aktiv).</summary>
+    Aktiv,
+
+    /// <summary>Persönliche Ansprache: „Du“ oder „Sie“ (ohne Angabe: Du).</summary>
+    Anredeform,
+
+    /// <summary>Persönliche Ansprache: „Locker“, „Neutral“, „Foermlich“ (ohne Angabe: Locker).</summary>
+    Begruessungsstil,
+
+    /// <summary>Persönliche Ansprache: Titel in der Sie-Form nennen, „ja“ oder „nein“ (ohne Angabe: ja).</summary>
+    TitelInAnsprache,
 }
 
 /// <summary>Eine zeitlich gültige Angabe zur Person (bitemporal); leerer Inhalt = keine Angabe ab diesem Datum.</summary>
@@ -76,14 +124,28 @@ public sealed class PersonMerkmal : BitemporaleVersion<PersonMerkmal>
 
     public string? WertOderNull => Inhalt.Length == 0 ? null : Inhalt;
 
-    public override string Datenart => Art == PersonMerkmalArt.Funktion ? "Funktion" : "Person";
+    public override string Datenart => Art switch
+    {
+        PersonMerkmalArt.Funktion => "Funktion",
+        PersonMerkmalArt.Titel => "Name",
+        PersonMerkmalArt.Anredeform or PersonMerkmalArt.Begruessungsstil or PersonMerkmalArt.TitelInAnsprache => "Ansprache",
+        _ => "Person",
+    };
 
     public override string Feld => Art switch
     {
         PersonMerkmalArt.Anrede => "Anrede",
         PersonMerkmalArt.Geschlecht => "Geschlecht",
+        PersonMerkmalArt.Titel => "Titel",
+        PersonMerkmalArt.Aktiv => "Aktiv in der Fraktion",
+        PersonMerkmalArt.Anredeform => "Du oder Sie",
+        PersonMerkmalArt.Begruessungsstil => "Stil der Begrüßung",
+        PersonMerkmalArt.TitelInAnsprache => "Titel in der Ansprache",
         _ => "Funktion in der Fraktion",
     };
+
+    /// <summary>Bezeichnung einer Merkmalsart für Formulare.</summary>
+    public static string Bezeichnung(PersonMerkmalArt art) => new PersonMerkmal(art, null, DateOnly.MinValue, null, Erfassung.Erst(DateTimeOffset.MinValue)).Feld;
 
     public override string Gegenstand => Art.ToString();
 
@@ -98,6 +160,7 @@ public sealed record PersonenStand(
     DateOnly GueltigAm,
     DateTimeOffset BekanntAm,
     PersonName? Name,
+    string? Titel,
     string? Anrede,
     string? Geschlecht,
     string? Funktion,
@@ -107,7 +170,15 @@ public sealed record PersonenStand(
     IReadOnlyList<Rufnummer> Rufnummern,
     IReadOnlyList<Einwilligung> Einwilligungen)
 {
-    public string Anzeige => Name?.Anzeige ?? "(noch nicht erfasst)";
+    public string Anzeige => Name is null ? "(noch nicht erfasst)" : PersonName.Zusammensetzen(Titel, Name.Vorname, Name.Vorsatz, Name.Nachname, Name.Zusatz);
+
+    public bool Aktiv { get; init; } = true;
+
+    public Anredeform Anredeform { get; init; }
+
+    public Begruessungsstil Begruessungsstil { get; init; }
+
+    public bool TitelInAnsprache { get; init; } = true;
 
     /// <summary>Bevorzugte E-Mail-Adresse, sonst die erste.</summary>
     public string? EMail => EMails.FirstOrDefault()?.Adresse;

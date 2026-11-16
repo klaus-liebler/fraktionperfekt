@@ -15,7 +15,7 @@ namespace FraktionPerfekt.Infrastructure.Datenbank;
 /// Speicher der Fachdaten über einen gemeinsamen DbContext je Arbeitsbereich: Was ein Dienst in mehreren Speichern
 /// ändert, wird mit einem einzigen <see cref="SpeichernAsync"/> gemeinsam festgeschrieben (inklusive Postausgang und Protokoll).
 /// </summary>
-internal sealed class FraktionSpeicher(FraktionDbContext db) : IStammdatenSpeicher, ITerminSpeicher, IVertretungSpeicher
+internal sealed class FraktionSpeicher(FraktionDbContext db, TimeProvider uhr) : IStammdatenSpeicher, ITerminSpeicher, IVertretungSpeicher
 {
     public Task SpeichernAsync(CancellationToken abbruch = default) => db.SaveChangesAsync(abbruch);
 
@@ -26,15 +26,36 @@ internal sealed class FraktionSpeicher(FraktionDbContext db) : IStammdatenSpeich
 
     public void Hinzufuegen(Mitgliedschaft mitgliedschaft) => db.Mitgliedschaften.Add(mitgliedschaft);
 
+    /// <summary>
+    /// Alle Personen mit allen Versionen (je Versionstabelle eine Abfrage für alle Personen, nicht N+1), Stand heute berechnet,
+    /// sortiert nach DIN 5007-2 („von Berg“ unter B).
+    /// </summary>
     public async Task<IReadOnlyList<Person>> PersonenAsync(CancellationToken abbruch = default)
-        => await db.Personen.OrderBy(p => p.Nachname).ThenBy(p => p.Vorname).ThenBy(p => p.Id).ToListAsync(abbruch);
+    {
+        var personen = await db.Personen.OrderBy(p => p.Id).AsSplitQuery().ToListAsync(abbruch);
+        var jetzt = uhr.GetUtcNow();
+        foreach (var p in personen)
+        {
+            p.StandHeuteBerechnen(jetzt);
+        }
 
-    public Task<Person?> PersonAsync(Guid id, CancellationToken abbruch = default) => db.Personen.FirstOrDefaultAsync(p => p.Id == id, abbruch);
+        return personen.OrderBy(p => p.Sortierschluessel, StringComparer.Ordinal).ThenBy(p => p.Id).ToList();
+    }
 
-    public Task<Person?> PersonNachKennungAsync(string kennung, CancellationToken abbruch = default)
+    public async Task<Person?> PersonAsync(Guid id, CancellationToken abbruch = default)
+        => Heute(await db.Personen.AsSplitQuery().FirstOrDefaultAsync(p => p.Id == id, abbruch));
+
+    public async Task<Person?> PersonNachKennungAsync(string kennung, CancellationToken abbruch = default)
     {
         var k = (kennung ?? string.Empty).Trim().ToLowerInvariant();
-        return db.Personen.FirstOrDefaultAsync(p => p.Benutzerkennung == k, abbruch);
+        return Heute(await db.Personen.AsSplitQuery().FirstOrDefaultAsync(p => p.Benutzerkennung == k, abbruch));
+    }
+
+    /// <summary>Stand heute aus den Versionen berechnen (nicht gespeichert, Datenbank-Regel 1).</summary>
+    private Person? Heute(Person? p)
+    {
+        p?.StandHeuteBerechnen(uhr.GetUtcNow());
+        return p;
     }
 
     public async Task<IReadOnlyList<Gremium>> GremienAsync(CancellationToken abbruch = default)

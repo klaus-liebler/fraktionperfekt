@@ -31,8 +31,14 @@
   - `PersonRollen` (Rechte-Rollen, schon vorher bitemporal),
   - Gremienmitgliedschaften (`Mitgliedschaft`, schon vorher bitemporal, mit „Seit“ aus dem RIS).
 - `StandAm(tag, bekanntAm)`, `AnzeigenameAm(tag)`, `NameAendernAb`/`NameKorrigieren`, `AngabeAendern(…, korrektur)`.
-- Zwischenstand (`Vorname`, `Nachname`, `Titel`, `Anrede`, `EMail`, `Mobil`) für Listen, Suche, Anmeldung und Postausgang;
-  zusätzlich ein **Nachtlauf** (Fristenprüfung „Personen-Zwischenstand“), damit künftige Änderungen am Stichtag sichtbar werden.
+- **Keine Kopien** (Datenbank-Regeln, Etappe 1): `Vorname`, `Nachname`, `Titel`, `Anrede`, `EMail`, `Mobil`, `Aktiv` und die Ansprache
+  an der Person sind *Stand heute*, beim Laden aus den Versionen berechnet (`StandHeuteBerechnen`), nicht gespeichert; der frühere
+  Nachtlauf „Personen-Zwischenstand“ entfällt. Personen werden mit allen Versionen im Paket geladen (eine Abfrage je Versionstabelle).
+- **Titel** ist ein eigenes zeitliches Merkmal (nie Teil von Vor- oder Nachname, Hinweis „Als Titel übernehmen“), dazu Namensvorsatz und
+  -zusatz in der Namensversion, Sortierung nach DIN 5007-2 („von Berg“ unter B), „nur ein Name laut Ausweis“ mit Kennzeichen.
+- **Aktiv** und **persönliche Ansprache** (Du/Sie, Stil, Titel nennen) sind zeitliche Merkmale.
+- **Zeitraum korrigieren** (z. B. Umzugsdatum): `ZeitlicheHistorie.ZeitraumKorrigieren`, `Person.UmzugsdatumKorrigieren`; Test mit dem
+  Beispiel Frau Muster.
 - Oberfläche (Personenseite): „Angaben – Stand heute“ mit Verlauf je Angabe (Uhr-Symbol: gültig von/bis, Art, erfasst am/von,
   Grund, ersetzte Erfassungen blass), **Stand an einem Stichtag**, Formular **Änderung ab Datum / Korrektur** mit Grund
   (nur Geschäftsführung).
@@ -42,8 +48,6 @@
 
 ## Abweichungen und Gründe
 
-- **Ansprache (Du/Sie, Stil, Titel nennen)** ist in FraktionPerfekt eine *Benutzereinstellung* ohne Historie (gilt sofort);
-  VibeVHS führt sie als zeitliches Merkmal. Die *Anrede* (Herr/Frau) ist dagegen ein Personendatum und zeitlich.
 - **Sichtbarkeit der Kontakte**: Adressen, Rufnummern und E-Mails sehen die Person selbst und die Geschäftsführung; alle anderen nur
   mit Einwilligung „Kontaktdaten in der Fraktion weitergeben“ (sonst auch nicht in Personenliste und Datenhistorie). Kontakte und
   Einwilligungen pflegen die Person selbst und die Geschäftsführung; Name, Anrede, Funktion und Rollen nur die Geschäftsführung.
