@@ -12,8 +12,10 @@ namespace FraktionPerfekt.Application.Heute;
 /// <summary>Eine Schnellaktion der Startseite (Plus-Knopf).</summary>
 public sealed record Schnellaktion(string Titel, string Ziel, string Symbol, Freigabe Freigabe);
 
+/// <param name="Vorname">Für die Du-Ansprache („Hallo Klaus“): immer das Vornamen-Feld, nie aus dem Anzeigenamen abgeleitet (Titel!).</param>
 public sealed record HeuteAnsicht(
     string Name,
+    string Vorname,
     IReadOnlyList<TerminZeile> NaechsteTermine,
     IReadOnlyList<MeineAnfrage> Vertretungsanfragen,
     IReadOnlyList<TerminZeile> OffeneZusagen,
@@ -37,6 +39,7 @@ public sealed class HeuteDienst(
     Abstimmungen.UmfrageDienst umfragen,
     BesetzungDienst besetzung,
     HinweisDienst hinweise,
+    IStammdatenSpeicher stammdaten,
     IAktuellerBenutzer benutzer,
     TimeProvider uhr)
 {
@@ -56,8 +59,10 @@ public sealed class HeuteDienst(
         var politik = wer.Rolle is Domain.Personen.Rolle.Helferin or null
             ? Freigabe.Nein("Nur für Mitglieder, sachkundige Bürger:innen, Vorstand und Geschäftsführung.")
             : Freigabe.Ja;
+        var person = wer.PersonId is { } pid ? await stammdaten.PersonAsync(pid, abbruch) : null;
         return new HeuteAnsicht(
             wer.Name,
+            person?.Vorname ?? wer.Name,
             meine,
             await vertretung.MeineAnfragenAsync(abbruch),
             offeneZusagen,

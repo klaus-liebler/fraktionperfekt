@@ -66,9 +66,12 @@
         <h2>Kurzbericht</h2>
         @if (d.Anfrage.Bericht is not null)
         {
-            <p style="white-space:pre-line">@d.Anfrage.Bericht</p>
+            <Markdown Text="@d.Anfrage.Bericht" />
         }
-        <RadzenTextArea @bind-Value="bericht" Rows="3" Placeholder="Wer war da, was wurde besprochen, was ist zu tun?" Disabled="@(!d.BerichtSchreiben.Erlaubt)" Style="width:100%" />
+        @if (d.BerichtSchreiben.Erlaubt)
+        {
+            <MarkdownEditor @bind-Text="bericht" BezugArt="Besetzung" BezugId="@d.Anfrage.Id" Bezeichnung="Kurzbericht: Wer war da, was wurde besprochen, was ist zu tun?" Kompakt="true" />
+        }
         <BegruendeterButton Text="Bericht speichern" Size="ButtonSize.Small" Freigabe="@d.BerichtSchreiben.Und(() => string.IsNullOrWhiteSpace(bericht) ? Freigabe.Nein("Bitte einen Text eingeben.") : Freigabe.Ja)"
                             Click="@(() => AusfuehrenAsync(s => s.BerichtAsync(d.Anfrage.Id, bericht!), "Bericht gespeichert."))" />
     </section>

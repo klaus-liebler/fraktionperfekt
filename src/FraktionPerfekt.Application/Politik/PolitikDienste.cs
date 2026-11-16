@@ -91,6 +91,12 @@ public sealed class AnfrageDienst(
 
     public async Task BeantwortenAsync(Guid id, string antwort, CancellationToken abbruch = default)
     {
+        await BeantwortenOhneBilderAsync(id, antwort, abbruch);
+        await bilder.VerwendungenAbgleichenAsync("Anfrage", id, antwort, abbruch);
+    }
+
+    private async Task BeantwortenOhneBilderAsync(Guid id, string antwort, CancellationToken abbruch)
+    {
         var zeile = (await ListeAsync(abbruch)).FirstOrDefault(z => z.Anfrage.Id == id) ?? throw new InvalidOperationException("Anfrage nicht gefunden.");
         Politikrechte.Pruefen(zeile.Beantworten);
         var a = await daten.LadenAsync<Anfrage>(id, "Anfrage", abbruch);
@@ -304,6 +310,12 @@ public sealed class AnliegenDienst(
     }
 
     public async Task ErledigenAsync(Guid id, string antwort, CancellationToken abbruch = default)
+    {
+        await ErledigenOhneBilderAsync(id, antwort, abbruch);
+        await bilder.VerwendungenAbgleichenAsync("Anliegen", id, antwort, abbruch);
+    }
+
+    private async Task ErledigenOhneBilderAsync(Guid id, string antwort, CancellationToken abbruch)
     {
         var zeile = (await ListeAsync(abbruch)).FirstOrDefault(z => z.Anliegen.Id == id) ?? throw new InvalidOperationException("Anliegen nicht gefunden.");
         Politikrechte.Pruefen(zeile.Bearbeiten);

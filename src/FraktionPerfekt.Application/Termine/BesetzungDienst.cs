@@ -33,6 +33,7 @@ public sealed record BesetzungDetail(
 /// </summary>
 public sealed class BesetzungDienst(
     IDaten daten,
+    IServiceProvider dienste,
     ITerminSpeicher termine,
     IStammdatenSpeicher stammdaten,
     PostausgangDienst postausgang,
@@ -237,6 +238,13 @@ public sealed class BesetzungDienst(
     }
 
     public async Task BerichtAsync(Guid anfrageId, string text, CancellationToken abbruch = default)
+    {
+        await BerichtOhneBilderAsync(anfrageId, text, abbruch);
+        await Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Wissen.BildDienst>(dienste)
+            .VerwendungenAbgleichenAsync("Besetzung", anfrageId, text, abbruch);
+    }
+
+    private async Task BerichtOhneBilderAsync(Guid anfrageId, string text, CancellationToken abbruch)
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
         var d = await DetailAsync(anfrageId, abbruch) ?? throw new InvalidOperationException("Anfrage nicht gefunden.");

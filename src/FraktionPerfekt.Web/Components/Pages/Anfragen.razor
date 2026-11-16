@@ -40,7 +40,7 @@
         <Markdown Text="@z.Anfrage.Text" />
         @if (z.Anfrage.Antwort is { } antwort)
         {
-            <div class="fp-zitat"><b>Antwort vom @z.Anfrage.BeantwortetAm?.ToString("dd.MM.yyyy"):</b> @antwort</div>
+            <div class="fp-zitat"><b>Antwort vom @z.Anfrage.BeantwortetAm?.ToString("dd.MM.yyyy"):</b> <Markdown Text="@antwort" /></div>
         }
         <div class="fp-row">
             @if (z.Anfrage.Status == Anfragestatus.Entwurf)
@@ -52,7 +52,7 @@
             {
                 @if (antwortFuer == z.Anfrage.Id)
                 {
-                    <RadzenTextArea @bind-Value="antwortText" Rows="3" Style="width:100%" aria-label="Antwort der Verwaltung" />
+                    <MarkdownEditor @bind-Text="antwortText" BezugArt="Anfrage" BezugId="@z.Anfrage.Id" Bezeichnung="Antwort der Verwaltung" Kompakt="true" />
                     <RadzenButton Text="Antwort speichern" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(antwortText)"
                                   Click="@(() => AusfuehrenAsync(s => s.BeantwortenAsync(z.Anfrage.Id, antwortText!), "Antwort erfasst."))" />
                 }

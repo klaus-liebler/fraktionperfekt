@@ -39,6 +39,9 @@ Das gilt auch, wenn ein Bild aus einem anderen Text kopiert wird.
 **PDF:** Antrag und Protokoll werden mit Markdig nach MigraDoc übertragen (Überschriften, Listen, Tabellen, Zitate, fett/kursiv,
 Links mit Adresse) – eingebettete Bilder erscheinen im PDF (höchstens Satzspiegelbreite).
 
-**Offen:** Antwort der Verwaltung zu Anfragen, Bürgeranliegen-Antwort, Aufgabenbeschreibungen, Berichte in der Terminbesetzung
-und Kalenderbeschreibungen bleiben einfache Textfelder (kurz). Eine Einladung als PDF gibt es bisher nicht. Autovervollständigung
-für `[[…]]`. Serverseitiges Verkleinern übernimmt bisher der Browser (keine Bildbibliothek in der erlaubten Paketliste).
+**Kompakt** (kleine Werkzeugleiste, 200 px) für kurze Texte: Antwort der Verwaltung auf Anfragen, Antwort auf Bürgeranliegen,
+Kurzbericht in der Terminbesetzung, Beschreibung neuer Termine. Bilder auch dort, Besitzer „Anfrage“, „Anliegen“, „Besetzung“,
+„Termin“ mit den Rechten des jeweiligen Moduls. Im Kalender-Abo (ICS) steht die Beschreibung als Klartext ohne Markdown.
+
+**Offen:** Aufgabenbeschreibungen entstehen bisher nur automatisch (kein Eingabefeld). Eine Einladung als PDF gibt es bisher nicht.
+Autovervollständigung für `[[…]]`. Serverseitiges Verkleinern übernimmt bisher der Browser (keine Bildbibliothek in der erlaubten Paketliste).

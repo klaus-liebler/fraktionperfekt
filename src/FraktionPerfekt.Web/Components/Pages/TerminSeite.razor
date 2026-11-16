@@ -44,7 +44,7 @@ else
                 <dt>Quelle</dt><dd>@(t.RisId is null ? $"angelegt von {t.AngelegtVon}" : "Ratsinformationssystem (wird beim Abgleich aktualisiert)")</dd>
                 @if (t.Beschreibung is not null)
                 {
-                    <dt>Hinweis</dt><dd style="white-space:pre-line">@t.Beschreibung</dd>
+                    <dt>Hinweis</dt><dd><Markdown Text="@t.Beschreibung" /></dd>
                 }
             </dl>
             @if (detail.Zeile.Beteiligung != Beteiligung.Vertritt)

@@ -48,7 +48,7 @@
                 <RadzenDropDown id="t-gremium" TValue="Guid?" @bind-Value="neu.GremiumId" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" Placeholder="kein Gremium" />
             </div>
         </div>
-        <div class="fp-field"><label class="fp-lbl" for="t-beschreibung">Beschreibung</label><RadzenTextArea id="t-beschreibung" @bind-Value="neu.Beschreibung" Rows="2" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="t-beschreibung">Beschreibung</label><MarkdownEditor @key="entwurfId" @bind-Text="neu.Beschreibung" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Beschreibung" Kompakt="true" /></div>
         <div class="fp-row">
             <BegruendeterButton Text="Anlegen" Icon="save" Freigabe="@AnlegenFreigabe" Click="AnlegenAsync" />
             <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
@@ -181,6 +181,7 @@
     private IReadOnlyList<Auswahl> gremien = [];
     private IReadOnlyList<Auswahl> personen = [];
     private Neu neu = new();
+    private Guid entwurfId = Guid.NewGuid();
     private string? meldung;
     private IReadOnlyList<NaechsterSchritt> schritte = [];
 
@@ -257,6 +258,7 @@
             schritte = folgeschritte;
             formular = false;
             neu = new Neu { Beginn = neu.Beginn };
+            entwurfId = Guid.NewGuid();
             monat = new DateOnly(termin.Beginn.Year, termin.Beginn.Month, 1);
             await LadenAsync();
         }

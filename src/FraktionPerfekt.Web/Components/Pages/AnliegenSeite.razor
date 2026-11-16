@@ -46,7 +46,7 @@
             <p class="fp-small">@(a.Thema is null ? "" : $"Politikfeld: {a.Thema} · ")Zuständig: <b>@(z.Zustaendig ?? "noch niemand")</b></p>
             @if (a.Antwort is not null)
             {
-                <div class="fp-zitat"><b>Antwort:</b> @a.Antwort</div>
+                <div class="fp-zitat"><b>Antwort:</b> <Markdown Text="@a.Antwort" /></div>
             }
             @if (a.Status != Anliegenstatus.Erledigt)
             {
@@ -68,7 +68,8 @@
                 {
                     <div class="fp-form">
                         <div class="fp-field fp-grow"><label class="fp-lbl" for="@($"antw-{a.Id:N}")">Antwort an die Bürgerin / den Bürger</label>
-                            <RadzenTextBox id="@($"antw-{a.Id:N}")" Value="@antworten.GetValueOrDefault(a.Id)" Change="@(v => antworten[a.Id] = v)" /></div>
+                            <MarkdownEditor Text="@antworten.GetValueOrDefault(a.Id)" TextChanged="@((string? v) => antworten[a.Id] = v)" BezugArt="Anliegen" BezugId="@a.Id"
+                                            Bezeichnung="Antwort an die Bürgerin / den Bürger" Kompakt="true" /></div>
                     </div>
                     <BegruendeterButton Text="Beantwortet – erledigt" Icon="check" Size="ButtonSize.Small"
                                         Freigabe="@(string.IsNullOrWhiteSpace(antworten.GetValueOrDefault(a.Id)) ? Freigabe.Nein("Bitte die Antwort kurz festhalten.") : Freigabe.Ja)"

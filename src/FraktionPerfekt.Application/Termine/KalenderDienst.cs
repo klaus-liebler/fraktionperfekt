@@ -71,7 +71,8 @@ public sealed class KalenderDienst(
     IAktuellerBenutzer benutzer,
     IOptions<FraktionOptionen> optionen,
     TimeProvider uhr,
-    IDaten daten)
+    IDaten daten,
+    IServiceProvider dienste)
 {
     /// <summary>Termine im Zeitraum [von, bis] (Tage einschließlich) aus Sicht der angemeldeten Person.</summary>
     public async Task<IReadOnlyList<TerminZeile>> TermineAsync(DateOnly von, DateOnly bis, Kalenderfilter? filter = null, CancellationToken abbruch = default)
@@ -182,6 +183,8 @@ public sealed class KalenderDienst(
         await protokoll.ProtokollierenAsync("Termin.Angelegt", $"{termin.Art.Anzeigename()} am {termin.Beginn:dd.MM.yyyy HH:mm} angelegt",
             nameof(Termin), termin.Id, abbruch: abbruch);
         await termine.SpeichernAsync(abbruch);
+        await Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Wissen.BildDienst>(dienste)
+            .VerwendungenAbgleichenAsync("Termin", termin.Id, neu.Beschreibung, abbruch);
 
         var schritte = new List<NaechsterSchritt>
         {

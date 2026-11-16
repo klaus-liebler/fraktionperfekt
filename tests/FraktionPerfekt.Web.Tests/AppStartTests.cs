@@ -115,7 +115,8 @@ public sealed partial class AppStartTests : IAsyncLifetime
         // Testanmeldung als Dames Joud (Demodaten: für den HFWA als Vertretung gefragt).
         var anmelden = await http.GetStringAsync("anmelden", abbruch);
         anmelden.ShouldContain("CDU-Fraktion Greven");
-        anmelden.ShouldContain("Prof. Dr. Klaus Liebler");
+        anmelden.ShouldContain("Dr. Klaus Liebler");
+        anmelden.ShouldNotContain("Prof.");
         var antwort = await http.PostAsync("anmelden", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = Token(anmelden),

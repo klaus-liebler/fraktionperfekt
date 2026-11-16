@@ -51,6 +51,8 @@
                 previewStyle: 'tab',
                 language: 'de-DE',
                 usageStatistics: false,
+                toolbarItems: optionen.kompakt ? [['heading', 'bold', 'italic'], ['ul', 'ol'], ['link', 'image']] : undefined,
+                hideModeSwitch: !!optionen.kompakt,
                 autofocus: false,
                 initialValue: text || '',
                 placeholder: 'Text der Seite … Bilder einfach einfügen (Strg+V) oder hineinziehen. [[Seitentitel]] verlinkt eine Wiki-Seite.',

@@ -37,6 +37,10 @@
     [Parameter]
     public string Hoehe { get; set; } = "520px";
 
+    /// <summary>Kompakt: kleinere Werkzeugleiste (Überschrift, fett, kursiv, Listen, Link, Bild) für kurze Texte.</summary>
+    [Parameter]
+    public bool Kompakt { get; set; }
+
     /// <summary>Nach jedem hochgeladenen Bild (z. B. um die Mediathek neu zu laden).</summary>
     [Parameter]
     public EventCallback BildHinzugefuegt { get; set; }
@@ -59,7 +63,7 @@
         try
         {
             bereit = await Js.InvokeAsync<bool>("fpEditor.start", element, selbst, Text ?? string.Empty,
-                new { bezugArt = BezugArt, bezugId = BezugId, token = token?.Value, tokenFeld = token?.FormFieldName, hoehe = Hoehe });
+                new { bezugArt = BezugArt, bezugId = BezugId, token = token?.Value, tokenFeld = token?.FormFieldName, hoehe = Kompakt && Hoehe == "520px" ? "200px" : Hoehe, kompakt = Kompakt });
         }
         catch (JSException)
         {

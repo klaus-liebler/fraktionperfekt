@@ -38,7 +38,7 @@ public static class Kalenderdatei
 
             if (e.Beschreibung is { Length: > 0 } beschreibung)
             {
-                Zeile(sb, "DESCRIPTION:" + Text(beschreibung));
+                Zeile(sb, "DESCRIPTION:" + Text(Klartext(beschreibung)));
             }
 
             if (e.Abgesagt)
@@ -69,4 +69,8 @@ public static class Kalenderdatei
 
         sb.Append(zeile).Append("\r\n");
     }
+
+    /// <summary>Markdown als Klartext für Kalender-Apps (keine Formatierungszeichen, Bilder als Alt-Text).</summary>
+    public static string Klartext(string markdown)
+        => Markdig.Markdown.ToPlainText(markdown ?? string.Empty, Markdig.MarkdownExtensions.UsePipeTables(Markdig.MarkdownExtensions.DisableHtml(new Markdig.MarkdownPipelineBuilder())).Build()).Trim();
 }

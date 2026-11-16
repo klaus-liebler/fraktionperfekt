@@ -36,3 +36,34 @@ public sealed class HelferinRechteTests
         (await u.InAsync(d => d.GetRequiredService<BesetzungDienst>().ListeAsync())).ShouldBeEmpty();
     }
 }
+
+/// <summary>Du-Ansprache immer mit dem Vornamen-Feld, nie mit dem ersten Wort des Anzeigenamens (Titel).</summary>
+public sealed class AnspracheTests
+{
+    [Fact]
+    public async Task Startseite_begruesst_Personen_mit_Titel_beim_Vornamen()
+    {
+        await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
+        foreach (var (kennung, vorname, anzeige) in new[] { ("kliebler", "Klaus", "Dr. Klaus Liebler"), ("tschubert", "Tim", "Dr. Tim Schubert"), ("djoud", "Dames", "Dames Joud") })
+        {
+            var person = await u.AnmeldenAsync(kennung);
+            person.Anzeigename.ShouldBe(anzeige);
+            var heute = await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Heute.HeuteDienst>().LadenAsync());
+            heute.Vorname.ShouldBe(vorname);
+        }
+    }
+}
+
+public sealed class KalenderKlartextTests
+{
+    [Fact]
+    public void Beschreibung_im_Kalender_Abo_ist_Klartext_ohne_Markdown()
+    {
+        var text = FraktionPerfekt.Application.Termine.Kalenderdatei.Klartext("## Ablauf\n\n- **Begrüßung** durch [Johannes](https://example.org)\n- ![Lageplan](dateien/bild/0196a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b)");
+        text.ShouldContain("Ablauf");
+        text.ShouldContain("Begrüßung durch Johannes");
+        text.ShouldNotContain("**");
+        text.ShouldNotContain("##");
+        text.ShouldNotContain("dateien/bild");
+    }
+}

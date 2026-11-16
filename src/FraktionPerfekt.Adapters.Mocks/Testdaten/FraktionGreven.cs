@@ -14,7 +14,7 @@ public static class FraktionGreven
 {
     public static IReadOnlyList<Demoperson> Ratsmitglieder { get; } =
     [
-        new("Klaus", "Liebler", "kliebler", "ris-p14", "Ratsmitglied", [Rolle.Mitglied], "Herr", "Prof. Dr."),
+        new("Klaus", "Liebler", "kliebler", "ris-p14", "Ratsmitglied", [Rolle.Mitglied], "Herr", "Dr."),
         new("Johannes", "Wilp", "jwilp", "ris-p01", "Fraktionsvorsitzender", [Rolle.Vorstand, Rolle.Mitglied], "Herr", EMail: "johannes.wilp@cdu-greven.de"),
         new("Eike", "Brinkhaus", "ebrinkhaus", "ris-p02", "1. stellv. Fraktionsvorsitzender", [Rolle.Vorstand, Rolle.Mitglied], "Herr", EMail: "eike.brinkhaus@cdu-greven.de"),
         new("Philipp", "Nientiedt", "pnientiedt", "ris-p15", "2. stellv. Fraktionsvorsitzender", [Rolle.Vorstand, Rolle.Mitglied], "Herr", EMail: "philipp.wimber@cdu-greven.de"),
@@ -256,7 +256,7 @@ public static class FraktionGreven
     public static IReadOnlyList<(Demoperson Person, RisZugehoerigkeit Zugehoerigkeit)> Zugehoerigkeiten { get; } =
         RisTabelle.Parsen(Gremienzugehoerigkeit).Concat(RisTabelle.Parsen(SitzeSachkundigeDemo)).Select(z => (PersonZu(z.Person), z)).ToList();
 
-    /// <summary>Person zum Namen aus der RIS-Tabelle („Prof. Dr. Klaus Liebler“, „Herr Thomas Horstmann“ …).</summary>
+    /// <summary>Person zum Namen aus der RIS-Tabelle („Dr. Klaus Liebler“, „Herr Thomas Horstmann“ …).</summary>
     public static Demoperson PersonZu(string name)
     {
         var n = " " + string.Join(' ', name.Split(' ', StringSplitOptions.RemoveEmptyEntries)) + " ";

@@ -39,7 +39,8 @@ public sealed class Person
     /// <summary>Nachname, auch mehrteilig („Große Maestrup“, „Schulte Jochmaring“); danach wird sortiert.</summary>
     public string Nachname { get; private set; }
 
-    /// <summary>Akademischer Titel („Dr.“, „Prof. Dr.“), wird in der Anzeige vorangestellt, nicht sortiert.</summary>
+    /// <summary>Akademischer Grad („Dr.“) für förmliche Darstellungen (Listen, PDF, „Herr Dr. Schubert“); nicht sortiert und nie in der
+    /// Du-Ansprache. Amtsbezeichnungen wie „Prof.“ gehören nicht hierher.</summary>
     public string? Titel { get; private set; }
 
     public string? EMail { get; private set; }
