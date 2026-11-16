@@ -184,7 +184,6 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.Property(t => t.Ort).HasMaxLength(300);
             b.Property(t => t.Beschreibung).HasMaxLength(4000);
             b.Property(t => t.RisId).HasMaxLength(200);
-            b.Property(t => t.AngelegtVon).HasMaxLength(200);
             b.HasIndex(t => t.Beginn);
             b.HasIndex(t => t.RisId).IsUnique();
             b.HasIndex(t => t.GremiumId);
@@ -260,7 +259,6 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.Property(a => a.Beschreibung).HasMaxLength(2000);
             b.Property(a => a.Anlass).HasMaxLength(60);
             b.Property(a => a.Ziel).HasMaxLength(300);
-            b.Property(a => a.ErledigtVon).HasMaxLength(200);
             b.Property(a => a.Vermerk).HasMaxLength(2000);
             b.HasIndex(a => new { a.Status, a.Zustaendig });
             b.HasIndex(a => new { a.Anlass, a.AnlassId });

@@ -116,7 +116,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Ressourcen](#ressourcen) – 6 Spalten
 - [Schichteintraege](#schichteintraege) – 4 Spalten
 - [Schichten](#schichten) – 6 Spalten
-- [Sitzungen](#sitzungen) – 16 Spalten
+- [Sitzungen](#sitzungen) – 14 Spalten
 - [Sitzungsanwesenheiten](#sitzungsanwesenheiten) – 4 Spalten
 - [Spenden](#spenden) – 9 Spalten
 - [Stimmen](#stimmen) – 5 Spalten
@@ -129,7 +129,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Umfragen](#umfragen) – 15 Spalten
 - [Vertretungsanfragen](#vertretungsanfragen) – 8 Spalten
 - [Vertretungsfaelle](#vertretungsfaelle) – 10 Spalten
-- [WikiSeiten](#wikiseiten) – 9 Spalten
+- [WikiSeiten](#wikiseiten) – 7 Spalten
 - [WikiVersionen](#wikiversionen) – 8 Spalten
 - [WikiVorschlaege](#wikivorschlaege) – 12 Spalten
 
@@ -257,7 +257,7 @@ Klasse: `FraktionPerfekt.Domain.Aufgaben.Aufgabe`
 | Beschreibung | TEXT(2000) |  |  | G |  |
 | ErinnertAm | INTEGER |  |  | G |  |
 | ErledigtAm | INTEGER |  |  | G |  |
-| ErledigtVon | TEXT(200) |  |  | **K** | Name der Person als Text – wird Personenverweis (Etappe 1) |
+| ErledigtVonPersonId | TEXT |  |  | G | wer erledigt hat; leer = Automatik |
 | ErstelltAm | INTEGER | ja |  | G |  |
 | FaelligAm | INTEGER |  |  | G |  |
 | Status | TEXT(40) | ja | Index | G |  |
@@ -949,12 +949,10 @@ Klasse: `FraktionPerfekt.Domain.Sitzungen.Sitzung`
 | EingeladenAm | INTEGER |  |  | G |  |
 | FreigegebenAm | INTEGER |  |  | G |  |
 | FreigegebenVonPersonId | TEXT |  |  | G |  |
-| GremiumId | TEXT |  |  | **K** | Kopie aus Termine.GremiumId – entfällt (Etappe 1) |
 | LeitungPersonId | TEXT |  |  | G |  |
 | ProtokollPersonId | TEXT |  |  | G |  |
 | Status | TEXT(40) | ja |  | G |  |
 | TerminId | TEXT | ja | eindeutig | G |  |
-| Titel | TEXT | ja |  | **K** | Kopie aus Termine.Titel – entfällt (Etappe 1) |
 | TopAnmeldungBis | INTEGER |  |  | G |  |
 | Vorlage | TEXT | ja |  | G |  |
 
@@ -1040,7 +1038,7 @@ Klasse: `FraktionPerfekt.Domain.Termine.Termin`
 | Id | TEXT | ja | PK | G | Schlüssel (Zeilen-Id) |
 | Abgesagt | INTEGER | ja |  | G |  |
 | AngelegtAm | INTEGER | ja |  | G |  |
-| AngelegtVon | TEXT(200) | ja |  | **K** | Name der Person als Text – wird Personenverweis (Etappe 1) |
+| AngelegtVonPersonId | TEXT |  |  | G | wer angelegt hat; leer = RIS-Abgleich bzw. Automatik |
 | Art | TEXT(40) | ja |  | G |  |
 | Beginn | TEXT | ja | Index | G |  |
 | Beschreibung | TEXT(4000) |  |  | G |  |
@@ -1170,10 +1168,8 @@ Klasse: `FraktionPerfekt.Domain.Wissen.WikiSeite`
 | Archiviert | INTEGER | ja |  | G |  |
 | Bereich | TEXT | ja |  | G |  |
 | ErstelltAm | INTEGER | ja |  | G |  |
-| GeaendertAm | INTEGER | ja |  | **K** | Zeitpunkt der letzten WikiVersion – entfällt (Etappe 1) |
 | GremiumId | TEXT |  |  | G |  |
 | Titel | TEXT | ja | eindeutig | G |  |
-| Version | INTEGER | ja |  | **K** | höchste Nummer aus WikiVersionen – entfällt (Etappe 1) |
 | Vertraulich | INTEGER | ja |  | G |  |
 
 Indizes: (Titel) eindeutig
@@ -1209,9 +1205,9 @@ Klasse: `FraktionPerfekt.Domain.Wissen.WikiVorschlag`
 | EntschiedenAm | INTEGER |  |  | G |  |
 | EntschiedenVonPersonId | TEXT |  |  | G |  |
 | Nachher | TEXT |  |  | G |  |
+| Quelle | TEXT | ja |  | G | Name des KI-Systems (keine Person) |
 | SeiteId | TEXT | ja | Index | G |  |
 | Status | TEXT(20) | ja | Index | G |  |
-| Von | TEXT | ja |  | **K** | Name der Person bzw. „KI“ als Text – wird Personenverweis oder Kennzeichen KI (Etappe 1) |
 | Vorher | TEXT | ja |  | G |  |
 
 Indizes: (SeiteId, Status)

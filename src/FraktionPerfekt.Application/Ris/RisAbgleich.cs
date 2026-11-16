@@ -149,7 +149,7 @@ public sealed class RisAbgleich(
             }
 
             t = new Termin(s.Name, gremium.Art == Gremienart.Rat ? Terminart.Ratssitzung : Terminart.Ausschusssitzung, s.Beginn, s.Ende, s.Ort,
-                gremium.Id, ris.Quelle, jetzt, (s.Tagesordnung is null ? string.Empty : "Tagesordnung (Auszug):\n" + s.Tagesordnung + "\n\n")
+                gremium.Id, null, jetzt, (s.Tagesordnung is null ? string.Empty : "Tagesordnung (Auszug):\n" + s.Tagesordnung + "\n\n")
                 + "Öffentliche Sitzung laut Ratsinformationssystem. Unterlagen im RIS (Mandatsträger-Zugang).", s.RisId);
             if (s.Abgesagt)
             {

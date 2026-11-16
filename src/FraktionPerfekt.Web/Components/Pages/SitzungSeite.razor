@@ -16,7 +16,7 @@ else
 {
     <div class="fp-head">
         <div>
-            <h1>@d.Sitzung.Titel</h1>
+            <h1>@d.Termin.Titel</h1>
             <p class="fp-sub">
                 <a href="termine/@d.Termin.Id">@d.Termin.Beginn.ToString("dddd, dd.MM.yyyy, HH:mm") Uhr</a> · @d.Termin.Ort
                 @(d.Gremium is null ? "" : $" · {d.Gremium}") · Leitung: @(d.Leitung ?? "–")

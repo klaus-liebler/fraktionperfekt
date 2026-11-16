@@ -45,10 +45,9 @@ public sealed class Termin
     private Termin()
     {
         Titel = string.Empty;
-        AngelegtVon = string.Empty;
     }
 
-    public Termin(string titel, Terminart art, DateTime beginn, DateTime ende, string? ort, Guid? gremiumId, string angelegtVon,
+    public Termin(string titel, Terminart art, DateTime beginn, DateTime ende, string? ort, Guid? gremiumId, Guid? angelegtVonPersonId,
         DateTimeOffset angelegtAm, string? beschreibung = null, string? risId = null, Guid? id = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(titel);
@@ -66,7 +65,7 @@ public sealed class Termin
         GremiumId = gremiumId;
         Beschreibung = string.IsNullOrWhiteSpace(beschreibung) ? null : beschreibung.Trim();
         RisId = risId;
-        AngelegtVon = angelegtVon;
+        AngelegtVonPersonId = angelegtVonPersonId;
         AngelegtAm = angelegtAm;
     }
 
@@ -90,7 +89,8 @@ public sealed class Termin
 
     public bool Abgesagt { get; private set; }
 
-    public string AngelegtVon { get; private set; }
+    /// <summary>Wer den Termin angelegt hat (Personenverweis; leer = RIS-Abgleich bzw. Automatik).</summary>
+    public Guid? AngelegtVonPersonId { get; private set; }
 
     public DateTimeOffset AngelegtAm { get; private set; }
 

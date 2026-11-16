@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116214352_NamenDin5007";
+    public override string LastMigrationId => "20261116215140_KopienEntfernt";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -439,8 +439,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long?>("ErledigtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<string>("ErledigtVon")
-                    .HasMaxLength(200)
+                b.Property<Guid?>("ErledigtVonPersonId")
                     .HasColumnType("TEXT");
 
                 b.Property<long>("ErstelltAm")
@@ -1731,9 +1730,6 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid?>("FreigegebenVonPersonId")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("GremiumId")
-                    .HasColumnType("TEXT");
-
                 b.Property<Guid?>("LeitungPersonId")
                     .HasColumnType("TEXT");
 
@@ -1746,10 +1742,6 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("TEXT");
 
                 b.Property<Guid>("TerminId")
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Titel")
-                    .IsRequired()
                     .HasColumnType("TEXT");
 
                 b.Property<long?>("TopAnmeldungBis")
@@ -1992,9 +1984,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("AngelegtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<string>("AngelegtVon")
-                    .IsRequired()
-                    .HasMaxLength(200)
+                b.Property<Guid?>("AngelegtVonPersonId")
                     .HasColumnType("TEXT");
 
                 b.Property<string>("Art")
@@ -2471,18 +2461,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<long>("GeaendertAm")
-                    .HasColumnType("INTEGER");
-
                 b.Property<Guid?>("GremiumId")
                     .HasColumnType("TEXT");
 
                 b.Property<string>("Titel")
                     .IsRequired()
                     .HasColumnType("TEXT");
-
-                b.Property<int>("Version")
-                    .HasColumnType("INTEGER");
 
                 b.Property<bool>("Vertraulich")
                     .HasColumnType("INTEGER");
@@ -2559,16 +2543,16 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Nachher")
                     .HasColumnType("TEXT");
 
+                b.Property<string>("Quelle")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
                 b.Property<Guid>("SeiteId")
                     .HasColumnType("TEXT");
 
                 b.Property<string>("Status")
                     .IsRequired()
                     .HasMaxLength(20)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Von")
-                    .IsRequired()
                     .HasColumnType("TEXT");
 
                 b.Property<string>("Vorher")

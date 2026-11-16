@@ -119,7 +119,7 @@ public sealed class RessourcenDienst(
         if (await daten.ErsterAsync(daten.Menge<Aufgabe>().Where(a => a.Anlass == AufgabenAnlass && a.AnlassId == buchungId && a.Status == Aufgabenstatus.Offen)
                 .OrderBy(a => a.Id), abbruch) is { } aufgabe)
         {
-            aufgabe.Erledigen(uhr.GetUtcNow(), wer.Anzeige, bestaetigen ? "freigegeben" : "abgelehnt");
+            aufgabe.Erledigen(uhr.GetUtcNow(), wer.PersonId, bestaetigen ? "freigegeben" : "abgelehnt");
         }
 
         if (await stammdaten.PersonAsync(b.PersonId, abbruch) is { } p)

@@ -77,7 +77,8 @@ public sealed class Aufgabe
 
     public DateTimeOffset? ErledigtAm { get; private set; }
 
-    public string? ErledigtVon { get; private set; }
+    /// <summary>Wer erledigt hat (Personenverweis; leer = Automatik). Der Name wird bei der Anzeige nachgeschlagen, nicht kopiert.</summary>
+    public Guid? ErledigtVonPersonId { get; private set; }
 
     public string? Vermerk { get; private set; }
 
@@ -133,7 +134,7 @@ public sealed class Aufgabe
 
     public void ErinnerungVermerken(DateTimeOffset jetzt) => ErinnertAm = jetzt;
 
-    public void Erledigen(DateTimeOffset jetzt, string von, string? vermerk)
+    public void Erledigen(DateTimeOffset jetzt, Guid? vonPersonId, string? vermerk)
     {
         if (Status == Aufgabenstatus.Erledigt)
         {
@@ -142,7 +143,7 @@ public sealed class Aufgabe
 
         Status = Aufgabenstatus.Erledigt;
         ErledigtAm = jetzt;
-        ErledigtVon = von;
+        ErledigtVonPersonId = vonPersonId;
         Vermerk = string.IsNullOrWhiteSpace(vermerk) ? null : vermerk.Trim();
     }
 

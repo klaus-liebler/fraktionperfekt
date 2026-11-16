@@ -47,19 +47,15 @@ public sealed class Sitzung
 {
     private Sitzung()
     {
-        Titel = string.Empty;
         Vorlage = string.Empty;
     }
 
-    public Sitzung(Guid terminId, Guid? gremiumId, Sitzungsart art, string titel, string vorlage, DateTimeOffset? topAnmeldungBis, Guid? leitungPersonId,
-        DateTimeOffset angelegtAm)
+    /// <summary>Titel und Gremium stehen am Termin (keine Kopie in der Sitzung, Datenbank-Regel 1).</summary>
+    public Sitzung(Guid terminId, Sitzungsart art, string vorlage, DateTimeOffset? topAnmeldungBis, Guid? leitungPersonId, DateTimeOffset angelegtAm)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(titel);
         Id = Ids.Neu();
         TerminId = terminId;
-        GremiumId = gremiumId;
         Art = art;
-        Titel = titel.Trim();
         Vorlage = vorlage;
         TopAnmeldungBis = topAnmeldungBis;
         LeitungPersonId = leitungPersonId;
@@ -71,11 +67,7 @@ public sealed class Sitzung
 
     public Guid TerminId { get; private set; }
 
-    public Guid? GremiumId { get; private set; }
-
     public Sitzungsart Art { get; private set; }
-
-    public string Titel { get; private set; }
 
     /// <summary>Name der Vorlage, aus der die festen TOPs stammen.</summary>
     public string Vorlage { get; private set; }

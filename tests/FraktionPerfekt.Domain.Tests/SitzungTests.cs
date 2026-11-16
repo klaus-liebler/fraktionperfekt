@@ -11,7 +11,7 @@ public sealed class SitzungTests
     [Fact]
     public void Ablauf_Vorbereitung_Einladung_Sitzung_Entwurf_Freigabe()
     {
-        var s = new Sitzung(Guid.NewGuid(), null, Sitzungsart.Fraktionssitzung, "Fraktionssitzung", "Fraktionssitzung", null, Guid.NewGuid(), Jetzt);
+        var s = new Sitzung(Guid.NewGuid(), Sitzungsart.Fraktionssitzung, "Fraktionssitzung", null, Guid.NewGuid(), Jetzt);
         Should.Throw<InvalidOperationException>(() => s.Freigeben(Guid.NewGuid(), Jetzt));
         s.Einladen(Jetzt);
         s.TagesordnungAenderbar.ShouldBeTrue();
@@ -64,7 +64,7 @@ public sealed class SitzungTests
         a.ZugewiesenPersonId.ShouldBeNull();
         a.Zuweisen(anna);
         a.Ueberfaellig(Jetzt.AddDays(2)).ShouldBeTrue();
-        a.Erledigen(Jetzt, "Anna", "ok");
+        a.Erledigen(Jetzt, Guid.NewGuid(), "ok");
         a.Ueberfaellig(Jetzt.AddDays(2)).ShouldBeFalse();
         Should.Throw<InvalidOperationException>(() => a.Zuweisen(anna));
 

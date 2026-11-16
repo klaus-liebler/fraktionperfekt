@@ -47,7 +47,9 @@ public sealed record TerminZeile(
 public sealed record TerminTeilnehmer(Guid PersonId, string Name, Beteiligung Beteiligung, int? Rang, Teilnahmestatus? Status, bool Abwesend,
     string? Vertritt);
 
-public sealed record TerminDetail(TerminZeile Zeile, IReadOnlyList<TerminTeilnehmer> Teilnehmende, IReadOnlyList<Vertretungsfall> Vertretungen);
+/// <param name="AngelegtVon">Name der Person, die den Termin angelegt hat (nachgeschlagen, nicht gespeichert); leer bei RIS bzw. Automatik.</param>
+public sealed record TerminDetail(TerminZeile Zeile, IReadOnlyList<TerminTeilnehmer> Teilnehmende, IReadOnlyList<Vertretungsfall> Vertretungen,
+    string? AngelegtVon = null);
 
 /// <param name="GremiumId">Nur Termine dieses Gremiums.</param>
 /// <param name="PersonId">Nur Termine, an denen diese Person beteiligt ist (Sitz, Vertretung oder Zusage).</param>
@@ -113,7 +115,7 @@ public sealed class KalenderDienst(
                 kontext.IstAbwesend(t.PersonId, termin.Tag), t.VertrittPersonId is { } v ? kontext.Name(v) : null));
         }
 
-        return new TerminDetail(zeile, teilnehmende, faelle);
+        return new TerminDetail(zeile, teilnehmende, faelle, termin.AngelegtVonPersonId is { } von ? kontext.Name(von) : null);
     }
 
     public static Freigabe AntwortFreigabe(Termin termin, DateTime jetzt)
@@ -178,7 +180,7 @@ public sealed class KalenderDienst(
             throw new InvalidOperationException(nein.Begruendung);
         }
 
-        var termin = new Termin(neu.Titel, neu.Art, neu.Beginn, neu.Ende, neu.Ort, neu.GremiumId, wer.Anzeige, uhr.GetUtcNow(), neu.Beschreibung);
+        var termin = new Termin(neu.Titel, neu.Art, neu.Beginn, neu.Ende, neu.Ort, neu.GremiumId, wer.PersonId, uhr.GetUtcNow(), neu.Beschreibung);
         termine.Hinzufuegen(termin);
         await protokoll.ProtokollierenAsync("Termin.Angelegt", $"{termin.Art.Anzeigename()} am {termin.Beginn:dd.MM.yyyy HH:mm} angelegt",
             nameof(Termin), termin.Id, abbruch: abbruch);

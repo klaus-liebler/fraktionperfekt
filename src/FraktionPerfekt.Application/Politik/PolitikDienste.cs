@@ -139,7 +139,7 @@ public sealed class AnfrageDienst(
         foreach (var a in await daten.ListeAsync(daten.Menge<Aufgabe>().Where(x => x.Anlass == AufgabenAnlass && x.AnlassId == anlassId && x.Status == Aufgabenstatus.Offen)
                      .OrderBy(x => x.Id), abbruch))
         {
-            a.Erledigen(uhr.GetUtcNow(), wer.Anzeige, vermerk);
+            a.Erledigen(uhr.GetUtcNow(), wer.PersonId, vermerk);
         }
     }
 }
@@ -352,7 +352,7 @@ public sealed class AnliegenDienst(
         foreach (var t in await daten.ListeAsync(daten.Menge<Aufgabe>().Where(x => x.Anlass == AufgabenAnlass && x.AnlassId == anlassId && x.Status == Aufgabenstatus.Offen)
                      .OrderBy(x => x.Id), abbruch))
         {
-            t.Erledigen(uhr.GetUtcNow(), wer.Anzeige, vermerk);
+            t.Erledigen(uhr.GetUtcNow(), wer.PersonId, vermerk);
         }
     }
 }
@@ -459,7 +459,7 @@ public sealed class PresseDienst(
         foreach (var t in await daten.ListeAsync(daten.Menge<Aufgabe>().Where(x => x.Anlass == AufgabenAnlass && x.AnlassId == id && x.Status == Aufgabenstatus.Offen)
                      .OrderBy(x => x.Id), abbruch))
         {
-            t.Erledigen(uhr.GetUtcNow(), wer.Anzeige, freigeben ? "freigegeben" : "zurückgewiesen");
+            t.Erledigen(uhr.GetUtcNow(), wer.PersonId, freigeben ? "freigegeben" : "zurückgewiesen");
         }
 
         if (await stammdaten.PersonAsync(m.AutorPersonId, abbruch) is { } autor)

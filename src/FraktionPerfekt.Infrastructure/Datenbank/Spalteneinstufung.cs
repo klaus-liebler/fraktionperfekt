@@ -112,13 +112,13 @@ public static class Spalteneinstufung
             },
             ["Aufgaben"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["ErledigtVonPersonId"] = (Spaltenart.Vorgang, "wer erledigt hat; leer = Automatik"),
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
                 ["Anlass"] = (Spaltenart.Vorgang, null),
                 ["AnlassId"] = (Spaltenart.Vorgang, null),
                 ["Beschreibung"] = (Spaltenart.Vorgang, null),
                 ["ErinnertAm"] = (Spaltenart.Vorgang, null),
                 ["ErledigtAm"] = (Spaltenart.Vorgang, null),
-                ["ErledigtVon"] = (Spaltenart.Kopie, "Name der Person als Text – wird Personenverweis (Etappe 1)"),
                 ["ErstelltAm"] = (Spaltenart.Vorgang, null),
                 ["FaelligAm"] = (Spaltenart.Vorgang, null),
                 ["Status"] = (Spaltenart.Vorgang, null),
@@ -583,12 +583,10 @@ public static class Spalteneinstufung
                 ["EingeladenAm"] = (Spaltenart.Vorgang, null),
                 ["FreigegebenAm"] = (Spaltenart.Vorgang, null),
                 ["FreigegebenVonPersonId"] = (Spaltenart.Vorgang, null),
-                ["GremiumId"] = (Spaltenart.Kopie, "Kopie aus Termine.GremiumId – entfällt (Etappe 1)"),
                 ["LeitungPersonId"] = (Spaltenart.Vorgang, null),
                 ["ProtokollPersonId"] = (Spaltenart.Vorgang, null),
                 ["Status"] = (Spaltenart.Vorgang, null),
                 ["TerminId"] = (Spaltenart.Vorgang, null),
-                ["Titel"] = (Spaltenart.Kopie, "Kopie aus Termine.Titel – entfällt (Etappe 1)"),
                 ["TopAnmeldungBis"] = (Spaltenart.Vorgang, null),
                 ["Vorlage"] = (Spaltenart.Vorgang, null),
             },
@@ -637,10 +635,10 @@ public static class Spalteneinstufung
             },
             ["Termine"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["AngelegtVonPersonId"] = (Spaltenart.Vorgang, "wer angelegt hat; leer = RIS-Abgleich bzw. Automatik"),
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
                 ["Abgesagt"] = (Spaltenart.Vorgang, null),
                 ["AngelegtAm"] = (Spaltenart.Vorgang, null),
-                ["AngelegtVon"] = (Spaltenart.Kopie, "Name der Person als Text – wird Personenverweis (Etappe 1)"),
                 ["Art"] = (Spaltenart.Vorgang, null),
                 ["Beginn"] = (Spaltenart.Vorgang, null),
                 ["Beschreibung"] = (Spaltenart.Vorgang, null),
@@ -730,10 +728,8 @@ public static class Spalteneinstufung
                 ["Archiviert"] = (Spaltenart.Vorgang, null),
                 ["Bereich"] = (Spaltenart.Vorgang, null),
                 ["ErstelltAm"] = (Spaltenart.Vorgang, null),
-                ["GeaendertAm"] = (Spaltenart.Kopie, "Zeitpunkt der letzten WikiVersion – entfällt (Etappe 1)"),
                 ["GremiumId"] = (Spaltenart.Vorgang, null),
                 ["Titel"] = (Spaltenart.Vorgang, null),
-                ["Version"] = (Spaltenart.Kopie, "höchste Nummer aus WikiVersionen – entfällt (Etappe 1)"),
                 ["Vertraulich"] = (Spaltenart.Vorgang, null),
             },
             ["WikiVersionen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
@@ -749,6 +745,7 @@ public static class Spalteneinstufung
             },
             ["WikiVorschlaege"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["Quelle"] = (Spaltenart.Vorgang, "Name des KI-Systems (keine Person)"),
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
                 ["Am"] = (Spaltenart.Vorgang, null),
                 ["Art"] = (Spaltenart.Vorgang, null),
@@ -759,7 +756,6 @@ public static class Spalteneinstufung
                 ["Nachher"] = (Spaltenart.Vorgang, null),
                 ["SeiteId"] = (Spaltenart.Vorgang, null),
                 ["Status"] = (Spaltenart.Vorgang, null),
-                ["Von"] = (Spaltenart.Kopie, "Name der Person bzw. „KI“ als Text – wird Personenverweis oder Kennzeichen KI (Etappe 1)"),
                 ["Vorher"] = (Spaltenart.Vorgang, null),
             },
             ["GremiumVersionen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)

@@ -69,7 +69,7 @@ internal static class RessourcenDemodaten
 
         // Vergangener öffentlicher Termin: Anna war dabei, Bericht fehlt noch („Kurzbericht anlegen“)
         var vorbei = heute.AddDays(-3).ToDateTime(new TimeOnly(18, 0));
-        var t2 = new Termin("Bürgerversammlung zur Grundschulplanung", Terminart.Oeffentlich, vorbei, vorbei.AddHours(2), "Aula einer Grundschule", null, "Demodaten",
+        var t2 = new Termin("Bürgerversammlung zur Grundschulplanung", Terminart.Oeffentlich, vorbei, vorbei.AddHours(2), "Aula einer Grundschule", null, null,
             jetzt.AddDays(-14));
         termine.Hinzufuegen(t2);
         var a2 = new Besetzungsanfrage(t2.Id, 2, jetzt.AddDays(-5), Besetzungsmodus.VorstandBestaetigt, P("jwilp"), jetzt.AddDays(-14), null);

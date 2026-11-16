@@ -50,7 +50,12 @@ public sealed partial class FraktionDbContext
             b.HasIndex(x => new { x.BildId, x.BezugArt, x.BezugId }).IsUnique();
             b.HasIndex(x => new { x.BezugArt, x.BezugId });
         });
-        Einfach<Domain.Wissen.WikiSeite>(modelBuilder, "WikiSeiten", b => b.HasIndex(x => x.Titel).IsUnique());
+        Einfach<Domain.Wissen.WikiSeite>(modelBuilder, "WikiSeiten", b =>
+        {
+            b.HasIndex(x => x.Titel).IsUnique();
+            b.Ignore(x => x.Version);       // aus WikiVersionen (keine Kopie)
+            b.Ignore(x => x.GeaendertAm);
+        });
         Einfach<Domain.Wissen.WikiVersion>(modelBuilder, "WikiVersionen", b => b.HasIndex(x => new { x.SeiteId, x.Nummer }).IsUnique());
         Einfach<Domain.Wissen.WikiVorschlag>(modelBuilder, "WikiVorschlaege", b =>
         {

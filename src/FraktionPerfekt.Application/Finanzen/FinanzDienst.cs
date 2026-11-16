@@ -280,7 +280,7 @@ public sealed class FinanzDienst(
         foreach (var t in await daten.ListeAsync(daten.Menge<Aufgabe>().Where(x => x.Anlass == AufgabenAnlass && x.AnlassId == anlassId && x.Status == Aufgabenstatus.Offen)
                      .OrderBy(x => x.Id), abbruch))
         {
-            t.Erledigen(uhr.GetUtcNow(), wer.Anzeige, vermerk);
+            t.Erledigen(uhr.GetUtcNow(), wer.PersonId, vermerk);
         }
     }
 

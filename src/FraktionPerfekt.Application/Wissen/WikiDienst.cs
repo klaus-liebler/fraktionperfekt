@@ -233,6 +233,12 @@ public sealed class WikiDienst(
     private async Task NeueVersionAsync(Guid seiteId, string text, Guid? personId, string? kommentar, Guid? vorschlagId, CancellationToken abbruch)
     {
         var seite = await daten.LadenAsync<WikiSeite>(seiteId, "Seite", abbruch);
+        var letzte = await daten.ListeAsync(daten.Menge<WikiVersion>().Where(v => v.SeiteId == seiteId).OrderByDescending(v => v.Nummer).ThenBy(v => v.Id).Take(1), abbruch);
+        if (letzte.Count > 0)
+        {
+            seite.StandAusVersion(letzte[0].Nummer, letzte[0].Am);
+        }
+
         seite.NeueVersion(uhr.GetUtcNow());
         daten.Hinzufuegen(new WikiVersion(seite.Id, seite.Version, text, personId, kommentar, uhr.GetUtcNow(), vorschlagId));
         await suche.AktualisierenAsync(seite.Id, seite.Titel, text, abbruch);
@@ -261,6 +267,15 @@ public sealed class WikiDienst(
     {
         var ids = seiten.Select(s => s.Id).ToList();
         var versionen = await daten.ListeAsync(daten.Menge<WikiVersion>().Where(v => ids.Contains(v.SeiteId)).OrderBy(v => v.SeiteId).ThenBy(v => v.Nummer).ThenBy(v => v.Id), abbruch);
-        return versionen.GroupBy(v => v.SeiteId).ToDictionary(g => g.Key, g => g.Last().Text);
+        var neueste = versionen.GroupBy(v => v.SeiteId).ToDictionary(g => g.Key, g => g.Last());
+        foreach (var s in seiten)
+        {
+            if (neueste.TryGetValue(s.Id, out var v))
+            {
+                s.StandAusVersion(v.Nummer, v.Am);   // Version und Änderungszeit stehen nur in den Versionen
+            }
+        }
+
+        return neueste.ToDictionary(x => x.Key, x => x.Value.Text);
     }
 }

@@ -67,7 +67,7 @@
             {
                 <tr>
                     <td>@z.Termin.Beginn.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td><a href="sitzungen/@z.Sitzung.Id">@z.Sitzung.Titel</a></td>
+                    <td><a href="sitzungen/@z.Sitzung.Id">@z.Termin.Titel</a></td>
                     <td>@z.Gremium</td>
                     <td>@z.Tops</td>
                     <td><StatusPille Stil="@(z.Sitzung.Status == Sitzungsstatus.Freigegeben ? "gut" : z.Sitzung.Status == Sitzungsstatus.Entwurf ? "warn" : "info")">@z.Sitzung.Status.Anzeigename()</StatusPille></td>

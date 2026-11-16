@@ -41,7 +41,7 @@ else
             <h2>Angaben</h2>
             <dl class="fp-dl">
                 <dt>Ort</dt><dd>@(t.Ort ?? "–")</dd>
-                <dt>Quelle</dt><dd>@(t.RisId is null ? $"angelegt von {t.AngelegtVon}" : "Ratsinformationssystem (wird beim Abgleich aktualisiert)")</dd>
+                <dt>Quelle</dt><dd>@(t.RisId is null ? (detail.AngelegtVon is { } a ? $"angelegt von {a}" : "angelegt automatisch (Demodaten bzw. Abgleich)") : "Ratsinformationssystem (wird beim Abgleich aktualisiert)")</dd>
                 @if (t.Beschreibung is not null)
                 {
                     <dt>Hinweis</dt><dd><Markdown Text="@t.Beschreibung" /></dd>

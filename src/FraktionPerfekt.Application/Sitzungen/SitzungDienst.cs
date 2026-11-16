@@ -77,7 +77,7 @@ public sealed class SitzungDienst(
             if (await termine.TerminAsync(s.TerminId, abbruch) is { } t)
             {
                 var anzahl = await daten.AnzahlAsync(daten.Menge<Top>().Where(x => x.SitzungId == s.Id && x.Status != Topstatus.Zusammengelegt), abbruch);
-                zeilen.Add(new SitzungZeile(s, t, s.GremiumId is { } g && gremien.TryGetValue(g, out var n) ? n : null, anzahl));
+                zeilen.Add(new SitzungZeile(s, t, t.GremiumId is { } g && gremien.TryGetValue(g, out var n) ? n : null, anzahl));
             }
         }
 
@@ -123,7 +123,7 @@ public sealed class SitzungDienst(
             _ => ("Tagesordnung aus dem RIS", Sitzungsvorlagen.AusTagesordnung(termin.Beschreibung)),
         };
         var frist = art == Sitzungsart.Gremienprotokoll ? (DateTimeOffset?)null : Ortszeit.Zeitpunkt(termin.Beginn).AddDays(-3);
-        var sitzung = new Sitzung(termin.Id, termin.GremiumId, art, termin.Titel, vorlage, frist, await StandardLeitungAsync(art, abbruch), jetzt);
+        var sitzung = new Sitzung(termin.Id, art, vorlage, frist, await StandardLeitungAsync(art, abbruch), jetzt);
         daten.Hinzufuegen(sitzung);
 
         var position = 0;
@@ -137,7 +137,8 @@ public sealed class SitzungDienst(
         var uebernommen = 0;
         if (termin.GremiumId is { } gremiumId)
         {
-            var frueher = await daten.ListeAsync(daten.Menge<Sitzung>().Where(s => s.GremiumId == gremiumId && s.Id != sitzung.Id).Select(s => s.Id), abbruch);
+            var frueher = await daten.ListeAsync(daten.Menge<Sitzung>().Join(daten.Menge<Termin>(), s => s.TerminId, t => t.Id, (s, t) => new { s.Id, t.GremiumId })
+                .Where(x => x.GremiumId == gremiumId && x.Id != sitzung.Id).Select(x => x.Id), abbruch);
             var vertagt = await daten.ListeAsync(daten.Menge<Top>()
                 .Where(t => frueher.Contains(t.SitzungId) && t.Status == Topstatus.Vertagt && t.UebernommenInSitzungId == null)
                 .OrderBy(t => t.AngelegtAm).ThenBy(t => t.Id), abbruch);
@@ -201,7 +202,7 @@ public sealed class SitzungDienst(
         var ansicht = tops.Select(t => new TopAnsicht(t, t.Status == Topstatus.Zusammengelegt ? 0 : ++nummer, Name(t.AngemeldetVonPersonId),
             beschluesse.Where(b => b.TopId == t.Id).ToList(),
             aufgaben.Where(a => a.Beschreibung?.Contains($"[TOP {t.Id:N}]", StringComparison.Ordinal) == true).ToList())).ToList();
-        var gremium = s.GremiumId is { } g ? await stammdaten.GremiumAsync(g, abbruch) : null;
+        var gremium = termin.GremiumId is { } g ? await stammdaten.GremiumAsync(g, abbruch) : null;
         var istLeitung = wer.PersonId is { } ich && (ich == s.LeitungPersonId || ich == s.ProtokollPersonId);
         var steuert = Rechte.SitzungenSteuern(wer.Rolle).Erlaubt || istLeitung;
 
@@ -348,7 +349,7 @@ public sealed class SitzungDienst(
         s.Einladen(uhr.GetUtcNow());
 
         var text = new StringBuilder();
-        text.Append(CultureInfo.CurrentCulture, $"Einladung: {s.Titel} am {termin.Beginn:dddd, dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr, {termin.Ort ?? "Ort folgt"}\n\nTagesordnung\n");
+        text.Append(CultureInfo.CurrentCulture, $"Einladung: {termin.Titel} am {termin.Beginn:dddd, dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr, {termin.Ort ?? "Ort folgt"}\n\nTagesordnung\n");
         for (var i = 0; i < tops.Count; i++)
         {
             text.Append(CultureInfo.CurrentCulture, $"TOP {i + 1} {tops[i].Titel}\n");
@@ -363,8 +364,8 @@ public sealed class SitzungDienst(
         var empfaenger = await TeilnehmendeAsync(s, termin, abbruch);
         foreach (var p in empfaenger)
         {
-            await postausgang.BenachrichtigenAsync(p, $"{(erneut ? "Aktualisierte " : "")}Einladung: {s.Titel} am {termin.Beginn:dd.MM.}",
-                $"{s.Titel} am {termin.Beginn:dd.MM.} um {termin.Beginn:HH:mm} Uhr – bitte zu- oder absagen.", $"{Domain.Personen.Ansprache.Begruessung(p)},\n\n{text}",
+            await postausgang.BenachrichtigenAsync(p, $"{(erneut ? "Aktualisierte " : "")}Einladung: {termin.Titel} am {termin.Beginn:dd.MM.}",
+                $"{termin.Titel} am {termin.Beginn:dd.MM.} um {termin.Beginn:HH:mm} Uhr – bitte zu- oder absagen.", $"{Domain.Personen.Ansprache.Begruessung(p)},\n\n{text}",
                 $"termine/{termin.Id}", "Zusagen", abbruch);
         }
 
@@ -450,7 +451,7 @@ public sealed class SitzungDienst(
             _ => Beschlussquelle.Fraktion,
         };
         var ergebnis = ja + nein + enthaltung == 0 ? Beschlussergebnis.Kenntnisnahme : Beschluss.Auswerten(ja, nein);
-        var b = new Beschluss(quelle, termin.Tag, top.Titel, text, ergebnis, ja, nein, enthaltung, s.Id, top.Id, s.GremiumId, top.AntragId);
+        var b = new Beschluss(quelle, termin.Tag, top.Titel, text, ergebnis, ja, nein, enthaltung, s.Id, top.Id, termin.GremiumId, top.AntragId);
         daten.Hinzufuegen(b);
         top.AlsBehandeltMarkieren();
         await protokoll.ProtokollierenAsync("Sitzung.Beschluss", $"Beschluss zu TOP „{top.Titel}“: {ergebnis} ({b.Stimmen})", nameof(Sitzung), s.Id, abbruch: abbruch);
@@ -464,7 +465,8 @@ public sealed class SitzungDienst(
         var top = await daten.LadenAsync<Top>(topId, "TOP", abbruch);
         var s = await daten.LadenAsync<Sitzung>(top.SitzungId, "Sitzung", abbruch);
         await ProtokollierenPruefenAsync(s, abbruch);
-        var aufgabe = new Aufgabe(titel, $"Aus {s.Titel}, TOP „{top.Titel}“ [TOP {top.Id:N}]", null, AufgabenAnlass, s.Id, $"sitzungen/{s.Id}", uhr.GetUtcNow(),
+        var sitzungstitel = (await termine.TerminAsync(s.TerminId, abbruch))?.Titel ?? "Sitzung";
+        var aufgabe = new Aufgabe(titel, $"Aus {sitzungstitel}, TOP „{top.Titel}“ [TOP {top.Id:N}]", null, AufgabenAnlass, s.Id, $"sitzungen/{s.Id}", uhr.GetUtcNow(),
             frist is { } f ? Ortszeit.Zeitpunkt(f.ToDateTime(new TimeOnly(18, 0))) : null, personId);
         daten.Hinzufuegen(aufgabe);
         if (await stammdaten.PersonAsync(personId, abbruch) is { } p)
@@ -502,7 +504,7 @@ public sealed class SitzungDienst(
         var empfaenger = await TeilnehmendeAsync(s, termin, abbruch);
         foreach (var p in empfaenger.Where(p => p.EMail is not null))
         {
-            await postausgang.MailEinreihenAsync(p.EMail!, p.Anzeigename, $"Protokoll: {s.Titel} vom {termin.Beginn:dd.MM.yyyy}", text, p.Id,
+            await postausgang.MailEinreihenAsync(p.EMail!, p.Anzeigename, $"Protokoll: {termin.Titel} vom {termin.Beginn:dd.MM.yyyy}", text, p.Id,
                 $"sitzungen/{s.Id}", abbruch);
         }
 
@@ -544,7 +546,7 @@ public sealed class SitzungDienst(
     {
         var d = await DetailAsync(sitzungId, abbruch) ?? throw new InvalidOperationException("Sitzung nicht gefunden.");
         var sb = new StringBuilder();
-        sb.Append(CultureInfo.CurrentCulture, $"# Protokoll: {d.Sitzung.Titel}\n\n");
+        sb.Append(CultureInfo.CurrentCulture, $"# Protokoll: {d.Termin.Titel}\n\n");
         sb.Append(CultureInfo.CurrentCulture, $"{d.Termin.Beginn:dddd, dd.MM.yyyy}, {d.Termin.Beginn:HH:mm} Uhr, {d.Termin.Ort}\n");
         sb.Append(CultureInfo.CurrentCulture, $"Sitzungsleitung: {d.Leitung ?? "–"} · Status: {d.Sitzung.Status.Anzeigename()}\n\n");
         sb.Append(CultureInfo.CurrentCulture, $"Anwesend: {string.Join(", ", d.Anwesenheit.Where(a => a.Status == Anwesenheitsstatus.Anwesend).Select(a => a.Name))}\n");
@@ -597,7 +599,7 @@ public sealed class SitzungDienst(
             if (pos >= 0 && await termine.TerminAsync(sitzungen[t.SitzungId].TerminId, abbruch) is { } termin)
             {
                 var start = Math.Max(0, pos - 60);
-                treffer.Add(new Protokolltreffer(t.SitzungId, sitzungen[t.SitzungId].Titel, termin.Tag, t.Titel,
+                treffer.Add(new Protokolltreffer(t.SitzungId, termin.Titel, termin.Tag, t.Titel,
                     (start > 0 ? "…" : "") + text.Substring(start, Math.Min(text.Length - start, 180))));
             }
         }
@@ -607,12 +609,13 @@ public sealed class SitzungDienst(
 
     private async Task<Sitzung?> NaechsteSitzungAsync(Sitzung s, Termin termin, CancellationToken abbruch)
     {
-        if (s.GremiumId is not { } g)
+        if (termin.GremiumId is not { } g)
         {
             return null;
         }
 
-        var kandidaten = await daten.ListeAsync(daten.Menge<Sitzung>().Where(x => x.GremiumId == g && x.Id != s.Id).OrderBy(x => x.Id), abbruch);
+        var kandidaten = await daten.ListeAsync(daten.Menge<Sitzung>().Join(daten.Menge<Termin>(), x => x.TerminId, t => t.Id, (x, t) => new { x, t.GremiumId })
+            .Where(y => y.GremiumId == g && y.x.Id != s.Id).Select(y => y.x).OrderBy(x => x.Id), abbruch);
         Sitzung? beste = null;
         DateTime? besterBeginn = null;
         foreach (var k in kandidaten)
@@ -632,7 +635,7 @@ public sealed class SitzungDienst(
         var personen = (await stammdaten.PersonenAsync(abbruch)).Where(p => p.Aktiv).ToList();
         var jetzt = uhr.GetUtcNow();
         var heute = Ortszeit.Heute(uhr);
-        if (s.GremiumId is not { } g)
+        if (termin.GremiumId is not { } g)
         {
             return personen.Where(p => p.RollenAm(heute, jetzt).Any(r => r is not Rolle.Helferin)).ToList();
         }

@@ -17,7 +17,7 @@ internal static class DokumentEndpunkte
             }
 
             var text = await sitzungen.ProtokolltextAsync(id);
-            var bytes = pdf.Erzeugen(new PdfDokument($"Protokoll: {d.Sitzung.Titel}",
+            var bytes = pdf.Erzeugen(new PdfDokument($"Protokoll: {d.Termin.Titel}",
                 $"{d.Termin.Beginn:dddd, dd.MM.yyyy, HH:mm} Uhr · {d.Termin.Ort} · {d.Sitzung.Status.Anzeigename()}", text, await bilder.InhalteAsync(text)));
             return Results.File(bytes, "application/pdf", $"protokoll-{d.Termin.Beginn:yyyy-MM-dd}.pdf");
         }).RequireAuthorization();

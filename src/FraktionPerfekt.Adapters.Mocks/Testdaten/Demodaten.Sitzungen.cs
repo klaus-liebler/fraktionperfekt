@@ -23,7 +23,7 @@ internal static class SitzungsDemodaten
         // Freigegebenes Protokoll der letzten Fraktionssitzung
         if (vergangen is not null)
         {
-            var s = new Sitzung(vergangen.Id, vergangen.GremiumId, Sitzungsart.Fraktionssitzung, vergangen.Titel, "Fraktionssitzung", null, vorsitz, jetzt.AddDays(-20));
+            var s = new Sitzung(vergangen.Id, Sitzungsart.Fraktionssitzung, "Fraktionssitzung", null, vorsitz, jetzt.AddDays(-20));
             s.LeitungFestlegen(vorsitz, personen["kalbers"].Id);
             s.Einladen(jetzt.AddDays(-14));
             s.Beginnen(jetzt.AddDays(-10), personen["kalbers"].Id);
@@ -51,10 +51,10 @@ internal static class SitzungsDemodaten
             Top("Verschiedenes", null);
 
             daten.Hinzufuegen(new Beschluss(Beschlussquelle.Fraktion, vergangen.Tag, schule.Titel,
-                "Die Fraktion beantragt eine Elternbefragung, bevor über Schließungen entschieden wird.", Beschlussergebnis.Angenommen, 11, 0, 1, s.Id, schule.Id, s.GremiumId));
+                "Die Fraktion beantragt eine Elternbefragung, bevor über Schließungen entschieden wird.", Beschlussergebnis.Angenommen, 11, 0, 1, s.Id, schule.Id, vergangen.GremiumId));
             daten.Hinzufuegen(new Beschluss(Beschlussquelle.Fraktion, vergangen.Tag, haushalt.Titel,
                 "Die Fraktion trägt den Haushaltsentwurf nur mit einer Prioritätenliste der Bauinvestitionen mit.", Beschlussergebnis.Angenommen, 9, 2, 1, s.Id, haushalt.Id,
-                s.GremiumId));
+                vergangen.GremiumId));
             foreach (var (k, status) in new[] { ("jwilp", Anwesenheitsstatus.Anwesend), ("ebrinkhaus", Anwesenheitsstatus.Anwesend), ("djoud", Anwesenheitsstatus.Anwesend),
                          ("lkuehlert", Anwesenheitsstatus.Anwesend), ("thorstmann", Anwesenheitsstatus.Entschuldigt), ("bkurney", Anwesenheitsstatus.Anwesend),
                          ("mgries", Anwesenheitsstatus.Anwesend), ("seisenrichter", Anwesenheitsstatus.Anwesend), ("kschwenken", Anwesenheitsstatus.Anwesend),
@@ -64,9 +64,9 @@ internal static class SitzungsDemodaten
                 daten.Hinzufuegen(new Sitzungsanwesenheit(s.Id, personen[k].Id, status));
             }
 
-            daten.Hinzufuegen(new Aufgabe("Fragen zur Elternbefragung an die Schulverwaltung schicken", $"Aus {s.Titel}, TOP „{schule.Titel}“ [TOP {schule.Id:N}]", null,
+            daten.Hinzufuegen(new Aufgabe("Fragen zur Elternbefragung an die Schulverwaltung schicken", $"Aus {vergangen.Titel}, TOP „{schule.Titel}“ [TOP {schule.Id:N}]", null,
                 "Protokoll", s.Id, $"sitzungen/{s.Id}", jetzt.AddDays(-10), jetzt.AddDays(5), personen["lkuehlert"].Id).MitThema("Schule und Bildung"));
-            daten.Hinzufuegen(new Aufgabe("Prioritätenliste Bauinvestitionen mit der Kämmerei besprechen", $"Aus {s.Titel}, TOP „{haushalt.Titel}“ [TOP {haushalt.Id:N}]", null,
+            daten.Hinzufuegen(new Aufgabe("Prioritätenliste Bauinvestitionen mit der Kämmerei besprechen", $"Aus {vergangen.Titel}, TOP „{haushalt.Titel}“ [TOP {haushalt.Id:N}]", null,
                 "Protokoll", s.Id, $"sitzungen/{s.Id}", jetzt.AddDays(-10), jetzt.AddDays(-1), personen["djoud"].Id).MitThema("Haushalt und Finanzen"));
             s.Beenden(jetzt.AddDays(-10).AddHours(3));
             s.Freigeben(vorsitz, jetzt.AddDays(-9));
@@ -75,7 +75,7 @@ internal static class SitzungsDemodaten
         // Nächste Fraktionssitzung: vorbereitet, noch nicht eingeladen; mit angemeldetem TOP
         if (naechste is not null)
         {
-            var s = new Sitzung(naechste.Id, naechste.GremiumId, Sitzungsart.Fraktionssitzung, naechste.Titel, "Fraktionssitzung",
+            var s = new Sitzung(naechste.Id, Sitzungsart.Fraktionssitzung, "Fraktionssitzung",
                 Application.Gemeinsam.Ortszeit.Zeitpunkt(naechste.Beginn).AddDays(-3), vorsitz, jetzt);
             daten.Hinzufuegen(s);
             var position = 0;

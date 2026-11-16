@@ -31,7 +31,7 @@
     <section class="fp-card">
         <div class="fp-row" style="justify-content:space-between">
             <h2><a href="wiki/seite/@Uri.EscapeDataString(z.Seite.Titel)">@z.Seite.Titel</a> <span class="fp-pill fp-p-info">@z.Vorschlag.Art</span></h2>
-            <span class="fp-small fp-muted">@z.Vorschlag.Von · @Ortszeit.AlsOrtszeit(z.Vorschlag.Am).ToString("dd.MM.yyyy HH:mm") · zu Version @z.Vorschlag.BasisVersion</span>
+            <span class="fp-small fp-muted">@z.Vorschlag.Quelle · @Ortszeit.AlsOrtszeit(z.Vorschlag.Am).ToString("dd.MM.yyyy HH:mm") · zu Version @z.Vorschlag.BasisVersion</span>
         </div>
         <p>@z.Vorschlag.Begruendung</p>
         @if (z.Veraltet)

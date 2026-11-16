@@ -103,7 +103,6 @@ public sealed class WikiSeite
         GremiumId = gremiumId;
         Vertraulich = vertraulich;
         ErstelltAm = jetzt;
-        GeaendertAm = jetzt;
     }
 
     public Guid Id { get; private set; }
@@ -117,18 +116,25 @@ public sealed class WikiSeite
     /// <summary>Vertraulich: nur Vorstand, Administration und Gremienmitglieder; für die KI unsichtbar.</summary>
     public bool Vertraulich { get; private set; }
 
+    /// <summary>Nummer der neuesten Version – nicht gespeichert, aus den <see cref="WikiVersion"/>-Zeilen gesetzt (<see cref="StandAusVersion"/>).</summary>
     public int Version { get; private set; }
 
     public DateTimeOffset ErstelltAm { get; private set; }
 
-    public DateTimeOffset GeaendertAm { get; private set; }
+    private DateTimeOffset? _geaendertAm;
+
+    /// <summary>Zeitpunkt der neuesten Version (nicht gespeichert); ohne Version der Zeitpunkt der Anlage.</summary>
+    public DateTimeOffset GeaendertAm => _geaendertAm ?? ErstelltAm;
+
+    /// <summary>Stand aus der neuesten Version übernehmen (Datenbank-Regel 1: keine Kopie in der Seite).</summary>
+    public void StandAusVersion(int nummer, DateTimeOffset am) => (Version, _geaendertAm) = (nummer, am);
 
     public bool Archiviert { get; private set; }
 
     public void NeueVersion(DateTimeOffset jetzt)
     {
         Version++;
-        GeaendertAm = jetzt;
+        _geaendertAm = jetzt;
     }
 
     public void Verschieben(string bereich, string titel, bool vertraulich, Guid? gremiumId)
@@ -227,11 +233,11 @@ public sealed class WikiVorschlag
     private WikiVorschlag()
     {
         Begruendung = string.Empty;
-        Von = string.Empty;
+        Quelle = string.Empty;
         Vorher = string.Empty;
     }
 
-    public WikiVorschlag(Guid seiteId, int basisVersion, Vorschlagsart art, string begruendung, string vorher, string? nachher, string von, DateTimeOffset am)
+    public WikiVorschlag(Guid seiteId, int basisVersion, Vorschlagsart art, string begruendung, string vorher, string? nachher, string quelle, DateTimeOffset am)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(begruendung);
         Id = Ids.Neu();
@@ -241,7 +247,7 @@ public sealed class WikiVorschlag
         Begruendung = begruendung.Trim();
         Vorher = vorher ?? string.Empty;
         Nachher = nachher;
-        Von = von;
+        Quelle = quelle;
         Am = am;
         Status = Wikivorschlagsstatus.Offen;
     }
@@ -262,8 +268,8 @@ public sealed class WikiVorschlag
     /// <summary>Vorgeschlagener neuer Text; <c>null</c> = nur Hinweis (z. B. „verwaist, bitte einordnen“).</summary>
     public string? Nachher { get; private set; }
 
-    /// <summary>„KI (Mock)“, „KI-Schnittstelle“ oder Name einer Person.</summary>
-    public string Von { get; private set; }
+    /// <summary>Welches KI-System den Vorschlag gemacht hat („KI (Mock)“, „KI-Schnittstelle“) – keine Person.</summary>
+    public string Quelle { get; private set; }
 
     public DateTimeOffset Am { get; private set; }
 

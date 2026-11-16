@@ -183,7 +183,7 @@ public sealed class MessungTests
 
                 foreach (var t in termine)
                 {
-                    db.Termine.Add(new Termin($"{t.Titel} ({i})", t.Art, t.Beginn, t.Ende, t.Ort, t.GremiumId, "Messung", jetzt, t.Beschreibung));
+                    db.Termine.Add(new Termin($"{t.Titel} ({i})", t.Art, t.Beginn, t.Ende, t.Ort, t.GremiumId, null, jetzt, t.Beschreibung));
                 }
 
                 await db.SaveChangesAsync();

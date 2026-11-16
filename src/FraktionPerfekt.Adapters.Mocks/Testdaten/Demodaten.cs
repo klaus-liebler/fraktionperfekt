@@ -140,7 +140,7 @@ public sealed class Demodaten(
         for (var tag = montag; tag <= heute.AddDays(120); tag = tag.AddDays(14), nr++)
         {
             termine.Hinzufuegen(new Termin("Fraktionssitzung", Terminart.Fraktionssitzung, tag.ToDateTime(new TimeOnly(19, 0)),
-                tag.ToDateTime(new TimeOnly(21, 30)), "Fraktionsbüro, Rathaus Greven", fraktion.Id, Von, jetzt,
+                tag.ToDateTime(new TimeOnly(21, 30)), "Fraktionsbüro, Rathaus Greven", fraktion.Id, null, jetzt,
                 "TOP 1 Bericht des Vorstands\nTOP 2 " + GrevenerThemen.Fraktionstops[nr % GrevenerThemen.Fraktionstops.Length]
                 + "\nTOP 3 Vorbereitung der Ausschuss- und Ratssitzungen\nTOP 4 Verschiedenes"));
             anzahlTermine++;
@@ -150,7 +150,7 @@ public sealed class Demodaten(
         for (var tag = montag.AddDays(9); tag <= heute.AddDays(120); tag = tag.AddDays(28), nr++)
         {
             termine.Hinzufuegen(new Termin("Arbeitskreis Schule und Ganztag", Terminart.Arbeitskreis, tag.ToDateTime(new TimeOnly(18, 30)),
-                tag.ToDateTime(new TimeOnly(20, 0)), "Fraktionsbüro", arbeitskreis.Id, Von, jetzt,
+                tag.ToDateTime(new TimeOnly(20, 0)), "Fraktionsbüro", arbeitskreis.Id, null, jetzt,
                 GrevenerThemen.Arbeitskreistops[nr % GrevenerThemen.Arbeitskreistops.Length]));
             anzahlTermine++;
         }
@@ -163,7 +163,7 @@ public sealed class Demodaten(
         {
             var tag = heute.AddDays(f.Random.Int(2, 80));
             var beginn = tag.ToDateTime(new TimeOnly(f.Random.Int(10, 19), f.Random.Bool() ? 0 : 30));
-            var t = new Termin(titel, art, beginn, beginn.AddHours(f.Random.Int(1, 3)), ort ?? f.PickRandom(orte), null, Von, jetzt, beschreibung);
+            var t = new Termin(titel, art, beginn, beginn.AddHours(f.Random.Int(1, 3)), ort ?? f.PickRandom(orte), null, null, jetzt, beschreibung);
             termine.Hinzufuegen(t);
             oeffentliche.Add(t);
             anzahlTermine++;

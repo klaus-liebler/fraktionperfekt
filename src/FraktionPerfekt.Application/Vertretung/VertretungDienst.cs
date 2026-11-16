@@ -632,7 +632,7 @@ public sealed class VertretungDienst(
     {
         if (await speicher.OffeneAufgabeZumAnlassAsync(AufgabenAnlass, fall.Id, abbruch) is { } aufgabe)
         {
-            aufgabe.Erledigen(uhr.GetUtcNow(), "Automatik", vermerk);
+            aufgabe.Erledigen(uhr.GetUtcNow(), null, vermerk);
         }
     }
 

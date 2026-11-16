@@ -148,7 +148,7 @@ public sealed class AufgabenDienst(
             throw new InvalidOperationException(nein.Begruendung);
         }
 
-        aufgabe.Erledigen(uhr.GetUtcNow(), wer.Anzeige, vermerk);
+        aufgabe.Erledigen(uhr.GetUtcNow(), wer.PersonId, vermerk);
         await protokoll.ProtokollierenAsync("Aufgabe.Erledigt", $"Aufgabe [{Kurz(aufgabe)}] erledigt", nameof(Aufgabe), aufgabe.Id, abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
     }
