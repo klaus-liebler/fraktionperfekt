@@ -1,6 +1,6 @@
 // Service Worker von FraktionPerfekt: App-Hülle (Stil, Logo, Leaflet) offline vorhalten, Seiten immer frisch vom Server
 // (Netz zuerst, ohne Netz die Offline-Seite), Web-Push-Mitteilungen anzeigen und beim Antippen die passende Seite öffnen.
-const HUELLE = 'fp-huelle-v1';
+const HUELLE = 'fp-huelle-v2';   // neue Version löscht alte Caches (v1 hielt auch Spieldateien)
 const DATEIEN = ['offline.html', 'app.css', 'verhalten.js', 'karte.js', 'manifest.webmanifest', 'marke/logo.png', 'marke/favicon.png',
     'marke/icon-192.png', 'marke/icon-512.png', 'lib/leaflet/leaflet.css', 'lib/leaflet/leaflet.js'];
 
@@ -16,7 +16,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
     const anfrage = e.request;
     const url = new URL(anfrage.url);
-    if (anfrage.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/_blazor')) {
+    // Das Spiel (/spiel/) nie aus dem Cache: nach einer Änderung sonst alte Logik und Grafiken (z. B. fehlende Figuren)
+    if (anfrage.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/_blazor') || url.pathname.startsWith('/spiel/')) {
         return;
     }
 

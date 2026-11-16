@@ -238,3 +238,24 @@ test('Karte: Die Baustelle ist am Hallenbad (das Freibad ist nicht im Umbau)', (
     assert.match(S.ORTE.baustelle.name, /Hallenbad/);
     assert.match(S.SZENEN.baustelle.einstieg, /Hallenbad/);
 });
+
+test('Archiv: Nach Festkleben, Speichern und Neuladen stehen beide verkleinert im Hintergrund', () => {
+    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+    const speicher = new Map();
+    const plaetze = S.speicherplaetze({ getItem: (k) => speicher.get(k) ?? null, setItem: (k, v) => speicher.set(k, v), removeItem: (k) => speicher.delete(k) });
+    const z = S.neuerZustand();
+    for (const s of S.KOMPLETTLOESUNG) { S.schritt(z, s); if (z.szene === 'ems') { break; } }
+    plaetze.schreiben('auto', z);
+    const geladen = plaetze.lesen('auto');
+    geladen.szene = 'karte'; S.reisen(geladen, 'archiv');
+    const gegner = G.npcPlaetze(geladen, S.sichtbareHotspots(geladen)).filter((p) => p.id === 'gegner');
+    assert.equal(gegner.length, 2);
+    assert.ok(gegner.every((p) => p.hinten && p.klebt));
+});
+
+test('Service Worker hält das Spiel nie im Cache (sonst laufen nach Änderungen alte Skripte)', () => {
+    const fs = require('node:fs');
+    const sw = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'wwwroot', 'sw.js'), 'utf8');
+    assert.match(sw, /startsWith\('\/spiel\/'\)/);
+    assert.doesNotMatch(sw, /fp-huelle-v1'/);
+});
