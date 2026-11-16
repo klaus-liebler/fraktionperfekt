@@ -21,7 +21,10 @@ else
             <h1>@detail.Person.Anzeigename</h1>
             <p class="fp-sub">@string.Join(", ", detail.Rollen.Select(r => r.Anzeigename()))</p>
         </div>
-        <a class="fp-btn" href="kalender">Termine im Kalender (Filter Person)</a>
+        <div class="fp-row">
+            <a class="fp-btn" href="personen/@Id/historie">Datenhistorie</a>
+            <a class="fp-btn" href="kalender">Termine im Kalender (Filter Person)</a>
+        </div>
     </div>
 
     @if (meldung is not null)
@@ -65,7 +68,8 @@ else
                 </div>
                 @if (amStichtag is { } st)
                 {
-                    <p class="fp-small">Am @stichtag.ToString("dd.MM.yyyy"): <b>@st.Anzeige</b>@(st.Funktion is null ? "" : $" · {st.Funktion}") · Rollen: @(st.Rollen.Count == 0 ? "keine" : string.Join(", ", st.Rollen.Select(x => x.Anzeigename())))</p>
+                    <p class="fp-small">Am @stichtag.ToString("dd.MM.yyyy"): <b>@st.Anzeige</b>@(st.Funktion is null ? "" : $" · {st.Funktion}") · Rollen: @(st.Rollen.Count == 0 ? "keine" : string.Join(", ", st.Rollen.Select(x => x.Anzeigename())))@(detail.KontakteSichtbar && st.EMail is { } m ? $" · {m}" : "")</p>
+                    <p class="fp-small"><a href="personen/@Id/historie">Datenhistorie mit frei wählbarem Wissensstand …</a></p>
                 }
             </details>
 
@@ -128,6 +132,8 @@ else
             </div>
         </section>
     </div>
+
+    <KontakteKarte Detail="detail" Geaendert="LadenAsync" />
 }
 
 @code {
@@ -150,8 +156,6 @@ else
     {
         PersonMerkmalArt.Anrede => "Anrede",
         PersonMerkmalArt.Geschlecht => "Geschlecht",
-        PersonMerkmalArt.EMail => "E-Mail",
-        PersonMerkmalArt.Mobil => "Mobil",
         _ => "Funktion in der Fraktion",
     };
 
@@ -159,8 +163,6 @@ else
     {
         PersonMerkmalArt.Anrede => s.Anrede,
         PersonMerkmalArt.Geschlecht => s.Geschlecht,
-        PersonMerkmalArt.EMail => s.EMail,
-        PersonMerkmalArt.Mobil => s.Mobil,
         _ => s.Funktion,
     };
 

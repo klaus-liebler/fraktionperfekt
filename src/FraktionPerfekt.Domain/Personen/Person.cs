@@ -15,6 +15,10 @@ public sealed class Person
     private readonly List<PersonRollen> _rollen = [];
     private readonly List<PersonName> _namen = [];
     private readonly List<PersonMerkmal> _merkmale = [];
+    private readonly List<Postadresse> _adressen = [];
+    private readonly List<EMailAdresse> _emails = [];
+    private readonly List<Rufnummer> _rufnummern = [];
+    private readonly List<Einwilligung> _einwilligungen = [];
 
     private Person()
     {
@@ -41,7 +45,7 @@ public sealed class Person
         _merkmale.Add(new PersonMerkmal(PersonMerkmalArt.Anrede, AnredePruefen(anrede), ab, null, erst));
         if (!string.IsNullOrWhiteSpace(eMail))
         {
-            _merkmale.Add(new PersonMerkmal(PersonMerkmalArt.EMail, eMail, ab, null, erst));
+            _emails.Add(new EMailAdresse(Ids.Neu(), Kontaktbereich.Privat, eMail, true, ab, null, erst));
         }
 
         if (!string.IsNullOrWhiteSpace(funktion))
@@ -65,7 +69,7 @@ public sealed class Person
 
     public string? EMail { get; private set; }
 
-    /// <summary>Mobilnummer für spätere SMS/Push-Zuordnung; optional.</summary>
+    /// <summary>Bevorzugte Mobilnummer (Zwischenstand) für SMS/Push-Zuordnung; optional.</summary>
     public string? Mobil { get; private set; }
 
     /// <summary>Anmeldename; ohne Kennung kann sich die Person nicht anmelden.</summary>
@@ -132,8 +136,17 @@ public sealed class Person
 
     public IReadOnlyCollection<PersonMerkmal> Merkmale => _merkmale;
 
+    public IReadOnlyCollection<Postadresse> Adressen => _adressen;
+
+    public IReadOnlyCollection<EMailAdresse> EMails => _emails;
+
+    public IReadOnlyCollection<Rufnummer> Rufnummern => _rufnummern;
+
+    public IReadOnlyCollection<Einwilligung> Einwilligungen => _einwilligungen;
+
     /// <summary>Alle Versionen aller Angaben (für die Datenhistorie).</summary>
-    public IEnumerable<IHistorienwert> AlleVersionen => _namen.Cast<IHistorienwert>().Concat(_merkmale).Concat(_rollen);
+    public IEnumerable<IHistorienwert> AlleVersionen => _namen.Cast<IHistorienwert>().Concat(_merkmale).Concat(_rollen)
+        .Concat(_adressen).Concat(_emails).Concat(_rufnummern).Concat(_einwilligungen);
 
     // ---------- Stichtag ----------
 
@@ -141,10 +154,25 @@ public sealed class Person
     public PersonenStand StandAm(DateOnly gueltigAm, DateTimeOffset bekanntAm)
     {
         string? Merkmal(PersonMerkmalArt art) => _merkmale.Where(m => m.Art == art).AlsStichtag(gueltigAm, bekanntAm)?.WertOderNull;
+        var adressen = Gueltige(_adressen, gueltigAm, bekanntAm).OrderByDescending(a => a.Bevorzugt).ThenBy(a => a.Bereich).ToList();
+        var emails = Gueltige(_emails, gueltigAm, bekanntAm).OrderByDescending(e => e.Bevorzugt).ThenBy(e => e.Bereich).ToList();
+        var nummern = Gueltige(_rufnummern, gueltigAm, bekanntAm).OrderByDescending(r => r.Bevorzugt).ThenBy(r => r.Art).ToList();
+        var einwilligungen = Enum.GetValues<Einwilligungszweck>()
+            .Select(z => _einwilligungen.Where(e => e.Zweck == z).AlsStichtag(gueltigAm, bekanntAm))
+            .OfType<Einwilligung>().Where(e => !e.IstEndemarke).ToList();
         return new PersonenStand(gueltigAm, bekanntAm, _namen.AlsStichtag(gueltigAm, bekanntAm), Merkmal(PersonMerkmalArt.Anrede),
-            Merkmal(PersonMerkmalArt.Geschlecht), Merkmal(PersonMerkmalArt.EMail), Merkmal(PersonMerkmalArt.Mobil), Merkmal(PersonMerkmalArt.Funktion),
-            RollenAm(gueltigAm, bekanntAm));
+            Merkmal(PersonMerkmalArt.Geschlecht), Merkmal(PersonMerkmalArt.Funktion), RollenAm(gueltigAm, bekanntAm), adressen, emails, nummern,
+            einwilligungen);
     }
+
+    /// <summary>Je Gegenstand (Adresse, Nummer …) die am Stichtag gültige Version, ohne aufgegebene.</summary>
+    private static List<T> Gueltige<T>(IEnumerable<T> versionen, DateOnly tag, DateTimeOffset bekanntAm)
+        where T : BitemporaleVersion<T>
+        => versionen.GroupBy(v => v.Gegenstand).Select(g => g.AlsStichtag(tag, bekanntAm)).OfType<T>().Where(v => !v.IstEndemarke).ToList();
+
+    /// <summary>Ist am Stichtag die Einwilligung für den Zweck erteilt (nach Wissensstand <paramref name="bekanntAm"/>)?</summary>
+    public bool EinwilligungAm(Einwilligungszweck zweck, DateOnly am, DateTimeOffset bekanntAm)
+        => _einwilligungen.Where(e => e.Zweck == zweck).AlsStichtag(am, bekanntAm) is { IstEndemarke: false, Erteilt: true };
 
     /// <summary>Name zum damaligen Stand (z. B. Autor:in eines alten Antrags); vor der ersten Erfassung der früheste bekannte Name.</summary>
     public string AnzeigenameAm(DateOnly tag, DateTimeOffset bekanntAm)
@@ -169,7 +197,7 @@ public sealed class Person
         ZwischenstandAktualisieren(erfassung.Am);
     }
 
-    /// <summary>Anrede, Geschlecht, E-Mail, Mobil oder Funktion: Änderung ab Datum oder Korrektur der am Datum gültigen Angabe (leer = keine Angabe).</summary>
+    /// <summary>Anrede, Geschlecht oder Funktion: Änderung ab Datum oder Korrektur der am Datum gültigen Angabe (leer = keine Angabe).</summary>
     public void AngabeAendern(PersonMerkmalArt art, string? wert, DateOnly datum, Erfassung erfassung, bool korrektur)
     {
         ArgumentNullException.ThrowIfNull(erfassung);
@@ -205,6 +233,7 @@ public sealed class Person
         }
 
         (Anrede, EMail, Mobil) = (stand.Anrede, stand.EMail, stand.Mobil);
+
     }
 
     public IReadOnlyCollection<PersonRollen> RollenVersionen => _rollen;
@@ -230,20 +259,196 @@ public sealed class Person
         }
     }
 
-    /// <summary>Kontaktdaten ab heute (Kurzform von <see cref="AngabeAendern"/>); unveränderte Angaben bleiben ohne neue Version.</summary>
-    public void KontaktAendern(string? eMail, string? mobil, DateTimeOffset? jetzt = null)
+    // ---------- Adressen, E-Mails, Rufnummern, Einwilligungen (nach VibeVHS) ----------
+
+    public Guid AdresseHinzufuegen(Kontaktbereich bereich, string? zusatz, string strasse, string postleitzahl, string ort, bool bevorzugt,
+        DateOnly ab, Erfassung erfassung)
     {
-        var am = jetzt ?? DateTimeOffset.UtcNow;
-        var heute = DateOnly.FromDateTime(am.UtcDateTime);
-        if ((string.IsNullOrWhiteSpace(eMail) ? null : eMail.Trim()) != EMail)
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var id = Ids.Neu();
+        _adressen.Add(new Postadresse(id, bereich, zusatz, strasse, postleitzahl, ort, bevorzugt, ab, null, erfassung with { Art = Erfassungsart.Ersterfassung }));
+        if (bevorzugt)
         {
-            AngabeAendern(PersonMerkmalArt.EMail, eMail, heute, Erfassung.Aenderung(am, "Kontaktdaten"), false);
+            AndereAdressenNichtBevorzugt(id, ab, erfassung);
         }
 
-        if ((string.IsNullOrWhiteSpace(mobil) ? null : mobil.Trim()) != Mobil)
+        return id;
+    }
+
+    /// <summary>Adresse ab Datum ändern (z. B. neue Hausnummer nach Umbenennung) oder korrigieren (Tippfehler).</summary>
+    public void AdresseAendern(Guid adressId, Kontaktbereich bereich, string? zusatz, string strasse, string postleitzahl, string ort, bool bevorzugt,
+        DateOnly datum, Erfassung erfassung, bool korrektur)
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        Pruefen(_adressen, a => a.AdressId == adressId, "Adresse");
+        if (korrektur)
         {
-            AngabeAendern(PersonMerkmalArt.Mobil, mobil, heute, Erfassung.Aenderung(am, "Kontaktdaten"), false);
+            ZeitlicheHistorie.Korrigieren(_adressen, datum, (gv, gb) => new Postadresse(adressId, bereich, zusatz, strasse, postleitzahl, ort, bevorzugt, gv, gb,
+                erfassung with { Art = Erfassungsart.Korrektur }), erfassung.Am, a => a.AdressId == adressId);
         }
+        else
+        {
+            ZeitlicheHistorie.AendernAb(_adressen, new Postadresse(adressId, bereich, zusatz, strasse, postleitzahl, ort, bevorzugt, datum, null,
+                erfassung with { Art = Erfassungsart.AenderungAbDatum }));
+        }
+
+        if (bevorzugt)
+        {
+            AndereAdressenNichtBevorzugt(adressId, datum, erfassung);
+        }
+    }
+
+    /// <summary>Die Adresse gilt ab <paramref name="ab"/> nicht mehr (z. B. nach Umzug); die Historie bleibt.</summary>
+    public void AdresseAufgebenAb(Guid adressId, DateOnly ab, Erfassung erfassung)
+        => Aufgeben(_adressen, a => a.AdressId == adressId, ab, erfassung, "Adresse");
+
+    public Guid EMailHinzufuegen(Kontaktbereich bereich, string adresse, bool bevorzugt, DateOnly ab, Erfassung erfassung)
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var id = Ids.Neu();
+        _emails.Add(new EMailAdresse(id, bereich, adresse, bevorzugt || !_emails.Any(), ab, null, erfassung with { Art = Erfassungsart.Ersterfassung }));
+        if (bevorzugt)
+        {
+            AndereEMailsNichtBevorzugt(id, ab, erfassung);
+        }
+
+        ZwischenstandAktualisieren(erfassung.Am);
+        return id;
+    }
+
+    public void EMailAendern(Guid adressId, Kontaktbereich bereich, string adresse, bool bevorzugt, DateOnly datum, Erfassung erfassung, bool korrektur)
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        Pruefen(_emails, e => e.AdressId == adressId, "E-Mail-Adresse");
+        if (korrektur)
+        {
+            ZeitlicheHistorie.Korrigieren(_emails, datum, (gv, gb) => new EMailAdresse(adressId, bereich, adresse, bevorzugt, gv, gb,
+                erfassung with { Art = Erfassungsart.Korrektur }), erfassung.Am, e => e.AdressId == adressId);
+        }
+        else
+        {
+            ZeitlicheHistorie.AendernAb(_emails, new EMailAdresse(adressId, bereich, adresse, bevorzugt, datum, null, erfassung with { Art = Erfassungsart.AenderungAbDatum }));
+        }
+
+        if (bevorzugt)
+        {
+            AndereEMailsNichtBevorzugt(adressId, datum, erfassung);
+        }
+
+        ZwischenstandAktualisieren(erfassung.Am);
+    }
+
+    public void EMailAufgebenAb(Guid adressId, DateOnly ab, Erfassung erfassung)
+    {
+        Aufgeben(_emails, e => e.AdressId == adressId, ab, erfassung, "E-Mail-Adresse");
+        ZwischenstandAktualisieren(erfassung.Am);
+    }
+
+    public Guid RufnummerHinzufuegen(RufnummerArt art, string nummer, Messagingdienst dienste, bool einwilligung, bool bevorzugt, DateOnly ab,
+        Erfassung erfassung)
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var id = Ids.Neu();
+        _rufnummern.Add(new Rufnummer(id, art, nummer, dienste, einwilligung, bevorzugt, ab, null, erfassung with { Art = Erfassungsart.Ersterfassung }));
+        if (bevorzugt)
+        {
+            AndereNummernNichtBevorzugt(id, ab, erfassung);
+        }
+
+        ZwischenstandAktualisieren(erfassung.Am);
+        return id;
+    }
+
+    /// <summary>Neue Angaben zu einer Nummer ab Datum (z. B. Einwilligung für Signal erteilt) oder Korrektur (Zahlendreher).</summary>
+    public void RufnummerAendern(Guid nummerId, RufnummerArt art, string nummer, Messagingdienst dienste, bool einwilligung, bool bevorzugt,
+        DateOnly datum, Erfassung erfassung, bool korrektur)
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        Pruefen(_rufnummern, r => r.NummerId == nummerId, "Rufnummer");
+        if (korrektur)
+        {
+            ZeitlicheHistorie.Korrigieren(_rufnummern, datum, (gv, gb) => new Rufnummer(nummerId, art, nummer, dienste, einwilligung, bevorzugt, gv, gb,
+                erfassung with { Art = Erfassungsart.Korrektur }), erfassung.Am, r => r.NummerId == nummerId);
+        }
+        else
+        {
+            ZeitlicheHistorie.AendernAb(_rufnummern, new Rufnummer(nummerId, art, nummer, dienste, einwilligung, bevorzugt, datum, null,
+                erfassung with { Art = Erfassungsart.AenderungAbDatum }));
+        }
+
+        if (bevorzugt)
+        {
+            AndereNummernNichtBevorzugt(nummerId, datum, erfassung);
+        }
+
+        ZwischenstandAktualisieren(erfassung.Am);
+    }
+
+    public void RufnummerAbmeldenAb(Guid nummerId, DateOnly ab, Erfassung erfassung)
+    {
+        Aufgeben(_rufnummern, r => r.NummerId == nummerId, ab, erfassung, "Rufnummer");
+        ZwischenstandAktualisieren(erfassung.Am);
+    }
+
+    /// <summary>Einwilligung ab Datum erteilen oder widerrufen; die frühere Angabe bleibt in der Historie (Nachweispflicht).</summary>
+    public void EinwilligungSetzenAb(Einwilligungszweck zweck, bool erteilt, DateOnly ab, Erfassung erfassung)
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var erstes = !_einwilligungen.Any(e => e.Zweck == zweck);
+        var neu = new Einwilligung(zweck, erteilt, ab, null, erfassung with { Art = erstes ? Erfassungsart.Ersterfassung : Erfassungsart.AenderungAbDatum });
+        if (erstes)
+        {
+            _einwilligungen.Add(neu);
+        }
+        else
+        {
+            ZeitlicheHistorie.AendernAb(_einwilligungen, neu);
+        }
+    }
+
+    private void AndereAdressenNichtBevorzugt(Guid ausser, DateOnly ab, Erfassung erfassung)
+    {
+        foreach (var a in Gueltige(_adressen, ab, erfassung.Am).Where(a => a.AdressId != ausser && a.Bevorzugt))
+        {
+            ZeitlicheHistorie.AendernAb(_adressen, new Postadresse(a.AdressId, a.Bereich, a.Zusatz, a.Strasse, a.Postleitzahl, a.Ort, false, ab, null,
+                erfassung with { Art = Erfassungsart.AenderungAbDatum, Grund = "andere Adresse bevorzugt" }));
+        }
+    }
+
+    private void AndereEMailsNichtBevorzugt(Guid ausser, DateOnly ab, Erfassung erfassung)
+    {
+        foreach (var e in Gueltige(_emails, ab, erfassung.Am).Where(e => e.AdressId != ausser && e.Bevorzugt))
+        {
+            ZeitlicheHistorie.AendernAb(_emails, new EMailAdresse(e.AdressId, e.Bereich, e.Adresse, false, ab, null,
+                erfassung with { Art = Erfassungsart.AenderungAbDatum, Grund = "andere E-Mail-Adresse bevorzugt" }));
+        }
+    }
+
+    private void AndereNummernNichtBevorzugt(Guid ausser, DateOnly ab, Erfassung erfassung)
+    {
+        foreach (var r in Gueltige(_rufnummern, ab, erfassung.Am).Where(r => r.NummerId != ausser && r.Bevorzugt))
+        {
+            ZeitlicheHistorie.AendernAb(_rufnummern, new Rufnummer(r.NummerId, r.Art, r.Nummer, r.Dienste, r.Einwilligung, false, ab, null,
+                erfassung with { Art = Erfassungsart.AenderungAbDatum, Grund = "andere Rufnummer bevorzugt" }));
+        }
+    }
+
+    private static void Pruefen<T>(IEnumerable<T> versionen, Func<T, bool> betrifft, string was)
+    {
+        if (!versionen.Any(betrifft))
+        {
+            throw new InvalidOperationException($"{was} nicht gefunden.");
+        }
+    }
+
+    private static void Aufgeben<T>(List<T> versionen, Func<T, bool> betrifft, DateOnly ab, Erfassung erfassung, string was)
+        where T : BitemporaleVersion<T>
+    {
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var eigene = versionen.Where(betrifft).ToList();
+        var aktuell = eigene.AlsStichtag(ab, erfassung.Am) ?? eigene.AlsStichtag(ab.AddDays(-1), erfassung.Am)
+            ?? throw new InvalidOperationException($"{was} gilt am {ab:dd.MM.yyyy} nicht.");
+        ZeitlicheHistorie.BeendenAb(versionen, aktuell.KopieMit(ab, null, erfassung with { Art = Erfassungsart.Beendet }));
     }
 
     public void RisZuordnen(string? risId) => RisId = string.IsNullOrWhiteSpace(risId) ? null : risId.Trim();

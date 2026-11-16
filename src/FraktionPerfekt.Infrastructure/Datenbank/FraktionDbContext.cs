@@ -77,6 +77,14 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.Navigation(p => p.Namen).HasField("_namen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
             b.HasMany(p => p.Merkmale).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
             b.Navigation(p => p.Merkmale).HasField("_merkmale").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+            b.HasMany(p => p.Adressen).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(p => p.Adressen).HasField("_adressen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+            b.HasMany(p => p.EMails).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(p => p.EMails).HasField("_emails").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+            b.HasMany(p => p.Rufnummern).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(p => p.Rufnummern).HasField("_rufnummern").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+            b.HasMany(p => p.Einwilligungen).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(p => p.Einwilligungen).HasField("_einwilligungen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
             b.Ignore(p => p.AlleVersionen);
         });
         Version<PersonName>(modelBuilder, "PersonNamen", "PersonId", b =>
@@ -91,6 +99,33 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.Property(v => v.Art).HasConversion<string>().HasMaxLength(20);
             b.Property(v => v.Inhalt).HasMaxLength(320);
             b.Ignore(v => v.WertOderNull);
+        });
+        Version<Postadresse>(modelBuilder, "PersonAdressen", "PersonId", b =>
+        {
+            b.Property(v => v.Bereich).HasConversion<string>().HasMaxLength(20);
+            b.Property(v => v.Zusatz).HasMaxLength(200);
+            b.Property(v => v.Strasse).HasMaxLength(200);
+            b.Property(v => v.Postleitzahl).HasMaxLength(10);
+            b.Property(v => v.Ort).HasMaxLength(100);
+            b.Ignore(v => v.Anzeige);
+            b.HasIndex(v => v.AdressId);
+        });
+        Version<EMailAdresse>(modelBuilder, "PersonEMails", "PersonId", b =>
+        {
+            b.Property(v => v.Bereich).HasConversion<string>().HasMaxLength(20);
+            b.Property(v => v.Adresse).HasMaxLength(320);
+            b.HasIndex(v => v.AdressId);
+        });
+        Version<Rufnummer>(modelBuilder, "PersonRufnummern", "PersonId", b =>
+        {
+            b.Property(v => v.Art).HasConversion<string>().HasMaxLength(20);
+            b.Property(v => v.Nummer).HasMaxLength(40);
+            b.Ignore(v => v.DiensteAnzeige);
+            b.HasIndex(v => v.NummerId);
+        });
+        Version<Einwilligung>(modelBuilder, "PersonEinwilligungen", "PersonId", b =>
+        {
+            b.Property(v => v.Zweck).HasConversion<string>().HasMaxLength(40);
         });
         Version<PersonRollen>(modelBuilder, "PersonRollen", "PersonId", b =>
         {

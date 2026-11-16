@@ -23,8 +23,22 @@ public sealed record PersonMitgliedschaft(Guid MitgliedschaftId, Guid GremiumId,
     IReadOnlyList<MitgliedschaftsVersion> Verlauf);
 
 /// <param name="Heute">Alle Angaben, wie sie heute gelten (maßgeblich, nicht der Zwischenstand).</param>
+/// <param name="KontakteSichtbar">Adressen, Rufnummern und E-Mails sehen die Person selbst, die Geschäftsführung und – mit Einwilligung
+/// „Kontaktdaten in der Fraktion weitergeben“ – alle in der Fraktion.</param>
+/// <param name="KontakteBearbeitbar">Kontakte und Einwilligungen pflegen die Person selbst und die Geschäftsführung.</param>
 public sealed record PersonDetail(Person Person, IReadOnlyList<Rolle> Rollen, IReadOnlyList<PersonRollen> RollenVerlauf,
-    IReadOnlyList<PersonMitgliedschaft> Mitgliedschaften, PersonenStand? Heute = null);
+    IReadOnlyList<PersonMitgliedschaft> Mitgliedschaften, PersonenStand? Heute = null, bool KontakteSichtbar = false, bool KontakteBearbeitbar = false);
+
+/// <summary>Datenhistorie einer Person (Zeitleiste aller Erfassungen); ohne Kontaktdaten, wenn sie nicht sichtbar sind.</summary>
+public sealed record PersonHistorie(Person Person, IReadOnlyList<HistorienEintrag> Eintraege, bool KontakteSichtbar);
+
+/// <summary>Welche Art Kontakt aufgegeben wird.</summary>
+public enum Kontaktart
+{
+    Adresse,
+    EMail,
+    Rufnummer,
+}
 
 /// <summary>Personen, Gremien und Mitgliedschaften (Mandatsübersicht). Funktionen kommen aus dem RIS, der Rang ist fraktionsintern.</summary>
 public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtokoll protokoll, IAktuellerBenutzer benutzer, TimeProvider uhr)
@@ -33,10 +47,11 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
     {
         var heute = Ortszeit.Heute(uhr);
         var jetzt = uhr.GetUtcNow();
+        var wer = await benutzer.ErmittelnAsync(abbruch);
         var mitgliedschaften = await speicher.MitgliedschaftenAsync(abbruch);
         var staende = mitgliedschaften.Select(m => (m.PersonId, Stand: m.StandAm(heute, jetzt))).Where(x => x.Stand is not null).ToList();
         return (await speicher.PersonenAsync(abbruch))
-            .Select(p => new PersonZeile(p.Id, p.Anzeigename, p.Sortiername, p.EMail, p.RollenAm(heute, jetzt), p.Aktiv,
+            .Select(p => new PersonZeile(p.Id, p.Anzeigename, p.Sortiername, KontakteSichtbar(wer, p, heute, jetzt) ? p.EMail : null, p.RollenAm(heute, jetzt), p.Aktiv,
                 staende.Count(s => s.PersonId == p.Id && s.Stand!.Funktion == Funktion.Ordentlich),
                 staende.Count(s => s.PersonId == p.Id && s.Stand!.Funktion == Funktion.Stellvertretung),
                 p.RisId is not null))
@@ -64,7 +79,131 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
             .OrderBy(m => m.Funktion is null).ThenBy(m => m.Funktion).ThenBy(m => m.Gremium, StringComparer.CurrentCulture)
             .ToList();
         var rollenVerlauf = person.RollenVersionen.OrderByDescending(v => v.ErfasstAm).ThenByDescending(v => v.GueltigVon).ToList();
-        return new PersonDetail(person, person.RollenAm(heute, jetzt), rollenVerlauf, mitgliedschaften, person.StandAm(heute, jetzt));
+        var wer = await benutzer.ErmittelnAsync(abbruch);
+        return new PersonDetail(person, person.RollenAm(heute, jetzt), rollenVerlauf, mitgliedschaften, person.StandAm(heute, jetzt),
+            KontakteSichtbar(wer, person, heute, jetzt), KontakteBearbeiten(wer, person.Id).Erlaubt);
+    }
+
+    /// <summary>Datenhistorie (Seite „Datenhistorie“): alle Erfassungen, Kontaktdaten nur, wenn sie sichtbar sind.</summary>
+    public async Task<PersonHistorie?> HistorieAsync(Guid id, CancellationToken abbruch = default)
+    {
+        if (await speicher.PersonAsync(id, abbruch) is not { } person)
+        {
+            return null;
+        }
+
+        var sichtbar = KontakteSichtbar(await benutzer.ErmittelnAsync(abbruch), person, Ortszeit.Heute(uhr), uhr.GetUtcNow());
+        return new PersonHistorie(person, Datenhistorie.Erstellen(person, sichtbar), sichtbar);
+    }
+
+    /// <summary>Kontaktdaten sehen: die Person selbst, die Geschäftsführung, sonst nur mit Einwilligung zur Weitergabe in der Fraktion.</summary>
+    public static bool KontakteSichtbar(Benutzer wer, Person person, DateOnly heute, DateTimeOffset jetzt)
+    {
+        ArgumentNullException.ThrowIfNull(wer);
+        ArgumentNullException.ThrowIfNull(person);
+        return wer.IstAutomatik || wer.PersonId == person.Id || Rechte.StammdatenPflegen(wer.Rolle).Erlaubt
+               || person.EinwilligungAm(Einwilligungszweck.WeitergabeInDerFraktion, heute, jetzt);
+    }
+
+    /// <summary>Kontakte und Einwilligungen pflegen: die Person selbst und die Geschäftsführung.</summary>
+    public static Freigabe KontakteBearbeiten(Benutzer wer, Guid personId)
+    {
+        ArgumentNullException.ThrowIfNull(wer);
+        return wer.IstAutomatik || wer.PersonId == personId || Rechte.StammdatenPflegen(wer.Rolle).Erlaubt
+            ? Freigabe.Ja
+            : Freigabe.Nein("Kontaktdaten pflegen nur die Person selbst und die Geschäftsführung.");
+    }
+
+    /// <summary>Postadresse anlegen (<paramref name="adressId"/> leer) oder ab Datum ändern bzw. korrigieren.</summary>
+    public async Task<Guid> AdresseSpeichernAsync(Guid personId, Guid? adressId, Kontaktbereich bereich, string? zusatz, string strasse, string postleitzahl,
+        string ort, bool bevorzugt, DateOnly datum, bool korrektur, string grund, CancellationToken abbruch = default)
+    {
+        var (person, erfassung) = await KontaktVorbereitenAsync(personId, korrektur, grund, abbruch);
+        var id = adressId ?? person.AdresseHinzufuegen(bereich, zusatz, strasse, postleitzahl, ort, bevorzugt, datum, erfassung);
+        if (adressId is { } vorhanden)
+        {
+            person.AdresseAendern(vorhanden, bereich, zusatz, strasse, postleitzahl, ort, bevorzugt, datum, erfassung, korrektur);
+        }
+
+        await KontaktProtokollierenAsync(personId, "Postadresse", adressId is null ? "angelegt" : korrektur ? "korrigiert" : $"geändert ab {datum:dd.MM.yyyy}", abbruch);
+        return id;
+    }
+
+    /// <summary>E-Mail-Adresse anlegen oder ab Datum ändern bzw. korrigieren; die bevorzugte erhält die Mails der Fraktion.</summary>
+    public async Task<Guid> EMailSpeichernAsync(Guid personId, Guid? adressId, Kontaktbereich bereich, string adresse, bool bevorzugt, DateOnly datum,
+        bool korrektur, string grund, CancellationToken abbruch = default)
+    {
+        var (person, erfassung) = await KontaktVorbereitenAsync(personId, korrektur, grund, abbruch);
+        var id = adressId ?? person.EMailHinzufuegen(bereich, adresse, bevorzugt, datum, erfassung);
+        if (adressId is { } vorhanden)
+        {
+            person.EMailAendern(vorhanden, bereich, adresse, bevorzugt, datum, erfassung, korrektur);
+        }
+
+        await KontaktProtokollierenAsync(personId, "E-Mail-Adresse", adressId is null ? "angelegt" : korrektur ? "korrigiert" : $"geändert ab {datum:dd.MM.yyyy}", abbruch);
+        return id;
+    }
+
+    /// <summary>Rufnummer anlegen oder ab Datum ändern bzw. korrigieren (mit Messaging-Diensten und Einwilligung).</summary>
+    public async Task<Guid> RufnummerSpeichernAsync(Guid personId, Guid? nummerId, RufnummerArt art, string nummer, Messagingdienst dienste, bool einwilligung,
+        bool bevorzugt, DateOnly datum, bool korrektur, string grund, CancellationToken abbruch = default)
+    {
+        var (person, erfassung) = await KontaktVorbereitenAsync(personId, korrektur, grund, abbruch);
+        var id = nummerId ?? person.RufnummerHinzufuegen(art, nummer, dienste, einwilligung, bevorzugt, datum, erfassung);
+        if (nummerId is { } vorhanden)
+        {
+            person.RufnummerAendern(vorhanden, art, nummer, dienste, einwilligung, bevorzugt, datum, erfassung, korrektur);
+        }
+
+        await KontaktProtokollierenAsync(personId, "Rufnummer", nummerId is null ? "angelegt" : korrektur ? "korrigiert" : $"geändert ab {datum:dd.MM.yyyy}", abbruch);
+        return id;
+    }
+
+    /// <summary>Adresse, E-Mail oder Rufnummer gilt ab Datum nicht mehr (die Historie bleibt).</summary>
+    public async Task KontaktAufgebenAsync(Guid personId, Kontaktart art, Guid id, DateOnly ab, string grund, CancellationToken abbruch = default)
+    {
+        var (person, erfassung) = await KontaktVorbereitenAsync(personId, false, grund, abbruch);
+        switch (art)
+        {
+            case Kontaktart.Adresse:
+                person.AdresseAufgebenAb(id, ab, erfassung);
+                break;
+            case Kontaktart.EMail:
+                person.EMailAufgebenAb(id, ab, erfassung);
+                break;
+            default:
+                person.RufnummerAbmeldenAb(id, ab, erfassung);
+                break;
+        }
+
+        await KontaktProtokollierenAsync(personId, art.ToString(), $"aufgegeben ab {ab:dd.MM.yyyy}", abbruch);
+    }
+
+    /// <summary>Einwilligung ab Datum erteilen oder widerrufen.</summary>
+    public async Task EinwilligungSetzenAsync(Guid personId, Einwilligungszweck zweck, bool erteilt, DateOnly ab, string grund, CancellationToken abbruch = default)
+    {
+        var (person, erfassung) = await KontaktVorbereitenAsync(personId, false, grund, abbruch);
+        person.EinwilligungSetzenAb(zweck, erteilt, ab, erfassung);
+        await KontaktProtokollierenAsync(personId, $"Einwilligung {zweck}", $"{(erteilt ? "erteilt" : "widerrufen")} ab {ab:dd.MM.yyyy}", abbruch);
+    }
+
+    private async Task<(Person Person, Erfassung Erfassung)> KontaktVorbereitenAsync(Guid personId, bool korrektur, string grund, CancellationToken abbruch)
+    {
+        var wer = await benutzer.ErmittelnAsync(abbruch);
+        if (KontakteBearbeiten(wer, personId) is { Erlaubt: false } nein)
+        {
+            throw new InvalidOperationException(nein.Begruendung);
+        }
+
+        var person = await speicher.PersonAsync(personId, abbruch) ?? throw new InvalidOperationException("Person nicht gefunden.");
+        var jetzt = uhr.GetUtcNow();
+        return (person, korrektur ? Erfassung.Korrektur(jetzt, Grund(grund), wer.Anzeige) : Erfassung.Aenderung(jetzt, Grund(grund), wer.Anzeige));
+    }
+
+    private async Task KontaktProtokollierenAsync(Guid personId, string was, string wie, CancellationToken abbruch)
+    {
+        await protokoll.ProtokollierenAsync("Person.KontaktGeaendert", $"{was} von {Pseudonym.Person(personId)} {wie}", nameof(Person), personId, abbruch: abbruch);
+        await speicher.SpeichernAsync(abbruch);
     }
 
     public async Task<IReadOnlyList<GremiumZeile>> GremienAsync(CancellationToken abbruch = default)
@@ -220,7 +359,7 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
         await speicher.SpeichernAsync(abbruch);
     }
 
-    /// <summary>Anrede, Geschlecht, E-Mail, Mobil oder Funktion ändern ab Datum oder korrigieren.</summary>
+    /// <summary>Anrede, Geschlecht oder Funktion ändern ab Datum oder korrigieren.</summary>
     public async Task AngabeAendernAsync(Guid personId, PersonMerkmalArt art, string? wert, DateOnly datum, bool korrektur, string grund,
         CancellationToken abbruch = default)
     {

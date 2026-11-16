@@ -38,6 +38,30 @@ public sealed class Demodaten(
 {
     public const int Startwert = 20261115;
 
+    private static void DemoKontakte(Dictionary<string, Person> personen, DateOnly seit, DateTimeOffset jetzt)
+    {
+        var erst = Erfassung.Erst(jetzt, Von, "Demodaten (fiktiv)");
+        var albers = personen["kalbers"];
+        var alt = albers.AdresseHinzufuegen(Kontaktbereich.Privat, null, "Musterweg 12", "48268", "Greven", true, seit, erst);
+        albers.AdresseHinzufuegen(Kontaktbereich.Dienstlich, "CDU-Fraktion, Fraktionsbüro", "Beispielstraße 1", "48268", "Greven", false, seit, erst);
+        var umzug = seit.AddMonths(6);
+        albers.AdresseAufgebenAb(alt, umzug, Erfassung.Aenderung(jetzt, "Umzug (Demo)", Von));
+        albers.AdresseHinzufuegen(Kontaktbereich.Privat, null, "Probeweg 7", "48268", "Greven", true, umzug, Erfassung.Aenderung(jetzt, "Umzug (Demo)", Von));
+        albers.EMailHinzufuegen(Kontaktbereich.Privat, "katrin.albers@demo.invalid", false, seit, erst);   // zweite Adresse; die erste ist bevorzugt
+        albers.RufnummerHinzufuegen(RufnummerArt.Mobil, "+49 151 0000001", Messagingdienst.Anruf | Messagingdienst.Sms | Messagingdienst.Signal, true, true, seit, erst);
+        albers.RufnummerHinzufuegen(RufnummerArt.Dienstlich, "+49 2571 000001", Messagingdienst.Anruf, false, false, seit, erst);
+        albers.EinwilligungSetzenAb(Einwilligungszweck.WeitergabeInDerFraktion, true, seit, erst);
+
+        foreach (var (kennung, nummer, strasse) in new[] { ("fbaeumer", "+49 151 0000002", "Testallee 3"), ("nfeldhaus", "+49 151 0000003", "Demoring 5") })
+        {
+            var p = personen[kennung];
+            p.RufnummerHinzufuegen(RufnummerArt.Mobil, nummer, Messagingdienst.Anruf | Messagingdienst.WhatsApp, true, true, seit, erst);
+            p.AdresseHinzufuegen(Kontaktbereich.Privat, null, strasse, "48268", "Greven", true, seit, erst);
+            p.EinwilligungSetzenAb(Einwilligungszweck.WeitergabeInDerFraktion, true, seit, erst);
+            p.EinwilligungSetzenAb(Einwilligungszweck.Fotos, kennung == "fbaeumer", seit, erst);
+        }
+    }
+
     private const string Von = "Demodaten";
 
     public async Task<Demodatensatz?> AnlegenAsync(CancellationToken abbruch = default)
@@ -83,6 +107,10 @@ public sealed class Demodaten(
             stammdaten.Hinzufuegen(p);
             personen[d.Kennung] = p;
         }
+
+        // Kontakte nach VibeVHS (Adressen, mehrere E-Mails/Rufnummern, Einwilligungen): nur für die fiktiven Mitarbeitenden –
+        // echte Personen bekommen keine erfundenen Adressen oder Nummern. Frau Albers ist umgezogen (Verlauf zum Ausprobieren).
+        DemoKontakte(personen, seit, jetzt);
 
         await stammdaten.SpeichernAsync(abbruch);
 

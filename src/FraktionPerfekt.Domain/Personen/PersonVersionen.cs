@@ -54,10 +54,6 @@ public enum PersonMerkmalArt
     /// <summary>Freie Angabe (z. B. weiblich, männlich, divers) oder leer.</summary>
     Geschlecht,
 
-    EMail,
-
-    Mobil,
-
     /// <summary>Funktion in der Fraktion (z. B. „Fraktionsvorsitzender“, „Schatzmeister“) – die Rechte ergeben sich aus den Rollen.</summary>
     Funktion,
 }
@@ -80,14 +76,12 @@ public sealed class PersonMerkmal : BitemporaleVersion<PersonMerkmal>
 
     public string? WertOderNull => Inhalt.Length == 0 ? null : Inhalt;
 
-    public override string Datenart => Art is PersonMerkmalArt.EMail or PersonMerkmalArt.Mobil ? "Kontakt" : Art == PersonMerkmalArt.Funktion ? "Funktion" : "Person";
+    public override string Datenart => Art == PersonMerkmalArt.Funktion ? "Funktion" : "Person";
 
     public override string Feld => Art switch
     {
         PersonMerkmalArt.Anrede => "Anrede",
         PersonMerkmalArt.Geschlecht => "Geschlecht",
-        PersonMerkmalArt.EMail => "E-Mail",
-        PersonMerkmalArt.Mobil => "Mobil",
         _ => "Funktion in der Fraktion",
     };
 
@@ -99,17 +93,27 @@ public sealed class PersonMerkmal : BitemporaleVersion<PersonMerkmal>
         => new(Art, Inhalt, gueltigVon, gueltigBis, erfassung);
 }
 
-/// <summary>Alle Angaben einer Person, wie sie an einem Tag galten, nach einem Wissensstand.</summary>
+/// <summary>Alle Angaben einer Person, wie sie an einem Tag galten, nach einem Wissensstand (Kontakte: bevorzugte zuerst).</summary>
 public sealed record PersonenStand(
     DateOnly GueltigAm,
     DateTimeOffset BekanntAm,
     PersonName? Name,
     string? Anrede,
     string? Geschlecht,
-    string? EMail,
-    string? Mobil,
     string? Funktion,
-    IReadOnlyList<Rolle> Rollen)
+    IReadOnlyList<Rolle> Rollen,
+    IReadOnlyList<Postadresse> Adressen,
+    IReadOnlyList<EMailAdresse> EMails,
+    IReadOnlyList<Rufnummer> Rufnummern,
+    IReadOnlyList<Einwilligung> Einwilligungen)
 {
     public string Anzeige => Name?.Anzeige ?? "(noch nicht erfasst)";
+
+    /// <summary>Bevorzugte E-Mail-Adresse, sonst die erste.</summary>
+    public string? EMail => EMails.FirstOrDefault()?.Adresse;
+
+    /// <summary>Bevorzugte Mobilnummer, sonst die erste mobile.</summary>
+    public string? Mobil => Rufnummern.FirstOrDefault(r => r.Art == RufnummerArt.Mobil)?.Nummer;
+
+    public bool Erteilt(Einwilligungszweck zweck) => Einwilligungen.Any(e => e.Zweck == zweck && e.Erteilt);
 }

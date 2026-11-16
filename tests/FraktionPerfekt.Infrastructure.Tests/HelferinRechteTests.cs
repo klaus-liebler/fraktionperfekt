@@ -121,3 +121,45 @@ public sealed class PersonZeitlichAblaufTests
             .NameAendernAsync(liz.Id, "X", "Y", null, heute, false, "Test")));
     }
 }
+
+/// <summary>Kontakte: sichtbar für die Person selbst, die Geschäftsführung oder mit Einwilligung; die Datenhistorie blendet sie sonst aus.</summary>
+public sealed class KontakteAblaufTests
+{
+    [Fact]
+    public async Task Kontakte_nur_mit_Einwilligung_fuer_andere_sichtbar_und_selbst_pflegbar()
+    {
+        await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
+        FraktionPerfekt.Application.Stammdaten.StammdatenDienst S(IServiceProvider d) => d.GetRequiredService<FraktionPerfekt.Application.Stammdaten.StammdatenDienst>();
+        var speicher = (Func<IServiceProvider, FraktionPerfekt.Application.IStammdatenSpeicher>)(d => d.GetRequiredService<FraktionPerfekt.Application.IStammdatenSpeicher>());
+        var liz = (await u.InAsync(d => speicher(d).PersonNachKennungAsync("lkuehlert")))!;
+        var albers = (await u.InAsync(d => speicher(d).PersonNachKennungAsync("kalbers")))!;
+
+        // Mitglied sieht die Kontakte der fiktiven Geschäftsführerin (Einwilligung), aber nicht die eines anderen Mitglieds
+        await u.AnmeldenAsync("thorstmann");
+        var a = (await u.InAsync(d => S(d).PersonAsync(albers.Id)))!;
+        a.KontakteSichtbar.ShouldBeTrue();
+        a.KontakteBearbeitbar.ShouldBeFalse();
+        a.Heute!.Adressen.Single(x => x.Bevorzugt).Strasse.ShouldBe("Probeweg 7");
+        var l = (await u.InAsync(d => S(d).PersonAsync(liz.Id)))!;
+        l.KontakteSichtbar.ShouldBeFalse();
+        (await u.InAsync(d => S(d).HistorieAsync(liz.Id)))!.Eintraege.ShouldNotContain(e => e.Datenart == "E-Mail");
+        (await u.InAsync(d => S(d).PersonenAsync())).Single(z => z.Id == liz.Id).EMail.ShouldBeNull();
+        await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => S(d).EinwilligungSetzenAsync(liz.Id,
+            FraktionPerfekt.Domain.Personen.Einwilligungszweck.WeitergabeInDerFraktion, true, new DateOnly(2026, 1, 1), "fremd")));
+
+        // Liz pflegt selbst: Rufnummer und Einwilligung zur Weitergabe
+        await u.AnmeldenAsync("lkuehlert");
+        var heute = FraktionPerfekt.Application.Gemeinsam.Ortszeit.Heute(u.Uhr);
+        await u.InAsync(d => S(d).RufnummerSpeichernAsync(liz.Id, null, FraktionPerfekt.Domain.Personen.RufnummerArt.Mobil, "+49 151 0000099",
+            FraktionPerfekt.Domain.Personen.Messagingdienst.Anruf, false, true, heute, false, "eigene Angabe"));
+        await u.InAsync(d => S(d).EinwilligungSetzenAsync(liz.Id, FraktionPerfekt.Domain.Personen.Einwilligungszweck.WeitergabeInDerFraktion, true, heute, "eigene Angabe"));
+
+        await u.AnmeldenAsync("thorstmann");
+        var danach = (await u.InAsync(d => S(d).PersonAsync(liz.Id)))!;
+        danach.KontakteSichtbar.ShouldBeTrue();
+        danach.Heute!.Mobil.ShouldBe("+49 151 0000099");
+        var historie = (await u.InAsync(d => S(d).HistorieAsync(liz.Id)))!;
+        historie.Eintraege.ShouldContain(e => e.Datenart == "Telefon" && e.ErfasstVon.StartsWith("Liz", StringComparison.Ordinal));
+        historie.Eintraege.ShouldContain(e => e.Datenart == "Einwilligungen" && e.NeuerWert == "erteilt");
+    }
+}

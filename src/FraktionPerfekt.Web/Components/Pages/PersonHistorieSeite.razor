@@ -1,0 +1,156 @@
+@page "/personen/{Id:guid}/historie"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Gemeinsam
+@using FraktionPerfekt.Domain.Personen
+@inject Vorgang Vorgang
+@inject TimeProvider Uhr
+
+<PageTitle>Datenhistorie · FraktionPerfekt</PageTitle>
+
+<a class="fp-zurueck" href="personen/@Id">← Zur Person</a>
+
+@if (historie is null)
+{
+    <p class="fp-muted">@(geladen ? "Diese Person gibt es nicht." : "Lade …")</p>
+    return;
+}
+
+<div class="fp-head">
+    <div>
+        <h1>Datenhistorie</h1>
+        <p class="fp-sub">@historie.Person.Anzeigename · alle Angaben, neueste Erfassung oben. Nichts wird gelöscht oder überschrieben.
+            @if (!historie.KontakteSichtbar) { <span>Kontaktdaten sind ausgeblendet (keine Einwilligung zur Weitergabe).</span> }</p>
+    </div>
+</div>
+
+<section class="fp-card">
+    <h2>Stichtag und Wissensstand</h2>
+    <p class="fp-small fp-muted">Wie war der Stand am …, und was war dazu am … bekannt? So lässt sich z. B. ein altes Schreiben genau nachvollziehen.</p>
+    <div class="fp-form">
+        <div class="fp-field"><label class="fp-lbl">Wie war der Stand am</label>
+            <RadzenDatePicker TValue="DateTime" @bind-Value="stichtag" DateFormat="dd.MM.yyyy" /></div>
+        <div class="fp-field"><label class="fp-lbl">Was war bekannt am</label>
+            <RadzenDatePicker TValue="DateTime" @bind-Value="wissensstand" DateFormat="dd.MM.yyyy HH:mm" ShowTime="true" /></div>
+    </div>
+    @if (StandAmStichtag is { } s)
+    {
+        @if (s.Name is null)
+        {
+            <div class="fp-alert fp-info">Zu diesem Stichtag und Wissensstand war die Person noch nicht erfasst.</div>
+        }
+        else
+        {
+            <dl class="fp-dl">
+                <dt>Name</dt><dd>@s.Anzeige</dd>
+                <dt>Anrede</dt><dd>@(s.Anrede ?? "–")</dd>
+                <dt>Geschlecht</dt><dd>@(s.Geschlecht ?? "–")</dd>
+                <dt>Funktion</dt><dd>@(s.Funktion ?? "–")</dd>
+                <dt>Rollen</dt><dd>@(s.Rollen.Count == 0 ? "keine" : string.Join(", ", s.Rollen.Select(r => r.Anzeigename())))</dd>
+                @if (historie.KontakteSichtbar)
+                {
+                    <dt>Adressen</dt><dd>@Aufzaehlung(s.Adressen.Select(a => a.Wert))</dd>
+                    <dt>E-Mail</dt><dd>@Aufzaehlung(s.EMails.Select(e => e.Wert))</dd>
+                    <dt>Telefon</dt><dd>@Aufzaehlung(s.Rufnummern.Select(r => $"{r.Feld}: {r.Wert}"))</dd>
+                }
+                <dt>Einwilligungen</dt><dd>@Aufzaehlung(s.Einwilligungen.Where(e => e.Erteilt).Select(e => e.Feld))</dd>
+            </dl>
+        }
+    }
+</section>
+
+<section class="fp-card">
+    <div class="fp-head">
+        <h2>Zeitleiste</h2>
+        <label class="fp-small"><input type="checkbox" @bind="ersetzteZeigen" /> ersetzte Erfassungen anzeigen</label>
+    </div>
+    <div class="fp-chips" role="group" aria-label="Nach Datenart filtern">
+        <button class="fp-chip @(filter.Count == 0 ? "on" : "")" @onclick="@(() => filter.Clear())">Alle (@Sichtbar(alle: true).Count)</button>
+        @foreach (var art in Datenhistorie.Datenarten)
+        {
+            var anzahl = historie.Eintraege.Count(e => e.Datenart == art && (ersetzteZeigen || !e.Ersetzt));
+            <button class="fp-chip @(filter.Contains(art) ? "on" : "")" disabled="@(anzahl == 0)" @onclick="@(() => Umschalten(art))">@art (@anzahl)</button>
+        }
+    </div>
+
+    <ol class="fp-timeline" style="margin-top:14px">
+        @foreach (var e in Sichtbar())
+        {
+            <li class="@(e.Ersetzt ? "fp-tl-ersetzt" : "")">
+                <div class="fp-tl-kopf">
+                    <span class="fp-mono fp-small">@Ortszeit.AlsOrtszeit(e.ErfasstAm).ToString("dd.MM.yyyy HH:mm")</span>
+                    <StatusPille Stil="neutral">@e.Feld</StatusPille>
+                    <StatusPille Stil="@ArtStil(e.Art)">@e.ArtAnzeige</StatusPille>
+                    @if (e.ErsetztAm is { } ersetzt)
+                    {
+                        <span class="fp-small fp-muted fp-why" tabindex="0"
+                              data-why="Diese Erfassung wurde später ersetzt (z. B. durch eine Korrektur). Sie bleibt sichtbar, damit alte Schreiben nachvollziehbar sind.">ersetzt am @Ortszeit.AlsOrtszeit(ersetzt).ToString("dd.MM.yyyy HH:mm")</span>
+                    }
+                </div>
+                <div class="fp-tl-wert">
+                    @if (e.AlterWert is not null)
+                    {
+                        <span class="fp-alt">@e.AlterWert</span>
+                        <span aria-label="wird zu"> → </span>
+                    }
+                    <b>@e.NeuerWert</b>
+                </div>
+                <div class="fp-small fp-muted">gültig @Zeitraum(e.GueltigVon, e.GueltigBis) · erfasst von @e.ErfasstVon · @e.Grund</div>
+            </li>
+        }
+    </ol>
+</section>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private PersonHistorie? historie;
+    private bool geladen;
+    private readonly HashSet<string> filter = [];
+    private bool ersetzteZeigen = true;
+    private DateTime stichtag;
+    private DateTime wissensstand;
+
+    private PersonenStand? StandAmStichtag
+        => historie?.Person.StandAm(DateOnly.FromDateTime(stichtag), Ortszeit.Zeitpunkt(wissensstand));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        historie = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().HistorieAsync(Id));
+        geladen = true;
+        var jetzt = Ortszeit.Jetzt(Uhr);
+        (stichtag, wissensstand) = (jetzt.Date, jetzt);
+    }
+
+    private List<HistorienEintrag> Sichtbar(bool alle = false)
+        => historie!.Eintraege.Where(e => (ersetzteZeigen || !e.Ersetzt) && (alle || filter.Count == 0 || filter.Contains(e.Datenart))).ToList();
+
+    private void Umschalten(string art)
+    {
+        if (!filter.Remove(art))
+        {
+            filter.Add(art);
+        }
+    }
+
+    private static string Aufzaehlung(IEnumerable<string> werte)
+    {
+        var liste = werte.ToList();
+        return liste.Count == 0 ? "–" : string.Join(" · ", liste);
+    }
+
+    private static string Zeitraum(DateOnly von, DateOnly? bis)
+    {
+        var ab = von == DateOnly.MinValue ? "immer" : $"ab {von:dd.MM.yyyy}";
+        return bis is { } b ? $"{ab} bis {b.AddDays(-1):dd.MM.yyyy}" : ab;
+    }
+
+    private static string ArtStil(Erfassungsart art) => art switch
+    {
+        Erfassungsart.Korrektur => "warn",
+        Erfassungsart.Beendet => "neutral",
+        Erfassungsart.Ersterfassung => "gut",
+        _ => "info",
+    };
+}

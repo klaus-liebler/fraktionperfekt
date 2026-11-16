@@ -21,7 +21,13 @@
 - Dieselben Bausteine (`BitemporaleVersion`, `ZeitlicheHistorie`, `Erfassung` mit Art und Grund).
 - `Person` = Identität (Id, Anmeldename, RIS-Kennung, Anlage). Versioniert:
   - `PersonName`: Vorname, Nachname **und Titel** (auf Klaus' Wunsch: alle Namensbestandteile zeitlich),
-  - `PersonMerkmal`: Anrede, Geschlecht, E-Mail, Mobil, **Funktion in der Fraktion** (z. B. „Fraktionsvorsitzender“),
+  - `PersonMerkmal`: Anrede, Geschlecht, **Funktion in der Fraktion** (z. B. „Fraktionsvorsitzender“),
+  - Kontakte wie VibeVHS: `Postadresse` (privat/dienstlich, Zusatz, „bevorzugt“ = für Briefe), `EMailAdresse` (privat/dienstlich,
+    „bevorzugt“ = Mails der Fraktion), `Rufnummer` (mobil/Festnetz/dienstlich, Messaging-Dienste, Einwilligung Messaging, „bevorzugt“) –
+    je mehrere, jede mit fester Id, Änderung ab Datum, Korrektur und Aufgabe ab Datum (Umzug); ein neuer „bevorzugter“ Kontakt nimmt
+    den anderen das Kennzeichen ab demselben Tag,
+  - `Einwilligung` je Zweck: *Kontaktdaten in der Fraktion weitergeben*, *Newsletter und Informationen*, *Fotos veröffentlichen*
+    (VibeVHS: Kursorganisation, Werbung, Fotos; die Kanal-Dimension entfällt). Eine Geburtstagsliste gibt es in VibeVHS nicht – daher auch hier nicht,
   - `PersonRollen` (Rechte-Rollen, schon vorher bitemporal),
   - Gremienmitgliedschaften (`Mitgliedschaft`, schon vorher bitemporal, mit „Seit“ aus dem RIS).
 - `StandAm(tag, bekanntAm)`, `AnzeigenameAm(tag)`, `NameAendernAb`/`NameKorrigieren`, `AngabeAendern(…, korrektur)`.
@@ -38,8 +44,12 @@
 
 - **Ansprache (Du/Sie, Stil, Titel nennen)** ist in FraktionPerfekt eine *Benutzereinstellung* ohne Historie (gilt sofort);
   VibeVHS führt sie als zeitliches Merkmal. Die *Anrede* (Herr/Frau) ist dagegen ein Personendatum und zeitlich.
-- **Kontakte**: je Person eine E-Mail und eine Mobilnummer als Merkmal statt mehrerer Adressen/Rufnummern mit Einwilligungen –
-  die Fraktion braucht (noch) nicht mehr. Postadressen gibt es bisher nicht.
-- **Datenhistorie als eigene Seite** mit Wissensstand-Auswahl gibt es noch nicht; der Verlauf steht je Angabe auf der Personenseite,
-  der Stichtag fragt den heutigen Wissensstand ab. Der Wissensstand ist im Dienst (`StandAmAsync(…, bekanntAm)`) schon abfragbar.
+- **Sichtbarkeit der Kontakte**: Adressen, Rufnummern und E-Mails sehen die Person selbst und die Geschäftsführung; alle anderen nur
+  mit Einwilligung „Kontaktdaten in der Fraktion weitergeben“ (sonst auch nicht in Personenliste und Datenhistorie). Kontakte und
+  Einwilligungen pflegen die Person selbst und die Geschäftsführung; Name, Anrede, Funktion und Rollen nur die Geschäftsführung.
+- Statt der VibeVHS-Kennzeichen „üblicher Aufenthaltsort/Korrespondenzadresse“ genügt „bevorzugt“ an jeder Adresse.
+- **Datenhistorie** (`/personen/{id}/historie`) wie VibeVHS: Stichtag *und* frei wählbarer Wissensstand („Was war bekannt am …“),
+  Zeitleiste aller Erfassungen mit altem → neuem Wert, Filter je Datenart, ersetzte Erfassungen ausblendbar.
+- Bisherige E-Mail-/Mobil-Merkmale überführt die Migration `PersonKontakte` in bevorzugte Kontakte.
+- Demo: echte Personen bekommen keine erfundenen Adressen oder Nummern; nur die fiktiven Mitarbeitenden (Albers mit Umzug, Bäumer, Feldhaus).
 - Bestehende Datenbanken: Personen ohne Versionen behalten ihren Zwischenstand; für die Demo wird die Datenbank neu aufgebaut.

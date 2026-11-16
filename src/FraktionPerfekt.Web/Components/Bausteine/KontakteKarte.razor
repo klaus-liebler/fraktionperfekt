@@ -1,0 +1,271 @@
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Gemeinsam
+@using FraktionPerfekt.Domain.Personen
+@inject Vorgang Vorgang
+@inject TimeProvider Uhr
+
+@* Kontakte nach VibeVHS: mehrere Adressen, E-Mails und Rufnummern mit Art und „bevorzugt“, zeitlich gültig; Einwilligungen je Zweck. *@
+<section class="fp-card">
+    <h2>Kontakte <span class="fp-small fp-muted">Stand heute</span></h2>
+    @if (!Detail.KontakteSichtbar)
+    {
+        <p class="fp-muted">Kontaktdaten sehen nur die Person selbst und die Geschäftsführung – eine Einwilligung zur Weitergabe in der Fraktion liegt nicht vor.</p>
+    }
+    else
+    {
+        var h = Detail.Heute;
+        <h3>Postadressen</h3>
+        @Liste(h?.Adressen.Select(a => (a.AdressId, Kontaktart.Adresse, a.Feld, a.Anzeige, a.Bevorzugt,
+            (IEnumerable<IHistorienwert>)Detail.Person.Adressen.Where(x => x.AdressId == a.AdressId)))
+            , "Keine Postadresse.")
+        <h3>E-Mail-Adressen</h3>
+        @Liste(h?.EMails.Select(e => (e.AdressId, Kontaktart.EMail, e.Feld, e.Adresse, e.Bevorzugt,
+            (IEnumerable<IHistorienwert>)Detail.Person.EMails.Where(x => x.AdressId == e.AdressId)))
+            , "Keine E-Mail-Adresse.")
+        <h3>Rufnummern</h3>
+        @Liste(h?.Rufnummern.Select(r => (r.NummerId, Kontaktart.Rufnummer, r.Feld, $"{r.Nummer} · {r.DiensteAnzeige}{(r.Einwilligung ? " · Einwilligung Messaging" : "")}", r.Bevorzugt,
+            (IEnumerable<IHistorienwert>)Detail.Person.Rufnummern.Where(x => x.NummerId == r.NummerId)))
+            , "Keine Rufnummer.")
+    }
+
+    <h3>Einwilligungen</h3>
+    <div class="fp-list">
+        @foreach (var zweck in Enum.GetValues<Einwilligungszweck>())
+        {
+            var erteilt = Detail.Heute?.Erteilt(zweck) ?? false;
+            var verlauf = Detail.Person.Einwilligungen.Where(e => e.Zweck == zweck).ToList();
+            <div>
+                <span class="fp-grow">@Einwilligung.ZweckAnzeige(zweck)</span>
+                <StatusPille Stil="@(erteilt ? "gut" : "neutral")">@(erteilt ? "erteilt" : verlauf.Count == 0 ? "keine Angabe" : "nicht erteilt")</StatusPille>
+                @if (verlauf.Count > 0) { <Verlauf Versionen="verlauf" /> }
+                @if (Detail.KontakteBearbeitbar)
+                {
+                    <RadzenButton Text="@(erteilt ? "Widerrufen" : "Erteilen")" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light"
+                                  Click="@(() => EinwilligungAsync(zweck, !erteilt))" />
+                }
+            </div>
+        }
+    </div>
+
+    @if (Detail.KontakteBearbeitbar && Detail.KontakteSichtbar)
+    {
+        <details class="fp-einschub" open="@(bearbeiten is not null)">
+            <summary>@(bearbeiten is null ? "Kontakt hinzufügen" : "Kontakt ändern oder korrigieren")</summary>
+            <div class="fp-form">
+                <div class="fp-field">
+                    <label class="fp-lbl" for="k-art">Art</label>
+                    <select id="k-art" class="fp-select" @bind="art" disabled="@(bearbeiten is not null)">
+                        <option value="@Kontaktart.Adresse">Postadresse</option>
+                        <option value="@Kontaktart.EMail">E-Mail</option>
+                        <option value="@Kontaktart.Rufnummer">Rufnummer</option>
+                    </select>
+                </div>
+                @if (art == Kontaktart.Rufnummer)
+                {
+                    <div class="fp-field">
+                        <label class="fp-lbl" for="k-rart">Nummer</label>
+                        <select id="k-rart" class="fp-select" @bind="rufArt">
+                            <option value="@RufnummerArt.Mobil">mobil</option>
+                            <option value="@RufnummerArt.Festnetz">Festnetz</option>
+                            <option value="@RufnummerArt.Dienstlich">dienstlich</option>
+                        </select>
+                    </div>
+                    <div class="fp-field fp-grow"><label class="fp-lbl" for="k-nr">Rufnummer</label><RadzenTextBox id="k-nr" @bind-Value="nummer" Placeholder="+49 …" /></div>
+                }
+                else
+                {
+                    <div class="fp-field">
+                        <label class="fp-lbl" for="k-bereich">Bereich</label>
+                        <select id="k-bereich" class="fp-select" @bind="bereich">
+                            <option value="@Kontaktbereich.Privat">privat</option>
+                            <option value="@Kontaktbereich.Dienstlich">dienstlich</option>
+                        </select>
+                    </div>
+                }
+                @if (art == Kontaktart.EMail)
+                {
+                    <div class="fp-field fp-grow"><label class="fp-lbl" for="k-mail">E-Mail-Adresse</label><RadzenTextBox id="k-mail" @bind-Value="adresse" /></div>
+                }
+                @if (art == Kontaktart.Adresse)
+                {
+                    <div class="fp-field fp-grow"><label class="fp-lbl" for="k-str">Straße und Hausnummer</label><RadzenTextBox id="k-str" @bind-Value="strasse" /></div>
+                    <div class="fp-field"><label class="fp-lbl" for="k-plz">PLZ</label><RadzenTextBox id="k-plz" @bind-Value="plz" Style="width:6em" /></div>
+                    <div class="fp-field"><label class="fp-lbl" for="k-ort">Ort</label><RadzenTextBox id="k-ort" @bind-Value="ort" /></div>
+                    <div class="fp-field fp-grow"><label class="fp-lbl" for="k-zusatz">Zusatz (optional)</label><RadzenTextBox id="k-zusatz" @bind-Value="zusatz" Placeholder="z. B. c/o Rathaus" /></div>
+                }
+            </div>
+            @if (art == Kontaktart.Rufnummer)
+            {
+                <div class="fp-auswahl" role="group" aria-label="Erreichbar über">
+                    @foreach (var d in new[] { Messagingdienst.Anruf, Messagingdienst.Sms, Messagingdienst.Signal, Messagingdienst.WhatsApp })
+                    {
+                        <label><input type="checkbox" checked="@dienste.HasFlag(d)" @onchange="@(e => dienste = e.Value is true ? dienste | d : dienste & ~d)" /> @(d == Messagingdienst.Sms ? "SMS" : d.ToString())</label>
+                    }
+                    <label><input type="checkbox" @bind="einwilligung" /> Einwilligung zur Kontaktaufnahme über Messaging</label>
+                </div>
+            }
+            <div class="fp-auswahl"><label><input type="checkbox" @bind="bevorzugt" /> bevorzugt (@(art switch { Kontaktart.Adresse => "für Briefe", Kontaktart.EMail => "Mails der Fraktion gehen hierhin", _ => "für Anrufe und SMS" }))</label></div>
+            <div class="fp-form">
+                @if (bearbeiten is not null)
+                {
+                    <div class="fp-field">
+                        <RadzenRadioButtonList TValue="bool" @bind-Value="korrektur" aria-label="Änderung oder Korrektur">
+                            <Items>
+                                <RadzenRadioButtonListItem Text="Änderung ab Datum (z. B. Umzug, neue Nummer)" Value="false" />
+                                <RadzenRadioButtonListItem Text="Korrektur (Tippfehler) für den ganzen Zeitraum" Value="true" />
+                            </Items>
+                        </RadzenRadioButtonList>
+                    </div>
+                }
+                <div class="fp-field"><label class="fp-lbl">@(korrektur ? "Betroffene Angabe gültig am" : "Gültig ab")</label>
+                    <RadzenDatePicker TValue="DateTime" @bind-Value="datum" DateFormat="dd.MM.yyyy" /></div>
+                <div class="fp-field fp-grow"><label class="fp-lbl" for="k-grund">Grund</label><RadzenTextBox id="k-grund" @bind-Value="grund" Placeholder="z. B. Umzug, neue Nummer, Tippfehler" /></div>
+            </div>
+            <div class="fp-row">
+                <BegruendeterButton Text="Speichern" Icon="save" Size="ButtonSize.Small" Freigabe="@SpeichernFreigabe()" Click="SpeichernAsync" />
+                @if (bearbeiten is not null)
+                {
+                    <RadzenButton Text="Abbrechen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="Zuruecksetzen" />
+                }
+            </div>
+        </details>
+    }
+    @if (meldung is not null)
+    {
+        <p class="fp-small" role="status">@meldung</p>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public PersonDetail Detail { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback Geaendert { get; set; }
+
+    private (Kontaktart Art, Guid Id)? bearbeiten;
+    private Kontaktart art = Kontaktart.EMail;
+    private Kontaktbereich bereich;
+    private RufnummerArt rufArt;
+    private Messagingdienst dienste = Messagingdienst.Anruf | Messagingdienst.Sms;
+    private string? adresse, nummer, strasse, plz, ort, zusatz, grund, meldung;
+    private bool bevorzugt, einwilligung, korrektur;
+    private DateTime datum;
+
+    protected override void OnInitialized() => datum = Heute.ToDateTime(TimeOnly.MinValue);
+
+    private DateOnly Heute => Ortszeit.Heute(Uhr);
+
+    private RenderFragment Liste(IEnumerable<(Guid Id, Kontaktart Art, string Feld, string Text, bool Bevorzugt, IEnumerable<IHistorienwert> Verlauf)>? eintraege, string leer) => __builder =>
+    {
+        var liste = eintraege?.ToList() ?? [];
+        if (liste.Count == 0)
+        {
+            <p class="fp-small fp-muted">@leer</p>
+            return;
+        }
+
+        <div class="fp-list">
+            @foreach (var e in liste)
+            {
+                <div>
+                    <span class="fp-grow">@e.Text <span class="fp-small fp-muted">@e.Feld</span></span>
+                    @if (e.Bevorzugt) { <StatusPille Stil="info">bevorzugt</StatusPille> }
+                    <Verlauf Versionen="e.Verlauf" />
+                    @if (Detail.KontakteBearbeitbar)
+                    {
+                        <RadzenButton Icon="edit" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" title="Ändern oder korrigieren" aria-label="Ändern oder korrigieren"
+                                      Click="@(() => Bearbeiten(e.Art, e.Id))" />
+                        <RadzenButton Icon="block" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" title="Ab heute aufgeben" aria-label="Ab heute aufgeben"
+                                      Click="@(() => AufgebenAsync(e.Art, e.Id))" />
+                    }
+                </div>
+            }
+        </div>
+    };
+
+    private void Bearbeiten(Kontaktart was, Guid id)
+    {
+        Zuruecksetzen();
+        bearbeiten = (was, id);
+        art = was;
+        var h = Detail.Heute;
+        switch (was)
+        {
+            case Kontaktart.Adresse when h?.Adressen.FirstOrDefault(a => a.AdressId == id) is { } a:
+                (bereich, zusatz, strasse, plz, ort, bevorzugt) = (a.Bereich, a.Zusatz, a.Strasse, a.Postleitzahl, a.Ort, a.Bevorzugt);
+                break;
+            case Kontaktart.EMail when h?.EMails.FirstOrDefault(e => e.AdressId == id) is { } e:
+                (bereich, adresse, bevorzugt) = (e.Bereich, e.Adresse, e.Bevorzugt);
+                break;
+            case Kontaktart.Rufnummer when h?.Rufnummern.FirstOrDefault(r => r.NummerId == id) is { } r:
+                (rufArt, nummer, dienste, einwilligung, bevorzugt) = (r.Art, r.Nummer, r.Dienste, r.Einwilligung, r.Bevorzugt);
+                break;
+        }
+    }
+
+    private void Zuruecksetzen()
+    {
+        bearbeiten = null;
+        (adresse, nummer, strasse, plz, ort, zusatz, grund) = (null, null, null, null, null, null, null);
+        (bevorzugt, einwilligung, korrektur) = (false, false, false);
+        dienste = Messagingdienst.Anruf | Messagingdienst.Sms;
+        datum = Heute.ToDateTime(TimeOnly.MinValue);
+    }
+
+    private Freigabe SpeichernFreigabe()
+    {
+        var fehlt = art switch
+        {
+            Kontaktart.Adresse when string.IsNullOrWhiteSpace(strasse) || string.IsNullOrWhiteSpace(plz) || string.IsNullOrWhiteSpace(ort) => "Bitte Straße, PLZ und Ort angeben.",
+            Kontaktart.EMail when string.IsNullOrWhiteSpace(adresse) || !adresse.Contains('@', StringComparison.Ordinal) => "Bitte eine E-Mail-Adresse angeben.",
+            Kontaktart.Rufnummer when string.IsNullOrWhiteSpace(nummer) => "Bitte eine Rufnummer angeben.",
+            _ => string.IsNullOrWhiteSpace(grund) ? "Bitte einen Grund angeben." : null,
+        };
+        return fehlt is null ? Freigabe.Ja : Freigabe.Nein(fehlt);
+    }
+
+    private async Task SpeichernAsync()
+    {
+        var id = bearbeiten?.Id;
+        var tag = DateOnly.FromDateTime(datum);
+        await AusfuehrenAsync(d =>
+        {
+            var s = d.GetRequiredService<StammdatenDienst>();
+            return art switch
+            {
+                Kontaktart.Adresse => s.AdresseSpeichernAsync(Detail.Person.Id, id, bereich, zusatz, strasse!, plz!, ort!, bevorzugt, tag, korrektur, grund!),
+                Kontaktart.EMail => s.EMailSpeichernAsync(Detail.Person.Id, id, bereich, adresse!, bevorzugt, tag, korrektur, grund!),
+                _ => s.RufnummerSpeichernAsync(Detail.Person.Id, id, rufArt, nummer!, dienste, einwilligung, bevorzugt, tag, korrektur, grund!),
+            };
+        }, id is null ? "Kontakt hinzugefügt." : korrektur ? "Korrigiert. Die alte Angabe bleibt im Verlauf als ersetzt sichtbar." : $"Geändert ab {datum:dd.MM.yyyy}.");
+        if (meldung is not null && !meldung.StartsWith("Fehler", StringComparison.Ordinal))
+        {
+            Zuruecksetzen();
+        }
+    }
+
+    private Task AufgebenAsync(Kontaktart was, Guid id)
+        => AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().KontaktAufgebenAsync(Detail.Person.Id, was, id, Heute, "aufgegeben"),
+            "Gilt ab heute nicht mehr; der Verlauf bleibt.");
+
+    private Task EinwilligungAsync(Einwilligungszweck zweck, bool erteilen)
+        => AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().EinwilligungSetzenAsync(Detail.Person.Id, zweck, erteilen, Heute,
+            erteilen ? "Einwilligung erteilt" : "Einwilligung widerrufen"), erteilen ? "Einwilligung ab heute erteilt." : "Einwilligung ab heute widerrufen.");
+
+    private async Task AusfuehrenAsync(Func<IServiceProvider, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(aktion);
+            meldung = erfolg;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            meldung = $"Fehler: {ex.Message}";
+        }
+
+        await Geaendert.InvokeAsync();
+    }
+}

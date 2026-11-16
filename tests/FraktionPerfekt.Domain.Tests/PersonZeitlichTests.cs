@@ -31,7 +31,7 @@ public sealed class PersonZeitlichTests
     {
         var p = Liz();
         p.AngabeAendern(PersonMerkmalArt.Funktion, "Fraktionsvorsitzende", new DateOnly(2026, 1, 1), Erfassung.Aenderung(Anlage, "Wahl"), false);
-        p.AngabeAendern(PersonMerkmalArt.EMail, "liz.neu@demo.invalid", new DateOnly(2026, 1, 1), Erfassung.Aenderung(Anlage, "neue Adresse"), false);
+        p.EMailAendern(p.EMails.Single().AdressId, Kontaktbereich.Privat, "liz.neu@demo.invalid", true, new DateOnly(2026, 1, 1), Erfassung.Aenderung(Anlage, "neue Adresse"), false);
         p.EMail.ShouldBe("liz@demo.invalid");                       // heute (Nov. 2025) noch die alte
         p.ZwischenstandAktualisieren(new DateTimeOffset(2026, 1, 2, 3, 0, 0, TimeSpan.Zero));   // Nachtlauf nach dem Stichtag
         p.EMail.ShouldBe("liz.neu@demo.invalid");
