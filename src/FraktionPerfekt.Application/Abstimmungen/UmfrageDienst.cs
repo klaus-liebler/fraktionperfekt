@@ -36,6 +36,10 @@ public sealed class UmfrageDienst(
     public async Task<IReadOnlyList<UmfrageZeile>> ListeAsync(CancellationToken abbruch = default)
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
+        if (wer.Rolle is Rolle.Helferin)
+        {
+            return []; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+        }
         var umfragen = await daten.ListeAsync(daten.Menge<Umfrage>().OrderByDescending(u => u.ErstelltAm).ThenBy(u => u.Id), abbruch);
         var stimmen = await daten.ListeAsync(daten.Menge<Stimme>().OrderBy(s => s.Id), abbruch);
         return umfragen.Select(u => new UmfrageZeile(u, stimmen.Where(s => s.UmfrageId == u.Id).Select(s => s.PersonId).Distinct().Count(),
@@ -53,6 +57,10 @@ public sealed class UmfrageDienst(
     public async Task<UmfrageDetail?> DetailAsync(Guid id, CancellationToken abbruch = default)
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
+        if (wer.Rolle is Rolle.Helferin)
+        {
+            return null; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+        }
         if (await daten.FindenAsync<Umfrage>(id, abbruch) is not { } u)
         {
             return null;
@@ -128,6 +136,11 @@ public sealed class UmfrageDienst(
     {
         ArgumentNullException.ThrowIfNull(optionIds);
         var wer = await benutzer.ErmittelnAsync(abbruch);
+        if (wer.Rolle is Rolle.Helferin)
+        {
+            throw new InvalidOperationException("Helfer:innen nehmen an Fraktionsabstimmungen nicht teil.");
+        }
+
         var detail = await DetailAsync(umfrageId, abbruch) ?? throw new InvalidOperationException("Abstimmung nicht gefunden.");
         if (detail.Abstimmen is { Erlaubt: false } nein)
         {

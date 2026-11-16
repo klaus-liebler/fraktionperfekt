@@ -68,7 +68,19 @@
             <span class="fp-proto" title="Alle Mails und Push-Mitteilungen werden nur simuliert; nichts verlässt das System. Das RIS ist ein Mock.">Entwicklung · Mock-Anbindungen</span>
         </header>
         <main class="fp-content">
-            @Body
+            @if (Gesperrt() is { } sperre)
+            {
+                @* Direkte Adresse zu einem Bereich, den das Menü für diese Rolle sperrt: erklären statt leere Seite *@
+                <section class="fp-card" role="alert">
+                    <h1>@sperre.Titel ist für Ihre Rolle gesperrt</h1>
+                    <p>@sperre.Grund</p>
+                    <p><a href="">Zur Startseite</a></p>
+                </section>
+            }
+            else
+            {
+                @Body
+            }
         </main>
     </div>
 </div>
@@ -118,6 +130,21 @@
     private Benutzer? benutzer;
 
     private string AktuellerPfad => Navigation.ToBaseRelativePath(Navigation.Uri);
+
+    /// <summary>Gesperrter Menüpunkt, zu dem die aktuelle Adresse gehört (gleiche Regel wie im Menü).</summary>
+    private (string Titel, string Grund)? Gesperrt()
+    {
+        var pfad = AktuellerPfad.Split('?', '#')[0];
+        foreach (var n in Navigationspunkte.Where(n => n.Recht is not null && n.Ziel.Length > 0))
+        {
+            if ((pfad == n.Ziel || pfad.StartsWith(n.Ziel + "/", StringComparison.OrdinalIgnoreCase)) && n.Recht!(benutzer?.Rolle) is { Erlaubt: false } nein)
+            {
+                return (n.Titel, nein.Begruendung ?? "Für Ihre Rolle nicht freigegeben.");
+            }
+        }
+
+        return null;
+    }
 
     protected override async Task OnParametersSetAsync()
     {

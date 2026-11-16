@@ -59,6 +59,11 @@ public sealed class AntragDienst(
 {
     public async Task<IReadOnlyList<AntragZeile>> ListeAsync(CancellationToken abbruch = default)
     {
+        if ((await benutzer.ErmittelnAsync(abbruch)).Rolle is Rolle.Helferin)
+        {
+            return []; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+        }
+
         var antraege = await daten.ListeAsync(daten.Menge<Antrag>().OrderByDescending(a => a.GeaendertAm).ThenBy(a => a.Id), abbruch);
         var fassungen = await daten.ListeAsync(daten.Menge<AntragFassung>().Select(f => f.AntragId), abbruch);
         var vorschlaege = await daten.ListeAsync(daten.Menge<Aenderungsvorschlag>().Where(v => v.Status == Vorschlagsstatus.Offen).Select(v => v.AntragId), abbruch);
@@ -71,6 +76,10 @@ public sealed class AntragDienst(
     public async Task<AntragDetail?> DetailAsync(Guid id, CancellationToken abbruch = default)
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
+        if (wer.Rolle is Rolle.Helferin)
+        {
+            return null; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+        }
         if (await daten.FindenAsync<Antrag>(id, abbruch) is not { } a)
         {
             return null;

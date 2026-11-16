@@ -64,6 +64,11 @@ public sealed class SitzungDienst(
 
     public async Task<IReadOnlyList<SitzungZeile>> SitzungenAsync(CancellationToken abbruch = default)
     {
+        if ((await benutzer.ErmittelnAsync(abbruch)).Rolle is Rolle.Helferin)
+        {
+            return []; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+        }
+
         var sitzungen = await daten.ListeAsync(daten.Menge<Sitzung>().OrderBy(s => s.AngelegtAm).ThenBy(s => s.Id), abbruch);
         var gremien = (await stammdaten.GremienAsync(abbruch)).ToDictionary(g => g.Id, g => g.Name);
         var zeilen = new List<SitzungZeile>();
@@ -172,6 +177,10 @@ public sealed class SitzungDienst(
     public async Task<SitzungDetail?> DetailAsync(Guid sitzungId, CancellationToken abbruch = default)
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
+        if (wer.Rolle is Rolle.Helferin)
+        {
+            return null; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+        }
         if (await daten.FindenAsync<Sitzung>(sitzungId, abbruch) is not { } s || await termine.TerminAsync(s.TerminId, abbruch) is not { } termin)
         {
             return null;

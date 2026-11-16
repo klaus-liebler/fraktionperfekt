@@ -189,6 +189,24 @@ public sealed partial class AppStartTests : IAsyncLifetime
             (await fremd.GetStringAsync(adresse, abbruch)).ShouldContain("Testanmeldung"); // ohne Anmeldung kein Bild
         }
 
+        // Helfer:innen: gesperrte Bereiche auch über die direkte Adresse nicht – mit Erklärung statt leerer Seite.
+        using (var helfer = new HttpClient(new HttpClientHandler { CookieContainer = new CookieContainer(), AllowAutoRedirect = true }) { BaseAddress = _adresse })
+        {
+            var seite = await helfer.GetStringAsync("anmelden", abbruch);
+            (await helfer.PostAsync("anmelden", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = Token(seite),
+                ["_handler"] = "anmelden",
+                ["Login"] = "fbaeumer",
+            }), abbruch)).IsSuccessStatusCode.ShouldBeTrue();
+            foreach (var gesperrt in new[] { "antraege", "sitzungen", "anfragen", "anliegen", "presse", "abstimmungen", "besetzung", "kontakte" })
+            {
+                (await helfer.GetStringAsync(gesperrt, abbruch)).ShouldContain("für Ihre Rolle gesperrt", Case.Insensitive, $"/{gesperrt}");
+            }
+
+            (await helfer.GetStringAsync("wahlkampf", abbruch)).ShouldNotContain("für Ihre Rolle gesperrt");
+        }
+
         // Handy: Vertretungsanfrage mit Ein-Tipp-Antwort „Ich vertrete“.
         var handy = await http.GetStringAsync("handy", abbruch);
         handy.ShouldContain("Vertretung gesucht");
