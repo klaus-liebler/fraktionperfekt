@@ -2,9 +2,14 @@ using FraktionPerfekt.Domain.Personen;
 
 namespace FraktionPerfekt.Adapters.Mocks.Testdaten;
 
-/// <summary>Eine fiktive Person der Demofraktion.</summary>
+/// <summary>Eine Person der Demodaten (echte Fraktionsmitglieder aus <see cref="FraktionGreven"/> oder fiktive Mitarbeitende).</summary>
 /// <param name="RisId"><c>null</c> = nicht im Ratsinformationssystem (Geschäftsführung, Helfer:innen).</param>
-public sealed record Demoperson(string Vorname, string Nachname, string Kennung, string? RisId, string Funktion, params Rolle[] Rollen);
+/// <param name="EMail"><c>null</c> = „{Kennung}@demo.invalid“ (nicht zustellbar).</param>
+public sealed record Demoperson(string Vorname, string Nachname, string Kennung, string? RisId, string Funktion, Rolle[] Rollen, string? Anrede = null,
+    string? Titel = null, string? EMail = null)
+{
+    public string Adresse => EMail ?? $"{Kennung}@demo.invalid";
+}
 
 /// <summary>Ein fiktives Gremium der Stadt Greven mit den Sitzen der Demofraktion.</summary>
 /// <param name="Stellvertretungen">RIS-Kennungen in Rangfolge (Rang 1 zuerst).</param>
@@ -13,8 +18,8 @@ public sealed record Demogremium(string RisId, string Name, string Kurzname, str
     DateTime ErsteSitzung, int Rhythmus, int DauerMinuten, string Ort);
 
 /// <summary>
-/// Fiktive Demobesetzung der CDU-Fraktion Greven: Alle Personen sind erfunden, Ähnlichkeiten mit realen Personen sind Zufall. Die Gremien sind
-/// Beispiele, wie es sie in Greven geben könnte; Zusammensetzung und Sitzungstermine sind ausgedacht.
+/// Demobesetzung der CDU-Fraktion Greven: die echten Mitglieder aus <see cref="FraktionGreven"/>, dazu fiktive Mitarbeitende
+/// (Geschäftsführung, Wahlkampfteam). Gremien, Sitze, Termine und alle Vorgänge sind erfunden (Demo).
 /// </summary>
 public static class Demofraktion
 {
@@ -22,25 +27,16 @@ public static class Demofraktion
 
     public const string Anzeigename = "CDU-Fraktion Greven";
 
-    public static IReadOnlyList<Demoperson> Personen { get; } =
+    /// <summary>Fiktive Mitarbeitende ohne Mandat (als Demo gekennzeichnet).</summary>
+    public static IReadOnlyList<Demoperson> Mitarbeitende { get; } =
     [
-        new("Katrin", "Albers", "kalbers", null, "Fraktionsgeschäftsführerin", Rolle.Administration),
-        new("Thomas", "Brinkmann", "tbrinkmann", "ris-p01", "Fraktionsvorsitzender", Rolle.Vorstand, Rolle.Mitglied),
-        new("Sabine", "Hölscher", "shoelscher", "ris-p02", "stellv. Fraktionsvorsitzende", Rolle.Vorstand, Rolle.Mitglied),
-        new("Markus", "Terhaar", "mterhaar", "ris-p03", "Kassier", Rolle.Kassier, Rolle.Mitglied),
-        new("Anna", "Wewers", "awewers", "ris-p04", "Ratsmitglied", Rolle.Mitglied),
-        new("Jens", "Overmeyer", "jovermeyer", "ris-p05", "Ratsmitglied", Rolle.Mitglied),
-        new("Petra", "Lammers", "plammers", "ris-p06", "Ratsmitglied", Rolle.Mitglied),
-        new("Dirk", "Schulze-Eling", "dschulze", "ris-p07", "Ratsmitglied", Rolle.Mitglied),
-        new("Melanie", "Kock", "mkock", "ris-p08", "Ratsmitglied", Rolle.Mitglied),
-        new("Stefan", "Grüter", "sgrueter", "ris-p09", "Ratsmitglied", Rolle.Mitglied),
-        new("Ralf", "Niehues", "rniehues", "ris-p13", "Ratsmitglied", Rolle.Mitglied),
-        new("Lena", "Hagedorn", "lhagedorn", "ris-p10", "sachkundige Bürgerin", Rolle.SachkundigeBuergerin),
-        new("Yusuf", "Demir", "ydemir", "ris-p11", "sachkundiger Bürger", Rolle.SachkundigeBuergerin),
-        new("Claudia", "Rensing", "crensing", "ris-p12", "sachkundige Bürgerin", Rolle.SachkundigeBuergerin),
-        new("Felix", "Bäumer", "fbaeumer", null, "Wahlkampfteam", Rolle.Helferin),
-        new("Nora", "Feldhaus", "nfeldhaus", null, "Ortsverband", Rolle.Helferin),
+        new("Katrin", "Albers", "kalbers", null, "Fraktionsgeschäftsführerin (fiktiv, Demo)", [Rolle.Administration], "Frau"),
+        new("Felix", "Bäumer", "fbaeumer", null, "Wahlkampfteam (fiktiv, Demo)", [Rolle.Helferin], "Herr"),
+        new("Nora", "Feldhaus", "nfeldhaus", null, "Ortsverband (fiktiv, Demo)", [Rolle.Helferin], "Frau"),
     ];
+
+    /// <summary>Alle Personen der Demodaten; Klaus Liebler zuerst (Haupt-Login der Demo).</summary>
+    public static IReadOnlyList<Demoperson> Personen { get; } = [.. FraktionGreven.Ratsmitglieder, .. FraktionGreven.SachkundigeBuerger, .. Mitarbeitende];
 
     /// <summary>Ratsmitglieder anderer Fraktionen: im RIS vorhanden, werden beim Abgleich nicht übernommen.</summary>
     public static IReadOnlyList<(string RisId, string Vorname, string Nachname)> AndereFraktion { get; } =
@@ -50,7 +46,7 @@ public static class Demofraktion
         ("ris-x03", "Heiner", "Platzhalter"),
     ];
 
-    private static readonly string[] Ratsmitglieder = ["ris-p01", "ris-p02", "ris-p03", "ris-p04", "ris-p05", "ris-p06", "ris-p07", "ris-p08", "ris-p09", "ris-p13"];
+    private static readonly string[] Ratsmitglieder = FraktionGreven.Ratsmitglieder.Select(p => p.RisId!).ToArray();
 
     public static IReadOnlyList<Demogremium> Gremien { get; } =
     [

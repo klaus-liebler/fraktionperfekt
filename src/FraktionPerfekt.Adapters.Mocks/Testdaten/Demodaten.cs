@@ -55,7 +55,7 @@ public sealed class Demodaten(
         var personen = new Dictionary<string, Person>(StringComparer.Ordinal);
         foreach (var d in Demofraktion.Personen)
         {
-            var p = new Person(d.Vorname, d.Nachname, $"{d.Kennung}@demo.example", d.Kennung, jetzt, d.RisId);
+            var p = new Person(d.Vorname, d.Nachname, d.Adresse, d.Kennung, jetzt, d.RisId, titel: d.Titel);
             p.RollenFestlegenAb(seit, d.Rollen, Erfassung.Erst(jetzt, Von, $"Demodaten: {d.Funktion}"));
             stammdaten.Hinzufuegen(p);
             personen[d.Kennung] = p;
@@ -77,7 +77,7 @@ public sealed class Demodaten(
             stammdaten.Hinzufuegen(new Mitgliedschaft(personen[d.Kennung].Id, fraktion.Id, Funktion.Ordentlich, null, seit, erst));
         }
 
-        foreach (var k in new[] { "awewers", "ydemir", "mkock", "crensing" })
+        foreach (var k in new[] { "lkuehlert", "hakkus", "seisenrichter", "acleve" })
         {
             stammdaten.Hinzufuegen(new Mitgliedschaft(personen[k].Id, arbeitskreis.Id, Funktion.Ordentlich, null, seit, erst));
         }
@@ -123,7 +123,7 @@ public sealed class Demodaten(
         // Ein paar Zusagen zu öffentlichen Terminen
         foreach (var t in oeffentliche.Take(4))
         {
-            foreach (var k in f.PickRandom(new[] { "tbrinkmann", "awewers", "fbaeumer", "nfeldhaus", "plammers", "mkock" }, 2))
+            foreach (var k in f.PickRandom(new[] { "jwilp", "lkuehlert", "fbaeumer", "nfeldhaus", "bkurney", "seisenrichter" }, 2))
             {
                 termine.Hinzufuegen(new Teilnahme(t.Id, personen[k].Id, Teilnahmestatus.Zugesagt, jetzt));
             }
@@ -159,10 +159,10 @@ public sealed class Demodaten(
         DateTimeOffset Frist(Termin t) => Vertretungsfall.FristBerechnen(jetzt, Ortszeit.Zeitpunkt(t.Beginn), 24);
         var anzahl = 0;
 
-        // a) Jens Overmeyer fehlt im HFA: Anna Wewers (Rang 1) ist gefragt und hat noch nicht geantwortet.
+        // a) Thomas Horstmann fehlt im HFA: Liz Kühlert (Rang 1) ist gefragt und hat noch nicht geantwortet.
         if (Naechste("ris-g02") is { } hfa)
         {
-            var a = Abwesenheit(personen["jovermeyer"], hfa.Tag, hfa.Tag.AddDays(4), "Urlaub", jetzt);
+            var a = Abwesenheit(personen["thorstmann"], hfa.Tag, hfa.Tag.AddDays(4), "Urlaub", jetzt);
             var (fall, schritt) = Vertretungsfall.Starten(hfa.Id, hfa.GremiumId!.Value, a.PersonId, a.Id, Kandidaten(hfa), jetzt, Frist(hfa));
             vertretung.Hinzufuegen(fall);
             if (schritt.NeueAnfrage is { } anfrage && personen.Values.FirstOrDefault(p => p.Id == anfrage.PersonId) is { } gefragt)
@@ -175,16 +175,16 @@ public sealed class Demodaten(
             anzahl++;
         }
 
-        // b) Dirk Schulze-Eling fehlt im ASBU: Abwesenheit eingetragen, Vertretung noch nicht angefragt.
+        // b) Michael Gries fehlt im ASBU: Abwesenheit eingetragen, Vertretung noch nicht angefragt.
         if (Naechste("ris-g03") is { } asbu)
         {
-            Abwesenheit(personen["dschulze"], asbu.Tag.AddDays(-1), asbu.Tag.AddDays(1), null, jetzt);
+            Abwesenheit(personen["mgries"], asbu.Tag.AddDays(-1), asbu.Tag.AddDays(1), null, jetzt);
         }
 
-        // c) Claudia Rensing fehlt im ASFS: alle Stellvertretungen haben abgesagt → Aufgabe für den Vorstand.
+        // c) Alexandra Cleve fehlt im ASFS: alle Stellvertretungen haben abgesagt → Aufgabe für den Vorstand.
         if (Naechste("ris-g05") is { } asfs)
         {
-            var a = Abwesenheit(personen["crensing"], asfs.Tag, asfs.Tag, "beruflich verhindert", jetzt);
+            var a = Abwesenheit(personen["acleve"], asfs.Tag, asfs.Tag, "beruflich verhindert", jetzt);
             var (fall, _) = Vertretungsfall.Starten(asfs.Id, asfs.GremiumId!.Value, a.PersonId, a.Id, Kandidaten(asfs), jetzt.AddDays(-2), jetzt.AddDays(-1));
             while (fall.OffeneAnfrage is { } offen)
             {
@@ -193,15 +193,15 @@ public sealed class Demodaten(
 
             vertretung.Hinzufuegen(fall);
             vertretung.Hinzufuegen(new Aufgabe($"Vertretung offen: ASFS am {asfs.Beginn:dd.MM.yyyy}",
-                $"Alle {fall.Kandidaten.Count} Stellvertretungen für Claudia Rensing haben abgesagt oder nicht rechtzeitig geantwortet.",
+                $"Alle {fall.Kandidaten.Count} Stellvertretungen für Alexandra Cleve haben abgesagt oder nicht rechtzeitig geantwortet.",
                 Rolle.Vorstand, VertretungDienst.AufgabenAnlass, fall.Id, $"vertretungen/fall/{fall.Id}", jetzt, Ortszeit.Zeitpunkt(asfs.Beginn).AddHours(-2)));
             anzahl++;
         }
 
-        // d) Stefan Grüter fehlt im RPA: Dirk Schulze-Eling (Rang 1) hat zugesagt.
+        // d) Klaus Schwenken fehlt im RPA: Michael Gries (Rang 1) hat zugesagt.
         if (Naechste("ris-g07") is { } rpa)
         {
-            var a = Abwesenheit(personen["sgrueter"], rpa.Tag, rpa.Tag, null, jetzt);
+            var a = Abwesenheit(personen["kschwenken"], rpa.Tag, rpa.Tag, null, jetzt);
             var (fall, schritt) = Vertretungsfall.Starten(rpa.Id, rpa.GremiumId!.Value, a.PersonId, a.Id, Kandidaten(rpa), jetzt.AddDays(-1), Frist(rpa));
             if (schritt.NeueAnfrage is { } anfrage)
             {

@@ -13,14 +13,14 @@ public sealed class SicherungTests
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
 
         // Nur die Administration (oder die Automatik) sichert.
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => d.GetRequiredService<ISicherung>().SichernAsync())))
             .Message.ShouldContain("Administration");
 
         await u.AnmeldenAsync("kalbers", Rolle.Administration);
         var e = await u.InAsync(d => d.GetRequiredService<ISicherung>().SichernAsync());
         e.Wiederherstellbar.ShouldBe(true);
-        e.Pruefergebnis!.ShouldContain("Personen 16");
+        e.Pruefergebnis!.ShouldContain("Personen 53");
         e.Sha256.Length.ShouldBe(64);
 
         var liste = await u.InAsync(d => d.GetRequiredService<ISicherung>().ListeAsync());

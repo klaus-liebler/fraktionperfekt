@@ -66,6 +66,8 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.HasIndex(p => p.RisId).IsUnique();
             b.Ignore(p => p.Anzeigename);
             b.Ignore(p => p.Sortiername);
+            b.Ignore(p => p.Initialen);
+            b.Property(p => p.Titel).HasMaxLength(60);
             b.HasMany(p => p.RollenVersionen).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
             b.Navigation(p => p.RollenVersionen).HasField("_rollen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
         });

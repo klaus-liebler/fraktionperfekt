@@ -7,6 +7,8 @@ public sealed class MockMailKanal : IZustellKanal
 {
     public Kanal Kanal => Kanal.EMail;
 
+    public bool Simuliert => true;
+
     public Task<string?> ZustellenAsync(AusgehendeNachricht nachricht, CancellationToken abbruch = default)
         => Task.FromResult<string?>("simuliert, nicht versendet");
 }
@@ -18,6 +20,8 @@ public sealed class MockMailKanal : IZustellKanal
 public sealed class MockPushKanal : IZustellKanal
 {
     public Kanal Kanal => Kanal.Push;
+
+    public bool Simuliert => true;
 
     public Task<string?> ZustellenAsync(AusgehendeNachricht nachricht, CancellationToken abbruch = default)
         => Task.FromResult<string?>(nachricht.Aktion is null ? "Push simuliert" : $"Push simuliert, Aktionsknopf „{nachricht.Aktion}“");

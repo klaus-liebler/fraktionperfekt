@@ -31,7 +31,7 @@ public static class RollenExtensions
     {
         Rolle.Administration => "Administration",
         Rolle.Vorstand => "Vorstand",
-        Rolle.Kassier => "Kassier",
+        Rolle.Kassier => "Schatzmeister/Kassier",
         Rolle.Mitglied => "Mitglied",
         Rolle.SachkundigeBuergerin => "Sachkundige Bürger:innen",
         Rolle.Helferin => "Helfer:innen",

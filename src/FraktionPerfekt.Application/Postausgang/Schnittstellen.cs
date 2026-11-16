@@ -24,6 +24,15 @@ public interface IZustellKanal
 {
     Kanal Kanal { get; }
 
+    /// <summary><c>true</c> = simuliert, nichts verlässt das System (Mocks). Im Demobetrieb sind nur solche Kanäle für E-Mail erlaubt.</summary>
+    bool Simuliert => false;
+
     /// <summary>Stellt zu und liefert eine Rückmeldung. Fehler als Ausnahme.</summary>
     Task<string?> ZustellenAsync(AusgehendeNachricht nachricht, CancellationToken abbruch = default);
 }
+
+/// <summary>
+/// Demobetrieb (Demodaten mit echten Namen und teils echten Adressen): Mails gehen dann nie über einen echten Kanal hinaus,
+/// sondern werden blockiert. Wird aus der Konfiguration „Demodaten:Anlegen“ gesetzt.
+/// </summary>
+public sealed record Demobetrieb(bool Aktiv);

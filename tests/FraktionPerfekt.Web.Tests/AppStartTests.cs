@@ -112,15 +112,15 @@ public sealed partial class AppStartTests : IAsyncLifetime
         kopf.Headers.GetValues("X-Frame-Options").Single().ShouldBe("DENY");
         (await http.GetAsync("kalender/abo/falsch.ics", abbruch)).Headers.CacheControl!.NoStore.ShouldBeTrue();
 
-        // Testanmeldung als Anna Wewers (Demodaten: für den HFA als Vertretung gefragt).
+        // Testanmeldung als Liz Kühlert (Demodaten: für den HFA als Vertretung gefragt).
         var anmelden = await http.GetStringAsync("anmelden", abbruch);
         anmelden.ShouldContain("CDU-Fraktion Greven");
-        anmelden.ShouldContain("Anna Wewers");
+        anmelden.ShouldContain("Prof. Dr. Klaus Liebler");
         var antwort = await http.PostAsync("anmelden", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = Token(anmelden),
             ["_handler"] = "anmelden",
-            ["Login"] = "awewers",
+            ["Login"] = "lkuehlert",
         }), abbruch);
         antwort.IsSuccessStatusCode.ShouldBeTrue();
 

@@ -55,6 +55,8 @@ builder.Services.AddRateLimits(builder.Configuration);
 // Handy-Test im lokalen Netz (Profil "lan"): HTTPS auf allen Schnittstellen, öffentliche Adresse = LAN-IP.
 FraktionPerfekt.Web.LanBetrieb.Einrichten(builder);
 
+// Demobetrieb: Demodaten mit echten Namen und Adressen → Mails nie über echte Kanäle (Demo-Schutz im Postausgang)
+builder.Services.AddSingleton(new FraktionPerfekt.Application.Postausgang.Demobetrieb(builder.Configuration.GetValue("Demodaten:Anlegen", false)));
 builder.Services
     .AddFraktionAnwendung(builder.Configuration)
     .AddFraktionInfrastruktur(builder.Configuration, builder.Environment.ContentRootPath, builder.Environment.IsDevelopment(),

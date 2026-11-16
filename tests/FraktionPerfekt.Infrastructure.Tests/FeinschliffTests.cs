@@ -96,7 +96,7 @@ public sealed class FeinschliffTests
     public async Task Loeschfrist_Abwesenheiten_Grund_nach_drei_Monaten_Datensatz_nach_zwoelf()
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
-        await u.AnmeldenAsync("jovermeyer");
+        await u.AnmeldenAsync("thorstmann");
         var e = await u.InAsync(d => d.GetRequiredService<VertretungDienst>().EintragenAsync(new DateOnly(2026, 11, 20), new DateOnly(2026, 11, 21), "Kur"));
         var id = e.Abwesenheit.Id;
 
@@ -116,15 +116,15 @@ public sealed class FeinschliffTests
     public async Task Globale_Suche_mit_Modulrechten_Hinweise_Schnellaktionen_und_ICS()
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         var treffer = await u.InAsync(d => d.GetRequiredService<SucheDienst>().SuchenAsync("Grundschul"));
         treffer.Select(t => t.Bereich).Distinct().ShouldContain("Anträge");
         treffer.Select(t => t.Bereich).Distinct().ShouldContain("Wiki");
         treffer.Select(t => t.Bereich).Distinct().ShouldContain("Beschlüsse");
         (await u.InAsync(d => d.GetRequiredService<SucheDienst>().SuchenAsync("Stellungnahme Stadtwerke"))).ShouldContain(t => t.Bereich == "Dateien"); // HFA-Vertretung
-        await u.AnmeldenAsync("lhagedorn");
+        await u.AnmeldenAsync("uahrens");
         (await u.InAsync(d => d.GetRequiredService<SucheDienst>().SuchenAsync("Stellungnahme Stadtwerke"))).ShouldNotContain(t => t.Bereich == "Dateien"); // vertraulich, kein HFA-Sitz
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
 
         var ansicht = await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync());
         ansicht.Schnellaktionen.Select(s => s.Titel).ShouldContain("Plakat erfassen");

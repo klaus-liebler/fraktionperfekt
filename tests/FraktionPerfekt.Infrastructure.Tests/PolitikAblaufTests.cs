@@ -20,11 +20,11 @@ public sealed class PolitikAblaufTests
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
         AnfrageDienst A(IServiceProvider d) => d.GetRequiredService<AnfrageDienst>();
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         var anfrage = await u.InAsync(d => A(d).AnlegenAsync("Sanierungsstau an Grundschulen", "Welche Maßnahmen sind bis 2028 geplant?", null, "Schule und Bildung"));
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => A(d).EinreichenAsync(anfrage.Id, null)))).Message.ShouldContain("Vorstand");
 
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         await u.InAsync(d => A(d).EinreichenAsync(anfrage.Id, null));
         var z = (await u.InAsync(d => A(d).ListeAsync())).Single(x => x.Anfrage.Id == anfrage.Id);
         z.Anfrage.FristBis.ShouldBe(new DateOnly(2026, 11, 15).AddDays(AnfrageDienst.StandardFristTage));
@@ -37,7 +37,7 @@ public sealed class PolitikAblaufTests
         (await u.InAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync())).ShouldContain(a => a.AnlassId == anfrage.Id && a.Titel.StartsWith("Bei der Verwaltung nachhaken", StringComparison.Ordinal));
         (await u.InAsync(d => A(d).ListeAsync())).Single(x => x.Anfrage.Id == anfrage.Id).Ueberfaellig.ShouldBeTrue();
 
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         await u.InAsync(d => A(d).BeantwortenAsync(anfrage.Id, "Drei Schulen werden bis 2028 saniert (fiktiv)."));
         (await u.InAsync(d => A(d).ListeAsync())).Single(x => x.Anfrage.Id == anfrage.Id).Anfrage.Status.ShouldBe(Anfragestatus.Beantwortet);
         await u.AnmeldenAsync("kalbers", Rolle.Administration);
@@ -50,22 +50,22 @@ public sealed class PolitikAblaufTests
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
         AnliegenDienst A(IServiceProvider d) => d.GetRequiredService<AnliegenDienst>();
         AufgabenDienst T(IServiceProvider d) => d.GetRequiredService<AufgabenDienst>();
-        var wewers = await u.AnmeldenAsync("jovermeyer");
+        var wewers = await u.AnmeldenAsync("thorstmann");
         var anliegen = await u.InAsync(d => A(d).ErfassenAsync("Toiletten an der Grundschule", "Die Toiletten sind seit Monaten defekt.", "Frau Muster (fiktiv)",
             "muster@mail.example", Eingangskanal.Mail, "Schule und Bildung"));
 
         var zeile = (await u.InAsync(d => A(d).ListeAsync())).Single(z => z.Anliegen.Id == anliegen.Id);
         zeile.Zuweisen.Erlaubt.ShouldBeFalse();
-        zeile.Vorschlag.ShouldBe("Anna Wewers"); // Themenpatin Schule und Bildung
+        zeile.Vorschlag.ShouldBe("Liz Kühlert"); // Themenpatin Schule und Bildung
 
         await u.AnmeldenAsync("kalbers", Rolle.Administration);
         (await u.InAsync(d => T(d).KorbAsync())).ShouldContain(a => a.AnlassId == anliegen.Id);
         await u.InAsync(d => A(d).ZuweisenAsync(anliegen.Id, zeile.VorschlagPersonId!.Value));
         (await u.InAsync(d => T(d).KorbAsync())).ShouldNotContain(a => a.AnlassId == anliegen.Id);
 
-        await u.AnmeldenAsync("jovermeyer");
+        await u.AnmeldenAsync("thorstmann");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => A(d).ErledigenAsync(anliegen.Id, "x")))).Message.ShouldContain("zuständige");
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await u.InAsync(d => T(d).UebersichtAsync())).Meine.ShouldContain(a => a.Aufgabe.AnlassId == anliegen.Id);
         await u.InAsync(d => A(d).ErledigenAsync(anliegen.Id, "Mit der Schulverwaltung gesprochen; Reparatur beauftragt."));
         (await u.InAsync(d => T(d).UebersichtAsync())).Meine.ShouldNotContain(a => a.Aufgabe.AnlassId == anliegen.Id);
@@ -73,7 +73,7 @@ public sealed class PolitikAblaufTests
         u.Uhr.Advance(TimeSpan.FromDays(400));
         u.Benutzer.Aktuell = SBenutzer.Automatik;
         (await u.InAsync(d => A(d).LoeschfristenAsync())).ShouldBeGreaterThanOrEqualTo(1);
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         var danach = (await u.InAsync(d => A(d).ListeAsync())).Single(z => z.Anliegen.Id == anliegen.Id).Anliegen;
         danach.Name.ShouldBe("(gelöscht)");
         danach.Kontaktweg.ShouldBeNull();
@@ -86,16 +86,16 @@ public sealed class PolitikAblaufTests
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
         PresseDienst P(IServiceProvider d) => d.GetRequiredService<PresseDienst>();
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         var m = await u.InAsync(d => P(d).SpeichernAsync(null, "Ehrenamt stärken", "Text", new DateOnly(2026, 12, 1), "Ehrenamt"));
         await u.InAsync(d => P(d).ZurFreigabeAsync(m.Id));
         (await u.InAsync(d => P(d).MitteilungenAsync())).Single(z => z.Mitteilung.Id == m.Id).Freigeben.Begruendung!.ShouldContain("Vier-Augen");
         await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => P(d).EntscheidenAsync(m.Id, true)));
 
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await u.InAsync(d => P(d).MitteilungenAsync())).Single(z => z.Mitteilung.Id == m.Id).Freigeben.Begruendung!.ShouldContain("Vorstand");
 
-        await u.AnmeldenAsync("shoelscher", Rolle.Vorstand);
+        await u.AnmeldenAsync("ebrinkhaus", Rolle.Vorstand);
         await u.InAsync(d => P(d).EntscheidenAsync(m.Id, true));
         (await u.InAsync(d => P(d).MitteilungenAsync())).Single(z => z.Mitteilung.Id == m.Id).Mitteilung.Status.ShouldBe(Pressestatus.Freigegeben);
 
@@ -117,7 +117,7 @@ public sealed class PolitikAblaufTests
     public async Task Beschlusslage_aus_Protokollen_und_RIS_durchsuchbar_Abgleich_idempotent()
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         BeschlussArchiv B(IServiceProvider d) => d.GetRequiredService<BeschlussArchiv>();
         var alle = await u.InAsync(d => B(d).SuchenAsync(null, null, null, null));
         alle.ShouldContain(z => z.Beschluss.Quelle == Beschlussquelle.Fraktion);

@@ -18,7 +18,7 @@ public sealed class AntragAblaufTests
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
         AntragDienst A(IServiceProvider d) => d.GetRequiredService<AntragDienst>();
 
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         var asb = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync())).Single(g => g.Kurzname == "ASB");
         var antrag = await u.InAsync(d => A(d).AnlegenAsync("Schulwege sicher machen", "Die Verwaltung legt bis zum Sommer 2026 ein Schulwegkonzept vor.", asb.Id,
             "Schule und Bildung"));
@@ -28,7 +28,7 @@ public sealed class AntragAblaufTests
             "Die Verwaltung legt bis zum Sommer 2026 ein Schulwegkonzept für alle Grundschulen vor.", null)))).Message.ShouldContain("unverändert");
 
         // Kommentar und Änderungsvorschlag einer anderen Person; nur Autorin oder Vorstand entscheidet.
-        await u.AnmeldenAsync("mkock");
+        await u.AnmeldenAsync("seisenrichter");
         await u.InAsync(d => A(d).KommentierenAsync(antrag.Id, "Sommer 2026", "Knapp, aber machbar."));
         await u.InAsync(d => A(d).VorschlagenAsync(antrag.Id, "Sommer 2026", "Herbst 2026", "Mehr Zeit für die Elternbefragung"));
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => A(d).VorschlagenAsync(antrag.Id, "gibt es nicht", "x", null)))).Message.ShouldContain("nicht mehr");
@@ -36,7 +36,7 @@ public sealed class AntragAblaufTests
         detail.Vorschlaege.Single().Entscheiden.Erlaubt.ShouldBeFalse();
 
         // Vorstand kann erst abstimmen lassen, wenn über Vorschläge entschieden ist.
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         (await u.InAsync(d => A(d).DetailAsync(antrag.Id)))!.AbstimmungStarten.Begruendung!.ShouldContain("Änderungsvorschläge");
         await u.InAsync(d => A(d).VorschlagEntscheidenAsync(detail.Vorschlaege.Single().Vorschlag.Id, true));
         detail = (await u.InAsync(d => A(d).DetailAsync(antrag.Id)))!;
@@ -54,27 +54,27 @@ public sealed class AntragAblaufTests
         // Abstimmen: Ratsmitglieder ja, sachkundige Bürger:innen nein (Begründung); Stimme änderbar.
         var optionen = (await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().DetailAsync(umfrageId)))!.Optionen;
         Guid Ja() => optionen.Single(o => o.Text == "Ja").Id;
-        foreach (var k in new[] { "tbrinkmann", "shoelscher", "mterhaar", "awewers", "plammers", "sgrueter" })
+        foreach (var k in new[] { "jwilp", "ebrinkhaus", "djoud", "lkuehlert", "bkurney", "kschwenken", "seisenrichter", "mgries", "thorstmann", "pnientiedt", "mbenning", "kliebler", "tschubert" })
         {
             await u.AnmeldenAsync(k);
             await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbstimmenAsync(umfrageId, [Ja()]));
         }
 
-        await u.AnmeldenAsync("rniehues");
+        await u.AnmeldenAsync("ssterthues");
         (await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync())).OffeneAbstimmungen.ShouldContain(z => z.Umfrage.Id == umfrageId);
         await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbstimmenAsync(umfrageId, [optionen.Single(o => o.Text == "Ja").Id]));
         await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbstimmenAsync(umfrageId, [optionen.Single(o => o.Text == "Nein").Id]));
-        await u.AnmeldenAsync("lhagedorn");
+        await u.AnmeldenAsync("uahrens");
         (await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().DetailAsync(umfrageId)))!.Abstimmen.Begruendung!.ShouldContain("Ratsmitglieder");
 
         // Fristablauf: Fristenprüfung schließt ab → beschlossen, Beschluss in der Beschlusslage.
         u.Uhr.Advance(TimeSpan.FromDays(3));
         u.Benutzer.Aktuell = FraktionPerfekt.Application.Sicherheit.Benutzer.Automatik;   // wie der stündliche Fristen-Job
         (await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().FristenPruefenAsync())).ShouldBeGreaterThanOrEqualTo(1);
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         detail = (await u.InAsync(d => A(d).DetailAsync(antrag.Id)))!;
         detail.Antrag.Status.ShouldBe(Antragsstatus.Beschlossen);
-        detail.Abstimmung!.Ergebnis.Text.ShouldStartWith("Angenommen: 6 ja, 1 nein");
+        detail.Abstimmung!.Ergebnis.Text.ShouldStartWith("Angenommen: 13 ja, 1 nein");
         var beschluesse = await u.InAsync(d => d.GetRequiredService<IDaten>().ListeAsync(d.GetRequiredService<IDaten>().Menge<Beschluss>().Where(b => b.AntragId == antrag.Id)));
         beschluesse.ShouldHaveSingleItem().Ergebnis.ShouldBe(Beschlussergebnis.Angenommen);
 
@@ -95,7 +95,7 @@ public sealed class AntragAblaufTests
     public async Task Terminfindung_mit_Mehrfachauswahl_schlaegt_Termin_vor()
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
-        await u.AnmeldenAsync("shoelscher", Rolle.Vorstand);
+        await u.AnmeldenAsync("ebrinkhaus", Rolle.Vorstand);
         var a = new DateTime(2026, 12, 5, 10, 0, 0);
         var b = new DateTime(2026, 12, 12, 10, 0, 0);
         var umfrage = await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AnlegenAsync(
@@ -103,15 +103,15 @@ public sealed class AntragAblaufTests
         var o = (await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().DetailAsync(umfrage.Id)))!.Optionen;
         o[0].Zeitpunkt.ShouldBe(a);
         await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbstimmenAsync(umfrage.Id, [o[0].Id, o[1].Id]));
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbstimmenAsync(umfrage.Id, [o[1].Id]));
         await u.AnmeldenAsync("fbaeumer");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbstimmenAsync(umfrage.Id, [o[1].Id]))))
             .Message.ShouldContain("Helfer");
 
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbschliessenAsync(umfrage.Id)))).Message.ShouldContain("Vorstand");
-        await u.AnmeldenAsync("shoelscher", Rolle.Vorstand);
+        await u.AnmeldenAsync("ebrinkhaus", Rolle.Vorstand);
         var e = await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbschliessenAsync(umfrage.Id));
         e.Gewinner!.Zeitpunkt.ShouldBe(b);
         var detail = (await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().DetailAsync(umfrage.Id)))!;

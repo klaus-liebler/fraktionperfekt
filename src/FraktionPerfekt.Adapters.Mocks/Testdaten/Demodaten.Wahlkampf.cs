@@ -24,7 +24,7 @@ internal static class WahlkampfDemodaten
             (52.09650, 7.61590, "Bahnhof Greven, Vorplatz", Plakatart.Hohlkammer, Plakatstatus.Haengt, "nfeldhaus"),
             (52.09250, 7.60450, "Emsbrücke", Plakatart.Dreieck, Plakatstatus.Beschaedigt, "nfeldhaus"),
             (52.08870, 7.61200, "Saerbecker Straße", Plakatart.Hohlkammer, Plakatstatus.Haengt, "fbaeumer"),
-            (52.09480, 7.60200, "Münsterstraße, Kreisverkehr", Plakatart.Hohlkammer, Plakatstatus.Geplant, "mkock"),
+            (52.09480, 7.60200, "Münsterstraße, Kreisverkehr", Plakatart.Hohlkammer, Plakatstatus.Geplant, "seisenrichter"),
             (52.08600, 7.60100, "Schulzentrum, Zufahrt", Plakatart.Dreieck, Plakatstatus.Abgehaengt, "fbaeumer"),
             (52.13940, 7.62960, "Reckenfeld, Wittlerdamm", Plakatart.Hohlkammer, Plakatstatus.Haengt, "nfeldhaus"),
         };
@@ -50,7 +50,7 @@ internal static class WahlkampfDemodaten
         reckenfeld.Erledigen(jetzt.AddDays(-2), "12 Plakate hängen");
         var gimbte = new Gebiet("Gimbte", Gebietsart.Flyer, "Dorfkern, ca. 300 Haushalte", null, null);
         var schmedehausen = new Gebiet("Schmedehausen", Gebietsart.Haustuer, "Haustürbesuche mit Ratsmitglied", null, null);
-        schmedehausen.Zuteilen(P("dschulze"));
+        schmedehausen.Zuteilen(P("mgries"));
         foreach (var g in new[] { innenstadt, reckenfeld, gimbte, schmedehausen })
         {
             daten.Hinzufuegen(g);
@@ -66,14 +66,14 @@ internal static class WahlkampfDemodaten
             if (w == 0)
             {
                 daten.Hinzufuegen(new Schichteintrag(vormittag.Id, P("fbaeumer"), jetzt));
-                daten.Hinzufuegen(new Schichteintrag(vormittag.Id, P("tbrinkmann"), jetzt));
+                daten.Hinzufuegen(new Schichteintrag(vormittag.Id, P("jwilp"), jetzt));
                 daten.Hinzufuegen(new Schichteintrag(mittag.Id, P("nfeldhaus"), jetzt));
             }
         }
 
         // Finanzen: Fraktionskasse (Zuwendung der Stadt) und Wahlkampfkasse, Beträge fiktiv
         var jahr = heute.Year;
-        var kassier = P("mterhaar");
+        var kassier = P("kalbers"); // Demo-Buchungen trägt die fiktive Geschäftsführung ein, keine Beträge auf echte Personen
         var personal = new Haushaltsposten(Kasse.Fraktion, jahr, "Geschäftsstelle (Personal)", 38_000m);
         var sach = new Haushaltsposten(Kasse.Fraktion, jahr, "Sachkosten und Büro", 4_500m);
         var oeff = new Haushaltsposten(Kasse.Fraktion, jahr, "Öffentlichkeitsarbeit", 3_000m);
@@ -117,9 +117,9 @@ internal static class WahlkampfDemodaten
         }
 
         kabel.BelegSetzen(belegSchluessel, "kassenbon.png", "image/png");
-        var kaffee = new Auslage(P("awewers"), Kasse.Fraktion, heute.AddDays(-8), 18.50m, "Kaffee und Kekse Arbeitskreis", sach.Id, jetzt.AddDays(-8));
+        var kaffee = new Auslage(P("kalbers"), Kasse.Fraktion, heute.AddDays(-8), 18.50m, "Kaffee und Kekse Arbeitskreis", sach.Id, jetzt.AddDays(-8));
         kaffee.BelegSetzen(belegSchluessel, "kassenbon.png", "image/png");
-        kaffee.Entscheiden(true, kassier, null);
+        kaffee.Entscheiden(true, P("djoud"), null); // Freigabe durch den Schatzmeister (Rolle), Betrag gehört der fiktiven Geschäftsführung
         daten.Hinzufuegen(kabel);
         daten.Hinzufuegen(kaffee);
         daten.Hinzufuegen(new Domain.Aufgaben.Aufgabe($"Auslage prüfen: {kabel.Zweck} (23,90 €)", null, Domain.Personen.Rolle.Kassier, "Auslage", kabel.Id, "finanzen",

@@ -13,6 +13,7 @@ public static class Registrierung
         dienste.Configure<FraktionOptionen>(konfiguration.GetSection(FraktionOptionen.Abschnitt));
         dienste.TryAddSingleton(TimeProvider.System);
         dienste.AddScoped<PostausgangDienst>();
+        dienste.TryAddSingleton(new Postausgang.Demobetrieb(false));
         dienste.AddScoped<Zustellung>();
         dienste.AddScoped<Stammdaten.StammdatenDienst>();
         dienste.AddScoped<Ris.RisAbgleich>();

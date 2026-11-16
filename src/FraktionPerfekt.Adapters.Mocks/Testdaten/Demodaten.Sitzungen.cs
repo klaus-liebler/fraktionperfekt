@@ -17,7 +17,7 @@ internal static class SitzungsDemodaten
             .Where(t => t.Art == Terminart.Fraktionssitzung).ToList();
         var vergangen = fraktionssitzungen.LastOrDefault(t => t.Tag < heute);
         var naechste = fraktionssitzungen.FirstOrDefault(t => t.Tag >= heute);
-        var vorsitz = personen["tbrinkmann"].Id;
+        var vorsitz = personen["jwilp"].Id;
         Top? vertagt = null;
 
         // Freigegebenes Protokoll der letzten Fraktionssitzung
@@ -31,7 +31,7 @@ internal static class SitzungsDemodaten
             var position = 0;
             Top Top(string titel, string? notiz, bool fest = true)
             {
-                var t = new Top(s.Id, ++position, titel, null, fest, fest ? null : personen["awewers"].Id, jetzt.AddDays(-20));
+                var t = new Top(s.Id, ++position, titel, null, fest, fest ? null : personen["lkuehlert"].Id, jetzt.AddDays(-20));
                 t.NotizSetzen(notiz);
                 t.AlsBehandeltMarkieren();
                 daten.Hinzufuegen(t);
@@ -44,7 +44,7 @@ internal static class SitzungsDemodaten
             var schule = Top("Grundschullandschaft: geplante Schließung zweier Grundschulen", GrevenerThemen.ProtokollSchule, fest: false);
             var haushalt = Top("Haushalt 2026: Haltung der Fraktion", GrevenerThemen.ProtokollHaushalt);
             var rathausstrasse = new Top(s.Id, ++position, "Rathausstraße: Radfahrstreifen statt Hochbordradweg", "Fachliche Fragen offen; Ortstermin abwarten.", false,
-                personen["rniehues"].Id, jetzt.AddDays(-20));
+                personen["ssterthues"].Id, jetzt.AddDays(-20));
             rathausstrasse.Vertagen();
             daten.Hinzufuegen(rathausstrasse);
             vertagt = rathausstrasse;
@@ -55,19 +55,19 @@ internal static class SitzungsDemodaten
             daten.Hinzufuegen(new Beschluss(Beschlussquelle.Fraktion, vergangen.Tag, haushalt.Titel,
                 "Die Fraktion trägt den Haushaltsentwurf nur mit einer Prioritätenliste der Bauinvestitionen mit.", Beschlussergebnis.Angenommen, 9, 2, 1, s.Id, haushalt.Id,
                 s.GremiumId));
-            foreach (var (k, status) in new[] { ("tbrinkmann", Anwesenheitsstatus.Anwesend), ("shoelscher", Anwesenheitsstatus.Anwesend), ("mterhaar", Anwesenheitsstatus.Anwesend),
-                         ("awewers", Anwesenheitsstatus.Anwesend), ("jovermeyer", Anwesenheitsstatus.Entschuldigt), ("plammers", Anwesenheitsstatus.Anwesend),
-                         ("dschulze", Anwesenheitsstatus.Anwesend), ("mkock", Anwesenheitsstatus.Anwesend), ("sgrueter", Anwesenheitsstatus.Anwesend),
-                         ("rniehues", Anwesenheitsstatus.Anwesend), ("lhagedorn", Anwesenheitsstatus.Anwesend), ("ydemir", Anwesenheitsstatus.Anwesend),
-                         ("crensing", Anwesenheitsstatus.Entschuldigt), ("kalbers", Anwesenheitsstatus.Anwesend) })
+            foreach (var (k, status) in new[] { ("jwilp", Anwesenheitsstatus.Anwesend), ("ebrinkhaus", Anwesenheitsstatus.Anwesend), ("djoud", Anwesenheitsstatus.Anwesend),
+                         ("lkuehlert", Anwesenheitsstatus.Anwesend), ("thorstmann", Anwesenheitsstatus.Entschuldigt), ("bkurney", Anwesenheitsstatus.Anwesend),
+                         ("mgries", Anwesenheitsstatus.Anwesend), ("seisenrichter", Anwesenheitsstatus.Anwesend), ("kschwenken", Anwesenheitsstatus.Anwesend),
+                         ("ssterthues", Anwesenheitsstatus.Anwesend), ("uahrens", Anwesenheitsstatus.Anwesend), ("hakkus", Anwesenheitsstatus.Anwesend),
+                         ("acleve", Anwesenheitsstatus.Entschuldigt), ("kalbers", Anwesenheitsstatus.Anwesend) })
             {
                 daten.Hinzufuegen(new Sitzungsanwesenheit(s.Id, personen[k].Id, status));
             }
 
             daten.Hinzufuegen(new Aufgabe("Fragen zur Elternbefragung an die Schulverwaltung schicken", $"Aus {s.Titel}, TOP „{schule.Titel}“ [TOP {schule.Id:N}]", null,
-                "Protokoll", s.Id, $"sitzungen/{s.Id}", jetzt.AddDays(-10), jetzt.AddDays(5), personen["awewers"].Id).MitThema("Schule und Bildung"));
+                "Protokoll", s.Id, $"sitzungen/{s.Id}", jetzt.AddDays(-10), jetzt.AddDays(5), personen["lkuehlert"].Id).MitThema("Schule und Bildung"));
             daten.Hinzufuegen(new Aufgabe("Prioritätenliste Bauinvestitionen mit der Kämmerei besprechen", $"Aus {s.Titel}, TOP „{haushalt.Titel}“ [TOP {haushalt.Id:N}]", null,
-                "Protokoll", s.Id, $"sitzungen/{s.Id}", jetzt.AddDays(-10), jetzt.AddDays(-1), personen["mterhaar"].Id).MitThema("Haushalt und Finanzen"));
+                "Protokoll", s.Id, $"sitzungen/{s.Id}", jetzt.AddDays(-10), jetzt.AddDays(-1), personen["djoud"].Id).MitThema("Haushalt und Finanzen"));
             s.Beenden(jetzt.AddDays(-10).AddHours(3));
             s.Freigeben(vorsitz, jetzt.AddDays(-9));
         }
@@ -85,7 +85,7 @@ internal static class SitzungsDemodaten
             }
 
             daten.Hinzufuegen(new Top(s.Id, ++position, "Badsanierung: Stadtwerke wollen das Projekt eigenständig stemmen", "Was bedeutet das für den Haushalt?", false,
-                personen["mterhaar"].Id, jetzt));
+                personen["djoud"].Id, jetzt));
             if (vertagt is not null)
             {
                 daten.Hinzufuegen(new Top(s.Id, ++position, vertagt.Titel, vertagt.Beschreibung, false, vertagt.AngemeldetVonPersonId, jetzt, null, vertagt.Id));
@@ -101,9 +101,9 @@ internal static class SitzungsDemodaten
             "Demo", Guid.Empty, "aufgaben", jetzt, jetzt.AddDays(7)).MitThema("Schule und Bildung"));
         foreach (var (feld, k, v) in new[]
                  {
-                     ("Schule und Bildung", "awewers", "mkock"), ("Haushalt und Finanzen", "mterhaar", "tbrinkmann"),
-                     ("Stadtentwicklung und Verkehr", "dschulze", "rniehues"), ("Soziales und Familie", "plammers", "crensing"),
-                     ("Klima und Umwelt", "rniehues", "lhagedorn"),
+                     ("Schule und Bildung", "lkuehlert", "seisenrichter"), ("Haushalt und Finanzen", "djoud", "jwilp"),
+                     ("Stadtentwicklung und Verkehr", "mgries", "ssterthues"), ("Soziales und Familie", "bkurney", "acleve"),
+                     ("Klima und Umwelt", "ssterthues", "uahrens"),
                  })
         {
             daten.Hinzufuegen(new Themenpate(feld, personen[k].Id, personen[v].Id));

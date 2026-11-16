@@ -11,7 +11,8 @@ public sealed class Zustellung(
     INachrichtenSpeicher speicher,
     IEnumerable<IZustellKanal> kanaele,
     IAuditProtokoll protokoll,
-    TimeProvider uhr)
+    TimeProvider uhr,
+    Demobetrieb demo)
 {
     public async Task<ZustellErgebnis> WartendeZustellenAsync(int maximal = 50, CancellationToken abbruch = default)
     {
@@ -25,6 +26,11 @@ public sealed class Zustellung(
                 if (kanal is null)
                 {
                     throw new InvalidOperationException($"Kein Zustellkanal für {nachricht.Kanal} eingerichtet.");
+                }
+
+                if (demo.Aktiv && nachricht.Kanal == Kanal.EMail && !kanal.Simuliert)
+                {
+                    throw new InvalidOperationException("Demo-Schutz: Im Demobetrieb werden keine echten Mails versendet.");
                 }
 
                 var rueckmeldung = await kanal.ZustellenAsync(nachricht, abbruch);

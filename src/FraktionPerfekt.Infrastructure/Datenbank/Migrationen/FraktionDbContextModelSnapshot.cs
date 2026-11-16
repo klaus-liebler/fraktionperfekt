@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116184935_WikiBilder";
+    public override string LastMigrationId => "20261116190146_PersonTitel";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -822,6 +822,10 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<string>("RisId")
                     .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .HasMaxLength(60)
                     .HasColumnType("TEXT");
 
                 b.Property<string>("Vorname")

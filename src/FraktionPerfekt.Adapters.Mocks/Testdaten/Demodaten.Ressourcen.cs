@@ -41,30 +41,30 @@ internal static class RessourcenDemodaten
 
         if (kommende.FirstOrDefault(t => t.Titel.StartsWith("Infoabend", StringComparison.Ordinal)) is { } infoabend)
         {
-            var b = new Buchung(wagen.Id, P("awewers"), infoabend.Beginn.AddHours(-1), infoabend.Ende.AddHours(1), "Fahrt zum Infoabend Grundschulplanung", infoabend.Id, true, jetzt);
+            var b = new Buchung(wagen.Id, P("lkuehlert"), infoabend.Beginn.AddHours(-1), infoabend.Ende.AddHours(1), "Fahrt zum Infoabend Grundschulplanung", infoabend.Id, true, jetzt);
             daten.Hinzufuegen(b);
-            daten.Hinzufuegen(new Aufgabe($"Buchung freigeben: Dienstwagen am {b.Von:dd.MM. HH:mm}", "Fahrt zum Infoabend Grundschulplanung (Anna Wewers)", Rolle.Administration,
+            daten.Hinzufuegen(new Aufgabe($"Buchung freigeben: Dienstwagen am {b.Von:dd.MM. HH:mm}", "Fahrt zum Infoabend Grundschulplanung (Liz Kühlert)", Rolle.Administration,
                 "Buchung", b.Id, "ressourcen?ansicht=freigaben", jetzt, jetzt.AddDays(3)));
 
             // Besetzung „Vorstand bestätigt“ mit zwei Interessierten
             var a = new Besetzungsanfrage(infoabend.Id, 2, Application.Gemeinsam.Ortszeit.Zeitpunkt(infoabend.Beginn).AddDays(-2), Besetzungsmodus.VorstandBestaetigt,
-                P("tbrinkmann"), jetzt, "Bitte jemand aus dem Ausschuss für Schule und Bildung.");
+                P("jwilp"), jetzt, "Bitte jemand aus dem Ausschuss für Schule und Bildung.");
             daten.Hinzufuegen(a);
-            daten.Hinzufuegen(new Besetzungsmeldung(a.Id, P("awewers"), jetzt));
-            daten.Hinzufuegen(new Besetzungsmeldung(a.Id, P("ydemir"), jetzt.AddMinutes(5)));
+            daten.Hinzufuegen(new Besetzungsmeldung(a.Id, P("lkuehlert"), jetzt));
+            daten.Hinzufuegen(new Besetzungsmeldung(a.Id, P("hakkus"), jetzt.AddMinutes(5)));
         }
 
         if (kommende.FirstOrDefault(t => t.Titel.StartsWith("Jubiläum", StringComparison.Ordinal)) is { } jubilaeum)
         {
             // „Wer zuerst kommt“: ein Platz, schon vergeben, eine Person auf der Warteliste
             var a = new Besetzungsanfrage(jubilaeum.Id, 1, Application.Gemeinsam.Ortszeit.Zeitpunkt(jubilaeum.Beginn).AddDays(-1), Besetzungsmodus.WerZuerstKommt,
-                P("shoelscher"), jetzt, null);
+                P("ebrinkhaus"), jetzt, null);
             daten.Hinzufuegen(a);
-            var m1 = new Besetzungsmeldung(a.Id, P("plammers"), jetzt);
+            var m1 = new Besetzungsmeldung(a.Id, P("bkurney"), jetzt);
             m1.Bestaetigen();
             daten.Hinzufuegen(m1);
-            daten.Hinzufuegen(new Besetzungsmeldung(a.Id, P("sgrueter"), jetzt.AddMinutes(10)));
-            termine.Hinzufuegen(new Teilnahme(jubilaeum.Id, P("plammers"), Teilnahmestatus.Zugesagt, jetzt));
+            daten.Hinzufuegen(new Besetzungsmeldung(a.Id, P("kschwenken"), jetzt.AddMinutes(10)));
+            termine.Hinzufuegen(new Teilnahme(jubilaeum.Id, P("bkurney"), Teilnahmestatus.Zugesagt, jetzt));
         }
 
         // Vergangener öffentlicher Termin: Anna war dabei, Bericht fehlt noch („Kurzbericht anlegen“)
@@ -72,9 +72,9 @@ internal static class RessourcenDemodaten
         var t2 = new Termin("Bürgerversammlung zur Grundschulplanung", Terminart.Oeffentlich, vorbei, vorbei.AddHours(2), "Aula einer Grundschule", null, "Demodaten",
             jetzt.AddDays(-14));
         termine.Hinzufuegen(t2);
-        var a2 = new Besetzungsanfrage(t2.Id, 2, jetzt.AddDays(-5), Besetzungsmodus.VorstandBestaetigt, P("tbrinkmann"), jetzt.AddDays(-14), null);
+        var a2 = new Besetzungsanfrage(t2.Id, 2, jetzt.AddDays(-5), Besetzungsmodus.VorstandBestaetigt, P("jwilp"), jetzt.AddDays(-14), null);
         daten.Hinzufuegen(a2);
-        foreach (var k in new[] { "awewers", "mkock" })
+        foreach (var k in new[] { "lkuehlert", "seisenrichter" })
         {
             var m = new Besetzungsmeldung(a2.Id, P(k), jetzt.AddDays(-12));
             m.Bestaetigen();

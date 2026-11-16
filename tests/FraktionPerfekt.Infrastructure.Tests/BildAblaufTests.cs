@@ -65,7 +65,7 @@ public sealed class BildAblaufTests
             return true;
         });
 
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         var seite = (await u.InAsync(d => W(d).SeiteAsync("Fraktionssitzung")))!.Seite;
         var bild = await u.InAsync(d => B(d).HochladenAsync(BildDienst.Wiki, seite.Id, "image.png", new MemoryStream(Png1x1)));
         bild.OriginalName.ShouldStartWith("Eingefügt ");
@@ -99,12 +99,12 @@ public sealed class BildAblaufTests
         Encoding.ASCII.GetString(gespeichert).ShouldNotContain("GPS");
 
         // Rechte: Bild auf einer vertraulichen Seite sieht nur, wer die Seite sieht. Helfer:innen laden keine Bilder hoch.
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         var vertraulich = await u.InAsync(d => W(d).AnlegenAsync("Hintergrund", "Personalinterna Test", "Leer", true, null));
         vertraulich.Vertraulich.ShouldBeTrue();
         var geheim = await u.InAsync(d => B(d).HochladenAsync(BildDienst.Wiki, vertraulich.Id, "Organigramm.jpg", new MemoryStream(JpegMitExif()[..^2].Concat(new byte[] { 0x56, 0xFF, 0xD9 }).ToArray())));
         (await Sichtbar(geheim.Id)).ShouldBeTrue();
-        await u.AnmeldenAsync("lhagedorn");
+        await u.AnmeldenAsync("uahrens");
         (await Sichtbar(geheim.Id)).ShouldBeFalse();
         (await Sichtbar(bild.Id)).ShouldBeTrue();
         (await u.InAsync(d => B(d).BilderAsync(BildDienst.Wiki, vertraulich.Id, null))).ShouldBeEmpty();
@@ -113,7 +113,7 @@ public sealed class BildAblaufTests
             .Message.ShouldContain("Helfer");
 
         // Aufräumen: nach der Frist verschwinden Bilder, die in keinem Seitentext stehen; benutzte bleiben.
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         var text = (await u.InAsync(d => W(d).SeiteAsync("Fraktionssitzung")))!.Aktuell.Text + $"\n\n![{bild.OriginalName}]({bild.Adresse})";
         await u.InAsync(d => W(d).SpeichernAsync(seite.Id, text, "Bild eingefügt"));
         u.Uhr.Advance(BildDienst.Aufbewahrung + TimeSpan.FromDays(1));

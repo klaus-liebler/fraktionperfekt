@@ -37,7 +37,7 @@ public sealed class WahlkampfFinanzenTests
         // Gebiete: zuteilen nur Vorstand/Geschäftsführung, abhaken die zugeteilte Person.
         var gimbte = (await u.InAsync(d => W(d).GebieteAsync())).Single(z => z.Gebiet.Name == "Gimbte");
         gimbte.Zuteilen.Erlaubt.ShouldBeFalse();
-        await u.AnmeldenAsync("shoelscher", Rolle.Vorstand);
+        await u.AnmeldenAsync("ebrinkhaus", Rolle.Vorstand);
         await u.InAsync(d => W(d).ZuteilenAsync(gimbte.Gebiet.Id, u.Benutzer.Aktuell.PersonId));
         var baeumer = await u.AnmeldenAsync("fbaeumer");
         (await u.InAsync(d => W(d).GebieteAsync())).Single(z => z.Gebiet.Name == "Gimbte").Erledigen.Begruendung!.ShouldContain("zugeteilt");
@@ -68,7 +68,7 @@ public sealed class WahlkampfFinanzenTests
         u.Benutzer.Aktuell = SBenutzer.Automatik;
         (await u.InAsync(d => W(d).FristenPruefenAsync())).ShouldBe(1);
         (await u.InAsync(d => W(d).FristenPruefenAsync())).ShouldBe(0);
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         (await u.InAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync())).ShouldContain(a => a.Anlass == WahlkampfDienst.AbhaengAnlass);
         (await u.InAsync(d => W(d).AbhaenglisteAsync())).NachDerWahl.ShouldBeTrue();
 
@@ -77,7 +77,7 @@ public sealed class WahlkampfFinanzenTests
         u.Uhr.Advance(TimeSpan.FromDays(200));
         u.Benutzer.Aktuell = SBenutzer.Automatik;
         (await u.InAsync(d => W(d).FristenPruefenAsync())).ShouldBeGreaterThan(1);
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         var danach = await u.InAsync(d => W(d).PlakateAsync());
         danach.Count.ShouldBe(vorher - 1);
         danach.ShouldNotContain(z => z.Plakat.Status == Plakatstatus.Abgehaengt);
@@ -91,18 +91,18 @@ public sealed class WahlkampfFinanzenTests
         AufgabenDienst T(IServiceProvider d) => d.GetRequiredService<AufgabenDienst>();
         var jahr = 2026;
 
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => F(d).UebersichtAsync(Kasse.Fraktion, jahr)))).Message.ShouldContain("Kassier");
         var auslage = await u.InAsync(d => F(d).AuslageEinreichenAsync(Kasse.Fraktion, new DateOnly(2026, 11, 14), 42.10m, "Raummiete Bürgersprechstunde", null,
             new MemoryStream(Png), "beleg.jpg"));
         var ohneBeleg = await u.InAsync(d => F(d).AuslageEinreichenAsync(Kasse.Fraktion, new DateOnly(2026, 11, 14), 5m, "Parkticket", null, null, null));
         (await u.InAsync(d => F(d).BelegAsync(auslage.Id))).ShouldNotBeNull();
-        await u.AnmeldenAsync("jovermeyer");
+        await u.AnmeldenAsync("thorstmann");
         (await u.InAsync(d => F(d).BelegAsync(auslage.Id))).ShouldBeNull();
         (await u.InAsync(d => F(d).AuslagenAsync())).ShouldNotContain(z => z.Auslage.Id == auslage.Id);
 
         // Kassier: Aufgabe im Korb, ohne Beleg keine Freigabe, freigeben, auszahlen → Buchung
-        var kassier = await u.AnmeldenAsync("mterhaar", Rolle.Kassier);
+        var kassier = await u.AnmeldenAsync("djoud", Rolle.Kassier);
         (await u.InAsync(d => T(d).KorbAsync())).ShouldContain(a => a.AnlassId == auslage.Id);
         (await u.InAsync(d => F(d).AuslagenAsync())).Single(z => z.Auslage.Id == ohneBeleg.Id).Entscheiden.Begruendung!.ShouldContain("Beleg");
         await u.InAsync(d => F(d).AuslageEntscheidenAsync(auslage.Id, true, null));
@@ -128,7 +128,7 @@ public sealed class WahlkampfFinanzenTests
         // Eigene Auslage des Kassiers gibt der Vorstand frei
         var eigene = await u.InAsync(d => F(d).AuslageEinreichenAsync(Kasse.Wahlkampf, new DateOnly(2026, 11, 15), 12m, "Porto", null, new MemoryStream(Png), "porto.png"));
         (await u.InAsync(d => F(d).AuslagenAsync())).Single(z => z.Auslage.Id == eigene.Id).Entscheiden.Begruendung!.ShouldContain("Vier-Augen");
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         await u.InAsync(d => F(d).AuslageEntscheidenAsync(eigene.Id, true, null));
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => F(d).AuszahlenAsync(eigene.Id)))).Message.ShouldContain("Kassier");
 

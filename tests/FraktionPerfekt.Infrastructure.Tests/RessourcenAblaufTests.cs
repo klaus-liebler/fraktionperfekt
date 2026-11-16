@@ -22,7 +22,7 @@ public sealed class RessourcenAblaufTests
         var saal = ressourcen.Single(r => r.FreigabeNoetig && r.Art == Ressourcenart.Raum);
 
         // „Raum buchen“ aus der Fraktionssitzung: Vorschlag mit Zeit, Konflikt mit der Demo-Buchung.
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         var sitzung = (await u.InAsync(d => d.GetRequiredService<ITerminSpeicher>().TermineAsync(new DateTime(2026, 11, 15), new DateTime(2027, 1, 15))))
             .First(t => t.Art == Terminart.Fraktionssitzung);
         var vorschlag = (await u.InAsync(d => R(d).VorschlagAusTerminAsync(sitzung.Id)))!;
@@ -46,7 +46,7 @@ public sealed class RessourcenAblaufTests
         belegung.Single().Buchung.Status.ShouldBe(Buchungsstatus.Bestaetigt);
 
         // Stornieren nur durch Buchende oder Geschäftsführung
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => R(d).StornierenAsync(e.Buchung.Id)))).Message.ShouldContain("gebucht hat");
     }
 
@@ -55,32 +55,32 @@ public sealed class RessourcenAblaufTests
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
         BesetzungDienst B(IServiceProvider d) => d.GetRequiredService<BesetzungDienst>();
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         var termin = (await u.InAsync(d => d.GetRequiredService<ITerminSpeicher>().TermineAsync(new DateTime(2026, 11, 16), new DateTime(2027, 2, 1))))
             .First(t => t.Art == Terminart.Oeffentlich && t.Titel.StartsWith("Bürgerinformation", StringComparison.Ordinal));
         var anfrage = await u.InAsync(d => B(d).AnlegenAsync(termin.Id, 1, u.Uhr.GetUtcNow().AddDays(1), Besetzungsmodus.WerZuerstKommt, null));
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => B(d).AnlegenAsync(termin.Id, 1, u.Uhr.GetUtcNow().AddDays(1), Besetzungsmodus.WerZuerstKommt, null))))
             .Message.ShouldContain("bereits");
 
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync())).OffeneBesetzungen.ShouldContain(z => z.Anfrage.Id == anfrage.Id);
         (await u.InAsync(d => B(d).InteresseMeldenAsync(anfrage.Id))).ShouldContain("dabei");
-        var anna = await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonNachKennungAsync("awewers"));
+        var anna = await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonNachKennungAsync("lkuehlert"));
         (await u.InAsync(d => d.GetRequiredService<ITerminSpeicher>().TeilnahmeAsync(termin.Id, anna!.Id)))!.Status.ShouldBe(Teilnahmestatus.Zugesagt);
 
-        await u.AnmeldenAsync("mkock");
+        await u.AnmeldenAsync("seisenrichter");
         (await u.InAsync(d => B(d).InteresseMeldenAsync(anfrage.Id))).ShouldContain("Warteliste");
 
         // Anna zieht zurück → Melanie rückt nach und bekommt eine Push-Mitteilung.
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         await u.InAsync(d => B(d).ZurueckziehenAsync(anfrage.Id));
         var detail = (await u.InAsync(d => B(d).DetailAsync(anfrage.Id)))!;
-        detail.Meldungen.Single(m => m.Person == "Melanie Kock").Meldung.Status.ShouldBe(Meldungsstatus.Bestaetigt);
-        detail.Meldungen.Single(m => m.Person == "Anna Wewers").Meldung.Status.ShouldBe(Meldungsstatus.Zurueckgezogen);
+        detail.Meldungen.Single(m => m.Person == "Silke Eisenrichter").Meldung.Status.ShouldBe(Meldungsstatus.Bestaetigt);
+        detail.Meldungen.Single(m => m.Person == "Liz Kühlert").Meldung.Status.ShouldBe(Meldungsstatus.Zurueckgezogen);
         detail.BerichtSchreiben.Erlaubt.ShouldBeFalse();
 
         // Vorstandsbestätigung (Demo-Infoabend): bestätigen bis die Plätze voll sind.
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         var infoabend = (await u.InAsync(d => B(d).ListeAsync())).Single(z => z.Termin.Titel.StartsWith("Infoabend", StringComparison.Ordinal));
         var d1 = (await u.InAsync(d => B(d).DetailAsync(infoabend.Anfrage.Id)))!;
         foreach (var m in d1.Meldungen)
@@ -91,7 +91,7 @@ public sealed class RessourcenAblaufTests
         (await u.InAsync(d => B(d).DetailAsync(infoabend.Anfrage.Id)))!.Frei.ShouldBe(0);
 
         // Kurzbericht: der Demo-Termin von vor drei Tagen erscheint bei Anna als offener Folgeschritt.
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         var offen = (await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync())).BerichtOffen.Single();
         await u.InAsync(d => B(d).BerichtAsync(offen.Anfrage.Id, "Gut besucht; viele Fragen zu Schulwegen."));
         (await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync())).BerichtOffen.ShouldBeEmpty();

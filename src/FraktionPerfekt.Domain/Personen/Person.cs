@@ -17,7 +17,7 @@ public sealed class Person
     }
 
     public Person(string vorname, string nachname, string? eMail, string? benutzerkennung, DateTimeOffset angelegtAm, string? risId = null,
-        Guid? id = null)
+        Guid? id = null, string? titel = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(vorname);
         ArgumentException.ThrowIfNullOrWhiteSpace(nachname);
@@ -27,6 +27,7 @@ public sealed class Person
         EMail = string.IsNullOrWhiteSpace(eMail) ? null : eMail.Trim();
         Benutzerkennung = string.IsNullOrWhiteSpace(benutzerkennung) ? null : benutzerkennung.Trim().ToLowerInvariant();
         RisId = risId;
+        Titel = string.IsNullOrWhiteSpace(titel) ? null : titel.Trim();
         AngelegtAm = angelegtAm;
         Aktiv = true;
     }
@@ -35,7 +36,11 @@ public sealed class Person
 
     public string Vorname { get; private set; }
 
+    /// <summary>Nachname, auch mehrteilig („Große Maestrup“, „Schulte Jochmaring“); danach wird sortiert.</summary>
     public string Nachname { get; private set; }
+
+    /// <summary>Akademischer Titel („Dr.“, „Prof. Dr.“), wird in der Anzeige vorangestellt, nicht sortiert.</summary>
+    public string? Titel { get; private set; }
 
     public string? EMail { get; private set; }
 
@@ -52,9 +57,14 @@ public sealed class Person
 
     public DateTimeOffset AngelegtAm { get; private set; }
 
-    public string Anzeigename => $"{Vorname} {Nachname}";
+    public string Anzeigename => Titel is null ? $"{Vorname} {Nachname}" : $"{Titel} {Vorname} {Nachname}";
 
     public string Sortiername => $"{Nachname}, {Vorname}";
+
+    /// <summary>Initialen für Avatare: erster Buchstabe des Vornamens und des Nachnamens („Große Maestrup“ → „JG“).</summary>
+    public string Initialen => $"{char.ToUpperInvariant(Vorname[0])}{char.ToUpperInvariant(Nachname[0])}";
+
+    public void TitelSetzen(string? titel) => Titel = string.IsNullOrWhiteSpace(titel) ? null : titel.Trim();
 
     public IReadOnlyCollection<PersonRollen> RollenVersionen => _rollen;
 

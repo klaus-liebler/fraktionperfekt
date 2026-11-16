@@ -16,9 +16,9 @@ public sealed class WissenAblaufTests
         DateiDienst D(IServiceProvider d) => d.GetRequiredService<DateiDienst>();
 
         // Vorstand sieht im HFA-Ordner auch die vertrauliche Stellungnahme; eine sachkundige Bürgerin ohne HFA-Mandat nicht.
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         (await u.InAsync(d => D(d).ListeAsync("Gremien/HFA"))).Select(z => z.Datei.Name).ShouldContain("Stellungnahme Stadtwerke Bad.txt");
-        await u.AnmeldenAsync("lhagedorn");
+        await u.AnmeldenAsync("uahrens");
         var hfa = await u.InAsync(d => D(d).ListeAsync("Gremien/HFA"));
         hfa.Select(z => z.Datei.Name).ShouldContain("Haushalt 2026 – Eckdaten.csv");
         hfa.Select(z => z.Datei.Name).ShouldNotContain("Stellungnahme Stadtwerke Bad.txt");
@@ -29,7 +29,7 @@ public sealed class WissenAblaufTests
         (await u.InAsync(d => D(d).ListeAsync("Fraktion"))).ShouldBeEmpty();
 
         // Hochladen: Typprüfung, Anhang an einem Bezug, Download liefert den Inhalt, Löschen nur durch Hochladende.
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => D(d).HochladenAsync("Fraktion", "virus.exe", new MemoryStream([1, 2]), null, false))))
             .Message.ShouldContain("nicht erlaubt");
         var antragId = Guid.NewGuid();
@@ -45,9 +45,9 @@ public sealed class WissenAblaufTests
         });
         geoeffnet.ShouldBe("Elternbefragung");
 
-        await u.AnmeldenAsync("jovermeyer");
+        await u.AnmeldenAsync("thorstmann");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => D(d).LoeschenAsync(datei.Id)))).Message.ShouldContain("hochgeladen");
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         await u.InAsync(d => D(d).LoeschenAsync(datei.Id));
         (await u.InAsync(d => D(d).OeffnenAsync(datei.Id))).ShouldBeNull();
     }
@@ -57,7 +57,7 @@ public sealed class WissenAblaufTests
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
         WikiDienst W(IServiceProvider d) => d.GetRequiredService<WikiDienst>();
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
 
         (await u.InAsync(d => W(d).SuchenAsync("Grundschule Ganztag"))).Select(t => t.Seite.Titel).ShouldContain("Grundschullandschaft");
         (await u.InAsync(d => W(d).SuchenAsync("Stellenplan"))).ShouldBeEmpty(); // vertraulich, kein Gremium
@@ -90,9 +90,9 @@ public sealed class WissenAblaufTests
         (await u.InAsync(d => W(d).SeitenAsync())).Select(s => s.Seite.Titel).ShouldNotContain("Personalfragen der Fraktion");
 
         // Ein Mitglied darf die Prüfung nicht anstoßen; der Vorstand schon (oder nachts die Automatik).
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).KiPruefenAsync()));
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         var anzahl = await u.InAsync(d => W(d).KiPruefenAsync());
         anzahl.ShouldBeGreaterThan(3);
         var vorschlaege = await u.InAsync(d => W(d).VorschlaegeAsync());
@@ -106,9 +106,9 @@ public sealed class WissenAblaufTests
         // Nichts ist geändert, bis ein Mensch annimmt; danach neue Version ohne Person, mit Verweis auf den Vorschlag.
         var veraltet = vorschlaege.Single(z => z.Vorschlag.Art == Vorschlagsart.Veraltet && z.Seite.Titel == "Haushaltsberatungen");
         (await u.InAsync(d => W(d).SeiteAsync("Haushaltsberatungen")))!.Seite.Version.ShouldBe(1);
-        await u.AnmeldenAsync("awewers");
+        await u.AnmeldenAsync("lkuehlert");
         (await u.InAsync(d => W(d).VorschlaegeAsync())).First().Entscheiden.Erlaubt.ShouldBeFalse();
-        await u.AnmeldenAsync("tbrinkmann", Rolle.Vorstand);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         await u.InAsync(d => W(d).VorschlagEntscheidenAsync(veraltet.Vorschlag.Id, true));
         var haushalt = (await u.InAsync(d => W(d).SeiteAsync("Haushaltsberatungen")))!;
         haushalt.Aktuell.Nummer.ShouldBe(2);

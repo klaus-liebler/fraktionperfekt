@@ -87,7 +87,7 @@ public sealed class PostausgangTests
     private sealed class FesterBenutzer : IAktuellerBenutzer
     {
         public ValueTask<Benutzer> ErmittelnAsync(CancellationToken abbruch = default)
-            => ValueTask.FromResult(new Benutzer("tb", "Thomas Brinkmann", Rolle.Vorstand, PersonId: Guid.NewGuid()));
+            => ValueTask.FromResult(new Benutzer("tb", "Johannes Wilp", Rolle.Vorstand, PersonId: Guid.NewGuid()));
     }
 
     private sealed class SpeicherProtokoll : IAuditProtokoll
@@ -131,7 +131,7 @@ public sealed class PostausgangTests
         var speicher = new SpeicherPostausgang();
         var protokoll = new SpeicherProtokoll();
         var dienst = new PostausgangDienst(speicher, protokoll, new FesterBenutzer(), uhr);
-        var anna = new Person("Anna", "Wewers", "awewers@demo.example", "awewers", uhr.GetUtcNow());
+        var anna = new Person("Anna", "Wewers", "awewers@demo.invalid", "awewers", uhr.GetUtcNow());
 
         await dienst.BenachrichtigenAsync(anna, "Vertretung gesucht", "Kannst du vertreten?", "Langtext", "handy/anfrage/1", "Ich vertrete", TestContext.Current.CancellationToken);
 
@@ -139,7 +139,7 @@ public sealed class PostausgangTests
         speicher.Nachrichten[0].Aktion.ShouldBe("Ich vertrete");
         protokoll.Eintraege.ShouldAllBe(e => !e.Beschreibung.Contains("Wewers", StringComparison.Ordinal));
 
-        var zustellung = new Zustellung(speicher, [new MockMailKanal(), new MockPushKanal()], protokoll, uhr);
+        var zustellung = new Zustellung(speicher, [new MockMailKanal(), new MockPushKanal()], protokoll, uhr, new Demobetrieb(false));
         var ergebnis = await zustellung.WartendeZustellenAsync(abbruch: TestContext.Current.CancellationToken);
         ergebnis.Zugestellt.ShouldBe(2);
         speicher.Nachrichten.ShouldAllBe(n => n.Status == NachrichtenStatus.Zugestellt);
@@ -153,7 +153,7 @@ public sealed class PostausgangTests
         var protokoll = new SpeicherProtokoll();
         var anna = new Person("Anna", "Wewers", null, "awewers", uhr.GetUtcNow());
         await new PostausgangDienst(speicher, protokoll, new FesterBenutzer(), uhr).PushEinreihenAsync(anna, "Titel", "Text", null, abbruch: TestContext.Current.CancellationToken);
-        var zustellung = new Zustellung(speicher, [], protokoll, uhr);
+        var zustellung = new Zustellung(speicher, [], protokoll, uhr, new Demobetrieb(false));
 
         for (var i = 0; i < AusgehendeNachricht.MaxVersuche; i++)
         {
@@ -161,5 +161,39 @@ public sealed class PostausgangTests
         }
 
         speicher.Nachrichten.Single().Status.ShouldBe(NachrichtenStatus.Fehlgeschlagen);
+    }
+
+    /// <summary>Echter Mailkanal im Demobetrieb: Mail wird nicht versendet (Demo-Schutz), Push-Mocks laufen weiter.</summary>
+    [Fact]
+    public async Task Im_Demobetrieb_gehen_keine_echten_Mails_raus()
+    {
+        var uhr = new FakeTimeProvider(new DateTimeOffset(2026, 11, 16, 8, 0, 0, TimeSpan.Zero));
+        var speicher = new SpeicherPostausgang();
+        var protokoll = new SpeicherProtokoll();
+        var person = new Person("Johannes", "Wilp", "johannes.wilp@cdu-greven.de", "jwilp", uhr.GetUtcNow());
+        await new PostausgangDienst(speicher, protokoll, new FesterBenutzer(), uhr).BenachrichtigenAsync(person, "Titel", "Kurz", "Lang", null, null,
+            TestContext.Current.CancellationToken);
+        var echt = new EchterMailKanal();
+        var zustellung = new Zustellung(speicher, [echt, new MockPushKanal()], protokoll, uhr, new Demobetrieb(true));
+
+        var ergebnis = await zustellung.WartendeZustellenAsync(abbruch: TestContext.Current.CancellationToken);
+
+        echt.Versendet.ShouldBe(0);
+        ergebnis.Zugestellt.ShouldBe(1); // nur der Push-Mock
+        speicher.Nachrichten.Single(n => n.Kanal == Kanal.EMail).Status.ShouldNotBe(NachrichtenStatus.Zugestellt);
+        protokoll.Eintraege.ShouldContain(e => e.Beschreibung.Contains("Demo-Schutz", StringComparison.Ordinal));
+    }
+
+    private sealed class EchterMailKanal : IZustellKanal
+    {
+        public int Versendet { get; private set; }
+
+        public Kanal Kanal => Kanal.EMail;
+
+        public Task<string?> ZustellenAsync(AusgehendeNachricht nachricht, CancellationToken abbruch = default)
+        {
+            Versendet++;
+            return Task.FromResult<string?>("versendet");
+        }
     }
 }
