@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116215741_Aenderungsvorgaenge";
+    public override string LastMigrationId => "20261116220709_IdsBinaerDaten";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -24,8 +24,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Application.Postausgang.AusgehendeNachricht", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Aktion")
                     .HasMaxLength(100)
@@ -70,8 +70,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(500)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Rueckmeldung")
                     .HasMaxLength(500)
@@ -97,8 +97,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Application.Protokoll.AuditEintrag", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Aktion")
                     .IsRequired()
@@ -123,8 +123,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<bool>("Erfolgreich")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("ObjektId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ObjektId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("ObjektTyp")
                     .HasMaxLength(100)
@@ -148,20 +148,23 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Stimme", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("OptionId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("OptionId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("UmfrageId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("UmfrageId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -172,14 +175,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Umfrage", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("AbgeschlossenAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("AntragId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AntragId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Art")
                     .IsRequired()
@@ -198,14 +201,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("ErstelltVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ErstelltVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Frist")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("GewinnerOptionId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GewinnerOptionId")
+                    .HasColumnType("BLOB");
 
                 b.Property<bool>("Mehrfachauswahl")
                     .HasColumnType("INTEGER");
@@ -231,8 +235,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.UmfrageOption", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<int>("Position")
                     .HasColumnType("INTEGER");
@@ -241,8 +245,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("UmfrageId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("UmfrageId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<DateTime?>("Zeitpunkt")
                     .HasColumnType("TEXT");
@@ -256,8 +261,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Antraege.Aenderungsvorschlag", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Alt")
                     .IsRequired()
@@ -266,14 +271,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("AntragId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AntragId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Begruendung")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("EntschiedenVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("EntschiedenVonPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<int>("Fassung")
                     .HasColumnType("INTEGER");
@@ -282,8 +288,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -299,14 +306,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Antraege.Antrag", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("AbstimmungId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AbstimmungId")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("AutorPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AutorPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("EingereichtAm")
                     .HasColumnType("INTEGER");
@@ -320,8 +328,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Nummer")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("SitzungTerminId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("SitzungTerminId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -338,8 +346,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Vermerk")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("ZielGremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ZielGremiumId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -352,14 +360,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Antraege.AntragFassung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("AntragId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AntragId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Notiz")
                     .HasColumnType("TEXT");
@@ -367,8 +376,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int>("Nummer")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Text")
                     .IsRequired()
@@ -384,14 +394,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Antraege.AntragKommentar", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("AntragId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AntragId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<bool>("Erledigt")
                     .HasColumnType("INTEGER");
@@ -399,8 +410,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int>("Fassung")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Text")
                     .IsRequired()
@@ -418,16 +430,17 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Aufgaben.Aufgabe", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Anlass")
                     .IsRequired()
                     .HasMaxLength(60)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("AnlassId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AnlassId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Beschreibung")
                     .HasMaxLength(2000)
@@ -439,8 +452,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long?>("ErledigtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("ErledigtVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ErledigtVonPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
@@ -470,8 +483,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(300)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("ZugewiesenPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ZugewiesenPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Zustaendig")
                     .HasMaxLength(40)
@@ -488,18 +501,19 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Aufgaben.Themenpate", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Politikfeld")
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("VertretungPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VertretungPersonId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -508,8 +522,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Finanzen.Auslage", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("AusgezahltAm")
                     .HasColumnType("INTEGER");
@@ -532,19 +546,20 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("EingereichtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("EntschiedenVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("EntschiedenVonPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Kasse")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("PostenId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PostenId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -567,8 +582,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Finanzen.Haushaltsposten", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<decimal>("Ansatz")
                     .HasColumnType("TEXT");
@@ -594,8 +609,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Finanzen.Kassenbuchung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<decimal>("Betrag")
                     .HasColumnType("TEXT");
@@ -609,24 +624,25 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("ErfasstAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("ErfasstVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ErfasstVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Kasse")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("PostenId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PostenId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Quelle")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("QuelleId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("QuelleId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Text")
                     .IsRequired()
@@ -641,8 +657,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Finanzen.Spende", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Anschrift")
                     .HasColumnType("TEXT");
@@ -653,8 +669,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateOnly>("Datum")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("ErfasstVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ErfasstVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Kasse")
                     .IsRequired()
@@ -678,8 +695,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gemeinsam.Erfassung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
@@ -694,8 +711,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(500)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("ProtokollId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ProtokollId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Von")
                     .IsRequired()
@@ -713,8 +730,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Gremium", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Art")
                     .IsRequired()
@@ -738,8 +755,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.GremiumVersion", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<bool>("Aktiv")
                     .HasColumnType("INTEGER");
@@ -747,8 +764,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("GremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GremiumId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<DateOnly?>("GueltigBis")
                     .HasColumnType("TEXT");
@@ -766,8 +784,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(300)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -780,14 +799,16 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Mitgliedschaft", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("GremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GremiumId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("RisId")
                     .HasMaxLength(200)
@@ -807,8 +828,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.MitgliedschaftsVersion", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Amt")
                     .IsRequired()
@@ -833,14 +854,16 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateOnly>("GueltigVon")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("MitgliedschaftId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("MitgliedschaftId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<int?>("Rang")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -853,11 +876,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.EMailAdresse", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("AdressId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AdressId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Adresse")
                     .IsRequired()
@@ -881,11 +905,13 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateOnly>("GueltigVon")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -900,8 +926,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.Einwilligung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
@@ -915,11 +941,13 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateOnly>("GueltigVon")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Zweck")
                     .IsRequired()
@@ -937,8 +965,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.Person", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("AngelegtAm")
                     .HasColumnType("INTEGER");
@@ -964,8 +992,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonMerkmal", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Art")
                     .IsRequired()
@@ -986,11 +1014,13 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(320)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1003,8 +1033,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonName", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
@@ -1024,11 +1054,13 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<bool>("NurEinName")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Vorname")
                     .IsRequired()
@@ -1061,8 +1093,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonRolle", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("ErsetztAm")
                     .HasColumnType("INTEGER");
@@ -1073,16 +1105,18 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateOnly>("GueltigVon")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Rolle")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1095,11 +1129,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.Postadresse", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("AdressId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AdressId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Bereich")
                     .IsRequired()
@@ -1123,8 +1158,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(100)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Postleitzahl")
                     .IsRequired()
@@ -1136,8 +1172,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(200)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Zusatz")
                     .HasMaxLength(200)
@@ -1156,8 +1193,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.Rufnummer", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Art")
                     .IsRequired()
@@ -1189,14 +1226,17 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("NummerId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("NummerId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("VorgangId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorgangId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1211,14 +1251,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Anfrage", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Antwort")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("AutorPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AutorPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<DateOnly?>("BeantwortetAm")
                     .HasColumnType("TEXT");
@@ -1235,8 +1276,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateOnly?>("FristBis")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("GremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GremiumId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -1263,8 +1304,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Buergeranliegen", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<bool>("Anonymisiert")
                     .HasColumnType("INTEGER");
@@ -1306,8 +1347,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Thema")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("ZugewiesenPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ZugewiesenPersonId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1318,14 +1359,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Kontakt", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("AngelegtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("AngelegtVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AngelegtVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("EMail")
                     .HasColumnType("TEXT");
@@ -1361,14 +1403,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Presseartikel", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<DateOnly>("Datum")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("ErfasstVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ErfasstVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Link")
                     .HasColumnType("TEXT");
@@ -1377,8 +1420,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("PressemitteilungId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PressemitteilungId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Thema")
                     .HasColumnType("TEXT");
@@ -1404,11 +1447,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Politik.Pressemitteilung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("AutorPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AutorPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
@@ -1416,8 +1460,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long?>("FreigegebenAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("FreigegebenVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("FreigegebenVonPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("GeaendertAm")
                     .HasColumnType("INTEGER");
@@ -1453,8 +1497,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Postausgang.PushAbo", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Auth")
                     .IsRequired()
@@ -1474,8 +1518,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("ZuletztZugestelltAm")
                     .HasColumnType("INTEGER");
@@ -1492,31 +1537,33 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Ressourcen.Buchung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<DateTime>("Bis")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("EntschiedenVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("EntschiedenVonPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("RessourceId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("RessourceId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("TerminId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("TerminId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Vermerk")
                     .HasColumnType("TEXT");
@@ -1537,8 +1584,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Ressourcen.Ressource", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<bool>("Aktiv")
                     .HasColumnType("INTEGER");
@@ -1565,11 +1612,11 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Beschluss", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("AntragId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AntragId")
+                    .HasColumnType("BLOB");
 
                 b.Property<DateOnly>("Datum")
                     .HasColumnType("TEXT");
@@ -1582,8 +1629,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("GremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GremiumId")
+                    .HasColumnType("BLOB");
 
                 b.Property<int>("Ja")
                     .HasColumnType("INTEGER");
@@ -1599,8 +1646,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("RisId")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("SitzungId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("SitzungId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Text")
                     .IsRequired()
@@ -1610,8 +1657,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("TopId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("TopId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1622,8 +1669,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Sitzung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("AngelegtAm")
                     .HasColumnType("INTEGER");
@@ -1645,22 +1692,23 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long?>("FreigegebenAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("FreigegebenVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("FreigegebenVonPersonId")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("LeitungPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("LeitungPersonId")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("ProtokollPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ProtokollPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("TerminId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("TerminId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("TopAnmeldungBis")
                     .HasColumnType("INTEGER");
@@ -1679,14 +1727,16 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Sitzungsanwesenheit", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("SitzungId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("SitzungId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -1703,17 +1753,17 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Top", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("AngelegtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("AngemeldetVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AngemeldetVonPersonId")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("AntragId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AntragId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Beschreibung")
                     .HasColumnType("TEXT");
@@ -1727,8 +1777,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int>("Position")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("SitzungId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("SitzungId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -1739,14 +1790,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("UebernommenInSitzungId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("UebernommenInSitzungId")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("VertagtAusTopId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VertagtAusTopId")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("ZusammengelegtMitTopId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ZusammengelegtMitTopId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1757,8 +1808,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Termine.Besetzungsanfrage", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Bericht")
                     .HasColumnType("TEXT");
@@ -1766,14 +1817,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long?>("BerichtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("BerichtVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("BerichtVonPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("ErstelltVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ErstelltVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Frist")
                     .HasColumnType("INTEGER");
@@ -1789,8 +1841,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int>("Plaetze")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("TerminId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("TerminId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1802,17 +1855,19 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Termine.Besetzungsmeldung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("AnfrageId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AnfrageId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -1829,14 +1884,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Termine.KalenderAbo", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("TokenHash")
                     .IsRequired()
@@ -1861,25 +1917,27 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Termine.Teilnahme", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("GeantwortetAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("TerminId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("TerminId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("VertrittPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VertrittPersonId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1893,8 +1951,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Termine.Termin", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<bool>("Abgesagt")
                     .HasColumnType("INTEGER");
@@ -1902,8 +1960,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("AngelegtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("AngelegtVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AngelegtVonPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Art")
                     .IsRequired()
@@ -1920,8 +1978,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<DateTime>("Ende")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("GremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GremiumId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Ort")
                     .HasMaxLength(300)
@@ -1950,17 +2008,19 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Termine.TerminErinnerung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("TerminId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("TerminId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -1972,8 +2032,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Vertretung.Abwesenheit", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<DateOnly>("Bis")
                     .HasColumnType("TEXT");
@@ -1985,8 +2045,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(500)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<DateOnly>("Von")
                     .HasColumnType("TEXT");
@@ -2005,8 +2066,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Vertretung.Vertretungsanfrage", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("BeantwortetAm")
                     .HasColumnType("INTEGER");
@@ -2017,8 +2078,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("GestelltAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<int>("Reihenfolge")
                     .HasColumnType("INTEGER");
@@ -2028,8 +2090,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("VertretungsfallId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VertretungsfallId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -2042,34 +2105,37 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Vertretung.Vertretungsfall", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("AbgeschlossenAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("AbwesenheitId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("AbwesenheitId")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("GremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GremiumId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("TerminId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("TerminId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("VertretenePersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VertretenePersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid?>("VertreterPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VertreterPersonId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -2084,17 +2150,19 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Vertretung.Vertretungskandidat", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<int>("Position")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("VertretungsfallId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VertretungsfallId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -2108,8 +2176,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Gebiet", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Art")
                     .IsRequired()
@@ -2140,8 +2208,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Vermerk")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("ZugeteiltPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ZugeteiltPersonId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -2150,8 +2218,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Plakat", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Art")
                     .IsRequired()
@@ -2164,8 +2232,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("ErfasstAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("ErfasstVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("ErfasstVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("FotoSchluessel")
                     .HasColumnType("TEXT");
@@ -2176,8 +2245,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("GeaendertAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("GeaendertVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GeaendertVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<double>("Laenge")
                     .HasColumnType("REAL");
@@ -2203,8 +2273,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Schicht", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<DateTime>("Bis")
                     .HasColumnType("TEXT");
@@ -2216,8 +2286,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int>("Plaetze")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("TerminId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("TerminId")
+                    .HasColumnType("BLOB");
 
                 b.Property<DateTime>("Von")
                     .HasColumnType("TEXT");
@@ -2231,17 +2301,19 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Schichteintrag", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("SchichtId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("SchichtId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -2253,8 +2325,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.Bild", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
@@ -2268,8 +2340,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("Groesse")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("HochgeladenVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("HochgeladenVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<int>("Hoehe")
                     .HasColumnType("INTEGER");
@@ -2299,8 +2372,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.BildVerwendung", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
@@ -2309,11 +2382,13 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("BezugId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("BezugId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("BildId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("BildId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -2327,8 +2402,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.Datei", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
@@ -2336,20 +2411,21 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("BezugArt")
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("BezugId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("BezugId")
+                    .HasColumnType("BLOB");
 
                 b.Property<long?>("GeloeschtAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("GremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GremiumId")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Groesse")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid>("HochgeladenVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("HochgeladenVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Name")
                     .IsRequired()
@@ -2385,8 +2461,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.WikiSeite", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<bool>("Archiviert")
                     .HasColumnType("INTEGER");
@@ -2398,8 +2474,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long>("ErstelltAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("GremiumId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("GremiumId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Titel")
                     .IsRequired()
@@ -2418,8 +2494,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.WikiVersion", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
@@ -2430,18 +2506,19 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int>("Nummer")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("PersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("PersonId")
+                    .HasColumnType("BLOB");
 
-                b.Property<Guid>("SeiteId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("SeiteId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Text")
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid?>("VorschlagId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("VorschlagId")
+                    .HasColumnType("BLOB");
 
                 b.HasKey("Id");
 
@@ -2453,8 +2530,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.WikiVorschlag", b =>
             {
-                b.Property<Guid>("Id")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
 
                 b.Property<long>("Am")
                     .HasColumnType("INTEGER");
@@ -2474,8 +2551,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<long?>("EntschiedenAm")
                     .HasColumnType("INTEGER");
 
-                b.Property<Guid?>("EntschiedenVonPersonId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("EntschiedenVonPersonId")
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Nachher")
                     .HasColumnType("TEXT");
@@ -2484,8 +2561,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
-                b.Property<Guid>("SeiteId")
-                    .HasColumnType("TEXT");
+                b.Property<byte[]>("SeiteId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
 
                 b.Property<string>("Status")
                     .IsRequired()

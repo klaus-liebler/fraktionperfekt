@@ -96,6 +96,11 @@ Datenbank (`VACUUM INTO`) geprüft.
   Die Übergangsliste im Architekturtest ist leer.
 - **Etappe 3 erledigt**: Tabelle `Aenderungsvorgaenge` (Am, Von, Art, Grund, ProtokollId); die 9 Versionstabellen verweisen per `VorgangId`
   darauf. Auf der Kopie von Klaus' Datenbank: 29 Vorgänge statt Metadaten an 581 Zeilen.
+- **Etappe 4a erledigt**: Ids als 16-Byte-BLOB (Big-Endian, globaler Konverter `GuidZuBlob`), zentraler Erzeuger `Ids` (UUIDv7, in Tests
+  deterministisch über `Ids.Verwenden(Ids.Deterministisch(start))`). Umstellung der Bestandsdaten in eigener Migration (`IdsBinaerDaten`,
+  Fremdschlüssel bis zum Abschluss aufgeschoben); auf der Kopie: 186 Spalten, alle umgestellt, Fremdschlüssel und Integrität in Ordnung.
+  Ids als Text bleiben nur in Anzeigeformen (URLs, Links in Mails, ICS-UIDs, Bildpfade) und im Suchindex `WikiSuche` (FTS5, aus den
+  Wiki-Versionen neu aufbaubar, keine fachliche Kopie).
 
 ## Entscheidung (16.11.2026)
 

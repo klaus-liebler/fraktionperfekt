@@ -44,6 +44,8 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
 
         // SQLite kennt keinen Zeitstempel mit Offset; als sortierbare Zahl (UTC-Ticks) speichern.
         configurationBuilder.Properties<DateTimeOffset>().HaveConversion<DateTimeOffsetToBinaryConverter>();
+        // Datenbank-Regel 4: Ids binär (16 Byte, Big-Endian) statt als Text
+        configurationBuilder.Properties<Guid>().HaveConversion<GuidZuBlob>();
         configurationBuilder.Properties<Enum>().HaveConversion<string>().HaveMaxLength(40);
     }
 
