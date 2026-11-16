@@ -32,7 +32,8 @@ Datenbank (`VACUUM INTO`) geprüft.
 | Korrektur von Gültigkeitsbeginn und -ende („Umzugsdatum korrigieren“) | fehlt: Korrektur ersetzt nur den Wert, nicht den Zeitraum | 1: `ZeitlicheHistorie.ZeitraumKorrigieren` + Test mit dem Beispiel Muster (Zeilen A–E). |
 | `Personen.Aktiv` | veränderlich, nicht versioniert | 1: Merkmal „aktiv“ mit Gültigkeit. |
 | `Mitgliedschaften.Amt`, `Mitgliedschaften.FunktionText` | veränderlich, nicht versioniert (Funktion und Rang sind es) | 1: in `MitgliedschaftsVersionen`. |
-| Weitere Stammdaten ohne Versionen: Gremien (Name, Kurzname, Aktiv), Kontakte (Pressekontakte), Ressourcen, Gebiete, Haushaltsposten, Themenpaten | Regel 2 gilt auch für Stammdaten-Entitäten | **Frage an Klaus** (siehe unten); bis dahin Änderungen im Protokoll. |
+| Gremien (Name, Kurzname, aktiv) ohne Versionen | Regel 2 | 1: bitemporal (Entscheidung Klaus, 16.11.2026: alte Protokolle zeigen den damaligen Namen). |
+| Pressekontakte, Ressourcen, Gebiete, Haushaltsposten, Themenpaten | – | Entscheidung Klaus (16.11.2026): bleiben Arbeitsdaten mit Änderungsprotokoll, keine Versionen. |
 
 ## 3. Änderungsvorgänge
 
@@ -86,8 +87,7 @@ Datenbank (`VACUUM INTO`) geprüft.
 | Baseline-Messung | neu: `MessungTests` (`FP_MESSUNG=1` bzw. `=10`), Ergebnisse in `docs/messungen.md`. | 5: Vergleich. |
 | Demodaten relativ zum Tagesdatum | Termine relativ zum Montag der aktuellen Woche (ganze Wochen); Ratsbeginn und Wahlperiode sind echte feste Daten; RIS-Mock-Sitzungen laufen in festen Abständen ab einem festen Startdatum (auch in zwei Wochen gleichmäßig, aber nicht wochengenau verschoben). | 4: RIS-Mock ab einem Start relativ zum Tagesdatum in ganzen Wochen. |
 
-## Frage an Klaus
+## Entscheidung (16.11.2026)
 
-Regel 2 nennt „jede veränderliche Angabe zu einer Person bzw. Stammdaten-Entität“. Sollen auch **Gremien** (Name, Kurzname, aktiv),
-**Pressekontakte**, **Ressourcen** (Dienstwagen, Räume), **Gebiete** und **Haushaltsposten** bitemporal werden? Vorschlag: Gremien ja
-(Umbenennungen im RIS, alte Protokolle mit altem Namen), die übrigen nein (Arbeitsdaten, Änderungen stehen im Protokoll).
+Klaus: Außer Personen und Mitgliedschaften werden nur **Gremien** (Name, Kurzname, aktiv) bitemporal. Pressekontakte, Ressourcen,
+Gebiete und Haushaltsposten bleiben Arbeitsdaten mit Änderungsprotokoll.
