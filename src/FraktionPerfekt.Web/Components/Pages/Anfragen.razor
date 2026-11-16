@@ -13,6 +13,7 @@
         <h1>Anfragen an die Verwaltung</h1>
         <p class="fp-sub">Entwurf → Einreichen (Vorstand oder Geschäftsführung, Antwortfrist Standard 4 Wochen) → Antwort erfassen. Überfällige Anfragen erinnern einmal und landen als Aufgabe „nachhaken“ im Korb der Geschäftsführung.</p>
     </div>
+    <div class="fp-row"><RadzenButton Text="Neue Anfrage" Icon="add" Click="@(() => neuOffen = true)" /></div>
 </div>
 
 @if (meldung is not null)
@@ -65,16 +66,17 @@
     </section>
 }
 
-<details class="fp-card" open="@(zeilen.Count == 0)">
-    <summary>Neue Anfrage</summary>
+<GrosserDialog @bind-Offen="neuOffen" Titel="Neue Anfrage" Geaendert="@(!string.IsNullOrWhiteSpace(titel) || !string.IsNullOrWhiteSpace(text) || !string.IsNullOrWhiteSpace(thema))">
+    <ChildContent>
     <div class="fp-form">
         <div class="fp-field fp-grow"><label class="fp-lbl" for="a-titel">Titel</label><RadzenTextBox id="a-titel" @bind-Value="titel" Immediate="true" /></div>
         <div class="fp-field"><label class="fp-lbl">Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" AllowClear="true" Data="@gremien" TextProperty="Kurzname" ValueProperty="Id" /></div>
         <div class="fp-field"><label class="fp-lbl" for="a-thema">Politikfeld</label><RadzenTextBox id="a-thema" @bind-Value="thema" /></div>
     </div>
-    <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Fragen an die Verwaltung" Hoehe="300px" />
-    <RadzenButton Text="Als Entwurf anlegen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(titel)" Click="AnlegenAsync" />
-</details>
+    <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Fragen an die Verwaltung" Hoehe="100%" />
+    </ChildContent>
+    <Knoepfe><RadzenButton Text="Als Entwurf anlegen" Icon="save" Disabled="@string.IsNullOrWhiteSpace(titel)" Click="AnlegenAsync" /></Knoepfe>
+</GrosserDialog>
 
 @code {
     private IReadOnlyList<AnfrageZeile> zeilen = [];
@@ -85,6 +87,7 @@
     private string? titel;
     private string? text;
     private MarkdownEditor? editor;
+    private bool neuOffen;
     private Guid entwurfId = Guid.NewGuid();
     private string? thema;
     private Guid? gremium;
@@ -118,11 +121,7 @@
         await AusfuehrenAsync(s => s.AnlegenAsync(titel!, text ?? "", gremium, thema), "Entwurf angelegt.");
         if (!fehler)
         {
-            (titel, text, thema, entwurfId) = (null, null, null, Guid.NewGuid());
-            if (editor is not null)
-            {
-                await editor.SetzenAsync(null);
-            }
+            (titel, text, thema, gremium, entwurfId, neuOffen) = (null, null, null, null, Guid.NewGuid(), false);
         }
     }
 

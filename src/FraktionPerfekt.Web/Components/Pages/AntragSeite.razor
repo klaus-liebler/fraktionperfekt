@@ -76,20 +76,15 @@ else
     <div class="fp-split">
         <section class="fp-card">
             <h2>Text <span class="fp-zahl">Fassung @d.Aktuell.Nummer</span></h2>
-            @if (bearbeiten)
-            {
-                <MarkdownEditor @ref="editor" @bind-Text="entwurf" BezugArt="Antrag" BezugId="@Id" Bezeichnung="Antragstext" />
-                <div class="fp-row">
-                    <RadzenTextBox @bind-Value="fassungNotiz" Placeholder="Was wurde geändert?" Style="min-width:260px" />
-                    <RadzenButton Text="Als neue Fassung speichern" Icon="save" Click="FassungAsync" />
-                    <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => bearbeiten = false)" />
-                </div>
-            }
-            else
-            {
-                <Markdown Text="@d.Aktuell.Text" />
-                <BegruendeterButton Text="Text bearbeiten" Size="ButtonSize.Small" Icon="edit" Freigabe="@d.TextBearbeiten" Click="@(() => { entwurf = d.Aktuell.Text; bearbeiten = true; })" />
-            }
+            <Markdown Text="@d.Aktuell.Text" />
+            <BegruendeterButton Text="Neue Fassung" Size="ButtonSize.Small" Icon="edit" Freigabe="@d.TextBearbeiten" Click="@(() => { entwurf = d.Aktuell.Text; fassungNotiz = null; bearbeiten = true; })" />
+            <GrosserDialog @bind-Offen="bearbeiten" Titel="@($"Neue Fassung (bisher Fassung {d.Aktuell.Nummer})")" Geaendert="@((entwurf ?? "").Trim() != d.Aktuell.Text.Trim() || !string.IsNullOrWhiteSpace(fassungNotiz))">
+                <ChildContent>
+                    <MarkdownEditor @ref="editor" @bind-Text="entwurf" BezugArt="Antrag" BezugId="@Id" Bezeichnung="Antragstext" Hoehe="100%" />
+                    <div class="fp-field"><label class="fp-lbl" for="f-notiz">Was wurde geändert?</label><RadzenTextBox id="f-notiz" @bind-Value="fassungNotiz" Immediate="true" /></div>
+                </ChildContent>
+                <Knoepfe><RadzenButton Text="Als neue Fassung speichern" Icon="save" Click="FassungAsync" /></Knoepfe>
+            </GrosserDialog>
 
             <h3>Fassungen vergleichen</h3>
             <div class="fp-row">

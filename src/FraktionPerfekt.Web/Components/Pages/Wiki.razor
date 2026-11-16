@@ -12,6 +12,10 @@
         <p class="fp-sub">Wissen der Fraktion: Abläufe, Politikfelder, Gremien, Positionen. Verlinken mit [[Titel]]. Die KI liest nur nicht vertrauliche Seiten und macht nur Vorschläge.</p>
     </div>
     <div class="fp-row">
+        @if (darfBearbeiten)
+        {
+            <RadzenButton Text="Neue Seite" Icon="add" Click="@(() => neuOffen = true)" />
+        }
         <a class="fp-btn" href="wiki/vorschlaege">KI-Vorschläge @if (offen > 0) { <span class="fp-zahl">@offen</span> }</a>
     </div>
 </div>
@@ -95,16 +99,18 @@
 
 @if (darfBearbeiten)
 {
-    <details class="fp-card" open="@(NeuParameter is not null)">
-        <summary>Neue Seite</summary>
+    <GrosserDialog @bind-Offen="neuOffen" Titel="Neue Wiki-Seite" Klein="true" Geaendert="@(!string.IsNullOrWhiteSpace(neuTitel) && neuTitel != NeuParameter)">
+        <ChildContent>
+        <p class="fp-small fp-muted">Die Seite wird mit der Vorlage angelegt und öffnet sich danach zum Schreiben.</p>
         <div class="fp-form">
             <div class="fp-field"><label class="fp-lbl" for="neu-titel">Titel</label><RadzenTextBox id="neu-titel" @bind-Value="neuTitel" Immediate="true" /></div>
             <div class="fp-field"><label class="fp-lbl">Bereich</label><RadzenDropDown TValue="string" @bind-Value="neuBereich" Data="@WikiDienst.Bereiche" /></div>
             <div class="fp-field"><label class="fp-lbl">Vorlage</label><RadzenDropDown TValue="string" @bind-Value="neuVorlage" Data="@Wikivorlagen.Alle.Keys" /></div>
             <div class="fp-field"><label><input type="checkbox" @bind="neuVertraulich" /> vertraulich (für die KI unsichtbar)</label></div>
         </div>
-        <RadzenButton Text="Anlegen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(neuTitel)" Click="AnlegenAsync" />
-    </details>
+        </ChildContent>
+        <Knoepfe><RadzenButton Text="Anlegen und schreiben" Icon="edit" Disabled="@string.IsNullOrWhiteSpace(neuTitel)" Click="AnlegenAsync" /></Knoepfe>
+    </GrosserDialog>
 }
 
 @code {
@@ -123,11 +129,13 @@
     private string neuBereich = WikiDienst.Bereiche[0];
     private string neuVorlage = "Ablauf";
     private bool neuVertraulich;
+    private bool neuOffen;
 
     protected override async Task OnInitializedAsync()
     {
         darfBearbeiten = (await Vorgang.BenutzerAsync()).Rolle is not Rolle.Helferin;
         neuTitel = NeuParameter;
+        neuOffen = NeuParameter is not null && darfBearbeiten;
         await LadenAsync();
     }
 

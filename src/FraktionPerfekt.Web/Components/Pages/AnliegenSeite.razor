@@ -11,6 +11,7 @@
         <h1>Bürgeranliegen</h1>
         <p class="fp-sub">Eingang → Zuweisung (Vorschlag: Themenpate) → Bearbeitung → Antwort. Name und Kontaktweg werden @AnliegenDienst.LoeschfristMonate Monate nach Erledigung gelöscht.</p>
     </div>
+    <div class="fp-row"><RadzenButton Text="Neues Anliegen" Icon="add" Click="@(() => neuOffen = true)" /></div>
 </div>
 
 @if (meldung is not null)
@@ -18,8 +19,8 @@
     <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
 }
 
-<details class="fp-card fp-einschub" open="@(zeilen.Count == 0)">
-    <summary>Anliegen erfassen</summary>
+<GrosserDialog @bind-Offen="neuOffen" Titel="Neues Bürgeranliegen" Geaendert="@(!string.IsNullOrWhiteSpace(betreff) || !string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(kontakt) || !string.IsNullOrWhiteSpace(text))">
+    <ChildContent>
     <div class="fp-form">
         <div class="fp-field fp-grow"><label class="fp-lbl" for="an-betreff">Betreff</label><RadzenTextBox id="an-betreff" @bind-Value="betreff" Immediate="true" /></div>
         <div class="fp-field"><label class="fp-lbl" for="an-name">Name</label><RadzenTextBox id="an-name" @bind-Value="name" Immediate="true" /></div>
@@ -27,9 +28,10 @@
         <div class="fp-field"><label class="fp-lbl">Eingang über</label><RadzenDropDown TValue="Eingangskanal" @bind-Value="kanal" Data="@(Enum.GetValues<Eingangskanal>())" /></div>
         <div class="fp-field"><label class="fp-lbl" for="an-thema">Politikfeld</label><RadzenTextBox id="an-thema" @bind-Value="thema" Placeholder="z. B. Schule und Bildung" /></div>
     </div>
-    <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Anliegen" Hoehe="260px" />
-    <RadzenButton Text="Erfassen" Size="ButtonSize.Small" Disabled="@(string.IsNullOrWhiteSpace(betreff) || string.IsNullOrWhiteSpace(name))" Click="ErfassenAsync" />
-</details>
+    <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Anliegen" Hoehe="100%" />
+    </ChildContent>
+    <Knoepfe><RadzenButton Text="Erfassen" Icon="save" Disabled="@(string.IsNullOrWhiteSpace(betreff) || string.IsNullOrWhiteSpace(name))" Click="ErfassenAsync" /></Knoepfe>
+</GrosserDialog>
 
 @foreach (var gruppe in zeilen.GroupBy(z => z.Anliegen.Status).OrderBy(g => g.Key))
 {
@@ -87,6 +89,7 @@
     private readonly Dictionary<Guid, string?> antworten = [];
     private string? betreff, name, kontakt, thema, text;
     private MarkdownEditor? editor;
+    private bool neuOffen;
     private Guid entwurfId = Guid.NewGuid();
     private Eingangskanal kanal = Eingangskanal.Mail;
     private string? meldung;
@@ -118,11 +121,7 @@
         await AusfuehrenAsync(s => s.ErfassenAsync(betreff!, text ?? "", name!, kontakt, kanal, thema), "Erfasst – die Geschäftsführung hat eine Aufgabe „zuweisen“.");
         if (!fehler)
         {
-            (betreff, name, kontakt, thema, text, entwurfId) = (null, null, null, null, null, Guid.NewGuid());
-            if (editor is not null)
-            {
-                await editor.SetzenAsync(null);
-            }
+            (betreff, name, kontakt, thema, text, entwurfId, neuOffen) = (null, null, null, null, null, Guid.NewGuid(), false);
         }
     }
 

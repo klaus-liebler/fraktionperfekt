@@ -1,4 +1,4 @@
-// Markdown-Editor (TOAST UI Editor 3.2.2, lokal unter lib/toastui-editor) für Wiki-Seiten.
+// Text-Editor (TOAST UI Editor 3.2.2, lokal unter lib/toastui-editor): Standard WYSIWYG mit Symbolleiste, gespeichert wird Markdown.
 // Bilder: Einfügen aus der Zwischenablage, Ziehen oder Bild-Knopf → im Browser auf höchstens 2000 px verkleinern
 // (Fotos werden dabei neu kodiert, EXIF/GPS fällt weg) → POST dateien/bild → Markdown ![Originalname](dateien/bild/{guid}).
 (function () {
@@ -44,15 +44,30 @@
         start(element, dotnet, text, optionen) {
             if (!window.toastui || !window.toastui.Editor) { return false; }
             const melden = warten(() => dotnet.invokeMethodAsync('TextGeaendert', bereinigt(editor.getMarkdown())), 300);
+            // Unauffälliger Knopf ganz rechts in der Symbolleiste: Quelltext (Markdown) ein/aus. Gespeichert wird immer Markdown.
+            const quelltext = document.createElement('button');
+            quelltext.type = 'button';
+            quelltext.className = 'fp-quelltext';
+            quelltext.textContent = 'MD';
+            quelltext.setAttribute('aria-label', 'Quelltext (Markdown) ein/aus');
+            quelltext.addEventListener('click', () => {
+                const md = editor.isMarkdownMode();
+                editor.changeMode(md ? 'wysiwyg' : 'markdown', true);
+                quelltext.classList.toggle('an', !md);
+            });
+            const werkzeuge = optionen.kompakt
+                ? [['heading', 'bold', 'italic'], ['ul', 'ol'], ['link', 'image']]
+                : [['heading', 'bold', 'italic', 'strike'], ['hr', 'quote'], ['ul', 'ol', 'task', 'indent', 'outdent'], ['table', 'image', 'link'], ['code', 'codeblock']];
+            werkzeuge.push([{ name: 'quelltext', tooltip: 'Quelltext (Markdown)', el: quelltext }]);
             const editor = new window.toastui.Editor({
                 el: element,
                 height: optionen.hoehe || '520px',
-                initialEditType: optionen.modus || 'markdown',
+                initialEditType: optionen.modus || 'wysiwyg',
                 previewStyle: 'tab',
                 language: 'de-DE',
                 usageStatistics: false,
-                toolbarItems: optionen.kompakt ? [['heading', 'bold', 'italic'], ['ul', 'ol'], ['link', 'image']] : undefined,
-                hideModeSwitch: !!optionen.kompakt,
+                toolbarItems: werkzeuge,
+                hideModeSwitch: true,
                 autofocus: false,
                 initialValue: text || '',
                 placeholder: 'Text der Seite … Bilder einfach einfügen (Strg+V) oder hineinziehen. [[Seitentitel]] verlinkt eine Wiki-Seite.',

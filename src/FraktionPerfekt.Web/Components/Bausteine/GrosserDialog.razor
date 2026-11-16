@@ -1,0 +1,80 @@
+@inject IJSRuntime Js
+
+@* Großer modaler Dialog für Neu-Formulare mit langem Text (nahezu Vollbild, auf dem Handy Vollbild).
+   Schließen über ×, Abbrechen oder Esc fragt nach, wenn ungespeicherte Änderungen da sind. *@
+@if (Offen)
+{
+    <div class="fp-dialog-hintergrund">
+        <div class="fp-dialog @(Klein ? "fp-dialog-klein" : null)" role="dialog" aria-modal="true" aria-labelledby="@kennung" @onkeydown="TasteAsync">
+            <header class="fp-dialog-kopf">
+                <h2 id="@kennung">@Titel</h2>
+                <button type="button" class="fp-dialog-zu" aria-label="Schließen" title="Schließen" @onclick="SchliessenAsync">×</button>
+            </header>
+            <div class="fp-dialog-inhalt">@ChildContent</div>
+            <footer class="fp-dialog-fuss">
+                @Knoepfe
+                <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="SchliessenAsync" />
+            </footer>
+        </div>
+    </div>
+}
+
+@code {
+    private readonly string kennung = "dlg-" + Guid.NewGuid().ToString("N")[..8];
+
+    [Parameter]
+    public bool Offen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OffenChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Titel { get; set; } = string.Empty;
+
+    /// <summary>Ungespeicherte Eingaben vorhanden → vor dem Schließen nachfragen.</summary>
+    [Parameter]
+    public bool Geaendert { get; set; }
+
+    /// <summary>Kleiner Dialog ohne großen Editor (nur Felder).</summary>
+    [Parameter]
+    public bool Klein { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Speichern-Knopf o. Ä. (links neben „Abbrechen“).</summary>
+    [Parameter]
+    public RenderFragment? Knoepfe { get; set; }
+
+    private async Task TasteAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await SchliessenAsync();
+        }
+    }
+
+    private async Task SchliessenAsync()
+    {
+        if (Geaendert)
+        {
+            bool verwerfen;
+            try
+            {
+                verwerfen = await Js.InvokeAsync<bool>("confirm", "Ungespeicherte Änderungen verwerfen?");
+            }
+            catch (JSException)
+            {
+                verwerfen = true;
+            }
+
+            if (!verwerfen)
+            {
+                return;
+            }
+        }
+
+        Offen = false;
+        await OffenChanged.InvokeAsync(false);
+    }
+}

@@ -21,23 +21,18 @@
     <div class="fp-alert fp-crit" role="alert">@meldung</div>
 }
 
-@if (formular)
-{
-    <section class="fp-card fp-einschub">
-        <h2>Neuer Antrag</h2>
+<GrosserDialog @bind-Offen="formular" Titel="Neuer Antrag" Geaendert="@(!string.IsNullOrWhiteSpace(titel) || !string.IsNullOrWhiteSpace(text) || !string.IsNullOrWhiteSpace(thema))">
+    <ChildContent>
         <div class="fp-form">
             <div class="fp-field"><label class="fp-lbl" for="a-titel">Titel</label><RadzenTextBox id="a-titel" @bind-Value="titel" /></div>
             <div class="fp-field"><label class="fp-lbl">Ziel-Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" /></div>
             <div class="fp-field"><label class="fp-lbl" for="a-thema">Politikfeld</label><RadzenTextBox id="a-thema" @bind-Value="thema" Placeholder="z. B. Schule und Bildung" /></div>
         </div>
-        <div class="fp-field"><span class="fp-lbl">Antragstext (Bilder per Strg+V einfügen)</span>
-            <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Antragstext" Hoehe="360px" /></div>
-        <div class="fp-row">
-            <BegruendeterButton Text="Anlegen" Icon="save" Freigabe="@(string.IsNullOrWhiteSpace(titel) ? Freigabe.Nein("Bitte einen Titel eingeben.") : Freigabe.Ja)" Click="AnlegenAsync" />
-            <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
-        </div>
-    </section>
-}
+        <span class="fp-lbl">Antragstext (Bilder per Strg+V einfügen)</span>
+        <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Antragstext" Hoehe="100%" />
+    </ChildContent>
+    <Knoepfe><BegruendeterButton Text="Anlegen" Icon="save" Freigabe="@(string.IsNullOrWhiteSpace(titel) ? Freigabe.Nein("Bitte einen Titel eingeben.") : Freigabe.Ja)" Click="AnlegenAsync" /></Knoepfe>
+</GrosserDialog>
 
 <div class="fp-filter">
     <span class="fp-filter-lbl">Status</span>
