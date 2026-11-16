@@ -47,9 +47,9 @@ internal static class WissenDemodaten
             ("Gremien", "Arbeitskreis Schule und Ganztag",
                 "## Aufgaben des Gremiums\n\nBereitet die Themen für den Ausschuss für Schule und Bildung vor.\n\n## Laufende Themen\n\n- [[Grundschullandschaft]]\n- Ganztag",
                 80, "lkuehlert", false, "AK Schule"),
-            ("Gremien", "Haupt- und Finanzausschuss",
+            ("Gremien", "Haupt-/Finanz- und Wirtschaftsausschuss",
                 "## Aufgaben des Gremiums\n\nHaushalt, Finanzen, Beteiligungen (u. a. Stadtwerke Greven).\n\n## Laufende Themen\n\n- [[Haushaltsberatungen]]\n- Badsanierung durch die Stadtwerke",
-                70, "jwilp", false, "HFA"),
+                70, "jwilp", false, "HFWA"),
             ("Positionen", "Pressearbeit",
                 "Pressemitteilungen gibt der Vorstand frei. Ansprechpartner für die Grevener Zeitung ist der Fraktionsvorsitzende.", 150, "jwilp", false, null),
             ("Positionen", "Presse-Arbeit",
@@ -71,8 +71,8 @@ internal static class WissenDemodaten
         var dateien = new (string Ordner, string Name, string Inhalt, string Von, string? Gremium, bool Vertraulich)[]
         {
             ("Fraktion", "Geschäftsordnung der Fraktion.md", "# Geschäftsordnung der Fraktion (fiktiv)\n\n§ 1 Die Fraktion tagt in der Regel montags.\n", "kalbers", null, false),
-            ("Gremien/HFA", "Haushalt 2026 – Eckdaten.csv", "Bereich;Ansatz 2026 (Mio. Euro)\nSchulen;48\nStraßen;22\nBäder;15\n", "djoud", "HFA", false),
-            ("Gremien/HFA", "Stellungnahme Stadtwerke Bad.txt", "Fiktive Stellungnahme zur Badsanierung durch die Stadtwerke (nichtöffentlich).", "jwilp", "HFA", true),
+            ("Gremien/HFWA", "Haushalt 2026 – Eckdaten.csv", "Bereich;Ansatz 2026 (Mio. Euro)\nSchulen;48\nStraßen;22\nBäder;15\n", "djoud", "HFWA", false),
+            ("Gremien/HFWA", "Stellungnahme Stadtwerke Bad.txt", "Fiktive Stellungnahme zur Badsanierung durch die Stadtwerke (nichtöffentlich).", "jwilp", "HFWA", true),
             ("Arbeitskreise/AK Schule", "Schulwege-Übersicht.txt", "Fiktive Übersicht der Schulwege bei Schließung zweier Grundschulstandorte.", "lkuehlert", "AK Schule", false),
             ("Wahlkampf", "Plakatstandorte-Hinweise.txt", "Plakate nicht an Ampeln und Kreuzungen; Abstand zu Schulen beachten.", "fbaeumer", null, false),
         };

@@ -11,11 +11,11 @@ public sealed record Demoperson(string Vorname, string Nachname, string Kennung,
     public string Adresse => EMail ?? $"{Kennung}@demo.invalid";
 }
 
-/// <summary>Ein fiktives Gremium der Stadt Greven mit den Sitzen der Demofraktion.</summary>
-/// <param name="Stellvertretungen">RIS-Kennungen in Rangfolge (Rang 1 zuerst).</param>
+/// <summary>Ein Gremium der Stadt Greven (echter Name, erfundene Sitzungstermine).</summary>
 /// <param name="Rhythmus">Sitzungsabstand in Tagen; Sitzungen ab <paramref name="ErsteSitzung"/>.</param>
-public sealed record Demogremium(string RisId, string Name, string Kurzname, string Art, string[] Ordentliche, string[] Stellvertretungen,
-    DateTime ErsteSitzung, int Rhythmus, int DauerMinuten, string Ort);
+/// <param name="RisName">Abweichende Bezeichnung in der RIS-Tabelle (z. B. „Rat“).</param>
+public sealed record Demogremium(string RisId, string Name, string Kurzname, string Art, DateTime ErsteSitzung, int Rhythmus, int DauerMinuten, string Ort,
+    string? RisName = null);
 
 /// <summary>
 /// Demobesetzung der CDU-Fraktion Greven: die echten Mitglieder aus <see cref="FraktionGreven"/>, dazu fiktive Mitarbeitende
@@ -46,22 +46,35 @@ public static class Demofraktion
         ("ris-x03", "Heiner", "Platzhalter"),
     ];
 
-    private static readonly string[] Ratsmitglieder = FraktionGreven.Ratsmitglieder.Select(p => p.RisId!).ToArray();
-
+    /// <summary>
+    /// Die Gremien der Stadt Greven (Namen wie im RIS, Kurzbezeichnungen für die Oberfläche). Besetzung der Ratsmitglieder aus
+    /// <see cref="FraktionGreven.Gremienzugehoerigkeit"/>; Sitzungstermine, Orte und Tagesordnungen sind erfunden (Demo).
+    /// </summary>
     public static IReadOnlyList<Demogremium> Gremien { get; } =
     [
-        new("ris-g01", "Rat der Stadt Greven", "Rat", "Rat", Ratsmitglieder, [], new DateTime(2026, 1, 15, 17, 0, 0), 42, 210, "Rathaus Greven, Ratssaal"),
-        new("ris-g02", "Haupt- und Finanzausschuss", "HFA", "Ausschuss", ["ris-p01", "ris-p02", "ris-p03", "ris-p05"], ["ris-p04", "ris-p06", "ris-p07"],
-            new DateTime(2026, 1, 6, 17, 0, 0), 42, 150, "Rathaus Greven, Ratssaal"),
-        new("ris-g03", "Ausschuss für Stadtentwicklung und Verkehr", "ASV", "Ausschuss", ["ris-p05", "ris-p07", "ris-p10"],
-            ["ris-p08", "ris-p11", "ris-p09"], new DateTime(2026, 1, 13, 17, 30, 0), 35, 150, "Rathaus Greven, Sitzungsraum 1"),
-        new("ris-g04", "Ausschuss für Schule und Bildung", "ASB", "Ausschuss", ["ris-p04", "ris-p11", "ris-p08"], ["ris-p12", "ris-p06", "ris-p02"],
-            new DateTime(2026, 1, 20, 18, 0, 0), 42, 120, "Rathaus Greven, Sitzungsraum 1"),
-        new("ris-g05", "Ausschuss für Soziales, Familie und Senioren", "ASFS", "Ausschuss", ["ris-p06", "ris-p12", "ris-p09"], ["ris-p10", "ris-p13", "ris-p05"],
-            new DateTime(2026, 1, 21, 17, 0, 0), 42, 120, "Rathaus Greven, Sitzungsraum 2"),
-        new("ris-g06", "Ausschuss für Klima, Umwelt und Digitales", "AKUD", "Ausschuss", ["ris-p13", "ris-p10", "ris-p02"], ["ris-p11", "ris-p04", "ris-p03"],
-            new DateTime(2026, 1, 27, 18, 0, 0), 35, 120, "Rathaus Greven, Sitzungsraum 2"),
-        new("ris-g07", "Rechnungsprüfungsausschuss", "RPA", "Ausschuss", ["ris-p03", "ris-p09"], ["ris-p07", "ris-p01"],
-            new DateTime(2026, 2, 3, 16, 30, 0), 63, 90, "Rathaus Greven, Sitzungsraum 2"),
+        new("ris-g01", "Rat der Stadt Greven", "Rat", "Rat", new DateTime(2026, 1, 15, 17, 0, 0), 42, 210, "Rathaus Greven, Ratssaal", "Rat"),
+        new("ris-g02", "Haupt-/Finanz- und Wirtschaftsausschuss", "HFWA", "Ausschuss", new DateTime(2026, 1, 6, 17, 0, 0), 42, 150, "Rathaus Greven, Ratssaal"),
+        new("ris-g03", "Ausschuss für Stadtentwicklung, Klima und Umwelt", "ASKU", "Ausschuss", new DateTime(2026, 1, 13, 17, 30, 0), 35, 150, "Rathaus Greven, Sitzungsraum 1"),
+        new("ris-g04", "Schulausschuss", "SchulA", "Ausschuss", new DateTime(2026, 1, 20, 18, 0, 0), 42, 120, "Rathaus Greven, Sitzungsraum 1"),
+        new("ris-g05", "Sozialausschuss", "SozA", "Ausschuss", new DateTime(2026, 1, 21, 17, 0, 0), 42, 120, "Rathaus Greven, Sitzungsraum 2"),
+        new("ris-g06", "Ausschuss für Kultur, Sport und Freizeit", "AKSF", "Ausschuss", new DateTime(2026, 1, 27, 18, 0, 0), 42, 120, "Rathaus Greven, Sitzungsraum 2"),
+        new("ris-g07", "Rechnungsprüfungsausschuss", "RPA", "Ausschuss", new DateTime(2026, 2, 3, 16, 30, 0), 63, 90, "Rathaus Greven, Sitzungsraum 2"),
+        new("ris-g08", "Ausschuss für Chancengerechtigkeit und Integration", "ACI", "Ausschuss", new DateTime(2026, 1, 28, 18, 0, 0), 56, 120, "Rathaus Greven, Sitzungsraum 1"),
+        new("ris-g09", "Jugendhilfeausschuss", "JHA", "Ausschuss", new DateTime(2026, 2, 4, 17, 0, 0), 56, 120, "Rathaus Greven, Sitzungsraum 1"),
+        new("ris-g10", "Betriebsausschuss", "BetrA", "Ausschuss", new DateTime(2026, 2, 10, 17, 0, 0), 56, 90, "Rathaus Greven, Sitzungsraum 2"),
+        new("ris-g11", "Planungs- und Bauausschuss für den Rathausneubau", "PBR", "Ausschuss", new DateTime(2026, 2, 12, 17, 30, 0), 42, 120, "Rathaus Greven, Ratssaal"),
+        new("ris-g12", "Bezirksausschuss für die Bauerschaften", "BA Bauerschaften", "Ausschuss", new DateTime(2026, 2, 17, 19, 0, 0), 84, 120, "Gaststätte in den Bauerschaften (Ort fiktiv)"),
+        new("ris-g13", "Bezirksausschuss für die Ortschaft Reckenfeld", "BA Reckenfeld", "Ausschuss", new DateTime(2026, 2, 18, 19, 0, 0), 84, 120, "Bürgerhaus Reckenfeld"),
+        new("ris-g14", "Bezirksausschuss für die Ortschaft Gimbte", "BA Gimbte", "Ausschuss", new DateTime(2026, 2, 19, 19, 0, 0), 84, 120, "Gimbte (Ort fiktiv)"),
+        new("ris-g15", "Wahlausschuss", "WA", "Ausschuss", new DateTime(2026, 3, 3, 17, 0, 0), 182, 60, "Rathaus Greven, Sitzungsraum 2"),
+        new("ris-g16", "Wahlprüfungsausschuss", "WPA", "Ausschuss", new DateTime(2026, 3, 4, 17, 0, 0), 182, 60, "Rathaus Greven, Sitzungsraum 2"),
+        new("ris-g17", "Umlegungsausschuss", "UmlA", "Ausschuss", new DateTime(2026, 3, 10, 16, 0, 0), 91, 60, "Rathaus Greven, Sitzungsraum 2"),
+        new("ris-g18", "Zweckverbandsversammlung Musikschule Greven/Emsdetten/Saerbeck", "ZV Musikschule", "Zweckverband", new DateTime(2026, 3, 12, 18, 0, 0), 91, 90,
+            "Musikschule (Ort fiktiv)"),
     ];
+
+    /// <summary>Gremium zum Namen, wie er in der RIS-Tabelle steht („Rat“ oder voller Name).</summary>
+    public static Demogremium GremiumZu(string risName)
+        => Gremien.FirstOrDefault(g => string.Equals(g.Name, risName, StringComparison.OrdinalIgnoreCase) || string.Equals(g.RisName, risName, StringComparison.OrdinalIgnoreCase))
+           ?? throw new InvalidOperationException($"Unbekanntes Gremium „{risName}“ – bitte in Demofraktion.Gremien ergänzen.");
 }

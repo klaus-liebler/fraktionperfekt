@@ -9,6 +9,9 @@ public enum Gremienart
     Beirat,
     Arbeitskreis,
 
+    /// <summary>Interkommunales Gremium (z. B. Zweckverbandsversammlung), nicht vom Rat der Stadt allein besetzt.</summary>
+    Zweckverband,
+
     /// <summary>Die Fraktion selbst (Fraktionssitzungen).</summary>
     Fraktion,
 }

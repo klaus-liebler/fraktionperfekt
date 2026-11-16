@@ -83,6 +83,7 @@ public sealed class RisAbgleich(
             var person = personen[rm.PersonRisId];
             var gremium = gremien[rm.GremiumRisId];
             var funktion = rm.Stellvertretung ? Funktion.Stellvertretung : Funktion.Ordentlich;
+            var amt = Gremienfunktion.Deuten(rm.Rolle).Amt;
             var erfassung = new Erfassung(jetzt, wer.Anzeige, Erfassungsart.Ersterfassung, $"Abgleich mit {ris.Quelle}");
             if (!vorhanden.TryGetValue(rm.RisId, out var m))
             {
@@ -98,11 +99,18 @@ public sealed class RisAbgleich(
                     m.BeendenAb(ende, erfassung with { Art = Erfassungsart.Beendet, Grund = $"Ende laut {ris.Quelle}" });
                 }
 
+                m.AmtSetzen(amt, rm.Rolle);
                 stammdaten.Hinzufuegen(m);
                 alle.Add(m);
                 vorhanden[rm.RisId] = m;
                 mNeu++;
                 continue;
+            }
+
+            if (m.Amt != amt || m.FunktionText != rm.Rolle)
+            {
+                m.AmtSetzen(amt, rm.Rolle);
+                mGeaendert++;
             }
 
             var stichtag = heute < rm.Beginn ? rm.Beginn : heute;
@@ -191,6 +199,7 @@ public sealed class RisAbgleich(
         "RAT" => Gremienart.Rat,
         "BEIRAT" => Gremienart.Beirat,
         "ARBEITSKREIS" => Gremienart.Arbeitskreis,
+        "ZWECKVERBAND" => Gremienart.Zweckverband,
         _ => Gremienart.Ausschuss,
     };
 }

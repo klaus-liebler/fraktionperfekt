@@ -17,9 +17,9 @@ public sealed class WissenAblaufTests
 
         // Vorstand sieht im HFA-Ordner auch die vertrauliche Stellungnahme; eine sachkundige Bürgerin ohne HFA-Mandat nicht.
         await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
-        (await u.InAsync(d => D(d).ListeAsync("Gremien/HFA"))).Select(z => z.Datei.Name).ShouldContain("Stellungnahme Stadtwerke Bad.txt");
+        (await u.InAsync(d => D(d).ListeAsync("Gremien/HFWA"))).Select(z => z.Datei.Name).ShouldContain("Stellungnahme Stadtwerke Bad.txt");
         await u.AnmeldenAsync("uahrens");
-        var hfa = await u.InAsync(d => D(d).ListeAsync("Gremien/HFA"));
+        var hfa = await u.InAsync(d => D(d).ListeAsync("Gremien/HFWA"));
         hfa.Select(z => z.Datei.Name).ShouldContain("Haushalt 2026 – Eckdaten.csv");
         hfa.Select(z => z.Datei.Name).ShouldNotContain("Stellungnahme Stadtwerke Bad.txt");
 

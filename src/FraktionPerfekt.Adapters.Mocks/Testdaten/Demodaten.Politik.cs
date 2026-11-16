@@ -18,18 +18,18 @@ internal static class PolitikDemodaten
 
         // Anfragen: eine beantwortet, eine überfällig, eine offen, ein Entwurf
         var schulwege = new Anfrage("Schulwege bei Schließung zweier Grundschulstandorte",
-            "1. Wie verlängern sich die Schulwege der betroffenen Kinder?\n2. Welche Kosten entstehen für Schülerbeförderung?", P("lkuehlert"), G("ASB"), "Schule und Bildung",
+            "1. Wie verlängern sich die Schulwege der betroffenen Kinder?\n2. Welche Kosten entstehen für Schülerbeförderung?", P("lkuehlert"), G("SchulA"), "Schule und Bildung",
             jetzt.AddDays(-50));
         schulwege.Einreichen(heute.AddDays(-45), heute.AddDays(-17));
         schulwege.Beantworten("Die Verwaltung rechnet mit bis zu 1,8 km längeren Wegen; Beförderungskosten rund 90.000 Euro jährlich (fiktiv).", heute.AddDays(-20));
         var bad = new Anfrage("Finanzierung der Badsanierung durch die Stadtwerke",
-            "1. Welche Bürgschaften oder Zuschüsse der Stadt sind vorgesehen?\n2. Wie wirkt sich das auf den Haushalt 2026 aus?", P("djoud"), G("HFA"), "Haushalt und Finanzen",
+            "1. Welche Bürgschaften oder Zuschüsse der Stadt sind vorgesehen?\n2. Wie wirkt sich das auf den Haushalt 2026 aus?", P("djoud"), G("HFWA"), "Haushalt und Finanzen",
             jetzt.AddDays(-40));
         bad.Einreichen(heute.AddDays(-35), heute.AddDays(-7));
         var radweg = new Anfrage("Unfallzahlen Rathausstraße", "Wie viele Unfälle mit Radfahrenden gab es seit 2021 an den Einmündungen der Rathausstraße?",
-            P("thorstmann"), G("ASV"), "Stadtentwicklung und Verkehr", jetzt.AddDays(-10));
+            P("thorstmann"), G("ASKU"), "Stadtentwicklung und Verkehr", jetzt.AddDays(-10));
         radweg.Einreichen(heute.AddDays(-8), heute.AddDays(20));
-        var ganztag = new Anfrage("Raumbedarf für den Ganztag", "Welche Räume fehlen an den Grundschulen für den Rechtsanspruch ab 2026?", P("seisenrichter"), G("ASB"),
+        var ganztag = new Anfrage("Raumbedarf für den Ganztag", "Welche Räume fehlen an den Grundschulen für den Rechtsanspruch ab 2026?", P("seisenrichter"), G("SchulA"),
             "Schule und Bildung", jetzt.AddDays(-2));
         foreach (var a in new[] { schulwege, bad, radweg, ganztag })
         {

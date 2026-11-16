@@ -25,10 +25,11 @@ public sealed class MockRis : IRisSchnittstelle
     {
         var beginn = new DateOnly(2025, 11, 1);
         var liste = new List<RisMitgliedschaft>();
-        foreach (var g in Demofraktion.Gremien)
+        foreach (var (person, z) in FraktionGreven.Zugehoerigkeiten)
         {
-            liste.AddRange(g.Ordentliche.Select(p => new RisMitgliedschaft($"{g.RisId}-{p}", p, g.RisId, false, beginn, null)));
-            liste.AddRange(g.Stellvertretungen.Select(p => new RisMitgliedschaft($"{g.RisId}-{p}-v", p, g.RisId, true, beginn, null)));
+            var g = Demofraktion.GremiumZu(z.Gremium);
+            var stellv = z.Funktion == Domain.Gremien.Funktion.Stellvertretung;
+            liste.Add(new RisMitgliedschaft($"{g.RisId}-{person.RisId}{(stellv ? "-v" : "")}", person.RisId!, g.RisId, stellv, z.Seit, null, z.FunktionText));
         }
 
         // Andere Fraktion: sitzt im Rat, wird aber nicht übernommen.
@@ -88,10 +89,10 @@ public sealed class MockRis : IRisSchnittstelle
         string[] punkte = kurzname switch
         {
             "Rat" => ["Haushaltssatzung 2026", "Neuordnung der Grundschullandschaft", "Prioritätenliste Bauinvestitionen"],
-            "HFA" => ["Haushalt 2026: Entwicklung des Defizits", "Prioritätenliste der Bauinvestitionen (rund 180 Mio. Euro)", "Badsanierung durch die Stadtwerke"],
-            "ASB" => ["Neuplanung der Grundschullandschaft, Schließung zweier Standorte", "Martin-Luther-Grundschule: Nachnutzung des Grundstücks", "Ganztagsanspruch ab 2026: Raumbedarf"],
-            "ASV" => ["Rathausstraße: Radfahrstreifen statt Hochbordradweg", "Prioritäten im Straßen- und Radwegebau"],
-            "ASFS" => ["Ganztagsbetreuung und Familienangebote", "Bericht Seniorenbeirat"],
+            "HFWA" => ["Haushalt 2026: Entwicklung des Defizits", "Prioritätenliste der Bauinvestitionen (rund 180 Mio. Euro)", "Badsanierung durch die Stadtwerke"],
+            "SchulA" => ["Neuplanung der Grundschullandschaft, Schließung zweier Standorte", "Martin-Luther-Grundschule: Nachnutzung des Grundstücks", "Ganztagsanspruch ab 2026: Raumbedarf"],
+            "ASKU" => ["Rathausstraße: Radfahrstreifen statt Hochbordradweg", "Prioritäten im Straßen- und Radwegebau"],
+            "SozA" => ["Ganztagsbetreuung und Familienangebote", "Bericht Seniorenbeirat"],
             _ => [],
         };
         return punkte.Length == 0 ? null : string.Join("\n", punkte.Select((p, i) => $"TOP {i + 1} {p}").Skip(nr % 2).Take(2));

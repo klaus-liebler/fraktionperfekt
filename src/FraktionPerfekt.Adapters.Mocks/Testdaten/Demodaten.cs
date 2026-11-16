@@ -178,7 +178,7 @@ public sealed class Demodaten(
         // b) Michael Gries fehlt im ASBU: Abwesenheit eingetragen, Vertretung noch nicht angefragt.
         if (Naechste("ris-g03") is { } asbu)
         {
-            Abwesenheit(personen["mgries"], asbu.Tag.AddDays(-1), asbu.Tag.AddDays(1), null, jetzt);
+            Abwesenheit(personen["lkuehlert"], asbu.Tag.AddDays(-1), asbu.Tag.AddDays(1), null, jetzt);
         }
 
         // c) Alexandra Cleve fehlt im ASFS: alle Stellvertretungen haben abgesagt → Aufgabe für den Vorstand.
@@ -201,7 +201,7 @@ public sealed class Demodaten(
         // d) Klaus Schwenken fehlt im RPA: Michael Gries (Rang 1) hat zugesagt.
         if (Naechste("ris-g07") is { } rpa)
         {
-            var a = Abwesenheit(personen["kschwenken"], rpa.Tag, rpa.Tag, null, jetzt);
+            var a = Abwesenheit(personen["mgries"], rpa.Tag, rpa.Tag, null, jetzt);
             var (fall, schritt) = Vertretungsfall.Starten(rpa.Id, rpa.GremiumId!.Value, a.PersonId, a.Id, Kandidaten(rpa), jetzt.AddDays(-1), Frist(rpa));
             if (schritt.NeueAnfrage is { } anfrage)
             {

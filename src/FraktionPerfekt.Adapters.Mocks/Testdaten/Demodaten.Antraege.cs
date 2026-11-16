@@ -20,7 +20,7 @@ internal static class AntragsDemodaten
         Guid P(string k) => personen[k].Id;
 
         // 1. Beschlossen und eingereicht, der nächsten ASB-Sitzung zugeordnet
-        var asb = gremien["ASB"];
+        var asb = gremien["SchulA"];
         var naechsteAsb = (await termine.TermineAsync(heute.ToDateTime(TimeOnly.MinValue), heute.AddDays(90).ToDateTime(TimeOnly.MinValue), abbruch))
             .FirstOrDefault(t => t.GremiumId == asb.Id);
         var a1 = new Antrag("Elternbefragung vor der Schließung von Grundschulstandorten", P("lkuehlert"), asb.Id, "Schule und Bildung", jetzt.AddDays(-30));
@@ -54,7 +54,7 @@ internal static class AntragsDemodaten
             "Dann liegt das Ergebnis vor dem Start des Rechtsanspruchs vor.", jetzt.AddDays(-2)));
 
         // 3. In Abstimmung (offen, einige Stimmen)
-        var hfa = gremien["HFA"];
+        var hfa = gremien["HFWA"];
         var a3 = new Antrag("Verbindliche Prioritätenliste für die Bauinvestitionen", P("djoud"), hfa.Id, "Haushalt und Finanzen", jetzt.AddDays(-10));
         daten.Hinzufuegen(a3);
         daten.Hinzufuegen(new AntragFassung(a3.Id, 1, GrevenerThemen.AntragPrioritaeten, P("djoud"), jetzt.AddDays(-10), "Erste Fassung"));
@@ -72,7 +72,7 @@ internal static class AntragsDemodaten
         a3.AbstimmungZuordnen(u3.Id, jetzt.AddDays(-1));
 
         // 4. Idee
-        var a4 = new Antrag("Sichere Radwegführung an der Rathausstraße", P("mgries"), gremien["ASV"].Id, "Stadtentwicklung und Verkehr", jetzt.AddDays(-2));
+        var a4 = new Antrag("Sichere Radwegführung an der Rathausstraße", P("mgries"), gremien["ASKU"].Id, "Stadtentwicklung und Verkehr", jetzt.AddDays(-2));
         daten.Hinzufuegen(a4);
         daten.Hinzufuegen(new AntragFassung(a4.Id, 1, GrevenerThemen.AntragRadweg, P("mgries"), jetzt.AddDays(-2), "Stichpunkte"));
 

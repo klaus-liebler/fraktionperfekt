@@ -11,6 +11,20 @@ public enum Funktion
     Stellvertretung,
 }
 
+/// <summary>Amt im Gremium (Vorsitz und Stellvertretungen des Vorsitzes); unabhängig von der Funktion Mitglied/Stellvertretung.</summary>
+public enum Gremienamt
+{
+    Keins,
+
+    Vorsitz,
+
+    /// <summary>1. Stellvertretung des Vorsitzes (beim Rat: 1. stellv. Bürgermeister:in).</summary>
+    ErsteStellvertretung,
+
+    /// <summary>2. Stellvertretung des Vorsitzes.</summary>
+    ZweiteStellvertretung,
+}
+
 public static class FunktionExtensions
 {
     public static string Anzeigename(this Funktion funktion) => funktion switch
@@ -52,6 +66,18 @@ public sealed class Mitgliedschaft
 
     /// <summary>Kennung der Mitgliedschaft im RIS, falls sie von dort stammt.</summary>
     public string? RisId { get; private set; }
+
+    /// <summary>Vorsitz oder Stellvertretung des Vorsitzes (aus dem RIS).</summary>
+    public Gremienamt Amt { get; private set; }
+
+    /// <summary>Funktionsbezeichnung wie im RIS („2. Stellv. Ausschussvorsitzender“, „Mitglied ZVM“); unbekannte bleiben als Text erhalten.</summary>
+    public string? FunktionText { get; private set; }
+
+    public void AmtSetzen(Gremienamt amt, string? funktionText)
+    {
+        Amt = amt;
+        FunktionText = string.IsNullOrWhiteSpace(funktionText) ? null : funktionText.Trim();
+    }
 
     public IReadOnlyCollection<MitgliedschaftsVersion> Versionen => _versionen;
 

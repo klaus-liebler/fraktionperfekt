@@ -39,8 +39,8 @@ public sealed class VertretungAblaufTests
         var faelle = await u.InAsync(d => d.GetRequiredService<VertretungDienst>().AnfragenAsync(ergebnis.Abwesenheit.Id));
         var fall = faelle.Single(f => f.TerminId == hfa.Id);
 
-        // Rang 1 im HFA ist Liz Kühlert: Push + Mail im Postausgang, Ein-Klick-Anfrage auf ihrer Startseite.
-        var anna = await u.AnmeldenAsync("lkuehlert");
+        // Rang 1 im HFWA ist Dames Joud: Push + Mail im Postausgang, Ein-Klick-Anfrage auf seiner Startseite.
+        var anna = await u.AnmeldenAsync("djoud");
         var heute = await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync());
         var anfrage = heute.Vertretungsanfragen.Single(a => a.FallId == fall.Id);
         var post = await u.InAsync(d => d.GetRequiredService<INachrichtenSpeicher>().NeuesteAsync(50));
@@ -52,18 +52,21 @@ public sealed class VertretungAblaufTests
         var petra = await u.AnmeldenAsync("bkurney");
         (await u.InAsync(d => d.GetRequiredService<VertretungDienst>().MeineAnfragenAsync())).Single().FallId.ShouldBe(fall.Id);
 
-        // Petra antwortet nicht: nach Fristablauf geht es an Rang 3 (Michael Gries).
+        // Petra antwortet nicht: nach Fristablauf geht es an Rang 3 (Dr. Tim Schubert).
         u.Uhr.Advance(TimeSpan.FromHours(25));
         (await u.InAsync(d => d.GetRequiredService<VertretungDienst>().FristenPruefenAsync())).ShouldBe(1);
         (await u.InAsync(d => d.GetRequiredService<VertretungDienst>().MeineAnfragenAsync())).ShouldBeEmpty();
-        await u.AnmeldenAsync("mgries");
-        var dirk = (await u.InAsync(d => d.GetRequiredService<VertretungDienst>().MeineAnfragenAsync())).Single();
+        // Alle weiteren Stellvertretungen (Rang 3 bis 7) lehnen ab → alle gefragt → Aufgabe für den Vorstand.
+        foreach (var k in new[] { "tschubert", "aschultejochmaring", "kschwenken", "csluka", "cwaschkowitzbiggeleben" })
+        {
+            await u.AnmeldenAsync(k);
+            var meine = (await u.InAsync(d => d.GetRequiredService<VertretungDienst>().MeineAnfragenAsync())).Single();
+            await u.InAsync(d => d.GetRequiredService<VertretungDienst>().AntwortenAsync(meine.AnfrageId, false));
+        }
 
-        // Dirk lehnt ab → alle gefragt → Aufgabe für den Vorstand.
-        await u.InAsync(d => d.GetRequiredService<VertretungDienst>().AntwortenAsync(dirk.AnfrageId, false));
         await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         var aufgabe = (await u.InAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync())).Single();
-        aufgabe.Titel.ShouldContain("HFA");
+        aufgabe.Titel.ShouldContain("HFWA");
         aufgabe.Ziel.ShouldBe($"vertretungen/fall/{fall.Id}");
         var offen = await u.InAsync(d => d.GetRequiredService<VertretungDienst>().OffeneVertretungenAsync());
         offen.Single(v => v.Termin.Id == hfa.Id).Fall!.Status.ShouldBe(Vertretungsstatus.Eskaliert);
@@ -98,7 +101,7 @@ public sealed class VertretungAblaufTests
         var jens = await u.AnmeldenAsync("thorstmann");
         var fall = await u.InAsync(d => d.GetRequiredService<VertretungDienst>().FuerTerminAnfragenAsync(hfa.Id));
 
-        var anna = await u.AnmeldenAsync("lkuehlert");
+        var anna = await u.AnmeldenAsync("djoud");
         var anfrage = (await u.InAsync(d => d.GetRequiredService<VertretungDienst>().MeineAnfragenAsync())).Single();
         var antwort = await u.InAsync(d => d.GetRequiredService<VertretungDienst>().AntwortenAsync(anfrage.AnfrageId, true));
 
@@ -122,7 +125,7 @@ public sealed class VertretungAblaufTests
         await using var u = await TestUmgebung.ErzeugenAsync();
         var hfa = await HfaAsync(u);
 
-        await u.AnmeldenAsync("lkuehlert");
+        await u.AnmeldenAsync("djoud");
         await u.InAsync(d => d.GetRequiredService<VertretungDienst>().EintragenAsync(new DateOnly(2026, 12, 8), new DateOnly(2026, 12, 8), null));
 
         var jens = await u.AnmeldenAsync("thorstmann");
@@ -146,19 +149,19 @@ public sealed class VertretungAblaufTests
         var hfa = await HfaAsync(u);
         await u.AnmeldenAsync("kalbers");
         var detail = await u.InAsync(d => d.GetRequiredService<StammdatenDienst>().GremiumAsync(hfa.GremiumId!.Value));
-        detail!.Stellvertretungen.Select(s => s.Name).ShouldBe(["Liz Kühlert", "Bettina Kurney", "Michael Gries"]);
+        detail!.Stellvertretungen.Select(s => s.Name).Take(3).ShouldBe(["Dames Joud", "Bettina Kurney", "Dr. Tim Schubert"]);
 
-        var dirk = detail.Stellvertretungen.Single(s => s.Name == "Michael Gries");
+        var dirk = detail.Stellvertretungen.Single(s => s.Name == "Dr. Tim Schubert");
         await u.InAsync(d => d.GetRequiredService<StammdatenDienst>().RangAendernAsync(dirk.MitgliedschaftId, 0 + 1, new DateOnly(2026, 12, 1), "Test"));
-        var anna = detail.Stellvertretungen.Single(s => s.Name == "Liz Kühlert");
+        var anna = detail.Stellvertretungen.Single(s => s.Name == "Dames Joud");
         await u.InAsync(d => d.GetRequiredService<StammdatenDienst>().RangAendernAsync(anna.MitgliedschaftId, 3, new DateOnly(2026, 12, 1), "Test"));
 
         var mitgliedschaften = await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().MitgliedschaftenAsync());
         var personen = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonenAsync())).ToDictionary(p => p.Id, p => p.Nachname);
         Besetzung.StellvertretungenAm(mitgliedschaften, hfa.GremiumId!.Value, new DateOnly(2026, 11, 30), u.Uhr.GetUtcNow()).Select(id => personen[id])
-            .ShouldBe(["Kühlert", "Kurney", "Gries"]);
+            .Take(3).ShouldBe(["Joud", "Kurney", "Schubert"]);
         Besetzung.StellvertretungenAm(mitgliedschaften, hfa.GremiumId!.Value, new DateOnly(2026, 12, 8), u.Uhr.GetUtcNow()).Select(id => personen[id])
-            .ShouldBe(["Gries", "Kurney", "Kühlert"]);
+            .Take(3).ShouldBe(["Schubert", "Kurney", "Joud"]);
     }
 
     [Fact]
@@ -179,16 +182,17 @@ public sealed class KalenderUndRisTests
     {
         await using var u = await TestUmgebung.ErzeugenAsync();
         var gremien = await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync());
-        gremien.Count.ShouldBe(7);
-        gremien.ShouldContain(g => g.Name == "Ausschuss für Schule und Bildung" && g.Art == Gremienart.Ausschuss);
+        gremien.Count.ShouldBe(18);
+        gremien.ShouldContain(g => g.Name == "Schulausschuss" && g.Art == Gremienart.Ausschuss);
+        gremien.ShouldContain(g => g.Kurzname == "ZV Musikschule" && g.Art == Gremienart.Zweckverband);
 
         // Andere Fraktion sitzt im Rat, wird aber nicht übernommen.
         var personen = await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonenAsync());
         personen.ShouldNotContain(p => p.Nachname == "Musterhaus");
         var rat = await u.InAsync(d => d.GetRequiredService<StammdatenDienst>().GremiumAsync(gremien.Single(g => g.Kurzname == "Rat").Id));
         rat!.Ordentliche.Count.ShouldBe(18);
-        var asfs = await u.InAsync(d => d.GetRequiredService<StammdatenDienst>().GremiumAsync(gremien.Single(g => g.Kurzname == "ASFS").Id));
-        asfs!.Stellvertretungen.Select(s => s.Name).ShouldBe(["Uta Ahrens", "Steve Sterthues", "Thomas Horstmann"]);   // Reihenfolge laut RIS
+        var asfs = await u.InAsync(d => d.GetRequiredService<StammdatenDienst>().GremiumAsync(gremien.Single(g => g.Kurzname == "SozA").Id));
+        asfs!.Stellvertretungen.Select(s => s.Name).Take(3).ShouldBe(["Eike Brinkhaus", "Silke Eisenrichter", "Philipp Nientiedt"]);   // Reihenfolge laut RIS
 
         var zweiter = await u.InAsync(d => d.GetRequiredService<RisAbgleich>().AbgleichenAsync());
         (zweiter.GremienNeu + zweiter.GremienGeaendert + zweiter.MitgliedschaftenNeu + zweiter.MitgliedschaftenGeaendert + zweiter.SitzungenNeu + zweiter.SitzungenGeaendert)
@@ -207,7 +211,7 @@ public sealed class KalenderUndRisTests
         var ics = (await u.InAsync(d => d.GetRequiredService<KalenderDienst>().AboKalenderAsync(token)))?.Replace("\r\n ", string.Empty, StringComparison.Ordinal);
         ics.ShouldNotBeNull();
         ics.ShouldContain("BEGIN:VEVENT");
-        ics.ShouldContain("Haupt- und Finanzausschuss");   // ordentliches Mitglied im HFA
+        ics.ShouldContain("Haupt-/Finanz- und Wirtschaftsausschuss");   // ordentliches Mitglied im HFA
         ics.ShouldNotContain("Rechnungsprüfungsausschuss"); // dort kein Sitz
 
         var abos = await u.InAsync(d => d.GetRequiredService<KalenderDienst>().MeineAbosAsync());
@@ -230,7 +234,7 @@ public sealed class KalenderUndRisTests
         helfer.ShouldAllBe(z => z.Termin.Art == Terminart.Oeffentlich || z.Termin.Art == Terminart.Wahlkampf);
 
         var anna = await u.AnmeldenAsync("lkuehlert");
-        var asb = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync())).Single(g => g.Kurzname == "ASB");
+        var asb = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync())).Single(g => g.Kurzname == "SchulA");
         var nurAsb = await u.InAsync(d => d.GetRequiredService<KalenderDienst>().TermineAsync(von, bis, new Kalenderfilter(GremiumId: asb.Id)));
         nurAsb.ShouldNotBeEmpty();
         nurAsb.ShouldAllBe(z => z.Termin.GremiumId == asb.Id);
@@ -246,9 +250,9 @@ public sealed class KalenderUndRisTests
     public async Task Zusage_und_Absage_mit_naechstem_Schritt_Vertretung()
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
-        await u.AnmeldenAsync("lkuehlert");
+        await u.AnmeldenAsync("djoud");
         var heute = await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync());
-        heute.Vertretungsanfragen.ShouldHaveSingleItem();     // Demodaten: Anna ist für den HFA gefragt
+        heute.Vertretungsanfragen.ShouldHaveSingleItem();     // Demodaten: Dames Joud ist für den HFWA gefragt
         heute.OffeneZusagen.ShouldNotBeEmpty();               // Fraktionssitzungen ohne Antwort
         heute.Schnellaktionen.Single(s => s.Titel == "Raum buchen").Freigabe.Erlaubt.ShouldBeTrue();
 

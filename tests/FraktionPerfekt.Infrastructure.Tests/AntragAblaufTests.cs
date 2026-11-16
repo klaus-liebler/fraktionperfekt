@@ -19,7 +19,7 @@ public sealed class AntragAblaufTests
         AntragDienst A(IServiceProvider d) => d.GetRequiredService<AntragDienst>();
 
         await u.AnmeldenAsync("lkuehlert");
-        var asb = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync())).Single(g => g.Kurzname == "ASB");
+        var asb = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync())).Single(g => g.Kurzname == "SchulA");
         var antrag = await u.InAsync(d => A(d).AnlegenAsync("Schulwege sicher machen", "Die Verwaltung legt bis zum Sommer 2026 ein Schulwegkonzept vor.", asb.Id,
             "Schule und Bildung"));
         await u.InAsync(d => A(d).StatusWechselnAsync(antrag.Id, Antragsstatus.Entwurf, null));

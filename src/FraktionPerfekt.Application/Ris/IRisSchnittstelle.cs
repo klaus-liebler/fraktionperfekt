@@ -33,7 +33,8 @@ public sealed record RisGremium(string RisId, string Name, string Kurzname, stri
 public sealed record RisPerson(string RisId, string Vorname, string Nachname, string? Fraktion);
 
 /// <summary>OParl „Membership“: Rolle „Mitglied“ oder „Stellvertretendes Mitglied“; Ende exklusiv nicht gesetzt = laufend.</summary>
-public sealed record RisMitgliedschaft(string RisId, string PersonRisId, string GremiumRisId, bool Stellvertretung, DateOnly Beginn, DateOnly? Ende);
+public sealed record RisMitgliedschaft(string RisId, string PersonRisId, string GremiumRisId, bool Stellvertretung, DateOnly Beginn, DateOnly? Ende,
+    string? Rolle = null);
 
 /// <summary>OParl „Meeting“.</summary>
 public sealed record RisSitzung(string RisId, string GremiumRisId, string Name, DateTime Beginn, DateTime Ende, string? Ort, bool Abgesagt,
