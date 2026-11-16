@@ -42,6 +42,7 @@ speichere('ems_ufer_256x144.png', HG.emsUfer(), 'Hintergründe');
 speichere('baustelle_bad_256x144.png', HG.baustelle(false), 'Hintergründe');
 speichere('baustelle_bad_grube_trocken_256x144.png', HG.baustelle(true), 'Hintergründe');
 speichere('schulhof_nacht_256x144.png', HG.schulhof(), 'Hintergründe');
+speichere('schulflur_256x144.png', HG.schulflur(), 'Hintergründe');
 speichere('krypta_256x144.png', HG.krypta(), 'Hintergründe');
 speichere('tempel_eingang_256x144.png', HG.tempelEingang(false), 'Hintergründe');
 speichere('tempel_eingang_offen_256x144.png', HG.tempelEingang(true), 'Hintergründe');

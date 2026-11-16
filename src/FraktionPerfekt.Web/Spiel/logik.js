@@ -36,7 +36,7 @@
         buero: { name: 'Zukunftsschmiede', x: 51.8, y: 27.9 },
         archiv: { name: 'Rathausarchiv', x: 47.2, y: 35 },
         ems: { name: 'Ems-Ufer', x: 35.3, y: 29.9 },
-        baustelle: { name: 'Baustelle Badsanierung', x: 64.3, y: 82.1 },
+        baustelle: { name: 'Baustelle Hallenbad', x: 40.0, y: 43.0 },
         schule: { name: 'Martin-Luther-Grundschule', x: 47.6, y: 24.2 }
     };
 
@@ -195,19 +195,29 @@
                 },
                 {
                     id: 'gegner', name: 'Hohlbein und Dröhn (AfD)', x: 11.7, y: 48.6, b: 17.2, h: 45.8, form: 'gegner',
-                    sichtbar: (z) => z.flags.gegnerArchiv && !z.flags.gegnerArchivFest,
-                    ansehen: () => antwort('Kreissprecher Hohlbein und Beisitzer Dröhn. Großes Auftreten, kleines Leseverständnis. Sie versperren den Ausgang.'),
-                    reden: () => antwort(['Hohlbein: „Hier steht ‚Ausgang‘. Das heißt bestimmt ‚Ausland‘. Da gehen wir nicht hin.“', 'Dröhn: „Wir bleiben in der Tür stehen, bis die Altparteien den Gral rausrücken!“']),
+                    sichtbar: (z) => z.flags.gegnerArchiv,
+                    // Festgeklebt: verkleinert hinten an der Wand (perspektivisch weiter weg), der Ausgang ist frei
+                    hinten: (z) => z.flags.gegnerArchivFest,
+                    lage: (z) => (z.flags.gegnerArchivFest ? { x: 25, y: 46, b: 12, h: 30 } : null),
+                    ansehen: (z) => antwort(z.flags.gegnerArchivFest
+                        ? 'Hohlbein und Dröhn kleben hinten an der Wand fest – mitsamt Parkettdiele. Sie diskutieren, ob Dichtstoff „Systemkleber“ ist.'
+                        : 'Kreissprecher Hohlbein und Beisitzer Dröhn. Großes Auftreten, kleines Leseverständnis. Sie versperren den Ausgang.'),
+                    reden: (z) => (z.flags.gegnerArchivFest
+                        ? antwort(['Hohlbein: „Das ist Freiheitsberaubung! Ich rufe meinen Anwalt!“', 'Dröhn: „Unser Anwalt klebt auch. Der war gestern hier.“'])
+                        : antwort(['Hohlbein: „Hier steht ‚Ausgang‘. Das heißt bestimmt ‚Ausland‘. Da gehen wir nicht hin.“', 'Dröhn: „Wir bleiben in der Tür stehen, bis die Altparteien den Gral rausrücken!“'])),
                     f1: (z) => {
+                        if (z.flags.gegnerArchivFest) { return antwort('Joe: „Hält. 24 Stunden Haftung, wie versprochen.“'); }
                         if (!istJoe(z)) {
                             return antwort('Chani deutet die Körpersprache: breitbeinig, Arme verschränkt, Blick auf das Handy – sie warten auf eine Sprachnachricht vom Bundesvorstand.');
                         }
                         z.flags.gegnerArchivFest = true; ortFrei(z, 'ems'); punkte(z, 'kartusche1');
-                        return antwort(['Joe zieht die Kartusche wie einen Revolver. Zwei saubere Raupen Dichtstoff auf das Parkett – genau vor ihre Schuhspitzen.', 'Hohlbein tritt vor und klebt fest. Dröhn will ihn retten und klebt auch. „Elastisch, überstreichbar, 24 Stunden Haftung“, sagt Joe.', '(Neuer Ort auf der Karte: Ems-Ufer)']);
+                        return antwort(['Joe zieht die Kartusche wie einen Revolver. Zwei saubere Raupen Dichtstoff auf das Parkett – genau vor ihre Schuhspitzen.', 'Hohlbein tritt vor und klebt fest. Dröhn will ihn retten und klebt auch. „Elastisch, überstreichbar, 24 Stunden Haftung“, sagt Joe.', 'Christian schiebt die beiden samt loser Parkettdiele an die Rückwand. „Ordnung muss sein.“ Der Ausgang ist frei.', '(Neuer Ort auf der Karte: Ems-Ufer)']);
                     },
-                    f2: (z) => antwort(istJoe(z)
-                        ? 'Joe will ihnen Fugendichtstoff verkaufen. Sie fragen, ob der auch „aus Deutschland“ ist. Er ist es. Sie kaufen trotzdem nichts.'
-                        : 'Chani geht live. Die beiden posieren und erklären zehn Minuten lang das Wort „Altparteien“. Sie stehen dabei aber weiter in der Tür.')
+                    f2: (z) => antwort(z.flags.gegnerArchivFest
+                        ? (istJoe(z) ? 'Joe bietet Lösungsmittel an. Zum Listenpreis. Sie lehnen ab – „aus Prinzip“.' : 'Chani geht live. Die beiden winken von der Rückwand. Mehr Bewegung ist gerade nicht drin.')
+                        : istJoe(z)
+                            ? 'Joe will ihnen Fugendichtstoff verkaufen. Sie fragen, ob der auch „aus Deutschland“ ist. Er ist es. Sie kaufen trotzdem nichts.'
+                            : 'Chani geht live. Die beiden posieren und erklären zehn Minuten lang das Wort „Altparteien“. Sie stehen dabei aber weiter in der Tür.')
                 },
                 {
                     id: 'flurausgang', name: 'Tür zum Treppenhaus', x: 39.8, y: 16.7, b: 11.7, h: 55.6, form: 'tuer',
@@ -276,7 +286,7 @@
                         if (hat(z, 'siegel_exekutive')) { return antwort('Der dritte Pfahl ist jetzt einfach ein Pfahl.'); }
                         if (!z.flags.hinweisPfahl) { return antwort('Sieben Pfähle. Welcher? Vielleicht verrät die Inschrift an der Brücke mehr.'); }
                         geben(z, 'siegel_exekutive'); ortFrei(z, 'baustelle'); punkte(z, 'siegel2', 20);
-                        return antwort(['Der dritte Pfahl flussab ist hohl. Darin: ein Siegel mit einem Schlüsselbund. Das zweite Siegel!', '(Neuer Ort auf der Karte: Baustelle Badsanierung)']);
+                        return antwort(['Der dritte Pfahl flussab ist hohl. Darin: ein Siegel mit einem Schlüsselbund. Das zweite Siegel!', '(Neuer Ort auf der Karte: Baustelle Hallenbad)']);
                     }
                 },
                 {
@@ -287,9 +297,9 @@
         },
 
         baustelle: {
-            titel: 'Baustelle Badsanierung',
+            titel: 'Baustelle Hallenbad',
             stimmung: 'baustelle',
-            einstieg: 'Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Hohlbein und Dröhn schrauben Wegweiser ab.',
+            einstieg: 'Das Hallenbad wird saniert: Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Hohlbein und Dröhn schrauben Wegweiser ab.',
             hotspots: [
                 {
                     id: 'bauleiter', name: 'Bauleiterin Frau Kemper', x: 11.7, y: 48.6, b: 9.4, h: 45, form: 'person', farbe: '#f39c12',
@@ -350,7 +360,7 @@
         schule: {
             titel: 'Hof der Martin-Luther-Grundschule',
             stimmung: 'schule',
-            einstieg: 'Ein leerer Schulhof. Am Kellerabgang flattert Absperrband. Davor: Lore von den Grünen, mit Lastenrad und Gutachten.',
+            einstieg: 'Ein leerer Schulhof. Im Haupteingang brennt Licht – Elternabend. Davor: Lore von den Grünen, mit Lastenrad und Gutachten.',
             hotspots: [
                 {
                     id: 'lore', name: 'Lore (Grüne)', x: 19.5, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#27ae60',
@@ -377,17 +387,51 @@
                     }
                 },
                 {
-                    id: 'kellergang', name: 'Kellergang', x: 68.75, y: 34, b: 14.8, h: 38, form: 'tuer',
-                    ansehen: () => antwort('Ein Kellerabgang mit Absperrband. Dahinter: Dunkelheit.'),
-                    benutzen: (z) => {
-                        if (!z.flags.abend) { return antwort('Lore hebt das Gutachten: „Seite 212!“'); }
-                        if (!hat(z, 'taschenlampe')) { return antwort('Stockdunkel. Ohne Licht geht hier niemand runter.'); }
-                        return antwort('Ihr knipst die Taschenlampe an und steigt hinab …', { szene: 'krypta' });
-                    }
+                    id: 'eingang', name: 'Haupteingang', x: 68.75, y: 36, b: 15.6, h: 36, form: 'tuer',
+                    ansehen: () => antwort('Der Haupteingang der Grundschule. Die Tür steht offen, drinnen ist Elternabend.'),
+                    benutzen: () => antwort('Ihr geht hinein.', { szene: 'schulflur' })
                 },
                 {
                     id: 'zurkarte', name: 'Schultor', x: 1.6, y: 41.7, b: 10.5, h: 30.6, form: 'pfeil',
                     benutzen: () => antwort('Zur Karte.', { szene: 'karte' })
+                }
+            ]
+        },
+
+        schulflur: {
+            titel: 'Flur der Martin-Luther-Grundschule',
+            stimmung: 'schule',
+            einstieg: 'Ein langer Flur: Kinderbilder, Turnbeutel, drei Klassenzimmer. Am Ende die Kellertür – mit Absperrband.',
+            hotspots: [
+                {
+                    id: 'klasse1a', name: 'Klasse 1a', x: 14, y: 30.6, b: 9.4, h: 41.7, form: 'tuer',
+                    ansehen: () => antwort('Klasse 1a. An der Tür hängt ein Zettel: „Bitte nicht stören – Mathearbeit wird korrigiert.“'),
+                    benutzen: () => antwort(['Abgeschlossen. Von drinnen ruft eine Lehrerin: „Ich korrigiere! Mit Rotstift!“', 'Ihr tretet einen respektvollen Schritt zurück.'])
+                },
+                {
+                    id: 'klasse2b', name: 'Klasse 2b', x: 34.4, y: 30.6, b: 9.4, h: 41.7, form: 'tuer',
+                    ansehen: () => antwort('Klasse 2b. Hinter der Tür: Stimmengewirr.'),
+                    benutzen: () => antwort(['Ihr öffnet die Tür einen Spalt. Drinnen tagt seit 19 Uhr der Elternabend – Thema: die Farbe der Turnbeutel.', 'Eine Mutter: „Wollen Sie sich als Klassenpflegschaft aufstellen lassen?“ Ihr schließt die Tür sehr leise.'])
+                },
+                {
+                    id: 'klasse4c', name: 'Klasse 4c', x: 54.7, y: 30.6, b: 9.4, h: 41.7, form: 'tuer',
+                    ansehen: () => antwort('Klasse 4c. Ein Schild: „Klassenrat tagt“.'),
+                    benutzen: (z) => antwort(istJoe(z)
+                        ? 'Joe klopft. Ein Kind öffnet: „Haben Sie einen Antrag? Ohne Antrag kein Rederecht.“ Die Tür geht wieder zu.'
+                        : 'Chani klopft. Ein Kind öffnet: „Wir stimmen gerade über die Hofpause ab. Gäste nur mit Tagesordnungspunkt.“ Die Tür geht wieder zu.')
+                },
+                {
+                    id: 'kellertuer', name: 'Kellertür', x: 75.8, y: 27.8, b: 11.7, h: 44.4, form: 'tuer',
+                    ansehen: () => antwort('Eine Stahltür, Aufschrift „KELLER“. Absperrband und ein Zettel: „Fledermausquartier – siehe Gutachten, Seite 212“.'),
+                    benutzen: (z) => {
+                        if (!z.flags.abend) { return antwort('Auf dem Zettel steht: „Zutritt erst nach dem Ausflug der Fledermäuse (ab 20:30 Uhr)“. Lore hat ihn unterschrieben.'); }
+                        if (!hat(z, 'taschenlampe')) { return antwort('Hinter der Tür ist es stockdunkel. Ohne Licht geht hier niemand runter.'); }
+                        return antwort('Ihr knipst die Taschenlampe an und steigt die Kellertreppe hinab …', { szene: 'krypta' });
+                    }
+                },
+                {
+                    id: 'zumhof', name: 'Ausgang zum Hof', x: 0, y: 27.8, b: 8.6, h: 44.4, form: 'pfeil',
+                    benutzen: () => antwort('Zurück auf den Schulhof.', { szene: 'schule' })
                 }
             ]
         },
@@ -428,7 +472,7 @@
                 },
                 {
                     id: 'zurueck', name: 'Treppe nach oben', x: 0, y: 55.6, b: 10, h: 21, form: 'pfeil',
-                    benutzen: () => antwort('Zurück auf den Schulhof.', { szene: 'schule' })
+                    benutzen: () => antwort('Zurück in den Schulflur.', { szene: 'schulflur' })
                 }
             ]
         },
@@ -834,7 +878,8 @@
         ['reisen', 'schule'],
         ['aktion', 'benutzen', 'uhr'],
         ['aktion', 'reden', 'lore'],
-        ['aktion', 'benutzen', 'kellergang'],
+        ['aktion', 'benutzen', 'eingang'],
+        ['aktion', 'benutzen', 'kellertuer'],
         ['aktion', 'f1', 'fresko'],
         ['aktion', 'benutzen', 'schloss'],
         ['dialog', 'schloss', 'urne'],

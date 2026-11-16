@@ -204,3 +204,37 @@ test('Erkennungsmelodie: Fanfare, unverändertes Haydn-Zitat, Schluss; Stimmung 
     assert.equal(Math.round(M.frequenz('C5') * 100) / 100, 523.25);
     assert.equal(M.spielen(), 0); // ohne Browser: still, kein Fehler
 });
+
+test('Archiv: Hohlbein und Dröhn kleben nach dem Rätsel verkleinert im Hintergrund, der Ausgang ist frei', () => {
+    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+    const z = S.neuerZustand();
+    for (const s of S.KOMPLETTLOESUNG) { S.schritt(z, s); if (z.flags.gegnerArchivFest) { break; } }
+    assert.equal(z.szene, 'archiv');
+    const gegner = S.sichtbareHotspots(z).find((h) => h.id === 'gegner');
+    assert.ok(gegner, 'die beiden bleiben sichtbar');
+    const plaetze = G.npcPlaetze(z, S.sichtbareHotspots(z)).filter((p) => p.id === 'gegner');
+    assert.equal(plaetze.length, 2);
+    for (const p of plaetze) { assert.ok(p.hinten && p.klebt && p.skala < 1 && p.y < G.BODEN - 10, JSON.stringify(p)); }
+    assert.ok(G.NAMEN.includes('klebemasse_32x6'));
+    assert.deepEqual(S.aktion(z, 'benutzen', 'ausgang').szene, 'karte');
+});
+
+test('Schule: erst der Flur mit Klassenzimmern, der Keller nur über die Kellertür', () => {
+    const z = S.neuerZustand();
+    z.szene = 'karte'; z.orte.push('schule'); S.reisen(z, 'schule');
+    assert.equal(S.sichtbareHotspots(z).some((h) => h.id === 'kellergang'), false);
+    S.aktion(z, 'benutzen', 'eingang');
+    assert.equal(z.szene, 'schulflur');
+    for (const k of ['klasse1a', 'klasse2b', 'klasse4c']) { const e = S.aktion(z, 'benutzen', k); assert.equal(z.szene, 'schulflur'); assert.ok(e.text.length > 0); }
+    assert.match(S.aktion(z, 'benutzen', 'kellertuer').text.join(' '), /20:30/);
+    z.flags.abend = true; z.inventar.push('taschenlampe');
+    S.aktion(z, 'benutzen', 'kellertuer');
+    assert.equal(z.szene, 'krypta');
+    S.aktion(z, 'benutzen', 'zurueck');
+    assert.equal(z.szene, 'schulflur');
+});
+
+test('Karte: Die Baustelle ist am Hallenbad (das Freibad ist nicht im Umbau)', () => {
+    assert.match(S.ORTE.baustelle.name, /Hallenbad/);
+    assert.match(S.SZENEN.baustelle.einstieg, /Hallenbad/);
+});

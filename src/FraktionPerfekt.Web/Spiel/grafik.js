@@ -9,10 +9,10 @@
 
     const PERSONEN = ['joe', 'joe_hut', 'chani', 'christian', 'joanna', 'lore', 'kemper', 'hohlbein', 'droehn'];
     const HINTERGRUENDE = ['buero_zukunftsschmiede_v2', 'buero_zukunftsschmiede_v2_ohne_umschlag', 'rathaus_flur_v2', 'archiv_v2', 'ems_ufer',
-        'baustelle_bad', 'baustelle_bad_grube_trocken', 'schulhof_nacht', 'krypta', 'tempel_eingang', 'tempel_eingang_offen', 'tempel_abgrund',
+        'baustelle_bad', 'baustelle_bad_grube_trocken', 'schulhof_nacht', 'schulflur', 'krypta', 'tempel_eingang', 'tempel_eingang_offen', 'tempel_abgrund',
         'tempel_abgrund_bruecke', 'tempel_finale', 'karte_greven'].map((n) => n + '_256x144');
     const OBJEKTE = ['ruderboot_46x14', 'motorboot_64x24', 'hindernisse_ems_96x24', 'wahlkugel_64x64_x4', 'lastenrad_48x32', 'fledermaeuse_8x6_x4',
-        'leck_26x12_x3', 'uhr_zeiger_26x23_x2', 'tor_siegel_46x72', 'bodenplatte_leuchtend_36x9', 'minispiel_ems_512x144', 'minispiel_gang_512x144', 'inventar_icons_16x16'];
+        'leck_26x12_x3', 'uhr_zeiger_26x23_x2', 'tor_siegel_46x72', 'bodenplatte_leuchtend_36x9', 'klebemasse_32x6', 'minispiel_ems_512x144', 'minispiel_gang_512x144', 'inventar_icons_16x16'];
     const NAMEN = HINTERGRUENDE.concat(OBJEKTE,
         PERSONEN.map((p) => p + '_spritesheet_32x64'), PERSONEN.map((p) => p + '_posen_32x64'), PERSONEN.map((p) => p + '_portraet_64x64'));
 
@@ -35,6 +35,7 @@
             ems: () => 'ems_ufer',
             baustelle: () => (f.grubeTrocken ? 'baustelle_bad_grube_trocken' : 'baustelle_bad'),
             schule: () => 'schulhof_nacht',
+            schulflur: () => 'schulflur',
             krypta: () => 'krypta',
             tempel: () => (f.kugelGeschafft ? 'tempel_finale' : f.gitterOffen ? (f.brueckeDa ? 'tempel_abgrund_bruecke' : 'tempel_abgrund') : 'tempel_eingang'),
             karte: () => 'karte_greven'
@@ -82,6 +83,7 @@
     // ---------- Stehplätze: keine Figur steht vor einer anderen ----------
     const ABSTAND = 24;                      // Mindestabstand zweier Fußpunkte (Körperbreite ≈ 22 px)
     const RAND_X = 14;
+    const HINTEN = 0.65;                     // Maßstab von Figuren im Hintergrund
     const NPC = { christian: 'christian', joanna: 'joanna', lore: 'lore', bauleiter: 'kemper' };
     function npcName(h) { return h.form === 'gegner' ? 'gegner' : NPC[h.id] || null; }
 
@@ -92,7 +94,12 @@
             const n = npcName(h);
             if (!n) { continue; }
             const r = R(h, z), mitte = r.x + r.b / 2, fuss = Math.min(BODEN - 2, r.y + r.h);
-            if (n === 'gegner') { p.push({ id: h.id, name: 'hohlbein', x: mitte - ABSTAND / 2, y: fuss }, { id: h.id, name: 'droehn', x: mitte + ABSTAND / 2, y: fuss - 1 }); }
+            if (n === 'gegner' && h.hinten && h.hinten(z)) {
+                // perspektivisch weiter hinten: verkleinert, dunkler, Fußpunkt höher; Abstand wie im Vordergrund (keine Figur vor einer anderen)
+                p.push({ id: h.id, name: 'hohlbein', x: mitte - ABSTAND / 2, y: fuss, skala: HINTEN, hinten: true, klebt: true },
+                    { id: h.id, name: 'droehn', x: mitte + ABSTAND / 2, y: fuss - 1, skala: HINTEN, hinten: true, klebt: true });
+            }
+            else if (n === 'gegner') { p.push({ id: h.id, name: 'hohlbein', x: mitte - ABSTAND / 2, y: fuss }, { id: h.id, name: 'droehn', x: mitte + ABSTAND / 2, y: fuss - 1 }); }
             else { p.push({ id: h.id, name: n, x: mitte, y: fuss }); }
         }
         if (z.szene === 'tempel' && z.flags.kugelGeschafft) {
@@ -159,7 +166,7 @@
         return c;
     }
 
-    const api = { B, H, BODEN, FUSS_X, FUSS_Y, NAMEN, ICONS, ABSTAND, R, npcName, npcPlaetze, freiesZiel, standplaetze, startplaetze, klickBeiText, hintergrund, ueberlagerungen, fackeln, rahmen, portraet, icon, laden, bild, ausschnitt };
+    const api = { B, H, BODEN, FUSS_X, FUSS_Y, NAMEN, ICONS, ABSTAND, HINTEN, R, npcName, npcPlaetze, freiesZiel, standplaetze, startplaetze, klickBeiText, hintergrund, ueberlagerungen, fackeln, rahmen, portraet, icon, laden, bild, ausschnitt };
     wurzel.Grafik = api;
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 })(typeof globalThis !== 'undefined' ? globalThis : this);

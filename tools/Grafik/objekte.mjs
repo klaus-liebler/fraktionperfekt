@@ -80,6 +80,14 @@ function torSiegel() {
     return b;
 }
 function bruecke() { const b = new Bild(67, 10); b.rechteck(0, 0, 67, 10, F.lehm); b.rechteck(0, 0, 67, 2, F.sand); for (let x = 2; x < 67; x += 8) { b.rechteck(x, 0, 1, 10, F.sand2); } return b; }
+/** Schwarze Klebemasse (Dichtstoff-Raupe) unter festgeklebten Schuhen: zwei Pfützen mit Glanz und ein paar Fäden. */
+function klebemasse() {
+    const b = new Bild(32, 6);
+    b.ellipse(9, 3, 8, 2, F.fastschwarz); b.ellipse(23, 3, 8, 2, F.fastschwarz); b.rechteck(9, 3, 14, 2, F.fastschwarz);
+    b.rechteck(5, 2, 3, 1, F.dunkelgrau); b.rechteck(20, 2, 2, 1, F.dunkelgrau); b.setze(13, 1, F.grau); b.setze(27, 2, F.grau);
+    b.setze(1, 4, F.fastschwarz); b.setze(31, 3, F.fastschwarz); b.rechteck(15, 5, 3, 1, F.fastschwarz);
+    return b;
+}
 function bodenplatteAktiv() { const b = new Bild(36, 9); b.rechteck(0, 0, 36, 9, F.steindunkel); b.rechteck(1, 1, 34, 7, F.gelb); b.rechteck(15, 3, 6, 3, F.hellgelb); return b; }
 
 export function objekte() {
@@ -87,7 +95,8 @@ export function objekte() {
         ['ruderboot_46x14.png', ruderboot()], ['motorboot_64x24.png', motorboot()], ['hindernisse_ems_96x24.png', hindernisse()],
         ['wahlkugel_64x64_x4.png', wahlkugel()], ['lastenrad_48x32.png', lastenrad()], ['fledermaeuse_8x6_x4.png', fledermaeuse()],
         ['leck_26x12_x3.png', leck()], ['uhr_zeiger_26x23_x2.png', uhrZeiger()], ['symbolscheiben_31x20.png', symbolscheiben()],
-        ['tor_siegel_46x72.png', torSiegel()], ['bruecke_67x10.png', bruecke()], ['bodenplatte_leuchtend_36x9.png', bodenplatteAktiv()]
+        ['tor_siegel_46x72.png', torSiegel()], ['bruecke_67x10.png', bruecke()], ['bodenplatte_leuchtend_36x9.png', bodenplatteAktiv()],
+        ['klebemasse_32x6.png', klebemasse()]
     ];
 }
 

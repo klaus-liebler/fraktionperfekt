@@ -225,12 +225,13 @@ export function schulhof() {
     // Wanduhr (x 154–180, y 20–43)
     b.ellipse(167, 33, 11, 11, F.dunkelgrau); b.ellipse(167, 33, 10, 10, F.weiss); for (let i = 0; i < 12; i++) { b.setze(167 + Math.round(Math.sin(i * Math.PI / 6) * 8), 33 - Math.round(Math.cos(i * Math.PI / 6) * 8), F.dunkelgrau); }
     b.linie(167, 33, 167, 25, F.schwarz); b.linie(167, 33, 171, 35, F.schwarz);
-    // Kellerabgang mit Treppe und Absperrband (x 179–210, y 52–101)
-    b.rechteck(176, 52, 38, 52, F.steindunkel); b.rechteck(179, 55, 32, 49, F.fastschwarz);
-    for (let i = 0; i < 7; i++) { const y = 60 + i * 6, e = i * 2; b.rechteck(179 + e, y, 32 - 2 * e, 2, i < 3 ? F.grau : F.dunkelgrau); }
-    b.rechteck(174, 49, 42, 3, F.stein);
-    for (let x = 172; x < 218; x += 6) { b.rechteck(x, 70, 3, 2, F.rot); b.rechteck(x + 3, 70, 3, 2, F.weiss); }
-    b.rechteck(184, 74, 22, 8, F.weiss); text(b, 'ZU!', 189, 76, F.rot);
+    // Haupteingang mit Vordach und Glastüren (x 176–216, y 52–104): Elternabend, drinnen brennt Licht
+    b.rechteck(172, 46, 48, 4, F.stein); b.rechteck(172, 50, 48, 1, F.steindunkel);
+    b.rechteck(176, 52, 40, 52, F.beige);
+    for (const x of [179, 197]) { b.rechteck(x, 56, 16, 48, F.dunkelgrau); b.rechteck(x + 2, 58, 12, 30, F.hellgelb); b.rechteck(x + 2, 74, 12, 1, F.dunkelgrau); }
+    b.rechteck(193, 76, 2, 4, F.hellgrau); b.rechteck(197, 76, 2, 4, F.hellgrau);
+    b.rechteck(182, 40, 28, 6, F.creme); text(b, 'EINGANG', 196 - Math.floor(textBreite('EINGANG') / 2), 41, F.dunkelrot);
+    b.ellipse(196, 112, 22, 3, F.hellgrau);
     // Schultor links (x 10–30, y 43–92)
     b.rechteck(4, 60, 3, 44, F.dunkelgrau); b.rechteck(28, 60, 3, 44, F.dunkelgrau); for (let x = 9; x < 28; x += 3) { b.rechteck(x, 66, 1, 36, F.grau); } b.rechteck(7, 66, 21, 2, F.grau); b.rechteck(7, 96, 21, 2, F.grau);
     // Hof
@@ -240,6 +241,48 @@ export function schulhof() {
     // Laterne mit Lichtkreis
     b.rechteck(236, 60, 2, 50, F.dunkelgrau); b.rechteck(232, 56, 10, 4, F.dunkelgrau); b.rechteck(233, 60, 8, 2, F.hellgelb);
     b.ellipse(237, 116, 16, 3, F.hellgrau);
+    return b;
+}
+
+// ---------- Flur der Grundschule ----------
+// Klassenzimmertüren 1a (x 36–60), 2b (x 88–112), 4c (x 140–164), Kellertür mit Absperrband (x 196–222), Ausgang zum Hof links.
+export function schulflur() {
+    const b = new Bild(B, H, F.creme);
+    // Wand: oben hell, unten abwaschbare Fliesen
+    b.rechteck(0, 0, B, 14, F.creme2); b.rechteck(0, 14, B, 1, F.beige);
+    for (let i = 0; i < 5; i++) { const x = 18 + i * 52; b.rechteck(x, 4, 20, 3, F.weiss); b.rechteck(x, 7, 20, 1, F.hellgrau); }
+    b.rechteck(0, 70, B, 34, F.eisblau);
+    for (let y = 70; y < 104; y += 6) { b.rechteck(0, y, B, 1, F.hellblau); }
+    for (let y = 70, r = 0; y < 104; y += 6, r++) { for (let x = (r % 2) * 6; x < B; x += 12) { b.rechteck(x, y + 1, 1, 5, F.hellblau); } }
+    b.rechteck(0, 69, B, 1, F.blau);
+    // Linoleum
+    b.rechteck(0, 104, B, 40, F.lehm); b.rechteck(0, 104, B, 2, F.braun);
+    for (let y = 110; y < H; y += 8) { b.rechteck(0, y, B, 1, F.sand2); }
+    b.ellipse(128, 124, 70, 6, F.sand2);
+    // Ausgang zum Hof (links): Glastür mit Pfeil
+    b.rechteck(0, 40, 22, 64, F.dunkelgrau); b.rechteck(2, 44, 18, 36, F.nacht2); sterne(b, 0, 1, 1);
+    b.rechteck(4, 30, 16, 8, F.gruen); b.rechteck(7, 33, 8, 1, F.weiss); b.rechteck(8, 32, 1, 3, F.weiss); b.rechteck(7, 33, 1, 1, F.weiss);
+    // Klassenzimmer
+    const klassen = [['1A', 36, F.rot], ['2B', 88, F.blau], ['4C', 140, F.gruen]];
+    for (const [name, x, farbe] of klassen) {
+        tuer(b, x, 44, 24, 60, farbe, F.dunkelgrau, F.hellgrau, F.eisblau);
+        b.rechteck(x + 4, 34, 16, 7, F.weiss); text(b, name, x + 12 - Math.floor(textBreite(name) / 2), 35, F.fastschwarz);
+    }
+    // Kinderbilder und Garderobe zwischen den Türen
+    const bilder = [[66, F.gelb, F.rot], [118, F.hellgruen, F.blau], [170, F.rosa, F.lila]];
+    for (const [x, a, c] of bilder) {
+        b.rechteck(x, 26, 16, 12, F.weiss); b.ellipse(x + 5, 31, 3, 3, a); b.rechteck(x + 9, 30, 5, 6, c); b.rechteck(x + 2, 35, 12, 1, F.gruen);
+        b.rechteck(x - 2, 52, 20, 2, F.holz);
+        for (let i = 0; i < 3; i++) { b.rechteck(x + i * 6, 54, 2, 3, F.grau); b.rechteck(x - 1 + i * 6, 57, 5, 9, i === 1 ? c : a); }
+    }
+    // Kellertür (Stahl) mit Absperrband und Zettel
+    b.rechteck(194, 40, 30, 64, F.steindunkel); b.rechteck(196, 42, 26, 62, F.grau); b.rechteck(198, 44, 22, 58, F.hellgrau);
+    b.rechteck(215, 72, 3, 2, F.dunkelgrau);
+    b.rechteck(198, 30, 22, 8, F.gelb); text(b, 'KELLER', 209 - Math.floor(textBreite('KELLER') / 2), 31, F.fastschwarz);
+    for (let i = 0; i < 9; i++) { b.rechteck(190 + i * 4, 60 + Math.round(i * 0.6), 2, 2, F.rot); b.rechteck(192 + i * 4, 60 + Math.round(i * 0.6), 2, 2, F.weiss); }
+    b.rechteck(201, 78, 12, 9, F.weiss); b.rechteck(203, 80, 8, 1, F.grau); b.rechteck(203, 82, 6, 1, F.grau); b.rechteck(203, 84, 7, 1, F.grau);
+    // Turnbeutel und Feuerlöscher
+    b.rechteck(232, 70, 6, 14, F.rot); b.rechteck(233, 66, 4, 4, F.dunkelgrau); b.rechteck(231, 84, 8, 2, F.dunkelrot);
     return b;
 }
 

@@ -18,6 +18,8 @@
     try { speicherObjekt = window.localStorage; } catch (_) { speicherObjekt = null; }
     const plaetze = S.speicherplaetze(speicherObjekt || { getItem() { throw new Error('kein Speicher'); }, setItem() { throw new Error('kein Speicher'); }, removeItem() { } });
 
+    // gehalten: Plätze der Nebenfiguren vor der letzten Aktion – Figuren verschwinden oder wechseln den Platz erst, wenn der Text gelesen ist
+    let gehalten = null;
     let z = null, warteschlange = [], danach = null, mini = null, pausiert = false, hover = null, auswahl = -1, reise = null, letzterOrt = 'buero';
     let verb = 'gehe', objekt = null;          // gewähltes Verb und Gegenstand („Benutze X mit …“)
     let blende = null;                          // { t, ziel } Irisblende
@@ -98,13 +100,19 @@
     function teil(t) { const b = G.bild(t.bild); if (b) { t2.drawImage(b, t.sx, t.sy || 0, t.b, t.h, Math.round(t.x), Math.round(t.y), t.b, t.h); } }
 
     /** Figur mit Fußpunkt (x, fussY) zeichnen; seitliche Bilder schauen nach rechts und werden für blick < 0 gespiegelt. */
-    function zeichneFigur(name, zustand, bildNr, x, fussY, blick, blinzeln, schatten) {
+    function zeichneFigur(name, zustand, bildNr, x, fussY, blick, blinzeln, schatten, skala, hinten, klebt) {
         const r = G.rahmen(name, zustand, bildNr, blinzeln), b = G.bild(r.bild);
         if (!b) { return; }
-        const px = Math.round(x - G.FUSS_X), py = Math.round(fussY - G.FUSS_Y);
-        if (schatten !== false) { t2.globalAlpha = 0.3; t2.fillStyle = '#000'; t2.beginPath(); t2.ellipse(Math.round(x), fussY, 9, 2, 0, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1; }
-        if (r.seitlich && blick < 0) { t2.save(); t2.translate(Math.round(x) * 2, 0); t2.scale(-1, 1); t2.drawImage(b, r.sx, 0, 32, 64, px, py, 32, 64); t2.restore(); }
-        else { t2.drawImage(b, r.sx, 0, 32, 64, px, py, 32, 64); }
+        const s = skala || 1, bb = Math.round(32 * s), bh = Math.round(64 * s);
+        const px = Math.round(x - G.FUSS_X * s), py = Math.round(fussY - G.FUSS_Y * s);
+        if (schatten !== false) { t2.globalAlpha = 0.3; t2.fillStyle = '#000'; t2.beginPath(); t2.ellipse(Math.round(x), fussY, Math.round(9 * s), 2, 0, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1; }
+        // Festgeklebt: schwarze Dichtstoff-Raupe unter den Schuhen
+        const kleber = klebt && G.bild('klebemasse_32x6');
+        if (kleber) { t2.drawImage(kleber, 0, 0, 32, 6, Math.round(x - 16 * s), Math.round(fussY - 4 * s), bb, Math.max(3, Math.round(6 * s))); }
+        if (hinten) { t2.save(); t2.filter = 'brightness(0.72)'; }
+        if (r.seitlich && blick < 0) { t2.save(); t2.translate(Math.round(x) * 2, 0); t2.scale(-1, 1); t2.drawImage(b, r.sx, 0, 32, 64, px, py, bb, bh); t2.restore(); }
+        else { t2.drawImage(b, r.sx, 0, 32, 64, px, py, bb, bh); }
+        if (hinten) { t2.restore(); }
         return py;
     }
 
@@ -124,12 +132,12 @@
         if (z.szene === 'ems') { for (let i = 0; i < 10; i++) { const x = Math.round((i * 47 + zeit * 8 * (1 + (i % 3))) % B), y = 96 + (i * 13) % 40; t2.fillStyle = 'rgb(188,228,252)'; t2.fillRect(x, y, 3 + (i % 2), 1); } }
         // Personen (NPC)
         const figuren = [];
-        for (const p of G.npcPlaetze(z, hs)) {
+        for (const p of (gehalten || G.npcPlaetze(z, hs))) {
             const redet = (sprecher === p.id || (sprecher === 'gegner' && p.id === 'finale')) && !textbox.hidden;
             let zustand = redet ? (sprecherSchreck ? 'erschrocken' : 'reden') : 'stehen';
             if (p.id === 'finale') { zustand = z.ende ? 'erschrocken' : p.name === 'hohlbein' ? 'reden' : 'stehen'; }
             const wackel = p.id === 'finale' && p.name === 'droehn' ? Math.floor(zeit * 3) % 2 : 0;
-            figuren.push({ y: p.y - wackel, name: p.name, x: p.x, zustand, blick: p.x > held[z.figur].x ? -1 : 1 });
+            figuren.push({ y: p.y - wackel, name: p.name, x: p.x, zustand, blick: p.x > held[z.figur].x ? -1 : 1, skala: p.skala, hinten: p.hinten, klebt: p.klebt });
         }
         for (const n of ['joe', 'chani']) {
             const hh = held[n];
@@ -142,7 +150,7 @@
         for (const f of figuren) {
             const bildNr = f.zustand === 'gehen' ? Math.floor(zeit * 10) : f.zustand === 'reden' ? Math.floor(zeit * 7) : f.zustand === 'benutzen' ? (benutzenBis - zeit > 0.4 ? 0 : 1) : 0;
             const blinzeln = f.zustand === 'stehen' && (Math.floor(zeit * 8) + f.name.length * 11) % 41 === 0;
-            const py = zeichneFigur(f.name, f.zustand, bildNr, f.x, f.y, f.blick, blinzeln);
+            const py = zeichneFigur(f.name, f.zustand, bildNr, f.x, f.y, f.blick, blinzeln, true, f.skala, f.hinten, f.klebt);
             if (f.held && f.held === z.figur && !mini && py !== undefined) { t2.fillStyle = 'rgb(255,214,79)'; t2.fillRect(Math.round(f.x) - 1, py - 4, 3, 2); t2.fillRect(Math.round(f.x), py - 2, 1, 1); }
         }
         // Hover-Rahmen (dezent)
@@ -317,6 +325,7 @@
     function zeigeText() {
         if (warteschlange.length === 0) {
             textbox.hidden = true; sprecher = null;
+            if (gehalten) { gehalten = null; ausweichen(); }
             const d = danach; danach = null;
             if (d && d.dialog) { dialogZeigen(d.dialog); }
             if (d && d.gespraech) { gespraechZeigen(d.gespraech); }
@@ -355,7 +364,15 @@
     function dialogZeigen(art) {
         const d = S.dialogInhalt(z, art);
         if (!d) { return; }
-        auswahlListe(d.frage, d.optionen.map((o) => ({ text: o.text, tun: () => { klang('klick'); ergebnis(S.dialogWahl(z, art, o.id)); } })));
+        auswahlListe(d.frage, d.optionen.map((o) => ({ text: o.text, tun: () => { klang('klick'); ergebnis(halten(() => S.dialogWahl(z, art, o.id))); } })));
+    }
+
+    /** Aktion ausführen; verschwinden dabei Figuren oder wechseln sie den Platz, bleiben sie sichtbar, bis der Text gelesen ist. */
+    function halten(tun) {
+        const szene = z.szene, vorher = szene === 'karte' ? null : G.npcPlaetze(z, S.sichtbareHotspots(z));
+        const e = tun();
+        if (vorher && z.szene === szene && (e.text || []).length > 0 && JSON.stringify(vorher) !== JSON.stringify(G.npcPlaetze(z, S.sichtbareHotspots(z)))) { gehalten = gehalten || vorher; }
+        return e;
     }
 
     /** Gesprächsauswahl mit Personen (Dialogbaum: Wer sind Sie? / Anliegen / Tschüss). */
@@ -378,7 +395,7 @@
     // ---------- Aktionen ----------
     function handlung(art, h, gegenstand) {
         const vorher = z.punkte, szene = z.szene;
-        const e = S.aktion(z, art, h.id, gegenstand);
+        const e = halten(() => S.aktion(z, art, h.id, gegenstand));
         if (art === 'f1' && z.figur === 'joe') { klang('kartusche'); } else { klang(z.punkte > vorher ? 'erfolg' : 'klick'); }
         if (art !== 'ansehen' && art !== 'reden') { benutzenBis = zeit + 0.8; }
         if (z.szene !== szene) {
@@ -556,7 +573,7 @@
     function starten(zustand, neu) {
         z = zustand; mini = null; reise = null; blende = null; pausiert = false; laufAuftrag = null;
         menueEl.hidden = true; titelEl.hidden = true; dialogEl.hidden = true; kontextEl.hidden = true;
-        warteschlange = []; danach = null; verb = 'gehe'; objekt = null;
+        warteschlange = []; danach = null; verb = 'gehe'; objekt = null; gehalten = null;
         aufStart();
         letzterOrt = S.ORTE[z.szene] ? z.szene : 'buero';
         $('leiste').hidden = false;

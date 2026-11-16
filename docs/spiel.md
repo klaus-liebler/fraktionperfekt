@@ -24,7 +24,11 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
 - Porträts 96×96 im Textfeld mit Mimik (neutral, lacht, erschrocken).
 - Szenen mit Animationen: blinkendes Fax, Staub im Archiv, Wasser und Enten auf der Ems, tropfendes Leck, Fledermäuse,
   flackernde Fackeln; leichte Parallaxe; Irisblende beim Szenenwechsel; Reisekarte mit roter Reiselinie.
-- Screenshots aller Szenen: [`docs/spiel-screenshots/`](spiel-screenshots/).
+- Screenshots aller Szenen: [`docs/spiel-screenshots/`](spiel-screenshots/); Szenenbilder geänderter Szenen (15–19) erzeugt
+  `node tools/Grafik/szenenbilder.mjs` aus denselben Regeln wie das Spiel.
+- Figuren verschwinden oder wechseln den Platz erst, wenn der zugehörige Text gelesen ist. Hohlbein und Dröhn bleiben nach dem
+  Festkleben im Archiv verkleinert und abgedunkelt im Hintergrund stehen (mit schwarzer Klebemasse unter den Schuhen), der Ausgang ist frei.
+- Stadtplan: Station 4 ist das Hallenbad Greven (OSM-Gebäude „Hallenbad Greven“, Am Hallenbad 3); das Freibad steht ohne Nummer auf der Karte.
 
 ## Bedienung
 
@@ -53,11 +57,12 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
 3. **Ems-Ufer:** Joanna den **Stadtplan** geben (Umverteilung) → Paddel. **Chani:** Inschrift an der Brücke deuten →
    „dritter von sieben Pfählen“. Boot benutzen → **Bootsverfolgung** schaffen. Sieben Pfähle benutzen → **Siegel der
    Ausführung**. Weg zur Straße.
-4. **Baustelle Badsanierung:** **Joe:** Kartusche auf die leckende Leitung (Grube läuft leer). **Joe:**
+4. **Baustelle Hallenbad** (Sanierung; das Freibad ist nur beschriftet und nicht im Umbau): **Joe:** Kartusche auf die leckende Leitung (Grube läuft leer). **Joe:**
    Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**. **Chani:** Live-Story bei
    Hohlbein und Dröhn → sie stolpern in den Bauwagen. Bauzaun-Tor.
 5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lore reden →
-   Lastenrad. Kellergang benutzen (Taschenlampe nötig).
+   Lastenrad. Durch den Haupteingang in den Schulflur (Klassenzimmer 1a, 2b, 4c mit Absagen), dort die Kellertür benutzen
+   (nach 20:30 Uhr, Taschenlampe nötig).
 6. **Krypta:** **Chani:** Wandfresko deuten → „von unten nach oben“. Symbolschloss: **Urne, Buch, Waage** →
    Tempelschlüssel. Tor benutzen (drei Siegel + Schlüssel).
 7. **Tempel:** Mit einer Figur auf die linke Bodenplatte, Figur wechseln, mit der anderen auf die rechte → Fallgitter

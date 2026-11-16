@@ -12,7 +12,8 @@ export const STATIONEN = [
     { nr: '1', name: 'SCHMIEDE', lang: 'Zukunftsschmiede', lat: 52.0938, lon: 7.6120 },
     { nr: '2', name: 'RATHAUS', lang: 'Rathaus', lat: 52.09232, lon: 7.60944 },
     { nr: '3', name: 'EMS-UFER', lang: 'Ems-Ufer', lat: null, lon: null },
-    { nr: '4', name: 'FREIBAD', lang: 'Freibad / Baustelle Badsanierung', lat: 52.08255, lon: 7.61905 },
+    // Hallenbad Greven, Am Hallenbad 3 (OSM way 45506851, Mittelpunkt des Gebäudes): Baustelle der Sanierung
+    { nr: '4', name: 'HALLENBAD', lang: 'Hallenbad / Baustelle Sanierung', lat: 52.09067, lon: 7.60537 },
     { nr: '5', name: 'SCHULE', lang: 'Martin-Luther-Grundschule', lat: 52.09457, lon: 7.60966 },
     { nr: '?', name: 'TEMPEL', lang: 'Krypta und Tempel (erfunden)', lat: 52.0957, lon: 7.6020 }
 ];
@@ -55,6 +56,13 @@ export function karteGreven(datei) {
     const ems = daten.elemente.filter((e) => e.k === 'fluss').flatMap((e) => e.g)
         .reduce((best, p) => { const d = (p[0] - 52.0922) ** 2 + ((p[1] - 7.6094) * 0.62) ** 2; return d < best.d ? { d, p } : best; }, { d: 1e9, p: null }).p;
     const stationen = STATIONEN.map((s) => (s.nr === '3' ? { ...s, lat: ems[0], lon: ems[1] } : s));
+
+    // Freibad Greven (OSM way 72563305, Mittelpunkt des Geländes): nur beschriftet, keine Station – das Freibad ist nicht im Umbau
+    {
+        const fx = Math.round(px(7.61995)), fy = Math.round(py(52.08218));
+        b.rechteck(fx - 4, fy - 2, 9, 5, F.weiss); b.rechteck(fx - 3, fy - 1, 7, 3, F.himmel); b.rechteck(fx - 2, fy, 2, 1, F.weiss);
+        text(b, 'FREIBAD', fx - Math.floor(textBreite('FREIBAD') / 2), fy + 4, F.dunkelblau);
+    }
 
     // Die rote Reiselinie zeichnet das Spiel selbst (animiert von Station zu Station).
     for (const s of stationen) {
