@@ -13,7 +13,7 @@ namespace FraktionPerfekt.Domain.Personen;
 /// </summary>
 public sealed class Person
 {
-    private readonly List<PersonRollen> _rollen = [];
+    private readonly List<PersonRolle> _rollen = [];
     private readonly List<PersonName> _namen = [];
     private readonly List<PersonMerkmal> _merkmale = [];
     private readonly List<Postadresse> _adressen = [];
@@ -363,26 +363,34 @@ public sealed class Person
         StandHeuteBerechnen(erfassung.Am);
     }
 
-    public IReadOnlyCollection<PersonRollen> RollenVersionen => _rollen;
+    public IReadOnlyCollection<PersonRolle> RollenVersionen => _rollen;
 
     /// <summary>Rollen am Stichtag nach dem Wissensstand <paramref name="bekanntAm"/>.</summary>
     public IReadOnlyList<Rolle> RollenAm(DateOnly tag, DateTimeOffset bekanntAm)
-        => _rollen.AlsStichtag(tag, bekanntAm)?.Rollen ?? [];
+        => _rollen.GroupBy(r => r.Rolle).Select(g => g.AlsStichtag(tag, bekanntAm)).OfType<PersonRolle>().Where(r => !r.IstEndemarke)
+            .Select(r => r.Rolle).Order().ToList();
 
-    /// <summary>Rollen ab einem Datum festlegen (Ersterfassung oder Änderung ab Datum).</summary>
+    /// <summary>Rollen ab einem Datum festlegen: neue Rollen beginnen, nicht mehr genannte enden ab <paramref name="ab"/>.</summary>
     public void RollenFestlegenAb(DateOnly ab, IEnumerable<Rolle> rollen, Erfassung erfassung)
     {
         ArgumentNullException.ThrowIfNull(erfassung);
-        var liste = rollen.Distinct().Order().ToList();
-        var art = _rollen.Count == 0 ? Erfassungsart.Ersterfassung : Erfassungsart.AenderungAbDatum;
-        var neu = new PersonRollen(liste, ab, null, erfassung with { Art = art });
-        if (_rollen.Count == 0)
+        var soll = rollen.Distinct().ToHashSet();
+        var bisher = RollenAm(ab, erfassung.Am).ToHashSet();
+        foreach (var r in soll.Except(bisher).Order())
         {
-            _rollen.Add(neu);
+            if (_rollen.Any(x => x.Rolle == r))
+            {
+                ZeitlicheHistorie.AendernAb(_rollen, new PersonRolle(r, ab, null, erfassung with { Art = Erfassungsart.AenderungAbDatum }));
+            }
+            else
+            {
+                _rollen.Add(new PersonRolle(r, ab, null, erfassung with { Art = Erfassungsart.Ersterfassung }));
+            }
         }
-        else
+
+        foreach (var r in bisher.Except(soll).Order())
         {
-            ZeitlicheHistorie.AendernAb(_rollen, neu);
+            ZeitlicheHistorie.BeendenAb(_rollen, new PersonRolle(r, ab, null, erfassung with { Art = Erfassungsart.Beendet }));
         }
     }
 
@@ -589,35 +597,32 @@ public sealed class Person
     public override string ToString() => Anzeigename;
 }
 
-/// <summary>Eine Version der Rollen einer Person (bitemporal).</summary>
-public sealed class PersonRollen : BitemporaleVersion<PersonRollen>
+/// <summary>
+/// Eine Rolle einer Person (Rechte-Rolle) mit Gültigkeit, bitemporal. Je Rolle eine eigene Zeilenreihe (Gegenstand = Rolle); endet eine
+/// Rolle, markiert eine Endemarke das Ende (Datenbank-Regel 1: keine Rollenliste als Text).
+/// </summary>
+public sealed class PersonRolle : BitemporaleVersion<PersonRolle>
 {
-    private PersonRollen()
+    private PersonRolle()
     {
-        RollenText = string.Empty;
     }
 
-    public PersonRollen(IReadOnlyList<Rolle> rollen, DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
+    public PersonRolle(Rolle rolle, DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
         : base(gueltigVon, gueltigBis, erfassung)
     {
-        ArgumentNullException.ThrowIfNull(rollen);
-        RollenText = string.Join(',', rollen.Distinct().Order());
+        Rolle = rolle;
     }
 
-    /// <summary>Gespeichert als kommagetrennte technische Namen, z. B. "Vorstand,Mitglied".</summary>
-    public string RollenText { get; private set; }
-
-    public IReadOnlyList<Rolle> Rollen => RollenText.Split(',', StringSplitOptions.RemoveEmptyEntries)
-        .Select(r => Enum.TryParse<Rolle>(r, out var x) ? x : (Rolle?)null).OfType<Rolle>().ToList();
+    public Rolle Rolle { get; private set; }
 
     public override string Datenart => "Rollen";
 
-    public override string Feld => "Rollen in der Fraktion";
+    public override string Feld => $"Rolle {Rolle.Anzeigename()}";
 
-    public override string Gegenstand => "rollen";
+    public override string Gegenstand => Rolle.ToString();
 
-    public override string Wert => Rollen.Count == 0 ? "keine" : string.Join(", ", Rollen.Select(r => r.Anzeigename()));
+    public override string Wert => IstEndemarke ? "(beendet)" : Rolle.Anzeigename();
 
-    protected internal override PersonRollen KopieMit(DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
-        => new(Rollen, gueltigVon, gueltigBis, erfassung);
+    protected internal override PersonRolle KopieMit(DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
+        => new(Rolle, gueltigVon, gueltigBis, erfassung);
 }

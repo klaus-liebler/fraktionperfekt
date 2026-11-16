@@ -37,10 +37,10 @@ public sealed record Vertretungsschritt(Vertretungsstatus Status, Vertretungsanf
 public sealed class Vertretungsfall
 {
     private readonly List<Vertretungsanfrage> _anfragen = [];
+    private readonly List<Vertretungskandidat> _kandidaten = [];
 
     private Vertretungsfall()
     {
-        KandidatenText = string.Empty;
     }
 
     private Vertretungsfall(Guid terminId, Guid gremiumId, Guid vertretenePersonId, Guid? abwesenheitId, IReadOnlyList<Guid> kandidaten,
@@ -51,7 +51,7 @@ public sealed class Vertretungsfall
         GremiumId = gremiumId;
         VertretenePersonId = vertretenePersonId;
         AbwesenheitId = abwesenheitId;
-        KandidatenText = string.Join(',', kandidaten.Select(k => k.ToString("N")));
+        _kandidaten.AddRange(kandidaten.Select((k, i) => new Vertretungskandidat(Id, i + 1, k)));
         ErstelltAm = jetzt;
         Status = Vertretungsstatus.Angefragt;
     }
@@ -75,10 +75,10 @@ public sealed class Vertretungsfall
 
     public DateTimeOffset? AbgeschlossenAm { get; private set; }
 
-    /// <summary>Stellvertretungen in Rangfolge, festgehalten beim Start (gespeichert als kommagetrennte Ids).</summary>
-    public string KandidatenText { get; private set; }
+    /// <summary>Stellvertretungen in Rangfolge, festgehalten beim Start (eigene Tabelle, eine Zeile je Person).</summary>
+    public IReadOnlyList<Guid> Kandidaten => _kandidaten.OrderBy(k => k.Position).Select(k => k.PersonId).ToList();
 
-    public IReadOnlyList<Guid> Kandidaten => KandidatenText.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList();
+    public IReadOnlyCollection<Vertretungskandidat> KandidatenZeilen => _kandidaten;
 
     public IReadOnlyCollection<Vertretungsanfrage> Anfragen => _anfragen;
 
@@ -252,4 +252,28 @@ public sealed class Vertretungsanfrage
         Status = status;
         BeantwortetAm = jetzt;
     }
+}
+
+/// <summary>Eine Stellvertretung in der beim Start festgehaltenen Rangfolge eines Vertretungsfalls (Position 1 = zuerst gefragt).</summary>
+public sealed class Vertretungskandidat
+{
+    private Vertretungskandidat()
+    {
+    }
+
+    public Vertretungskandidat(Guid vertretungsfallId, int position, Guid personId)
+    {
+        Id = Ids.Neu();
+        VertretungsfallId = vertretungsfallId;
+        Position = position;
+        PersonId = personId;
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid VertretungsfallId { get; private set; }
+
+    public int Position { get; private set; }
+
+    public Guid PersonId { get; private set; }
 }

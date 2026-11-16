@@ -134,11 +134,7 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
         {
             b.Property(v => v.Zweck).HasConversion<string>().HasMaxLength(40);
         });
-        Version<PersonRollen>(modelBuilder, "PersonRollen", "PersonId", b =>
-        {
-            b.Property(v => v.RollenText).HasMaxLength(300);
-            b.Ignore(v => v.Rollen);
-        });
+        Version<PersonRolle>(modelBuilder, "PersonRollen", "PersonId", b => b.Property(v => v.Rolle).HasConversion<string>().HasMaxLength(40));
 
         modelBuilder.Entity<Gremium>(b =>
         {
@@ -225,12 +221,19 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.Ignore(a => a.Aktiv);
         });
 
+        modelBuilder.Entity<Vertretungskandidat>(b =>
+        {
+            b.ToTable("Vertretungskandidaten");
+            b.HasKey(k => k.Id);
+            b.Property(k => k.Id).ValueGeneratedNever();
+            b.HasIndex(k => new { k.VertretungsfallId, k.Position }).IsUnique();
+            b.HasOne<Person>().WithMany().HasForeignKey(k => k.PersonId).OnDelete(DeleteBehavior.Restrict);
+        });
         modelBuilder.Entity<Vertretungsfall>(b =>
         {
             b.ToTable("Vertretungsfaelle");
             b.HasKey(f => f.Id);
             b.Property(f => f.Id).ValueGeneratedNever();
-            b.Property(f => f.KandidatenText).HasMaxLength(4000);
             b.HasIndex(f => f.TerminId);
             b.HasIndex(f => f.Status);
             b.HasIndex(f => f.AbwesenheitId);
@@ -238,6 +241,8 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.HasMany(f => f.Anfragen).WithOne().HasForeignKey(a => a.VertretungsfallId).IsRequired().OnDelete(DeleteBehavior.Restrict);
             b.Navigation(f => f.Anfragen).HasField("_anfragen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
             b.Ignore(f => f.Kandidaten);
+            b.HasMany(f => f.KandidatenZeilen).WithOne().HasForeignKey(k => k.VertretungsfallId).IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(f => f.KandidatenZeilen).HasField("_kandidaten").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
             b.Ignore(f => f.OffeneAnfrage);
             b.Ignore(f => f.IstOffen);
         });

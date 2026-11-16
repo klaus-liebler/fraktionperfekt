@@ -26,7 +26,7 @@ public sealed record PersonMitgliedschaft(Guid MitgliedschaftId, Guid GremiumId,
 /// <param name="KontakteSichtbar">Adressen, Rufnummern und E-Mails sehen die Person selbst, die Geschäftsführung und – mit Einwilligung
 /// „Kontaktdaten in der Fraktion weitergeben“ – alle in der Fraktion.</param>
 /// <param name="KontakteBearbeitbar">Kontakte und Einwilligungen pflegen die Person selbst und die Geschäftsführung.</param>
-public sealed record PersonDetail(Person Person, IReadOnlyList<Rolle> Rollen, IReadOnlyList<PersonRollen> RollenVerlauf,
+public sealed record PersonDetail(Person Person, IReadOnlyList<Rolle> Rollen, IReadOnlyList<PersonRolle> RollenVerlauf,
     IReadOnlyList<PersonMitgliedschaft> Mitgliedschaften, PersonenStand? Heute = null, bool KontakteSichtbar = false, bool KontakteBearbeitbar = false);
 
 /// <summary>Datenhistorie einer Person (Zeitleiste aller Erfassungen); ohne Kontaktdaten, wenn sie nicht sichtbar sind.</summary>

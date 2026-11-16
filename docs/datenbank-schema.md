@@ -128,7 +128,8 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [UmfrageOptionen](#umfrageoptionen) – 5 Spalten
 - [Umfragen](#umfragen) – 15 Spalten
 - [Vertretungsanfragen](#vertretungsanfragen) – 8 Spalten
-- [Vertretungsfaelle](#vertretungsfaelle) – 10 Spalten
+- [Vertretungsfaelle](#vertretungsfaelle) – 9 Spalten
+- [Vertretungskandidaten](#vertretungskandidaten) – 4 Spalten
 - [WikiSeiten](#wikiseiten) – 7 Spalten
 - [WikiVersionen](#wikiversionen) – 8 Spalten
 - [WikiVorschlaege](#wikivorschlaege) – 12 Spalten
@@ -717,7 +718,7 @@ Indizes: (PersonId, GueltigVon); (Nachname, Vorname, Namensvorsatz)
 
 ## PersonRollen
 
-Klasse: `FraktionPerfekt.Domain.Personen.PersonRollen`
+Klasse: `FraktionPerfekt.Domain.Personen.PersonRolle`
 
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
@@ -730,7 +731,7 @@ Klasse: `FraktionPerfekt.Domain.Personen.PersonRollen`
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
 | PersonId | TEXT | ja | → Personen, Index | V |  |
-| RollenText | TEXT(300) | ja |  | **J** | Liste der Rollen als Text – wird eigene Zeile je Rolle (Etappe 2) |
+| Rolle | TEXT(40) | ja |  | V | eine Rolle je Zeilenreihe (Gegenstand) |
 
 Indizes: (PersonId, GueltigVon)
 
@@ -1150,13 +1151,25 @@ Klasse: `FraktionPerfekt.Domain.Vertretung.Vertretungsfall`
 | AbwesenheitId | TEXT |  | Index | G |  |
 | ErstelltAm | INTEGER | ja |  | G |  |
 | GremiumId | TEXT | ja |  | G |  |
-| KandidatenText | TEXT(4000) | ja |  | **J** | Liste von Personen-Ids als Text – wird eigene Tabelle (Etappe 2) |
 | Status | TEXT(40) | ja | Index | G |  |
 | TerminId | TEXT | ja | → Termine, Index | G |  |
 | VertretenePersonId | TEXT | ja |  | G |  |
 | VertreterPersonId | TEXT |  |  | G |  |
 
 Indizes: (AbwesenheitId); (Status); (TerminId)
+
+## Vertretungskandidaten
+
+Klasse: `FraktionPerfekt.Domain.Vertretung.Vertretungskandidat`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | TEXT | ja | PK | G | Schlüssel |
+| PersonId | TEXT | ja | → Personen, Index | G |  |
+| Position | INTEGER | ja | eindeutig | G | Rangfolge beim Start (1 = zuerst gefragt) |
+| VertretungsfallId | TEXT | ja | → Vertretungsfaelle, eindeutig | G |  |
+
+Indizes: (PersonId); (VertretungsfallId, Position) eindeutig
 
 ## WikiSeiten
 

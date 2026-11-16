@@ -425,6 +425,7 @@ public static class Spalteneinstufung
             },
             ["PersonRollen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["Rolle"] = (Spaltenart.Version, "eine Rolle je Zeilenreihe (Gegenstand)"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
                 ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
                 ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
@@ -434,7 +435,6 @@ public static class Spalteneinstufung
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["PersonId"] = (Spaltenart.Version, null),
-                ["RollenText"] = (Spaltenart.Json, "Liste der Rollen als Text – wird eigene Zeile je Rolle (Etappe 2)"),
             },
             ["PersonRufnummern"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
@@ -716,7 +716,6 @@ public static class Spalteneinstufung
                 ["AbwesenheitId"] = (Spaltenart.Vorgang, null),
                 ["ErstelltAm"] = (Spaltenart.Vorgang, null),
                 ["GremiumId"] = (Spaltenart.Vorgang, null),
-                ["KandidatenText"] = (Spaltenart.Json, "Liste von Personen-Ids als Text – wird eigene Tabelle (Etappe 2)"),
                 ["Status"] = (Spaltenart.Vorgang, null),
                 ["TerminId"] = (Spaltenart.Vorgang, null),
                 ["VertretenePersonId"] = (Spaltenart.Vorgang, null),
@@ -772,6 +771,13 @@ public static class Spalteneinstufung
                 ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
                 ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
+            },
+            ["Vertretungskandidaten"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["PersonId"] = (Spaltenart.Vorgang, null),
+                ["Position"] = (Spaltenart.Vorgang, "Rangfolge beim Start (1 = zuerst gefragt)"),
+                ["VertretungsfallId"] = (Spaltenart.Vorgang, null),
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel"),
             },
         };
 

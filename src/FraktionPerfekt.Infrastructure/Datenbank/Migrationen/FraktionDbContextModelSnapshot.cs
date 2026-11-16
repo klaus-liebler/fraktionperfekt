@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116215140_KopienEntfernt";
+    public override string LastMigrationId => "20261116215451_ListenAufgeloest";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -1102,7 +1102,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("PersonNamen");
             });
 
-        modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonRollen", b =>
+        modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonRolle", b =>
             {
                 b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
@@ -1137,9 +1137,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("PersonId")
                     .HasColumnType("TEXT");
 
-                b.Property<string>("RollenText")
+                b.Property<string>("Rolle")
                     .IsRequired()
-                    .HasMaxLength(300)
+                    .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
                 b.HasKey("Id");
@@ -2139,11 +2139,6 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("GremiumId")
                     .HasColumnType("TEXT");
 
-                b.Property<string>("KandidatenText")
-                    .IsRequired()
-                    .HasMaxLength(4000)
-                    .HasColumnType("TEXT");
-
                 b.Property<string>("Status")
                     .IsRequired()
                     .HasMaxLength(40)
@@ -2167,6 +2162,30 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("TerminId");
 
                 b.ToTable("Vertretungsfaelle");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Vertretung.Vertretungskandidat", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("Position")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid>("VertretungsfallId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("PersonId");
+
+                b.HasIndex("VertretungsfallId", "Position")
+                    .IsUnique();
+
+                b.ToTable("Vertretungskandidaten");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Gebiet", b =>
@@ -2635,7 +2654,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired();
             });
 
-        modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonRollen", b =>
+        modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonRolle", b =>
             {
                 b.HasOne("FraktionPerfekt.Domain.Personen.Person", null)
                     .WithMany("RollenVersionen")
@@ -2721,6 +2740,21 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired();
             });
 
+        modelBuilder.Entity("FraktionPerfekt.Domain.Vertretung.Vertretungskandidat", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Personen.Person", null)
+                    .WithMany()
+                    .HasForeignKey("PersonId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Vertretung.Vertretungsfall", null)
+                    .WithMany("KandidatenZeilen")
+                    .HasForeignKey("VertretungsfallId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Gremium", b =>
             {
                 b.Navigation("Versionen");
@@ -2751,6 +2785,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
         modelBuilder.Entity("FraktionPerfekt.Domain.Vertretung.Vertretungsfall", b =>
             {
                 b.Navigation("Anfragen");
+
+                b.Navigation("KandidatenZeilen");
             });
 #pragma warning restore 612, 618
     }

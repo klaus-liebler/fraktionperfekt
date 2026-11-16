@@ -87,6 +87,14 @@ Datenbank (`VACUUM INTO`) geprüft.
 | Baseline-Messung | neu: `MessungTests` (`FP_MESSUNG=1` bzw. `=10`), Ergebnisse in `docs/messungen.md`. | 5: Vergleich. |
 | Demodaten relativ zum Tagesdatum | Termine relativ zum Montag der aktuellen Woche (ganze Wochen); Ratsbeginn und Wahlperiode sind echte feste Daten; RIS-Mock-Sitzungen laufen in festen Abständen ab einem festen Startdatum (auch in zwei Wochen gleichmäßig, aber nicht wochengenau verschoben). | 4: RIS-Mock ab einem Start relativ zum Tagesdatum in ganzen Wochen. |
 
+## Stand des Umbaus
+
+- **Etappe 1 erledigt** (de541c1, 30115a9, 6ff93c8, 0518799): keine Kopien mehr (Personen-Zwischenstand und Nachtlauf, Sitzung, Wiki-Seite,
+  Namen als Text), Gremien und Amt der Mitgliedschaft bitemporal, Titel/Aktiv/Ansprache als Merkmale, Namensvorsatz/-zusatz,
+  „nur ein Name“, DIN-5007-2-Collation mit Index, Zeitraumkorrektur (Beispiel Frau Muster).
+- **Etappe 2 erledigt**: Rollen als eine Zeilenreihe je Rolle (statt Liste als Text), Vertretungskandidaten als eigene Tabelle mit Position.
+  Die Übergangsliste im Architekturtest ist leer.
+
 ## Entscheidung (16.11.2026)
 
 Klaus: Außer Personen und Mitgliedschaften werden nur **Gremien** (Name, Kurzname, aktiv) bitemporal. Pressekontakte, Ressourcen,

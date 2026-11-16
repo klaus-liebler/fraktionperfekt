@@ -15,7 +15,6 @@ public sealed class DatenbankArchitekturTests
     /// <summary>Kopien und JSON-Spalten, die der laufende Umbau noch entfernt. Die Liste muss am Ende leer sein.</summary>
     private static readonly HashSet<string> Uebergang = new(StringComparer.Ordinal)
     {
-        "PersonRollen.RollenText", "Vertretungsfaelle.KandidatenText",
     };
 
     private static FraktionDbContext Kontext() => new(new DbContextOptionsBuilder<FraktionDbContext>().UseSqlite("Data Source=:memory:").Options);
