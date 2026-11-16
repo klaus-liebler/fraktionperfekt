@@ -38,6 +38,9 @@ internal sealed class TestUmgebung : IAsyncDisposable
 
     public ServiceProvider Dienste { get; }
 
+    /// <summary>Datei der Testdatenbank (für Messungen der Dateigröße).</summary>
+    public string Datenbankdatei => Path.Combine(_ordner, "test.db");
+
     public FakeTimeProvider Uhr => (FakeTimeProvider)Dienste.GetRequiredService<TimeProvider>();
 
     public TestBenutzer Benutzer => (TestBenutzer)Dienste.GetRequiredService<IAktuellerBenutzer>();
