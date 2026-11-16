@@ -29,7 +29,8 @@
             <div class="fp-field"><label class="fp-lbl">Geplant am</label><RadzenDatePicker TValue="DateTime?" @bind-Value="geplant" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
             <div class="fp-field"><label class="fp-lbl" for="p-thema">Thema</label><RadzenTextBox id="p-thema" @bind-Value="thema" /></div>
         </div>
-        <RadzenTextArea @bind-Value="text" Rows="8" Style="width:100%" aria-label="Text der Pressemitteilung" />
+        <MarkdownEditor @key="@(id ?? entwurfId)" @ref="editor" @bind-Text="text" BezugArt="@(id is null ? FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf : "Presse")"
+                        BezugId="@(id ?? entwurfId)" Bezeichnung="Text der Pressemitteilung" Hoehe="360px" />
         @if (id is not null)
         {
             <p class="fp-small fp-muted">Änderungen am Text nach einer Freigabe setzen die Mitteilung auf „Entwurf“ zurück.</p>
@@ -125,6 +126,8 @@
     private IReadOnlyList<SpiegelZeile> spiegel = [];
     private bool formular;
     private Guid? id;
+    private MarkdownEditor? editor;
+    private readonly Guid entwurfId = Guid.NewGuid();
     private string? titel, text, thema;
     private DateTime? geplant;
     private string? medium, artikelTitel, link, zusammenfassung;
@@ -162,6 +165,11 @@
 
     private async Task SpeichernAsync()
     {
+        if (editor is not null)
+        {
+            text = await editor.AktuellerTextAsync();
+        }
+
         await AusfuehrenAsync(s => s.SpeichernAsync(id, titel!, text ?? "", geplant is { } g ? DateOnly.FromDateTime(g) : null, thema), "Gespeichert.");
         formular = fehler;
     }

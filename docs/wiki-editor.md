@@ -1,4 +1,4 @@
-# Wiki-Editor und Bilder
+# Markdown-Editor und Bilder
 
 **Editor:** TOAST UI Editor 3.2.2 (MIT), lokal unter `wwwroot/lib/toastui-editor` (kein CDN, Lizenzen in `LICENSE.txt`,
 Bauanleitung in `tools/Editor/README.md`). Markdown- und WYSIWYG-Modus umschaltbar, Vorschau, Tabellen, Aufgabenlisten,
@@ -24,6 +24,21 @@ Bilder nur aus der eigenen Ablage (`dateien/bild/{guid}`). Überschriften rücke
 - Mediathek: In der Seitenansicht zeigt „Bilder dieser Seite“ Vorschau, Originalname, Maße, Größe und ob das Bild noch im Text steht.
 - Aufräumen: Bilder, die in keinem aktuellen Seitentext mehr vorkommen, werden nach 30 Tagen gelöscht (nächtliche Fristenprüfung).
 
-**Offen:** Den Editor auch für Anträge und Protokoll-Notizen nutzen (die Komponente `MarkdownEditor` ist wiederverwendbar;
-für Bilder dort fehlen Bezug und Rechteprüfung „Antrag“/„Sitzung“ im `BildDienst`). Autovervollständigung für `[[…]]`.
-Serverseitiges Verkleinern übernimmt bisher der Browser (keine Bildbibliothek in der erlaubten Paketliste).
+**Wo der Editor arbeitet:** Wiki-Seiten, Anträge (neuer Antrag und neue Fassung), Anfragen an die Verwaltung (neue Anfrage),
+Pressemitteilungen, Bürgeranliegen (Erfassung) und TOP-Notizen im Sitzungsmodus (Fraktions- und Ausschussprotokolle). Angezeigt
+wird überall mit derselben bereinigten Markdig-Darstellung.
+
+**Besitzer und Rechte:** Ein Bild gehört zu einem oder mehreren Besitzern (Wiki-Seite, Antrag, Sitzung, Anfrage, Pressemitteilung,
+Bürgeranliegen). Abrufen darf es, wer mindestens einen davon sehen darf (Rechte des jeweiligen Moduls; vertrauliche Wiki-Seiten,
+Bürgeranliegen nur für Zuständige und Leitung, Anträge nicht für Helfer:innen). In Formularen für Neues hängt ein Bild zuerst an
+einem „Entwurf“ (nur für die hochladende Person sichtbar); beim Speichern ordnet der Dienst alle Bilder im Text dem neuen Besitzer zu.
+Das gilt auch, wenn ein Bild aus einem anderen Text kopiert wird.
+
+**Aufräumen:** über alle Besitzer; Bilder alter Antragsfassungen bleiben, solange die Fassung existiert.
+
+**PDF:** Antrag und Protokoll werden mit Markdig nach MigraDoc übertragen (Überschriften, Listen, Tabellen, Zitate, fett/kursiv,
+Links mit Adresse) – eingebettete Bilder erscheinen im PDF (höchstens Satzspiegelbreite).
+
+**Offen:** Antwort der Verwaltung zu Anfragen, Bürgeranliegen-Antwort, Aufgabenbeschreibungen, Berichte in der Terminbesetzung
+und Kalenderbeschreibungen bleiben einfache Textfelder (kurz). Eine Einladung als PDF gibt es bisher nicht. Autovervollständigung
+für `[[…]]`. Serverseitiges Verkleinern übernimmt bisher der Browser (keine Bildbibliothek in der erlaubten Paketliste).

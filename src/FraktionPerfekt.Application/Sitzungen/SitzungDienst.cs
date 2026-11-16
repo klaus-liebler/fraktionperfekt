@@ -51,6 +51,7 @@ public sealed record Protokolltreffer(Guid SitzungId, string Sitzung, DateOnly D
 /// </summary>
 public sealed class SitzungDienst(
     IDaten daten,
+    Wissen.BildDienst bilder,
     ITerminSpeicher termine,
     IStammdatenSpeicher stammdaten,
     PostausgangDienst postausgang,
@@ -421,6 +422,7 @@ public sealed class SitzungDienst(
         }
 
         await daten.SpeichernAsync(abbruch);
+        await bilder.VerwendungenAbgleichenAsync("Sitzung", s.Id, notiz, abbruch);
     }
 
     public async Task<Beschluss> BeschlussErfassenAsync(Guid topId, string text, int ja, int nein, int enthaltung, CancellationToken abbruch = default)

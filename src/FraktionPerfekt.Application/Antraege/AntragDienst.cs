@@ -51,6 +51,7 @@ public sealed class AntragDienst(
     ITerminSpeicher termine,
     UmfrageDienst umfragen,
     IPdfErzeugung pdf,
+    Wissen.BildDienst bilder,
     IAuditProtokoll protokoll,
     IAktuellerBenutzer benutzer,
     IOptions<FraktionOptionen> optionen,
@@ -138,6 +139,7 @@ public sealed class AntragDienst(
         daten.Hinzufuegen(new AntragFassung(a.Id, 1, text, wer.PersonIdPflicht, jetzt, "Erste Fassung"));
         await protokoll.ProtokollierenAsync("Antrag.Angelegt", "Antrag angelegt", nameof(Antrag), a.Id, abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
+        await bilder.VerwendungenAbgleichenAsync("Antrag", a.Id, text, abbruch);
         return a;
     }
 
@@ -160,6 +162,7 @@ public sealed class AntragDienst(
         (await daten.LadenAsync<Antrag>(antragId, "Antrag", abbruch)).Umbenennen(d.Antrag.Titel, d.Antrag.Thema, uhr.GetUtcNow());
         await protokoll.ProtokollierenAsync("Antrag.Fassung", $"Fassung {f.Nummer} gespeichert", nameof(Antrag), antragId, abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
+        await bilder.VerwendungenAbgleichenAsync("Antrag", antragId, text, abbruch);
         return f;
     }
 
@@ -279,7 +282,8 @@ public sealed class AntragDienst(
         var kopf = $"{(d.Antrag.Nummer is null ? "Entwurf" : $"Antrag {d.Antrag.Nummer}")} · {optionen.Value.Anzeigename} · "
                    + $"{(d.Gremium is null ? "" : $"an: {d.Gremium} · ")}{Ortszeit.AlsOrtszeit(d.Antrag.GeaendertAm).ToString("dd.MM.yyyy", CultureInfo.CurrentCulture)}";
         var bytes = pdf.Erzeugen(new PdfDokument(d.Antrag.Titel, kopf,
-            $"An die Bürgermeisterin / den Bürgermeister der Stadt {optionen.Value.Stadt}\n\n{d.Aktuell.Text}\n\nFür die Fraktion: {d.Autor}"));
+            $"An die Bürgermeisterin / den Bürgermeister der Stadt {optionen.Value.Stadt}\n\n{d.Aktuell.Text}\n\nFür die Fraktion: {d.Autor}",
+            await bilder.InhalteAsync(d.Aktuell.Text, abbruch)));
         return ($"antrag-{d.Antrag.Nummer ?? "entwurf"}.pdf", bytes);
     }
 

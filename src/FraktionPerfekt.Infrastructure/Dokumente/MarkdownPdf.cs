@@ -1,6 +1,5 @@
 using FraktionPerfekt.Application.Dokumente;
 using MigraDoc.DocumentObjectModel;
-using MigraDoc.DocumentObjectModel.Tables;
 using MigraDoc.Rendering;
 using PdfSharp.Fonts;
 
@@ -31,6 +30,10 @@ internal sealed class MarkdownPdf(Briefkopf briefkopf) : IPdfErzeugung
         h1.Font.Size = 16;
         h1.Font.Bold = true;
         h1.ParagraphFormat.SpaceAfter = Unit.FromPoint(6);
+        var h3 = dok.Styles[StyleNames.Heading3]!;
+        h3.Font.Size = 11;
+        h3.Font.Bold = true;
+        h3.ParagraphFormat.SpaceBefore = Unit.FromPoint(8);
         var h2 = dok.Styles[StyleNames.Heading2]!;
         h2.Font.Size = 12.5;
         h2.Font.Bold = true;
@@ -76,61 +79,12 @@ internal sealed class MarkdownPdf(Briefkopf briefkopf) : IPdfErzeugung
         unter.Format.Font.Color = Colors.DimGray;
         unter.Format.SpaceAfter = Unit.FromPoint(10);
 
-        foreach (var block in Bloecke(dokument.Markdown))
-        {
-            if (block.StartsWith("# ", StringComparison.Ordinal))
-            {
-                continue; // Titel steht schon im Kopf
-            }
-
-            if (block.StartsWith("## ", StringComparison.Ordinal))
-            {
-                s.AddParagraph(block[3..], StyleNames.Heading2);
-                continue;
-            }
-
-            foreach (var zeile in block.Split('\n'))
-            {
-                var p = zeile.StartsWith("- ", StringComparison.Ordinal) ? s.AddParagraph() : s.AddParagraph();
-                if (zeile.StartsWith("- ", StringComparison.Ordinal))
-                {
-                    p.Format.LeftIndent = Unit.FromCentimeter(0.6);
-                    p.Format.FirstLineIndent = Unit.FromCentimeter(-0.4);
-                    p.AddText("• ");
-                    Inline(p, zeile[2..]);
-                }
-                else
-                {
-                    Inline(p, zeile);
-                }
-            }
-        }
+        new MarkdownNachMigraDoc(s, dokument.Bilder ?? new Dictionary<Guid, byte[]>()).Schreiben(dokument.Markdown);
 
         var renderer = new PdfDocumentRenderer { Document = dok };
         renderer.RenderDocument();
         using var ms = new MemoryStream();
         renderer.PdfDocument.Save(ms);
         return ms.ToArray();
-    }
-
-    private static IEnumerable<string> Bloecke(string markdown)
-        => (markdown ?? string.Empty).Replace("\r", string.Empty, StringComparison.Ordinal)
-            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-    /// <summary>**fett** innerhalb einer Zeile.</summary>
-    private static void Inline(Paragraph p, string text)
-    {
-        var teile = text.Split("**");
-        for (var i = 0; i < teile.Length; i++)
-        {
-            if (i % 2 == 1)
-            {
-                p.AddFormattedText(teile[i], TextFormat.Bold);
-            }
-            else
-            {
-                p.AddText(teile[i]);
-            }
-        }
     }
 }

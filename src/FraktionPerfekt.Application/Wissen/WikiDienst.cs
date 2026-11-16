@@ -24,6 +24,7 @@ public sealed record Suchtreffer(WikiSeite Seite, string Ausschnitt);
 /// </summary>
 public sealed class WikiDienst(
     IDaten daten,
+    IServiceProvider dienste,
     IWikiSuche suche,
     IKiAssistent ki,
     IStammdatenSpeicher stammdaten,
@@ -102,6 +103,9 @@ public sealed class WikiDienst(
 
         await NeueVersionAsync(seiteId, text, wer.PersonId, kommentar, null, abbruch);
         await daten.SpeichernAsync(abbruch);
+        // Bilder aus dem Text der Seite zuordnen (z. B. aus einer anderen Seite kopiert); spät aufgelöst, BildDienst prüft Rechte über das Wiki
+        await Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<BildDienst>(dienste)
+            .VerwendungenAbgleichenAsync(BildDienst.Wiki, seiteId, text, abbruch);
     }
 
     public async Task<IReadOnlyList<Suchtreffer>> SuchenAsync(string anfrage, CancellationToken abbruch = default)

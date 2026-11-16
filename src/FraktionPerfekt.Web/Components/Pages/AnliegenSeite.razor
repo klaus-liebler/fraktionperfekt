@@ -27,7 +27,7 @@
         <div class="fp-field"><label class="fp-lbl">Eingang über</label><RadzenDropDown TValue="Eingangskanal" @bind-Value="kanal" Data="@(Enum.GetValues<Eingangskanal>())" /></div>
         <div class="fp-field"><label class="fp-lbl" for="an-thema">Politikfeld</label><RadzenTextBox id="an-thema" @bind-Value="thema" Placeholder="z. B. Schule und Bildung" /></div>
     </div>
-    <RadzenTextArea @bind-Value="text" Rows="3" Style="width:100%" aria-label="Anliegen" />
+    <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Anliegen" Hoehe="260px" />
     <RadzenButton Text="Erfassen" Size="ButtonSize.Small" Disabled="@(string.IsNullOrWhiteSpace(betreff) || string.IsNullOrWhiteSpace(name))" Click="ErfassenAsync" />
 </details>
 
@@ -42,7 +42,7 @@
                 <h3>@a.Betreff</h3>
                 <span class="fp-small fp-muted">@Ortszeit.AlsOrtszeit(a.Eingang).ToString("dd.MM.yyyy") · @a.Kanal · @a.Name@(a.Kontaktweg is null ? "" : $" ({a.Kontaktweg})")</span>
             </div>
-            <p>@a.Text</p>
+            <Markdown Text="@a.Text" />
             <p class="fp-small">@(a.Thema is null ? "" : $"Politikfeld: {a.Thema} · ")Zuständig: <b>@(z.Zustaendig ?? "noch niemand")</b></p>
             @if (a.Antwort is not null)
             {
@@ -85,6 +85,8 @@
     private readonly Dictionary<Guid, Guid?> wahl = [];
     private readonly Dictionary<Guid, string?> antworten = [];
     private string? betreff, name, kontakt, thema, text;
+    private MarkdownEditor? editor;
+    private Guid entwurfId = Guid.NewGuid();
     private Eingangskanal kanal = Eingangskanal.Mail;
     private string? meldung;
     private bool fehler;
@@ -107,10 +109,19 @@
 
     private async Task ErfassenAsync()
     {
+        if (editor is not null)
+        {
+            text = await editor.AktuellerTextAsync();
+        }
+
         await AusfuehrenAsync(s => s.ErfassenAsync(betreff!, text ?? "", name!, kontakt, kanal, thema), "Erfasst – die Geschäftsführung hat eine Aufgabe „zuweisen“.");
         if (!fehler)
         {
-            (betreff, name, kontakt, thema, text) = (null, null, null, null, null);
+            (betreff, name, kontakt, thema, text, entwurfId) = (null, null, null, null, null, Guid.NewGuid());
+            if (editor is not null)
+            {
+                await editor.SetzenAsync(null);
+            }
         }
     }
 

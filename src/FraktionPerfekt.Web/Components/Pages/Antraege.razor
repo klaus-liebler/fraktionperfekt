@@ -30,8 +30,8 @@
             <div class="fp-field"><label class="fp-lbl">Ziel-Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" /></div>
             <div class="fp-field"><label class="fp-lbl" for="a-thema">Politikfeld</label><RadzenTextBox id="a-thema" @bind-Value="thema" Placeholder="z. B. Schule und Bildung" /></div>
         </div>
-        <div class="fp-field"><label class="fp-lbl" for="a-text">Antragstext (Markdown: ## Überschrift, - Aufzählung, **fett**)</label>
-            <RadzenTextArea id="a-text" @bind-Value="text" Rows="8" Style="width:100%" /></div>
+        <div class="fp-field"><span class="fp-lbl">Antragstext (Bilder per Strg+V einfügen)</span>
+            <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Antragstext" Hoehe="360px" /></div>
         <div class="fp-row">
             <BegruendeterButton Text="Anlegen" Icon="save" Freigabe="@(string.IsNullOrWhiteSpace(titel) ? Freigabe.Nein("Bitte einen Titel eingeben.") : Freigabe.Ja)" Click="AnlegenAsync" />
             <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
@@ -85,6 +85,8 @@
     private bool formular;
     private string? titel;
     private string? text;
+    private MarkdownEditor? editor;
+    private readonly Guid entwurfId = Guid.NewGuid();
     private string? thema;
     private Guid? gremium;
     private string? meldung;
@@ -101,6 +103,11 @@
     {
         try
         {
+            if (editor is not null)
+            {
+                text = await editor.AktuellerTextAsync();
+            }
+
             var a = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<AntragDienst>().AnlegenAsync(titel!, text ?? string.Empty, gremium, thema));
             Navigation.NavigateTo($"antraege/{a.Id}");
         }

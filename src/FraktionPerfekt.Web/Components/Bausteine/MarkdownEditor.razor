@@ -33,6 +33,10 @@
     [Parameter]
     public string Bezeichnung { get; set; } = "Seitentext";
 
+    /// <summary>Höhe des Editors (CSS), z. B. „220px“ für Notizen.</summary>
+    [Parameter]
+    public string Hoehe { get; set; } = "520px";
+
     /// <summary>Nach jedem hochgeladenen Bild (z. B. um die Mediathek neu zu laden).</summary>
     [Parameter]
     public EventCallback BildHinzugefuegt { get; set; }
@@ -55,7 +59,7 @@
         try
         {
             bereit = await Js.InvokeAsync<bool>("fpEditor.start", element, selbst, Text ?? string.Empty,
-                new { bezugArt = BezugArt, bezugId = BezugId, token = token?.Value, tokenFeld = token?.FormFieldName });
+                new { bezugArt = BezugArt, bezugId = BezugId, token = token?.Value, tokenFeld = token?.FormFieldName, hoehe = Hoehe });
         }
         catch (JSException)
         {
@@ -83,6 +87,23 @@
         }
 
         return Text;
+    }
+
+    /// <summary>Inhalt ersetzen (z. B. nach dem Anlegen leeren).</summary>
+    public async Task SetzenAsync(string? text)
+    {
+        Text = text;
+        if (bereit)
+        {
+            try
+            {
+                await Js.InvokeVoidAsync("fpEditor.setzen", element, text ?? string.Empty);
+            }
+            catch (JSException)
+            {
+                // Editor nicht mehr da
+            }
+        }
     }
 
     [JSInvokable]

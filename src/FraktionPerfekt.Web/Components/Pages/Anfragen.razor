@@ -72,7 +72,7 @@
         <div class="fp-field"><label class="fp-lbl">Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" AllowClear="true" Data="@gremien" TextProperty="Kurzname" ValueProperty="Id" /></div>
         <div class="fp-field"><label class="fp-lbl" for="a-thema">Politikfeld</label><RadzenTextBox id="a-thema" @bind-Value="thema" /></div>
     </div>
-    <RadzenTextArea @bind-Value="text" Rows="5" Style="width:100%" aria-label="Fragen an die Verwaltung" Placeholder="1. Wie viele … ?&#10;2. Bis wann …?" />
+    <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Fragen an die Verwaltung" Hoehe="300px" />
     <RadzenButton Text="Als Entwurf anlegen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(titel)" Click="AnlegenAsync" />
 </details>
 
@@ -84,6 +84,8 @@
     private string? antwortText;
     private string? titel;
     private string? text;
+    private MarkdownEditor? editor;
+    private Guid entwurfId = Guid.NewGuid();
     private string? thema;
     private Guid? gremium;
     private string? meldung;
@@ -108,10 +110,19 @@
 
     private async Task AnlegenAsync()
     {
+        if (editor is not null)
+        {
+            text = await editor.AktuellerTextAsync();
+        }
+
         await AusfuehrenAsync(s => s.AnlegenAsync(titel!, text ?? "", gremium, thema), "Entwurf angelegt.");
         if (!fehler)
         {
-            (titel, text, thema) = (null, null, null);
+            (titel, text, thema, entwurfId) = (null, null, null, Guid.NewGuid());
+            if (editor is not null)
+            {
+                await editor.SetzenAsync(null);
+            }
         }
     }
 

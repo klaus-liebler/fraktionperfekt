@@ -78,7 +78,7 @@ else
             <h2>Text <span class="fp-zahl">Fassung @d.Aktuell.Nummer</span></h2>
             @if (bearbeiten)
             {
-                <RadzenTextArea @bind-Value="entwurf" Rows="14" Style="width:100%" />
+                <MarkdownEditor @ref="editor" @bind-Text="entwurf" BezugArt="Antrag" BezugId="@Id" Bezeichnung="Antragstext" />
                 <div class="fp-row">
                     <RadzenTextBox @bind-Value="fassungNotiz" Placeholder="Was wurde geändert?" Style="min-width:260px" />
                     <RadzenButton Text="Als neue Fassung speichern" Icon="save" Click="FassungAsync" />
@@ -173,6 +173,7 @@ else
     private IReadOnlyList<NaechsterSchritt> schritte = [];
     private bool bearbeiten;
     private string? entwurf;
+    private MarkdownEditor? editor;
     private string? fassungNotiz;
     private int vergleichVon = 1;
     private int vergleichBis = 1;
@@ -218,6 +219,11 @@ else
 
     private async Task FassungAsync()
     {
+        if (editor is not null)
+        {
+            entwurf = await editor.AktuellerTextAsync();
+        }
+
         await AusfuehrenAsync(s => s.FassungSpeichernAsync(Id, entwurf ?? string.Empty, fassungNotiz), "Neue Fassung gespeichert.");
         if (!fehler)
         {

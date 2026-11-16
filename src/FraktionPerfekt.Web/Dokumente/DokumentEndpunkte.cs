@@ -9,7 +9,7 @@ internal static class DokumentEndpunkte
 {
     public static void MapDokumente(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/sitzungen/{id:guid}/protokoll.pdf", async (Guid id, SitzungDienst sitzungen, IPdfErzeugung pdf) =>
+        app.MapGet("/sitzungen/{id:guid}/protokoll.pdf", async (Guid id, SitzungDienst sitzungen, IPdfErzeugung pdf, FraktionPerfekt.Application.Wissen.BildDienst bilder) =>
         {
             if (await sitzungen.DetailAsync(id) is not { } d)
             {
@@ -18,7 +18,7 @@ internal static class DokumentEndpunkte
 
             var text = await sitzungen.ProtokolltextAsync(id);
             var bytes = pdf.Erzeugen(new PdfDokument($"Protokoll: {d.Sitzung.Titel}",
-                $"{d.Termin.Beginn:dddd, dd.MM.yyyy, HH:mm} Uhr · {d.Termin.Ort} · {d.Sitzung.Status.Anzeigename()}", text));
+                $"{d.Termin.Beginn:dddd, dd.MM.yyyy, HH:mm} Uhr · {d.Termin.Ort} · {d.Sitzung.Status.Anzeigename()}", text, await bilder.InhalteAsync(text)));
             return Results.File(bytes, "application/pdf", $"protokoll-{d.Termin.Beginn:yyyy-MM-dd}.pdf");
         }).RequireAuthorization();
 

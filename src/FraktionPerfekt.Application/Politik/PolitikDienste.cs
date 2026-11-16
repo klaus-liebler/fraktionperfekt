@@ -34,6 +34,7 @@ public sealed record AnfrageZeile(Anfrage Anfrage, string Autor, string? Gremium
 /// </summary>
 public sealed class AnfrageDienst(
     IDaten daten,
+    Wissen.BildDienst bilder,
     IStammdatenSpeicher stammdaten,
     AufgabenDienst aufgaben,
     PostausgangDienst postausgang,
@@ -73,6 +74,7 @@ public sealed class AnfrageDienst(
         daten.Hinzufuegen(a);
         await protokoll.ProtokollierenAsync("Anfrage.Angelegt", "Anfrage an die Verwaltung angelegt", nameof(Anfrage), a.Id, abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
+        await bilder.VerwendungenAbgleichenAsync("Anfrage", a.Id, text, abbruch);
         return a;
     }
 
@@ -232,6 +234,7 @@ public sealed record AnliegenZeile(Buergeranliegen Anliegen, string? Zustaendig,
 /// </summary>
 public sealed class AnliegenDienst(
     IDaten daten,
+    Wissen.BildDienst bilder,
     IStammdatenSpeicher stammdaten,
     AufgabenDienst aufgaben,
     IAuditProtokoll protokoll,
@@ -276,6 +279,7 @@ public sealed class AnliegenDienst(
         await protokoll.ProtokollierenAsync("Anliegen.Erfasst", $"Bürgeranliegen erfasst ({kanal})", nameof(Buergeranliegen), a.Id, abbruch: abbruch);
         await aufgaben.AnlegenAsync($"Anliegen zuweisen: {a.Betreff}", "Bürgeranliegen eingegangen – bitte einer Person zuweisen.", null, Rolle.Administration,
             AufgabenAnlass, a.Id, "anliegen", Ortszeit.Heute(uhr).AddDays(2), null, abbruch);
+        await bilder.VerwendungenAbgleichenAsync("Anliegen", a.Id, text, abbruch);
         return a;
     }
 
@@ -352,6 +356,7 @@ public sealed record SpiegelZeile(Presseartikel Artikel, string? Mitteilung);
 /// </summary>
 public sealed class PresseDienst(
     IDaten daten,
+    Wissen.BildDienst bilder,
     IStammdatenSpeicher stammdaten,
     AufgabenDienst aufgaben,
     PostausgangDienst postausgang,
@@ -409,6 +414,7 @@ public sealed class PresseDienst(
 
         await protokoll.ProtokollierenAsync("Presse.Gespeichert", "Pressemitteilung gespeichert", nameof(Pressemitteilung), m.Id, abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
+        await bilder.VerwendungenAbgleichenAsync("Presse", m.Id, text, abbruch);
         return m;
     }
 

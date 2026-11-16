@@ -135,8 +135,16 @@ else
         {
             <section class="fp-card">
                 <h3>TOP @t.Nummer @t.Top.Titel @if (t.Top.Status == Topstatus.Behandelt) { <StatusPille Stil="gut">behandelt</StatusPille> } @if (t.Top.Status == Topstatus.Vertagt) { <StatusPille Stil="warn">vertagt</StatusPille> }</h3>
-                <RadzenTextArea Value="@(notizen.GetValueOrDefault(t.Top.Id) ?? t.Top.Notiz)" Change="@((string v) => notizen[t.Top.Id] = v)" Rows="3" Style="width:100%"
-                                Disabled="@(!d.Protokollieren.Erlaubt)" aria-label="Notizen" />
+                @if (d.Protokollieren.Erlaubt)
+                {
+                    var topId = t.Top.Id;
+                    <MarkdownEditor Text="@(notizen.GetValueOrDefault(topId) ?? t.Top.Notiz)" TextChanged="@((string? v) => notizen[topId] = v)" BezugArt="Sitzung"
+                                    BezugId="@d.Sitzung.Id" Bezeichnung="Notizen" Hoehe="220px" />
+                }
+                else if (!string.IsNullOrWhiteSpace(t.Top.Notiz))
+                {
+                    <Markdown Text="@t.Top.Notiz" />
+                }
                 <div class="fp-row">
                     <BegruendeterButton Text="Notiz speichern" Size="ButtonSize.Small" Freigabe="@d.Protokollieren"
                                         Click="@(() => AusfuehrenAsync(s => s.NotizSetzenAsync(t.Top.Id, notizen.GetValueOrDefault(t.Top.Id) ?? t.Top.Notiz, true), "Notiz gespeichert."))" />

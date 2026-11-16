@@ -43,7 +43,7 @@
     window.fpEditor = {
         start(element, dotnet, text, optionen) {
             if (!window.toastui || !window.toastui.Editor) { return false; }
-            const melden = warten(() => dotnet.invokeMethodAsync('TextGeaendert', bereinigt(editor.getMarkdown())), 400);
+            const melden = warten(() => dotnet.invokeMethodAsync('TextGeaendert', bereinigt(editor.getMarkdown())), 300);
             const editor = new window.toastui.Editor({
                 el: element,
                 height: optionen.hoehe || '520px',
@@ -63,11 +63,12 @@
                         return false;
                     }
                 },
-                events: { change: () => melden() }
+                events: { change: () => melden(), blur: () => dotnet.invokeMethodAsync('TextGeaendert', bereinigt(editor.getMarkdown())) }
             });
             element.fpEditor = editor;
             return true;
         },
+        setzen(element, text) { if (element && element.fpEditor) { element.fpEditor.setMarkdown(text || '', false); } },
         text(element) { return element && element.fpEditor ? bereinigt(element.fpEditor.getMarkdown()) : null; },
         ende(element) { if (element && element.fpEditor) { element.fpEditor.destroy(); element.fpEditor = null; } }
     };

@@ -421,3 +421,5 @@ label.fp-option.sel { border-color: var(--fp-rhoendorf); background: var(--fp-ca
 .fp-mediathek li { font-size: 12px; overflow-wrap: anywhere; }
 .fp-mediathek img { width: 100%; height: 72px; object-fit: cover; border-radius: 6px; border: 1px solid var(--fp-line, #ddd); display: block; }
 .fp-inline label { margin-right: .4em; }
+/* Flex-Container verschlucken Leerzeichen zwischen Text und <b> („Rolle Mitglied“) */
+.fp-why { column-gap: .3em; }
