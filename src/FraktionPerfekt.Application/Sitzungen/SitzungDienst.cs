@@ -205,7 +205,7 @@ public sealed class SitzungDienst(
         var istLeitung = wer.PersonId is { } ich && (ich == s.LeitungPersonId || ich == s.ProtokollPersonId);
         var steuert = Rechte.SitzungenSteuern(wer.Rolle).Erlaubt || istLeitung;
 
-        return new SitzungDetail(s, termin, gremium?.Name, Name(s.LeitungPersonId), ansicht,
+        return new SitzungDetail(s, termin, gremium?.StandAm(sitzungstag, wissen)?.Name, Name(s.LeitungPersonId), ansicht,
             teilnehmende.Select(p => new AnwesenheitZeile(p.Id, p.AnzeigenameAm(sitzungstag, wissen), anwesenheit.FirstOrDefault(a => a.PersonId == p.Id)?.Status))
                 .OrderBy(a => a.Name, StringComparer.CurrentCulture).ToList(),
             steuert ? (s.TagesordnungAenderbar ? Freigabe.Ja : Freigabe.Nein("Die Tagesordnung ist nach Sitzungsende nicht mehr änderbar.")) : NurLeitung,

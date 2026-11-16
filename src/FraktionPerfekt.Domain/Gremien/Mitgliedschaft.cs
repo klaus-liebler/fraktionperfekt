@@ -48,14 +48,15 @@ public sealed class Mitgliedschaft
     {
     }
 
-    public Mitgliedschaft(Guid personId, Guid gremiumId, Funktion funktion, int? rang, DateOnly ab, Erfassung erfassung, string? risId = null)
+    public Mitgliedschaft(Guid personId, Guid gremiumId, Funktion funktion, int? rang, DateOnly ab, Erfassung erfassung, string? risId = null,
+        Gremienamt amt = Gremienamt.Keins, string? funktionText = null)
     {
         ArgumentNullException.ThrowIfNull(erfassung);
         Id = Ids.Neu();
         PersonId = personId;
         GremiumId = gremiumId;
         RisId = risId;
-        _versionen.Add(new MitgliedschaftsVersion(funktion, RangPruefen(funktion, rang), ab, null, erfassung with { Art = Erfassungsart.Ersterfassung }));
+        _versionen.Add(new MitgliedschaftsVersion(funktion, RangPruefen(funktion, rang), amt, funktionText, ab, null, erfassung with { Art = Erfassungsart.Ersterfassung }));
     }
 
     public Guid Id { get; private set; }
@@ -67,16 +68,18 @@ public sealed class Mitgliedschaft
     /// <summary>Kennung der Mitgliedschaft im RIS, falls sie von dort stammt.</summary>
     public string? RisId { get; private set; }
 
-    /// <summary>Vorsitz oder Stellvertretung des Vorsitzes (aus dem RIS).</summary>
-    public Gremienamt Amt { get; private set; }
-
-    /// <summary>Funktionsbezeichnung wie im RIS („2. Stellv. Ausschussvorsitzender“, „Mitglied ZVM“); unbekannte bleiben als Text erhalten.</summary>
-    public string? FunktionText { get; private set; }
-
-    public void AmtSetzen(Gremienamt amt, string? funktionText)
+    /// <summary>Amt (Vorsitz …) und Funktionsbezeichnung wie im RIS ändern sich ab <paramref name="ab"/> (zeitlich, in der Version).</summary>
+    public bool AmtAendernAb(DateOnly ab, Gremienamt amt, string? funktionText, Erfassung erfassung)
     {
-        Amt = amt;
-        FunktionText = string.IsNullOrWhiteSpace(funktionText) ? null : funktionText.Trim();
+        ArgumentNullException.ThrowIfNull(erfassung);
+        var text = string.IsNullOrWhiteSpace(funktionText) ? null : funktionText.Trim();
+        if (StandAm(ab, erfassung.Am) is not { IstEndemarke: false } v || (v.Amt == amt && v.FunktionText == text))
+        {
+            return false;
+        }
+
+        ZeitlicheHistorie.AendernAb(_versionen, new MitgliedschaftsVersion(v.Funktion, v.Rang, amt, text, ab, null, erfassung with { Art = Erfassungsart.AenderungAbDatum }));
+        return true;
     }
 
     public IReadOnlyCollection<MitgliedschaftsVersion> Versionen => _versionen;
@@ -88,8 +91,10 @@ public sealed class Mitgliedschaft
     public void AendernAb(DateOnly ab, Funktion funktion, int? rang, Erfassung erfassung)
     {
         ArgumentNullException.ThrowIfNull(erfassung);
+        var bisher = StandAm(ab, erfassung.Am);
         ZeitlicheHistorie.AendernAb(_versionen,
-            new MitgliedschaftsVersion(funktion, RangPruefen(funktion, rang), ab, null, erfassung with { Art = Erfassungsart.AenderungAbDatum }));
+            new MitgliedschaftsVersion(funktion, RangPruefen(funktion, rang), bisher?.Amt ?? Gremienamt.Keins, bisher?.FunktionText, ab, null,
+                erfassung with { Art = Erfassungsart.AenderungAbDatum }));
     }
 
     /// <summary>Mitgliedschaft endet ab <paramref name="ab"/> (erster Tag ohne Mitgliedschaft).</summary>
@@ -99,7 +104,7 @@ public sealed class Mitgliedschaft
         var letzte = _versionen.Where(v => v.IstAktuellerWissensstand && !v.IstEndemarke).OrderBy(v => v.GueltigVon).LastOrDefault()
             ?? throw new InvalidOperationException("Die Mitgliedschaft ist bereits beendet.");
         ZeitlicheHistorie.BeendenAb(_versionen,
-            new MitgliedschaftsVersion(letzte.Funktion, letzte.Rang, ab, null, erfassung with { Art = Erfassungsart.Beendet }));
+            new MitgliedschaftsVersion(letzte.Funktion, letzte.Rang, letzte.Amt, letzte.FunktionText, ab, null, erfassung with { Art = Erfassungsart.Beendet }));
     }
 
     private static int? RangPruefen(Funktion funktion, int? rang)
@@ -125,12 +130,20 @@ public sealed class MitgliedschaftsVersion : BitemporaleVersion<MitgliedschaftsV
     {
     }
 
-    public MitgliedschaftsVersion(Funktion funktion, int? rang, DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
+    public MitgliedschaftsVersion(Funktion funktion, int? rang, Gremienamt amt, string? funktionText, DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
         : base(gueltigVon, gueltigBis, erfassung)
     {
         Funktion = funktion;
         Rang = rang;
+        Amt = amt;
+        FunktionText = string.IsNullOrWhiteSpace(funktionText) ? null : funktionText.Trim();
     }
+
+    /// <summary>Vorsitz oder Stellvertretung des Vorsitzes (aus dem RIS).</summary>
+    public Gremienamt Amt { get; private set; }
+
+    /// <summary>Funktionsbezeichnung wie im RIS („2. Stellv. Ausschussvorsitzender“, „Mitglied ZVM“); unbekannte bleiben als Text erhalten.</summary>
+    public string? FunktionText { get; private set; }
 
     public Funktion Funktion { get; private set; }
 
@@ -143,10 +156,10 @@ public sealed class MitgliedschaftsVersion : BitemporaleVersion<MitgliedschaftsV
 
     public override string Gegenstand => "mitgliedschaft";
 
-    public override string Wert => Funktion == Funktion.Stellvertretung && Rang is { } r
+    public override string Wert => (Funktion == Funktion.Stellvertretung && Rang is { } r
         ? $"{Funktion.Anzeigename()}, Rang {r}"
-        : Funktion.Anzeigename();
+        : Funktion.Anzeigename()) + (FunktionText is { } t ? $" · {t}" : string.Empty);
 
     protected internal override MitgliedschaftsVersion KopieMit(DateOnly gueltigVon, DateOnly? gueltigBis, Erfassung erfassung)
-        => new(Funktion, Rang, gueltigVon, gueltigBis, erfassung);
+        => new(Funktion, Rang, Amt, FunktionText, gueltigVon, gueltigBis, erfassung);
 }

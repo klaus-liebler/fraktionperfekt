@@ -56,11 +56,11 @@ public sealed class RisAbgleich(
             var art = ArtAus(rg.Art);
             if (gremien.TryGetValue(rg.RisId, out var g))
             {
-                gremienGeaendert += g.AusRisUebernehmen(rg.Name, rg.Kurzname, art) ? 1 : 0;
+                gremienGeaendert += g.AusRisUebernehmen(rg.Name, rg.Kurzname, art, heute, new Erfassung(jetzt, wer.Anzeige, Erfassungsart.AenderungAbDatum, $"Abgleich mit {ris.Quelle}")) ? 1 : 0;
             }
             else
             {
-                g = new Gremium(rg.Name, rg.Kurzname, art, (i + 1) * 10, rg.RisId);
+                g = new Gremium(rg.Name, rg.Kurzname, art, (i + 1) * 10, rg.RisId, erfassung: new Erfassung(jetzt, wer.Anzeige, Erfassungsart.Ersterfassung, $"Abgleich mit {ris.Quelle}"));
                 stammdaten.Hinzufuegen(g);
                 gremien[rg.RisId] = g;
                 gremienNeu++;
@@ -93,13 +93,12 @@ public sealed class RisAbgleich(
                 }
 
                 m = new Mitgliedschaft(person.Id, gremium.Id, funktion,
-                    funktion == Funktion.Stellvertretung ? NaechsterRang(alle, gremium.Id, rm.Beginn, jetzt) : null, rm.Beginn, erfassung, rm.RisId);
+                    funktion == Funktion.Stellvertretung ? NaechsterRang(alle, gremium.Id, rm.Beginn, jetzt) : null, rm.Beginn, erfassung, rm.RisId, amt, rm.Rolle);
                 if (rm.Ende is { } ende)
                 {
                     m.BeendenAb(ende, erfassung with { Art = Erfassungsart.Beendet, Grund = $"Ende laut {ris.Quelle}" });
                 }
 
-                m.AmtSetzen(amt, rm.Rolle);
                 stammdaten.Hinzufuegen(m);
                 alle.Add(m);
                 vorhanden[rm.RisId] = m;
@@ -107,13 +106,12 @@ public sealed class RisAbgleich(
                 continue;
             }
 
-            if (m.Amt != amt || m.FunktionText != rm.Rolle)
+            var stichtag = heute < rm.Beginn ? rm.Beginn : heute;
+            if (m.AmtAendernAb(stichtag, amt, rm.Rolle, erfassung with { Art = Erfassungsart.AenderungAbDatum, Grund = $"Funktion laut {ris.Quelle}" }))
             {
-                m.AmtSetzen(amt, rm.Rolle);
                 mGeaendert++;
             }
 
-            var stichtag = heute < rm.Beginn ? rm.Beginn : heute;
             var stand = m.StandAm(stichtag, jetzt);
             if (stand is not null && stand.Funktion != funktion && (rm.Ende is null || stichtag < rm.Ende))
             {

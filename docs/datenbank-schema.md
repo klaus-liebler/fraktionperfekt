@@ -76,13 +76,14 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Buergeranliegen](#buergeranliegen) – 13 Spalten
 - [Dateien](#dateien) – 14 Spalten
 - [Gebiete](#gebiete) – 10 Spalten
-- [Gremien](#gremien) – 7 Spalten
+- [Gremien](#gremien) – 4 Spalten
+- [GremiumVersionen](#gremiumversionen) – 12 Spalten
 - [Haushaltsposten](#haushaltsposten) – 5 Spalten
 - [KalenderAbos](#kalenderabos) – 6 Spalten
 - [Kassenbuchungen](#kassenbuchungen) – 11 Spalten
 - [Kontakte](#kontakte) – 11 Spalten
-- [Mitgliedschaften](#mitgliedschaften) – 6 Spalten
-- [MitgliedschaftsVersionen](#mitgliedschaftsversionen) – 11 Spalten
+- [Mitgliedschaften](#mitgliedschaften) – 4 Spalten
+- [MitgliedschaftsVersionen](#mitgliedschaftsversionen) – 13 Spalten
 - [PersonAdressen](#personadressen) – 16 Spalten
 - [PersonEMails](#personemails) – 13 Spalten
 - [PersonEinwilligungen](#personeinwilligungen) – 11 Spalten
@@ -458,14 +459,32 @@ Klasse: `FraktionPerfekt.Domain.Gremien.Gremium`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | S | Schlüssel (Zeilen-Id) |
-| Aktiv | INTEGER | ja |  | S |  |
 | Art | TEXT(40) | ja |  | S |  |
-| Kurzname | TEXT(60) | ja |  | S |  |
-| Name | TEXT(300) | ja |  | S | Name laut RIS |
 | RisId | TEXT(200) |  | eindeutig | S |  |
 | Sortierung | INTEGER | ja |  | S |  |
 
 Indizes: (RisId) eindeutig
+
+## GremiumVersionen
+
+Klasse: `FraktionPerfekt.Domain.Gremien.GremiumVersion`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | TEXT | ja | PK | V | Zeilen-Id = Version |
+| Aktiv | INTEGER | ja |  | V | Gremium aktiv |
+| ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
+| ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
+| Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
+| ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
+| GremiumId | TEXT | ja | → Gremien, Index | V |  |
+| Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
+| GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
+| GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |
+| Kurzname | TEXT(60) | ja |  | V | Kurzname laut RIS |
+| Name | TEXT(300) | ja |  | V | Name laut RIS |
+
+Indizes: (GremiumId, GueltigVon)
 
 ## Haushaltsposten
 
@@ -543,8 +562,6 @@ Klasse: `FraktionPerfekt.Domain.Gremien.Mitgliedschaft`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | S | Schlüssel (Zeilen-Id) |
-| Amt | TEXT(40) | ja |  | S | veränderlich, nicht versioniert – wandert in MitgliedschaftsVersionen (Etappe 1) |
-| FunktionText | TEXT |  |  | S | veränderlich, nicht versioniert – wandert in MitgliedschaftsVersionen (Etappe 1) |
 | GremiumId | TEXT | ja | → Gremien, Index | S |  |
 | PersonId | TEXT | ja | → Personen, Index | S |  |
 | RisId | TEXT(200) |  | eindeutig | S |  |
@@ -558,11 +575,13 @@ Klasse: `FraktionPerfekt.Domain.Gremien.MitgliedschaftsVersion`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | TEXT | ja | PK | V | Zeilen-Id = Version |
+| Amt | TEXT(40) | ja |  | V | Vorsitz oder Stellvertretung des Vorsitzes (RIS) |
 | ErfasstAm | INTEGER | ja |  | V | Wissenszeit: erfasst am |
 | ErfasstVon | TEXT(200) | ja |  | V | Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | Erfassungsart | TEXT(40) | ja |  | V | Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | ErsetztAm | INTEGER |  |  | V | Wissenszeit: ersetzt am, leer = aktuell |
 | Funktion | TEXT(40) | ja |  | V |  |
+| FunktionText | TEXT(200) |  |  | V | Funktionsbezeichnung wie im RIS |
 | Grund | TEXT(500) | ja |  | V | Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3) |
 | GueltigBis | TEXT |  |  | V | Gültigkeit bis (ausschließlich), leer = offen |
 | GueltigVon | TEXT | ja | Index | V | Gültigkeit von (einschließlich) |

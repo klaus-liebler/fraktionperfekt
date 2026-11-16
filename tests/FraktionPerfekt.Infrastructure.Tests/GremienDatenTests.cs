@@ -59,7 +59,7 @@ public sealed class GremienDatenTests
         var benning = personen.Single(p => p.Benutzerkennung == "mbenning");
         var betrA = gremien.Single(g => g.Kurzname == "BetrA");
         var m = mitgliedschaften.Single(x => x.PersonId == benning.Id && x.GremiumId == betrA.Id);
-        (m.Amt, m.FunktionText).ShouldBe((Gremienamt.Vorsitz, "Ausschussvorsitzender"));
+        (m.Versionen.Single().Amt, m.Versionen.Single().FunktionText).ShouldBe((Gremienamt.Vorsitz, "Ausschussvorsitzender"));
         m.Versionen.Single().GueltigVon.ShouldBe(new DateOnly(2025, 11, 5));
         var rat = mitgliedschaften.Single(x => x.PersonId == benning.Id && x.GremiumId == gremien.Single(g => g.Kurzname == "Rat").Id);
         rat.Versionen.Single().GueltigVon.ShouldBe(new DateOnly(2024, 4, 15));

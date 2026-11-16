@@ -100,3 +100,27 @@ public sealed class DatenbankRegelnTests
         p.StandAm(new DateOnly(2026, 1, 1), Am(2025, 7, 1)).Aktiv.ShouldBeFalse();
     }
 }
+
+public sealed class GremienZeitlichTests
+{
+    [Fact]
+    public void Umbenennung_im_RIS_gilt_ab_Datum_alte_Protokolle_behalten_den_Namen_Amt_ist_zeitlich()
+    {
+        var erst = new DateTimeOffset(2025, 11, 1, 9, 0, 0, TimeSpan.Zero);
+        var g = new FraktionPerfekt.Domain.Gremien.Gremium("Ausschuss für Umwelt", "UA", FraktionPerfekt.Domain.Gremien.Gremienart.Ausschuss, 10, "ris-1",
+            gueltigAb: new DateOnly(2020, 11, 1), erfassung: Erfassung.Erst(erst));
+        var am = erst.AddDays(30);
+        g.AusRisUebernehmen("Ausschuss für Klima und Umwelt", "AKU", FraktionPerfekt.Domain.Gremien.Gremienart.Ausschuss, new DateOnly(2026, 1, 1),
+            Erfassung.Aenderung(am, "RIS")).ShouldBeTrue();
+        g.StandAm(new DateOnly(2025, 12, 31), am)!.Name.ShouldBe("Ausschuss für Umwelt");
+        g.StandAm(new DateOnly(2026, 1, 1), am)!.Kurzname.ShouldBe("AKU");
+        g.StandHeuteBerechnen(new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero));
+        g.Name.ShouldBe("Ausschuss für Klima und Umwelt");
+
+        var m = new FraktionPerfekt.Domain.Gremien.Mitgliedschaft(Guid.NewGuid(), g.Id, FraktionPerfekt.Domain.Gremien.Funktion.Ordentlich, null, new DateOnly(2020, 11, 1),
+            Erfassung.Erst(erst), amt: FraktionPerfekt.Domain.Gremien.Gremienamt.Keins);
+        m.AmtAendernAb(new DateOnly(2025, 11, 5), FraktionPerfekt.Domain.Gremien.Gremienamt.Vorsitz, "Ausschussvorsitzender", Erfassung.Aenderung(am, "RIS")).ShouldBeTrue();
+        m.StandAm(new DateOnly(2025, 11, 4), am)!.Amt.ShouldBe(FraktionPerfekt.Domain.Gremien.Gremienamt.Keins);
+        m.StandAm(new DateOnly(2025, 11, 5), am)!.FunktionText.ShouldBe("Ausschussvorsitzender");
+    }
+}

@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116213521_PersonOhneKopien";
+    public override string LastMigrationId => "20261116214057_GremienZeitlich";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -682,22 +682,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
 
-                b.Property<bool>("Aktiv")
-                    .HasColumnType("INTEGER");
-
                 b.Property<string>("Art")
                     .IsRequired()
                     .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Kurzname")
-                    .IsRequired()
-                    .HasMaxLength(60)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Name")
-                    .IsRequired()
-                    .HasMaxLength(300)
                     .HasColumnType("TEXT");
 
                 b.Property<string>("RisId")
@@ -715,17 +702,64 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("Gremien");
             });
 
-        modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Mitgliedschaft", b =>
+        modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.GremiumVersion", b =>
             {
                 b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
 
-                b.Property<string>("Amt")
+                b.Property<bool>("Aktiv")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long>("ErfasstAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("ErfasstVon")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Erfassungsart")
                     .IsRequired()
                     .HasMaxLength(40)
                     .HasColumnType("TEXT");
 
-                b.Property<string>("FunktionText")
+                b.Property<long?>("ErsetztAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid>("GremiumId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Grund")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly?>("GueltigBis")
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly>("GueltigVon")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Kurzname")
+                    .IsRequired()
+                    .HasMaxLength(60)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(300)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("GremiumId", "GueltigVon");
+
+                b.ToTable("GremiumVersionen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Mitgliedschaft", b =>
+            {
+                b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
 
                 b.Property<Guid>("GremiumId")
@@ -755,6 +789,11 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("TEXT");
 
+                b.Property<string>("Amt")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
                 b.Property<long>("ErfasstAm")
                     .HasColumnType("INTEGER");
 
@@ -774,6 +813,10 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Funktion")
                     .IsRequired()
                     .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("FunktionText")
+                    .HasMaxLength(200)
                     .HasColumnType("TEXT");
 
                 b.Property<string>("Grund")
@@ -2531,6 +2574,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("WikiVorschlaege");
             });
 
+        modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.GremiumVersion", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Gremien.Gremium", null)
+                    .WithMany("Versionen")
+                    .HasForeignKey("GremiumId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Mitgliedschaft", b =>
             {
                 b.HasOne("FraktionPerfekt.Domain.Gremien.Gremium", null)
@@ -2675,6 +2727,11 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("TerminId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Gremium", b =>
+            {
+                b.Navigation("Versionen");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Gremien.Mitgliedschaft", b =>

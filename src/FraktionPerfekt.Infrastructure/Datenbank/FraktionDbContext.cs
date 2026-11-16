@@ -141,10 +141,18 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.ToTable("Gremien");
             b.HasKey(g => g.Id);
             b.Property(g => g.Id).ValueGeneratedNever();
-            b.Property(g => g.Name).HasMaxLength(300);
-            b.Property(g => g.Kurzname).HasMaxLength(60);
+            b.Ignore(g => g.Name);
+            b.Ignore(g => g.Kurzname);
+            b.Ignore(g => g.Aktiv);
             b.Property(g => g.RisId).HasMaxLength(200);
             b.HasIndex(g => g.RisId).IsUnique();
+            b.HasMany(g => g.Versionen).WithOne().HasForeignKey("GremiumId").IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(g => g.Versionen).HasField("_versionen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+        });
+        Version<GremiumVersion>(modelBuilder, "GremiumVersionen", "GremiumId", b =>
+        {
+            b.Property(v => v.Name).HasMaxLength(300);
+            b.Property(v => v.Kurzname).HasMaxLength(60);
         });
 
         modelBuilder.Entity<Mitgliedschaft>(b =>
@@ -161,7 +169,7 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.HasMany(m => m.Versionen).WithOne().HasForeignKey("MitgliedschaftId").IsRequired().OnDelete(DeleteBehavior.Restrict);
             b.Navigation(m => m.Versionen).HasField("_versionen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
         });
-        Version<MitgliedschaftsVersion>(modelBuilder, "MitgliedschaftsVersionen", "MitgliedschaftId", _ => { });
+        Version<MitgliedschaftsVersion>(modelBuilder, "MitgliedschaftsVersionen", "MitgliedschaftId", b => b.Property(v => v.FunktionText).HasMaxLength(200));
 
         modelBuilder.Entity<Termin>(b =>
         {

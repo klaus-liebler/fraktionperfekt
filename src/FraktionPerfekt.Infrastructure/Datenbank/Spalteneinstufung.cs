@@ -271,10 +271,7 @@ public static class Spalteneinstufung
             ["Gremien"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Stammdatum, "Schlüssel (Zeilen-Id)"),
-                ["Aktiv"] = (Spaltenart.Stammdatum, null),
                 ["Art"] = (Spaltenart.Stammdatum, null),
-                ["Kurzname"] = (Spaltenart.Stammdatum, null),
-                ["Name"] = (Spaltenart.Stammdatum, "Name laut RIS"),
                 ["RisId"] = (Spaltenart.Stammdatum, null),
                 ["Sortierung"] = (Spaltenart.Stammdatum, null),
             },
@@ -326,14 +323,14 @@ public static class Spalteneinstufung
             ["Mitgliedschaften"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Stammdatum, "Schlüssel (Zeilen-Id)"),
-                ["Amt"] = (Spaltenart.Stammdatum, "veränderlich, nicht versioniert – wandert in MitgliedschaftsVersionen (Etappe 1)"),
-                ["FunktionText"] = (Spaltenart.Stammdatum, "veränderlich, nicht versioniert – wandert in MitgliedschaftsVersionen (Etappe 1)"),
                 ["GremiumId"] = (Spaltenart.Stammdatum, null),
                 ["PersonId"] = (Spaltenart.Stammdatum, null),
                 ["RisId"] = (Spaltenart.Stammdatum, null),
             },
             ["MitgliedschaftsVersionen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["FunktionText"] = (Spaltenart.Version, "Funktionsbezeichnung wie im RIS"),
+                ["Amt"] = (Spaltenart.Version, "Vorsitz oder Stellvertretung des Vorsitzes (RIS)"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
                 ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
                 ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
@@ -764,6 +761,21 @@ public static class Spalteneinstufung
                 ["Status"] = (Spaltenart.Vorgang, null),
                 ["Von"] = (Spaltenart.Kopie, "Name der Person bzw. „KI“ als Text – wird Personenverweis oder Kennzeichen KI (Etappe 1)"),
                 ["Vorher"] = (Spaltenart.Vorgang, null),
+            },
+            ["GremiumVersionen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
+                ["Name"] = (Spaltenart.Version, "Name laut RIS"),
+                ["Kurzname"] = (Spaltenart.Version, "Kurzname laut RIS"),
+                ["Aktiv"] = (Spaltenart.Version, "Gremium aktiv"),
+                ["GremiumId"] = (Spaltenart.Version, null),
+                ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
+                ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
+                ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
+                ["ErsetztAm"] = (Spaltenart.Version, "Wissenszeit: ersetzt am, leer = aktuell"),
+                ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
+                ["Erfassungsart"] = (Spaltenart.Version, "Änderungsvorgang: Art (wandert nach Aenderungsvorgaenge, Etappe 3)"),
+                ["Grund"] = (Spaltenart.Version, "Änderungsvorgang: Grund (wandert nach Aenderungsvorgaenge, Etappe 3)"),
             },
         };
 

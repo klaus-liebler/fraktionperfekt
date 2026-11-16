@@ -59,9 +59,23 @@ internal sealed class FraktionSpeicher(FraktionDbContext db, TimeProvider uhr) :
     }
 
     public async Task<IReadOnlyList<Gremium>> GremienAsync(CancellationToken abbruch = default)
-        => await db.Gremien.OrderBy(g => g.Sortierung).ThenBy(g => g.Name).ThenBy(g => g.Id).ToListAsync(abbruch);
+    {
+        var gremien = await db.Gremien.OrderBy(g => g.Sortierung).ThenBy(g => g.Id).AsSplitQuery().ToListAsync(abbruch);
+        var jetzt = uhr.GetUtcNow();
+        foreach (var g in gremien)
+        {
+            g.StandHeuteBerechnen(jetzt);
+        }
 
-    public Task<Gremium?> GremiumAsync(Guid id, CancellationToken abbruch = default) => db.Gremien.FirstOrDefaultAsync(g => g.Id == id, abbruch);
+        return gremien;
+    }
+
+    public async Task<Gremium?> GremiumAsync(Guid id, CancellationToken abbruch = default)
+    {
+        var g = await db.Gremien.FirstOrDefaultAsync(g => g.Id == id, abbruch);
+        g?.StandHeuteBerechnen(uhr.GetUtcNow());
+        return g;
+    }
 
     public async Task<IReadOnlyList<Mitgliedschaft>> MitgliedschaftenAsync(CancellationToken abbruch = default)
         => await db.Mitgliedschaften.OrderBy(m => m.Id).ToListAsync(abbruch);
