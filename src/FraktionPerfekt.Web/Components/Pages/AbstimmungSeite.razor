@@ -35,7 +35,7 @@ else
 
     <div class="fp-split">
         <section class="fp-card">
-            <h2>@(d.Umfrage.Mehrfachauswahl ? "Ihre Auswahl (mehrere möglich)" : "Ihre Stimme")</h2>
+            <h2>@(d.Umfrage.Mehrfachauswahl ? "Auswahl (mehrere möglich)" : "Stimme")</h2>
             @foreach (var o in d.Optionen)
             {
                 <label class="fp-option @(auswahl.Contains(o.Id) ? "sel" : null)">

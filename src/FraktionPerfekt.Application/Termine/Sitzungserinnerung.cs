@@ -45,7 +45,7 @@ public sealed class Sitzungserinnerung(
             {
                 var wann = DateOnly.FromDateTime(z.Termin.Beginn) == heute ? "Heute" : "Morgen";
                 await postausgang.PushEinreihenAsync(person, $"{wann} {z.Termin.Beginn:HH:mm}: {z.GremiumKurz ?? z.Termin.Titel}",
-                    $"{z.Termin.Titel}{(z.Termin.Ort is null ? "" : $" · {z.Termin.Ort}")}{(z.Beteiligung == Beteiligung.Vertritt ? " · Sie vertreten" : "")}",
+                    $"{z.Termin.Titel}{(z.Termin.Ort is null ? "" : $" · {z.Termin.Ort}")}{(z.Beteiligung == Beteiligung.Vertritt ? " · Vertretung" : "")}",
                     $"termine/{z.Termin.Id}", abbruch: abbruch);
                 daten.Hinzufuegen(new TerminErinnerung(z.Termin.Id, person.Id, uhr.GetUtcNow()));
                 n++;

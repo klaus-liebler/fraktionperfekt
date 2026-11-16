@@ -202,10 +202,10 @@ public sealed partial class AppStartTests : IAsyncLifetime
             }), abbruch)).IsSuccessStatusCode.ShouldBeTrue();
             foreach (var gesperrt in new[] { "antraege", "sitzungen", "anfragen", "anliegen", "presse", "abstimmungen", "besetzung", "kontakte" })
             {
-                (await helfer.GetStringAsync(gesperrt, abbruch)).ShouldContain("für Ihre Rolle gesperrt", Case.Insensitive, $"/{gesperrt}");
+                (await helfer.GetStringAsync(gesperrt, abbruch)).ShouldContain("für diese Rolle gesperrt", Case.Insensitive, $"/{gesperrt}");
             }
 
-            (await helfer.GetStringAsync("wahlkampf", abbruch)).ShouldNotContain("für Ihre Rolle gesperrt");
+            (await helfer.GetStringAsync("wahlkampf", abbruch)).ShouldNotContain("für diese Rolle gesperrt");
         }
 
         // Handy: Vertretungsanfrage mit Ein-Tipp-Antwort „Ich vertrete“.
@@ -219,7 +219,7 @@ public sealed partial class AppStartTests : IAsyncLifetime
             ["zusage"] = "ja",
         }), abbruch);
         var seiteDanach = await bestaetigung.Content.ReadAsStringAsync(abbruch);
-        seiteDanach.ShouldContain("Sie haben zugesagt");
+        seiteDanach.ShouldContain("Zugesagt. Danke");
     }
 
     private static string Token(string html) => TokenMuster().Match(html).Groups[1].Value;

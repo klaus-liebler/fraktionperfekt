@@ -21,7 +21,7 @@ internal static class HandyEndpunkte
             {
                 var ergebnis = await kalender.AntwortenAsync(id, ja);
                 var vertretung = ergebnis.NaechsteSchritte.FirstOrDefault(s => s.Hauptschritt && s.Ziel.StartsWith("vertretungen/termin/", StringComparison.Ordinal));
-                return Zurueck("handy", ja ? "Zugesagt." : vertretung is null ? "Abgesagt." : "Abgesagt. Sie sind ordentliches Mitglied – Vertretung jetzt anfragen?",
+                return Zurueck("handy", ja ? "Zugesagt." : vertretung is null ? "Abgesagt." : "Abgesagt. Als ordentliches Mitglied jetzt Vertretung anfragen?",
                     vertretung is null ? null : id);
             }
             catch (InvalidOperationException ex)

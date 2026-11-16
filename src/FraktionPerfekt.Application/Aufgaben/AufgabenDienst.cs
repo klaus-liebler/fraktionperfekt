@@ -77,7 +77,7 @@ public sealed class AufgabenDienst(
 
         if (a.ZugewiesenPersonId == wer.PersonId)
         {
-            return Freigabe.Nein("Sie bearbeiten die Aufgabe bereits.");
+            return Freigabe.Nein("Die Aufgabe ist schon in eigener Bearbeitung.");
         }
 
         return a.ZugewiesenPersonId is null ? Freigabe.Ja : Freigabe.Nein("Die Aufgabe bearbeitet bereits jemand anderes; bitte zuweisen lassen.");

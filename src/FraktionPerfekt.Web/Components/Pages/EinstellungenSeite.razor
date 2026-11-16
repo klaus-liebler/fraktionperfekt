@@ -8,13 +8,13 @@
 <div class="fp-head">
     <div>
         <h1>Meine Einstellungen</h1>
-        <p class="fp-sub">Wie FraktionPerfekt Sie bzw. dich anspricht – auf der Startseite, in Push-Mitteilungen und Mails. Gilt nur für dich bzw. Sie selbst.</p>
+        <p class="fp-sub">Persönliche Ansprache auf der Startseite, in Push-Mitteilungen und Mails. Gilt nur für das eigene Konto; übrige Texte sind neutral formuliert.</p>
     </div>
 </div>
 
 @if (ich is null)
 {
-    <section class="fp-card"><p>Ihrem Konto ist keine Person zugeordnet.</p></section>
+    <section class="fp-card"><p>Diesem Konto ist keine Person zugeordnet.</p></section>
 }
 else
 {
@@ -105,7 +105,7 @@ else
         try
         {
             await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<StammdatenDienst>().AnspracheSpeichernAsync(anrede, form, stil, titel));
-            (meldung, fehler) = ("Gespeichert. So werden Sie bzw. wirst du ab jetzt angesprochen.", false);
+            (meldung, fehler) = ("Gespeichert. Die Ansprache gilt ab sofort.", false);
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
         {

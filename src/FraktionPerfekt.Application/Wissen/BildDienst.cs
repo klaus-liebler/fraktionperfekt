@@ -55,7 +55,7 @@ public sealed partial class BildDienst(
 
         if (Besitzer(bezugArt) is not { } b || (b.Art != BildBesitzer.Entwurf && !await b.Sichtbar(dienste, bezugId, abbruch)))
         {
-            throw new InvalidOperationException("Hierzu können Sie keine Bilder einfügen (nicht gefunden oder keine Rechte).");
+            throw new InvalidOperationException("Hierzu lassen sich keine Bilder einfügen (nicht gefunden oder keine Rechte).");
         }
 
         using var puffer = new MemoryStream();

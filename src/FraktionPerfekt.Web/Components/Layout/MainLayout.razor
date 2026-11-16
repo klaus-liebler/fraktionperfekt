@@ -55,9 +55,9 @@
                         }
                         else
                         {
-                            <span class="fp-why" tabindex="0" data-why="Ihrem Konto ist nur diese eine Rolle zugeordnet.">Rolle <b>@benutzer?.Rolle?.Anzeigename()</b></span>
+                            <span class="fp-why" tabindex="0" data-why="Diesem Konto ist nur diese eine Rolle zugeordnet.">Rolle <b>@benutzer?.Rolle?.Anzeigename()</b></span>
                         }
-                        <a href="einstellungen" class="fp-link" title="Wie Sie bzw. du angesprochen werden möchtest">Einstellungen</a>
+                        <a href="einstellungen" class="fp-link" title="Persönliche Ansprache (Du/Sie, Begrüßung)">Einstellungen</a>
                         <a href="anmelden" class="fp-link" title="Mit einem anderen Testkonto anmelden">Konto wechseln</a>
                         <form method="post" action="abmelden" class="fp-inline">
                             <AntiforgeryToken />
@@ -73,7 +73,7 @@
             {
                 @* Direkte Adresse zu einem Bereich, den das Menü für diese Rolle sperrt: erklären statt leere Seite *@
                 <section class="fp-card" role="alert">
-                    <h1>@sperre.Titel ist für Ihre Rolle gesperrt</h1>
+                    <h1>@sperre.Titel ist für diese Rolle gesperrt</h1>
                     <p>@sperre.Grund</p>
                     <p><a href="">Zur Startseite</a></p>
                 </section>
@@ -140,7 +140,7 @@
         {
             if ((pfad == n.Ziel || pfad.StartsWith(n.Ziel + "/", StringComparison.OrdinalIgnoreCase)) && n.Recht!(benutzer?.Rolle) is { Erlaubt: false } nein)
             {
-                return (n.Titel, nein.Begruendung ?? "Für Ihre Rolle nicht freigegeben.");
+                return (n.Titel, nein.Begruendung ?? "Für diese Rolle nicht freigegeben.");
             }
         }
 

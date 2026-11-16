@@ -36,7 +36,7 @@ public sealed record Freigabe
 
         var benoetigt = string.Join(" oder ", erlaubteRollen.Select(x => $"„{x.Anzeigename()}“"));
         var eigene = aktuelleRolle?.Anzeigename() ?? "keine";
-        return Nein($"Nur für die Rolle {benoetigt}. Ihre Rolle: {eigene}.");
+        return Nein($"Nur für die Rolle {benoetigt}. Aktive Rolle: {eigene}.");
     }
 
     /// <summary>Funktion ist geplant, aber noch nicht umgesetzt.</summary>

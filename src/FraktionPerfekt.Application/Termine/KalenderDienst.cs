@@ -160,7 +160,7 @@ public sealed class KalenderDienst(
             if (Besetzung.OrdentlicheAm(mitgliedschaften, gremiumId, termin.Tag, uhr.GetUtcNow()).Contains(personId))
             {
                 schritte.Add(new NaechsterSchritt("Vertretung anfragen", $"vertretungen/termin/{terminId}",
-                    "Sie sind ordentliches Mitglied: Ihre Stellvertretungen werden in Rangfolge gefragt.", Hauptschritt: true));
+                    "Ordentliche Mitgliedschaft: Die Stellvertretungen werden in Rangfolge gefragt.", Hauptschritt: true));
             }
         }
 
@@ -230,7 +230,7 @@ public sealed class KalenderDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         var personId = wer.PersonIdPflicht;
         var abo = (await termine.AbosDerPersonAsync(personId, abbruch)).FirstOrDefault(a => a.Id == aboId)
-            ?? throw new InvalidOperationException("Dieses Abo gehört nicht zu Ihnen.");
+            ?? throw new InvalidOperationException("Dieses Abo gehört zu einem anderen Konto.");
         abo.Widerrufen(uhr.GetUtcNow());
         await protokoll.ProtokollierenAsync("Kalender.AboWiderrufen", $"Kalender-Abo von {Pseudonym.Person(personId)} widerrufen",
             nameof(KalenderAbo), abo.Id, abbruch: abbruch);
@@ -269,7 +269,7 @@ public sealed class KalenderDienst(
             zeilen.Where(z => z.MeinStatus != Teilnahmestatus.Abgesagt).Select(z => new Kalendereintrag(z.Termin.Id,
                 z.GremiumKurz is { } k && !z.Termin.Titel.Contains(k, StringComparison.Ordinal) ? $"{z.Termin.Titel} ({k})" : z.Termin.Titel,
                 z.Termin.Beginn, z.Termin.Ende, z.Termin.Ort,
-                (z.Beteiligung == Beteiligung.Vertritt ? "Sie vertreten in dieser Sitzung.\n" : string.Empty) + optionen.Value.Link($"termine/{z.Termin.Id}"),
+                (z.Beteiligung == Beteiligung.Vertritt ? "Vertretung in dieser Sitzung.\n" : string.Empty) + optionen.Value.Link($"termine/{z.Termin.Id}"),
                 z.Termin.Abgesagt)).Concat(schichten),
             jetzt);
     }

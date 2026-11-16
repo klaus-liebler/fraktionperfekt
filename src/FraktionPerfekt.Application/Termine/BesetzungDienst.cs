@@ -103,9 +103,9 @@ public sealed class BesetzungDienst(
                 : vorstand)).ToList(),
             meine,
             !a.MeldungMoeglich(jetzt) ? Freigabe.Nein("Die Meldefrist ist abgelaufen.")
-                : meine is { Status: not Meldungsstatus.Zurueckgezogen } ? Freigabe.Nein("Sie haben sich bereits gemeldet.")
+                : meine is { Status: not Meldungsstatus.Zurueckgezogen } ? Freigabe.Nein("Bereits gemeldet.")
                 : Freigabe.Ja,
-            meine is { Status: Meldungsstatus.Interessiert or Meldungsstatus.Bestaetigt } ? Freigabe.Ja : Freigabe.Nein("Sie haben sich nicht gemeldet."),
+            meine is { Status: Meldungsstatus.Interessiert or Meldungsstatus.Bestaetigt } ? Freigabe.Ja : Freigabe.Nein("Keine eigene Meldung."),
             t.Ende > Ortszeit.Jetzt(uhr) ? Freigabe.Nein("Den Kurzbericht gibt es nach dem Termin.")
                 : meine?.Status == Meldungsstatus.Bestaetigt || vorstand.Erlaubt ? Freigabe.Ja
                 : Freigabe.Nein("Den Bericht schreiben die Teilnehmenden oder der Vorstand."));
@@ -178,8 +178,8 @@ public sealed class BesetzungDienst(
 
         await daten.SpeichernAsync(abbruch);
         return meine.Status == Meldungsstatus.Bestaetigt
-            ? "Sie sind dabei – der Termin steht in Ihrem Kalender."
-            : anfrage.Modus == Besetzungsmodus.WerZuerstKommt ? "Alle Plätze sind vergeben; Sie stehen auf der Warteliste." : "Interesse gemeldet; der Vorstand bestätigt.";
+            ? "Dabei – der Termin steht im eigenen Kalender."
+            : anfrage.Modus == Besetzungsmodus.WerZuerstKommt ? "Alle Plätze sind vergeben; Platz auf der Warteliste." : "Interesse gemeldet; der Vorstand bestätigt.";
     }
 
     public async Task BestaetigenAsync(Guid meldungId, bool bestaetigen, CancellationToken abbruch = default)
@@ -203,7 +203,7 @@ public sealed class BesetzungDienst(
 
         if (await stammdaten.PersonAsync(m.PersonId, abbruch) is { } p)
         {
-            await postausgang.PushEinreihenAsync(p, bestaetigen ? $"Sie sind dabei: {d.Termin.Titel}" : $"Diesmal nicht: {d.Termin.Titel}",
+            await postausgang.PushEinreihenAsync(p, bestaetigen ? $"Dabei: {d.Termin.Titel}" : $"Diesmal nicht: {d.Termin.Titel}",
                 bestaetigen ? $"{d.Termin.Beginn:dd.MM. HH:mm} Uhr, {d.Termin.Ort}" : "Danke für die Meldung.", $"besetzung/{d.Anfrage.Id}", abbruch: abbruch);
         }
 
@@ -214,7 +214,7 @@ public sealed class BesetzungDienst(
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
         var meldungen = await MeldungenAsync(anfrageId, abbruch);
-        var meine = meldungen.FirstOrDefault(m => m.PersonId == wer.PersonId) ?? throw new InvalidOperationException("Sie haben sich nicht gemeldet.");
+        var meine = meldungen.FirstOrDefault(m => m.PersonId == wer.PersonId) ?? throw new InvalidOperationException("Keine eigene Meldung.");
         var warBestaetigt = meine.Status == Meldungsstatus.Bestaetigt;
         meine.Zurueckziehen();
         var anfrage = await daten.LadenAsync<Besetzungsanfrage>(anfrageId, "Anfrage", abbruch);
@@ -229,7 +229,7 @@ public sealed class BesetzungDienst(
             await ZusagenAsync(termin, m.PersonId, abbruch);
             if (await stammdaten.PersonAsync(m.PersonId, abbruch) is { } p)
             {
-                await postausgang.PushEinreihenAsync(p, $"Nachgerückt: {termin.Titel}", $"{termin.Beginn:dd.MM. HH:mm} Uhr – Sie sind dabei.", $"besetzung/{anfrageId}",
+                await postausgang.PushEinreihenAsync(p, $"Nachgerückt: {termin.Titel}", $"{termin.Beginn:dd.MM. HH:mm} Uhr – Platz bestätigt.", $"besetzung/{anfrageId}",
                     abbruch: abbruch);
             }
         }

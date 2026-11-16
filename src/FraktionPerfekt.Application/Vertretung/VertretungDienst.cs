@@ -238,8 +238,8 @@ public sealed class VertretungDienst(
         {
             return new Anfrageergebnis(fall.Status, anfrage.Status switch
             {
-                Anfragestatus.Zugesagt => "Sie haben bereits zugesagt.",
-                Anfragestatus.Abgelehnt => "Sie haben bereits abgesagt.",
+                Anfragestatus.Zugesagt => "Bereits zugesagt.",
+                Anfragestatus.Abgelehnt => "Bereits abgesagt.",
                 Anfragestatus.Abgelaufen => "Die Antwortfrist ist abgelaufen; die Anfrage ging an die nächste Person.",
                 _ => "Die Anfrage wurde zurückgezogen; die Vertretung wird nicht mehr gebraucht.",
             }, [new NaechsterSchritt("Zur Startseite", "")]);
@@ -253,7 +253,7 @@ public sealed class VertretungDienst(
         await speicher.SpeichernAsync(abbruch);
 
         return zusage
-            ? new Anfrageergebnis(fall.Status, $"Danke! Sie vertreten am {termin.Beginn:dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr. Der Termin steht in Ihrem Kalender.",
+            ? new Anfrageergebnis(fall.Status, $"Danke! Vertretung am {termin.Beginn:dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr – der Termin steht im eigenen Kalender.",
                 [new NaechsterSchritt("Termin ansehen", $"termine/{termin.Id}", Hauptschritt: true), new NaechsterSchritt("Zur Startseite", "")])
             : new Anfrageergebnis(fall.Status, "Danke für die Rückmeldung. Die Anfrage geht an die nächste Stellvertretung.",
                 [new NaechsterSchritt("Zur Startseite", "", Hauptschritt: true)]);
@@ -504,7 +504,7 @@ public sealed class VertretungDienst(
         {
             schritte.Add(new NaechsterSchritt(
                 ohneFall == 1 ? "In 1 Sitzung fehlt dann jemand: Vertretung anfragen" : $"In {ohneFall} Sitzungen fehlt dann jemand: Vertretung anfragen",
-                $"abwesenheit/{a.Id}?anfragen=1", "Ihre Stellvertretungen werden in der Reihenfolge ihres Rangs gefragt.", Hauptschritt: true));
+                $"abwesenheit/{a.Id}?anfragen=1", "Die Stellvertretungen werden in der Reihenfolge ihres Rangs gefragt.", Hauptschritt: true));
         }
 
         schritte.Add(new NaechsterSchritt("Sitzungen mit offener Vertretung", "vertretungen"));

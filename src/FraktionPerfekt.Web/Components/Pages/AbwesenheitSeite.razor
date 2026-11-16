@@ -11,7 +11,7 @@
 <div class="fp-head">
     <div>
         <h1>Abwesenheit melden</h1>
-        <p class="fp-sub">Das System findet Ihre Sitzungen im Zeitraum und fragt auf Wunsch Ihre Stellvertretungen in Rangfolge an.</p>
+        <p class="fp-sub">Das System findet die eigenen Sitzungen im Zeitraum und fragt auf Wunsch die Stellvertretungen in Rangfolge an.</p>
     </div>
 </div>
 
@@ -32,11 +32,11 @@
         </h2>
         @if (ergebnis.Sitzungen.Count == 0)
         {
-            <p class="fp-muted">In diesem Zeitraum haben Sie keine Sitzungen als ordentliches Mitglied.</p>
+            <p class="fp-muted">Im Zeitraum keine Sitzungen als ordentliches Mitglied.</p>
         }
         else
         {
-            <p>Betroffene Sitzungen (Sie sind ordentliches Mitglied):</p>
+            <p>Betroffene Sitzungen (als ordentliches Mitglied):</p>
         }
         <div class="fp-list">
             @foreach (var s in ergebnis.Sitzungen)
@@ -71,7 +71,7 @@ else
             <div class="fp-field">
                 <label class="fp-lbl" for="a-grund">Grund (optional, privat)</label>
                 <RadzenTextBox id="a-grund" @bind-Value="grund" Placeholder="z. B. Urlaub" />
-                <span class="fp-small fp-muted">Sehen nur Sie und die Geschäftsführung. Nicht in Nachrichten oder Protokoll. Gesundheitsangaben bitte weglassen.</span>
+                <span class="fp-small fp-muted">Nur für die eigene Person und die Geschäftsführung sichtbar. Nicht in Nachrichten oder Protokoll. Gesundheitsangaben bitte weglassen.</span>
             </div>
         </div>
         <div class="fp-row">
@@ -133,7 +133,7 @@ else
 
     private Freigabe AnfragenFreigabe => ergebnis is null || !ergebnis.Abwesenheit.Aktiv
         ? Freigabe.Nein("Die Abwesenheit wurde zurückgezogen.")
-        : ergebnis.Sitzungen.Count == 0 ? Freigabe.Nein("Im Zeitraum gibt es keine Sitzungen, in denen Sie ordentliches Mitglied sind.")
+        : ergebnis.Sitzungen.Count == 0 ? Freigabe.Nein("Im Zeitraum keine Sitzungen als ordentliches Mitglied.")
         : ergebnis.Sitzungen.All(s => s.Fall is not null) ? Freigabe.Nein("Für alle betroffenen Sitzungen läuft bereits eine Anfrage oder sie ist besetzt.")
         : Freigabe.Ja;
 
