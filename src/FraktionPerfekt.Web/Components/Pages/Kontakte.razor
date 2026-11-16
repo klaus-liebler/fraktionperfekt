@@ -23,7 +23,7 @@
     <section class="fp-card fp-hervor">
         <h2>@(id is null ? "Neuer Kontakt" : "Kontakt bearbeiten")</h2>
         <div class="fp-form">
-            <div class="fp-field"><label class="fp-lbl" for="k-name">Name</label><RadzenTextBox id="k-name" @bind-Value="name" @bind-Value:event="oninput" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="k-name">Name</label><RadzenTextBox id="k-name" @bind-Value="name" Immediate="true" /></div>
             <div class="fp-field"><label class="fp-lbl" for="k-org">Organisation</label><RadzenTextBox id="k-org" @bind-Value="organisation" /></div>
             <div class="fp-field"><label class="fp-lbl" for="k-fkt">Funktion</label><RadzenTextBox id="k-fkt" @bind-Value="funktion" /></div>
             <div class="fp-field"><label class="fp-lbl" for="k-mail">E-Mail</label><RadzenTextBox id="k-mail" @bind-Value="eMail" /></div>
@@ -41,7 +41,7 @@
 <section class="fp-card">
     <div class="fp-form">
         <div class="fp-field fp-grow"><label class="fp-lbl" for="k-suche">Suche (Name, Organisation, Funktion, Thema)</label>
-            <RadzenTextBox id="k-suche" @bind-Value="suche" @bind-Value:event="oninput" @onkeyup="LadenAsync" /></div>
+            <RadzenTextBox id="k-suche" @bind-Value="suche" Immediate="true" @onkeyup="LadenAsync" /></div>
     </div>
     <div class="fp-tbl">
         <table>

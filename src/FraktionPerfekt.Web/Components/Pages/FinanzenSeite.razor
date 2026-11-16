@@ -83,7 +83,7 @@ else if (u is not null)
                 <details>
                     <summary>Posten anlegen</summary>
                     <div class="fp-form">
-                        <div class="fp-field"><label class="fp-lbl" for="po-bez">Bezeichnung</label><RadzenTextBox id="po-bez" @bind-Value="postenName" @bind-Value:event="oninput" /></div>
+                        <div class="fp-field"><label class="fp-lbl" for="po-bez">Bezeichnung</label><RadzenTextBox id="po-bez" @bind-Value="postenName" Immediate="true" /></div>
                         <div class="fp-field"><label class="fp-lbl">Ansatz (€)</label><RadzenNumeric TValue="decimal" @bind-Value="postenAnsatz" Min="0" Format="N2" Style="width:130px" /></div>
                     </div>
                     <RadzenButton Text="Anlegen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(postenName)" Click="@(() => AusfuehrenAsync(s => s.PostenAnlegenAsync(kasse, jahr, postenName!, postenAnsatz), "Posten angelegt."))" />
@@ -97,7 +97,7 @@ else if (u is not null)
                 <div class="fp-field"><label class="fp-lbl">Betrag (€)</label><RadzenNumeric TValue="decimal" @bind-Value="betrag" Min="0" Format="N2" Style="width:130px" /></div>
                 <div class="fp-field"><label class="fp-lbl">Datum</label><RadzenDatePicker TValue="DateTime" @bind-Value="datum" DateFormat="dd.MM.yyyy" /></div>
                 <div class="fp-field"><label class="fp-lbl">Posten</label><RadzenDropDown TValue="Guid?" @bind-Value="posten" AllowClear="true" Data="@u.Posten.Select(p => p.Posten).ToList()" TextProperty="Bezeichnung" ValueProperty="Id" /></div>
-                <div class="fp-field fp-grow"><label class="fp-lbl" for="bu-text">Text</label><RadzenTextBox id="bu-text" @bind-Value="text" @bind-Value:event="oninput" /></div>
+                <div class="fp-field fp-grow"><label class="fp-lbl" for="bu-text">Text</label><RadzenTextBox id="bu-text" @bind-Value="text" Immediate="true" /></div>
             </div>
             <BegruendeterButton Text="Buchen" Freigabe="@(u.Buchen.Erlaubt && (betrag <= 0 || string.IsNullOrWhiteSpace(text)) ? Freigabe.Nein("Betrag und Text angeben.") : u.Buchen)"
                                 Click="@(() => AusfuehrenAsync(s => s.BuchenAsync(kasse, DateOnly.FromDateTime(datum), einnahme, betrag, posten, text!), "Gebucht."))" />

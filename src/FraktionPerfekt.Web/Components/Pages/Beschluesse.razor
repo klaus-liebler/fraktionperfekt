@@ -15,7 +15,7 @@
 
 <section class="fp-card fp-einschub">
     <div class="fp-form">
-        <div class="fp-field fp-grow"><label class="fp-lbl" for="b-suche">Suche</label><RadzenTextBox id="b-suche" @bind-Value="suche" @bind-Value:event="oninput" @onkeyup="LadenAsync" Placeholder="z. B. Grundschule, Haushalt, Radweg" /></div>
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="b-suche">Suche</label><RadzenTextBox id="b-suche" @bind-Value="suche" Immediate="true" @onkeyup="LadenAsync" Placeholder="z. B. Grundschule, Haushalt, Radweg" /></div>
         <div class="fp-field"><label class="fp-lbl">Quelle</label><RadzenDropDown TValue="Beschlussquelle?" @bind-Value="quelle" AllowClear="true" Data="@(Enum.GetValues<Beschlussquelle>().Cast<Beschlussquelle?>())" Change="@(_ => LadenAsync())" /></div>
         <div class="fp-field"><label class="fp-lbl">Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" AllowClear="true" Data="@gremien" TextProperty="Kurzname" ValueProperty="Id" Change="@(_ => LadenAsync())" /></div>
         <div class="fp-field"><label class="fp-lbl">Jahr</label><RadzenNumeric TValue="int?" @bind-Value="jahr" Min="2000" Max="2100" Change="@(_ => LadenAsync())" Style="width:110px" /></div>

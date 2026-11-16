@@ -25,7 +25,7 @@
     <div class="fp-form">
         <div class="fp-field fp-grow">
             <label class="fp-lbl" for="wiki-suche">Volltextsuche oder Frage</label>
-            <RadzenTextBox id="wiki-suche" @bind-Value="anfrage" @bind-Value:event="oninput" Placeholder="z. B. Haushalt, Schulcampus, Wie läuft eine Fraktionssitzung?" />
+            <RadzenTextBox id="wiki-suche" @bind-Value="anfrage" Immediate="true" Placeholder="z. B. Haushalt, Schulcampus, Wie läuft eine Fraktionssitzung?" />
         </div>
     </div>
     <div class="fp-row">
@@ -98,7 +98,7 @@
     <details class="fp-card" open="@(NeuParameter is not null)">
         <summary>Neue Seite</summary>
         <div class="fp-form">
-            <div class="fp-field"><label class="fp-lbl" for="neu-titel">Titel</label><RadzenTextBox id="neu-titel" @bind-Value="neuTitel" @bind-Value:event="oninput" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="neu-titel">Titel</label><RadzenTextBox id="neu-titel" @bind-Value="neuTitel" Immediate="true" /></div>
             <div class="fp-field"><label class="fp-lbl">Bereich</label><RadzenDropDown TValue="string" @bind-Value="neuBereich" Data="@WikiDienst.Bereiche" /></div>
             <div class="fp-field"><label class="fp-lbl">Vorlage</label><RadzenDropDown TValue="string" @bind-Value="neuVorlage" Data="@Wikivorlagen.Alle.Keys" /></div>
             <div class="fp-field"><label><input type="checkbox" @bind="neuVertraulich" /> vertraulich (für die KI unsichtbar)</label></div>

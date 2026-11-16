@@ -124,7 +124,7 @@ else if (ansicht == "gebiete")
             <details>
                 <summary>Gebiet anlegen</summary>
                 <div class="fp-form">
-                    <div class="fp-field"><label class="fp-lbl" for="g-name">Name</label><RadzenTextBox id="g-name" @bind-Value="gebietName" @bind-Value:event="oninput" /></div>
+                    <div class="fp-field"><label class="fp-lbl" for="g-name">Name</label><RadzenTextBox id="g-name" @bind-Value="gebietName" Immediate="true" /></div>
                     <div class="fp-field"><label class="fp-lbl">Art</label><RadzenDropDown TValue="Gebietsart" @bind-Value="gebietArt" Data="@(Enum.GetValues<Gebietsart>())" /></div>
                     <div class="fp-field fp-grow"><label class="fp-lbl" for="g-beschr">Straßen / Beschreibung</label><RadzenTextBox id="g-beschr" @bind-Value="gebietBeschreibung" /></div>
                 </div>
@@ -156,7 +156,7 @@ else if (ansicht == "schichten")
             <details>
                 <summary>Schicht anlegen</summary>
                 <div class="fp-form">
-                    <div class="fp-field"><label class="fp-lbl" for="s-ort">Ort</label><RadzenTextBox id="s-ort" @bind-Value="schichtOrt" @bind-Value:event="oninput" /></div>
+                    <div class="fp-field"><label class="fp-lbl" for="s-ort">Ort</label><RadzenTextBox id="s-ort" @bind-Value="schichtOrt" Immediate="true" /></div>
                     <div class="fp-field"><label class="fp-lbl">Von</label><RadzenDatePicker TValue="DateTime" @bind-Value="schichtVon" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
                     <div class="fp-field"><label class="fp-lbl">Bis</label><RadzenDatePicker TValue="DateTime" @bind-Value="schichtBis" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
                     <div class="fp-field"><label class="fp-lbl">Plätze</label><RadzenNumeric TValue="int" @bind-Value="schichtPlaetze" Min="1" Max="20" Style="width:90px" /></div>

@@ -21,7 +21,7 @@
 <section class="fp-card fp-einschub">
     <h2>Auslage einreichen</h2>
     <div class="fp-form">
-        <div class="fp-field fp-grow"><label class="fp-lbl" for="au-zweck">Wofür?</label><RadzenTextBox id="au-zweck" @bind-Value="zweck" @bind-Value:event="oninput" /></div>
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="au-zweck">Wofür?</label><RadzenTextBox id="au-zweck" @bind-Value="zweck" Immediate="true" /></div>
         <div class="fp-field"><label class="fp-lbl">Betrag (€)</label><RadzenNumeric TValue="decimal" @bind-Value="betrag" Min="0" Format="N2" Style="width:130px" /></div>
         <div class="fp-field"><label class="fp-lbl">Datum</label><RadzenDatePicker TValue="DateTime" @bind-Value="datum" DateFormat="dd.MM.yyyy" /></div>
         <div class="fp-field"><label class="fp-lbl">Kasse</label><RadzenDropDown TValue="Kasse" @bind-Value="kasse" Data="@(Enum.GetValues<Kasse>())" /></div>

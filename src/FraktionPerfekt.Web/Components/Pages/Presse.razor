@@ -25,7 +25,7 @@
     <section class="fp-card fp-hervor">
         <h2>@(id is null ? "Neue Pressemitteilung" : "Pressemitteilung bearbeiten")</h2>
         <div class="fp-form">
-            <div class="fp-field fp-grow"><label class="fp-lbl" for="p-titel">Titel</label><RadzenTextBox id="p-titel" @bind-Value="titel" @bind-Value:event="oninput" /></div>
+            <div class="fp-field fp-grow"><label class="fp-lbl" for="p-titel">Titel</label><RadzenTextBox id="p-titel" @bind-Value="titel" Immediate="true" /></div>
             <div class="fp-field"><label class="fp-lbl">Geplant am</label><RadzenDatePicker TValue="DateTime?" @bind-Value="geplant" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
             <div class="fp-field"><label class="fp-lbl" for="p-thema">Thema</label><RadzenTextBox id="p-thema" @bind-Value="thema" /></div>
         </div>
@@ -109,8 +109,8 @@
     <details>
         <summary>Artikel erfassen</summary>
         <div class="fp-form">
-            <div class="fp-field"><label class="fp-lbl" for="s-medium">Medium</label><RadzenTextBox id="s-medium" @bind-Value="medium" @bind-Value:event="oninput" /></div>
-            <div class="fp-field fp-grow"><label class="fp-lbl" for="s-titel">Überschrift</label><RadzenTextBox id="s-titel" @bind-Value="artikelTitel" @bind-Value:event="oninput" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="s-medium">Medium</label><RadzenTextBox id="s-medium" @bind-Value="medium" Immediate="true" /></div>
+            <div class="fp-field fp-grow"><label class="fp-lbl" for="s-titel">Überschrift</label><RadzenTextBox id="s-titel" @bind-Value="artikelTitel" Immediate="true" /></div>
             <div class="fp-field"><label class="fp-lbl">Datum</label><RadzenDatePicker TValue="DateTime" @bind-Value="artikelDatum" DateFormat="dd.MM.yyyy" /></div>
             <div class="fp-field fp-grow"><label class="fp-lbl" for="s-link">Link</label><RadzenTextBox id="s-link" @bind-Value="link" /></div>
             <div class="fp-field"><label class="fp-lbl">Tonlage</label><RadzenDropDown TValue="Tonlage" @bind-Value="tonlage" Data="@(Enum.GetValues<Tonlage>())" /></div>

@@ -28,6 +28,8 @@ public sealed partial class AnspracheTexteTests
         funde.ShouldBeEmpty(string.Join("\n", funde));
     }
 
+    internal static string RepositoryFuerTests() => Repository();
+
     private static string Repository()
     {
         for (var d = new DirectoryInfo(AppContext.BaseDirectory); d is not null; d = d.Parent)
@@ -39,5 +41,24 @@ public sealed partial class AnspracheTexteTests
         }
 
         throw new InvalidOperationException("Repository nicht gefunden.");
+    }
+}
+
+/// <summary>
+/// Blazor: „@bind-Value:event“ an einer Komponente (z. B. RadzenTextBox) gibt ChangeEventArgs an ValueChanged(string) weiter und beendet
+/// die Sitzung („ChangeEventArgs cannot be converted to type String“). Für Eingabe beim Tippen gibt es bei Radzen Immediate="true".
+/// </summary>
+public sealed class BlazorBindungTests
+{
+    [Fact]
+    public void Kein_bind_Value_event_an_Komponenten()
+    {
+        var src = Path.Combine(AnspracheTexteTests.RepositoryFuerTests(), "src");
+        var funde = Directory.EnumerateFiles(src, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(f => File.ReadLines(f).Select((z, i) => (f, i, z)))
+            .Where(t => t.z.Contains("@bind-Value:event", StringComparison.Ordinal))
+            .Select(t => $"{Path.GetRelativePath(src, t.f)}:{t.i + 1}")
+            .ToList();
+        funde.ShouldBeEmpty(string.Join("\n", funde));
     }
 }

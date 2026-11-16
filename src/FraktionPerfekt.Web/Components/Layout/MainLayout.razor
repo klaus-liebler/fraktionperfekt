@@ -80,7 +80,17 @@
             }
             else
             {
-                @Body
+                @* Fehler in einer Seite beenden nicht die ganze Sitzung: verständliche Meldung, neu laden hilft *@
+                <ErrorBoundary @ref="fehlergrenze">
+                    <ChildContent>@Body</ChildContent>
+                    <ErrorContent>
+                        <section class="fp-card" role="alert">
+                            <h1>Da ist etwas schiefgelaufen</h1>
+                            <p>Diese Seite konnte die Eingabe nicht verarbeiten. Bitte die Seite neu laden; die übrigen Daten sind nicht betroffen.</p>
+                            <p><a href="" onclick="location.reload(); return false;">Seite neu laden</a></p>
+                        </section>
+                    </ErrorContent>
+                </ErrorBoundary>
             }
         </main>
     </div>
@@ -93,6 +103,10 @@
 </div>
 
 @code {
+    private ErrorBoundary? fehlergrenze;
+
+    protected override void OnParametersSet() => fehlergrenze?.Recover();   // nach Seitenwechsel wieder normal anzeigen
+
     private sealed record Navigationspunkt(string Gruppe, string Titel, string Ziel, Func<Rolle?, Freigabe>? Recht = null, string? Geplant = null);
 
     private static readonly IReadOnlyList<Navigationspunkt> Navigationspunkte =

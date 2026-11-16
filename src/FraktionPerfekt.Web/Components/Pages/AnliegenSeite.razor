@@ -21,8 +21,8 @@
 <details class="fp-card fp-einschub" open="@(zeilen.Count == 0)">
     <summary>Anliegen erfassen</summary>
     <div class="fp-form">
-        <div class="fp-field fp-grow"><label class="fp-lbl" for="an-betreff">Betreff</label><RadzenTextBox id="an-betreff" @bind-Value="betreff" @bind-Value:event="oninput" /></div>
-        <div class="fp-field"><label class="fp-lbl" for="an-name">Name</label><RadzenTextBox id="an-name" @bind-Value="name" @bind-Value:event="oninput" /></div>
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="an-betreff">Betreff</label><RadzenTextBox id="an-betreff" @bind-Value="betreff" Immediate="true" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="an-name">Name</label><RadzenTextBox id="an-name" @bind-Value="name" Immediate="true" /></div>
         <div class="fp-field"><label class="fp-lbl" for="an-kontakt">Kontaktweg</label><RadzenTextBox id="an-kontakt" @bind-Value="kontakt" Placeholder="Mail oder Telefon" /></div>
         <div class="fp-field"><label class="fp-lbl">Eingang über</label><RadzenDropDown TValue="Eingangskanal" @bind-Value="kanal" Data="@(Enum.GetValues<Eingangskanal>())" /></div>
         <div class="fp-field"><label class="fp-lbl" for="an-thema">Politikfeld</label><RadzenTextBox id="an-thema" @bind-Value="thema" Placeholder="z. B. Schule und Bildung" /></div>

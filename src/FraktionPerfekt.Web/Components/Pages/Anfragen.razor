@@ -68,7 +68,7 @@
 <details class="fp-card" open="@(zeilen.Count == 0)">
     <summary>Neue Anfrage</summary>
     <div class="fp-form">
-        <div class="fp-field fp-grow"><label class="fp-lbl" for="a-titel">Titel</label><RadzenTextBox id="a-titel" @bind-Value="titel" @bind-Value:event="oninput" /></div>
+        <div class="fp-field fp-grow"><label class="fp-lbl" for="a-titel">Titel</label><RadzenTextBox id="a-titel" @bind-Value="titel" Immediate="true" /></div>
         <div class="fp-field"><label class="fp-lbl">Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" AllowClear="true" Data="@gremien" TextProperty="Kurzname" ValueProperty="Id" /></div>
         <div class="fp-field"><label class="fp-lbl" for="a-thema">Politikfeld</label><RadzenTextBox id="a-thema" @bind-Value="thema" /></div>
     </div>
