@@ -22,8 +22,9 @@ public sealed record GremiumDetail(Gremium Gremium, IReadOnlyList<MitgliedZeile>
 public sealed record PersonMitgliedschaft(Guid MitgliedschaftId, Guid GremiumId, string Gremium, Funktion? Funktion, int? Rang,
     IReadOnlyList<MitgliedschaftsVersion> Verlauf);
 
+/// <param name="Heute">Alle Angaben, wie sie heute gelten (maßgeblich, nicht der Zwischenstand).</param>
 public sealed record PersonDetail(Person Person, IReadOnlyList<Rolle> Rollen, IReadOnlyList<PersonRollen> RollenVerlauf,
-    IReadOnlyList<PersonMitgliedschaft> Mitgliedschaften);
+    IReadOnlyList<PersonMitgliedschaft> Mitgliedschaften, PersonenStand? Heute = null);
 
 /// <summary>Personen, Gremien und Mitgliedschaften (Mandatsübersicht). Funktionen kommen aus dem RIS, der Rang ist fraktionsintern.</summary>
 public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtokoll protokoll, IAktuellerBenutzer benutzer, TimeProvider uhr)
@@ -63,7 +64,7 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
             .OrderBy(m => m.Funktion is null).ThenBy(m => m.Funktion).ThenBy(m => m.Gremium, StringComparer.CurrentCulture)
             .ToList();
         var rollenVerlauf = person.RollenVersionen.OrderByDescending(v => v.ErfasstAm).ThenByDescending(v => v.GueltigVon).ToList();
-        return new PersonDetail(person, person.RollenAm(heute, jetzt), rollenVerlauf, mitgliedschaften);
+        return new PersonDetail(person, person.RollenAm(heute, jetzt), rollenVerlauf, mitgliedschaften, person.StandAm(heute, jetzt));
     }
 
     public async Task<IReadOnlyList<GremiumZeile>> GremienAsync(CancellationToken abbruch = default)
@@ -192,6 +193,67 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
         person.AnspracheEinstellen(anrede, form, stil, titelInAnsprache);
         await protokoll.ProtokollierenAsync("Person.AnspracheGeaendert", "Eigene Ansprache eingestellt", nameof(Person), person.Id, abbruch: abbruch);
         await speicher.SpeichernAsync(abbruch);
+    }
+
+    /// <summary>Stand einer Person an einem Stichtag (nach heutigem Wissensstand oder dem Wissensstand <paramref name="bekanntAm"/>).</summary>
+    public async Task<PersonenStand?> StandAmAsync(Guid personId, DateOnly tag, DateTimeOffset? bekanntAm = null, CancellationToken abbruch = default)
+        => await speicher.PersonAsync(personId, abbruch) is { } p ? p.StandAm(tag, bekanntAm ?? uhr.GetUtcNow()) : null;
+
+    /// <summary>Name ändern ab Datum (z. B. Heirat, neuer Titel) oder korrigieren (Tippfehler, gesamter Zeitraum der betroffenen Version).</summary>
+    public async Task NameAendernAsync(Guid personId, string vorname, string nachname, string? titel, DateOnly datum, bool korrektur, string grund,
+        CancellationToken abbruch = default)
+    {
+        var wer = await PruefenAsync(abbruch);
+        var person = await speicher.PersonAsync(personId, abbruch) ?? throw new InvalidOperationException("Person nicht gefunden.");
+        var erfassung = korrektur ? Erfassung.Korrektur(uhr.GetUtcNow(), Grund(grund), wer.Anzeige) : Erfassung.Aenderung(uhr.GetUtcNow(), Grund(grund), wer.Anzeige);
+        if (korrektur)
+        {
+            person.NameKorrigieren(vorname, nachname, titel, datum, erfassung);
+        }
+        else
+        {
+            person.NameAendernAb(vorname, nachname, titel, datum, erfassung);
+        }
+
+        await protokoll.ProtokollierenAsync(korrektur ? "Person.NameKorrigiert" : "Person.NameGeaendert",
+            $"Name von {Pseudonym.Person(personId)} {(korrektur ? "korrigiert" : $"geändert ab {datum:dd.MM.yyyy}")}", nameof(Person), personId, abbruch: abbruch);
+        await speicher.SpeichernAsync(abbruch);
+    }
+
+    /// <summary>Anrede, Geschlecht, E-Mail, Mobil oder Funktion ändern ab Datum oder korrigieren.</summary>
+    public async Task AngabeAendernAsync(Guid personId, PersonMerkmalArt art, string? wert, DateOnly datum, bool korrektur, string grund,
+        CancellationToken abbruch = default)
+    {
+        var wer = await PruefenAsync(abbruch);
+        var person = await speicher.PersonAsync(personId, abbruch) ?? throw new InvalidOperationException("Person nicht gefunden.");
+        var erfassung = korrektur ? Erfassung.Korrektur(uhr.GetUtcNow(), Grund(grund), wer.Anzeige) : Erfassung.Aenderung(uhr.GetUtcNow(), Grund(grund), wer.Anzeige);
+        person.AngabeAendern(art, wert, datum, erfassung, korrektur);
+        await protokoll.ProtokollierenAsync("Person.AngabeGeaendert",
+            $"{art} von {Pseudonym.Person(personId)} {(korrektur ? "korrigiert" : $"geändert ab {datum:dd.MM.yyyy}")}", nameof(Person), personId, abbruch: abbruch);
+        await speicher.SpeichernAsync(abbruch);
+    }
+
+    /// <summary>Nachts: Zwischenstand aller Personen auf heute bringen (künftige Änderungen werden am Stichtag sichtbar).</summary>
+    public async Task<int> ZwischenstaendeAktualisierenAsync(CancellationToken abbruch = default)
+    {
+        var jetzt = uhr.GetUtcNow();
+        var geaendert = 0;
+        foreach (var p in await speicher.PersonenAsync(abbruch))
+        {
+            var vorher = (p.Vorname, p.Nachname, p.Titel, p.Anrede, p.EMail, p.Mobil);
+            p.ZwischenstandAktualisieren(jetzt);
+            if ((p.Vorname, p.Nachname, p.Titel, p.Anrede, p.EMail, p.Mobil) != vorher)
+            {
+                geaendert++;
+            }
+        }
+
+        if (geaendert > 0)
+        {
+            await speicher.SpeichernAsync(abbruch);
+        }
+
+        return geaendert;
     }
 
     private async Task<Benutzer> PruefenAsync(CancellationToken abbruch)

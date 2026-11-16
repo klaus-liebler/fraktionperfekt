@@ -187,7 +187,10 @@ public sealed class SitzungDienst(
         }
 
         var personen = (await stammdaten.PersonenAsync(abbruch)).ToDictionary(p => p.Id);
-        string? Name(Guid? id) => id is { } i && personen.TryGetValue(i, out var p) ? p.Anzeigename : null;
+        // Namen zum Stand des Sitzungstags (Protokolle zeigen, wie die Person damals hieß)
+        var sitzungstag = DateOnly.FromDateTime(termin.Beginn);
+        var wissen = uhr.GetUtcNow();
+        string? Name(Guid? id) => id is { } i && personen.TryGetValue(i, out var p) ? p.AnzeigenameAm(sitzungstag, wissen) : null;
         var tops = await TopsAsync(sitzungId, abbruch);
         var topIds = tops.Select(t => t.Id).ToList();
         var beschluesse = await daten.ListeAsync(daten.Menge<Beschluss>().Where(b => b.SitzungId == sitzungId).OrderBy(b => b.Id), abbruch);
@@ -203,7 +206,7 @@ public sealed class SitzungDienst(
         var steuert = Rechte.SitzungenSteuern(wer.Rolle).Erlaubt || istLeitung;
 
         return new SitzungDetail(s, termin, gremium?.Name, Name(s.LeitungPersonId), ansicht,
-            teilnehmende.Select(p => new AnwesenheitZeile(p.Id, p.Anzeigename, anwesenheit.FirstOrDefault(a => a.PersonId == p.Id)?.Status))
+            teilnehmende.Select(p => new AnwesenheitZeile(p.Id, p.AnzeigenameAm(sitzungstag, wissen), anwesenheit.FirstOrDefault(a => a.PersonId == p.Id)?.Status))
                 .OrderBy(a => a.Name, StringComparer.CurrentCulture).ToList(),
             steuert ? (s.TagesordnungAenderbar ? Freigabe.Ja : Freigabe.Nein("Die Tagesordnung ist nach Sitzungsende nicht mehr änderbar.")) : NurLeitung,
             TopAnmeldenFreigabe(s, wer),

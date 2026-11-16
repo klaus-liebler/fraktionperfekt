@@ -2,6 +2,7 @@
 @using FraktionPerfekt.Application.Gemeinsam
 @using FraktionPerfekt.Application.Stammdaten
 @using FraktionPerfekt.Domain.Gremien
+@using FraktionPerfekt.Domain.Personen
 @inject Vorgang Vorgang
 @inject TimeProvider Uhr
 
@@ -43,12 +44,74 @@ else
             </div>
         </section>
         <section class="fp-card">
-            <h2>Angaben</h2>
+            <h2>Angaben <span class="fp-small fp-muted">Stand heute</span></h2>
+            @{ var h = detail.Heute; }
             <dl class="fp-dl">
+                <dt>Name</dt><dd>@(h?.Anzeige ?? detail.Person.Anzeigename) <Verlauf Versionen="detail.Person.Namen" /></dd>
+                @foreach (var art in Enum.GetValues<PersonMerkmalArt>())
+                {
+                    var versionen = detail.Person.Merkmale.Where(m => m.Art == art).ToList();
+                    <dt>@Bezeichnung(art)</dt>
+                    <dd>@(Wert(h, art) ?? "–") @if (versionen.Count > 0) { <Verlauf Versionen="versionen" /> }</dd>
+                }
                 <dt>Anmeldename</dt><dd>@(detail.Person.Benutzerkennung ?? "–")</dd>
-                <dt>E-Mail</dt><dd>@(detail.Person.EMail ?? "–")</dd>
                 <dt>RIS</dt><dd>@(detail.Person.RisId is null ? "nicht verknüpft" : "verknüpft")</dd>
             </dl>
+
+            <details class="fp-einschub">
+                <summary>Stand an einem Stichtag</summary>
+                <div class="fp-row">
+                    <RadzenDatePicker TValue="DateTime" @bind-Value="stichtag" DateFormat="dd.MM.yyyy" aria-label="Stichtag" Change="@((DateTime? _) => StichtagAsync())" />
+                </div>
+                @if (amStichtag is { } st)
+                {
+                    <p class="fp-small">Am @stichtag.ToString("dd.MM.yyyy"): <b>@st.Anzeige</b>@(st.Funktion is null ? "" : $" · {st.Funktion}") · Rollen: @(st.Rollen.Count == 0 ? "keine" : string.Join(", ", st.Rollen.Select(x => x.Anzeigename())))</p>
+                }
+            </details>
+
+            @if (Rechte.StammdatenPflegen(benutzer?.Rolle).Erlaubt)
+            {
+                <details class="fp-einschub">
+                    <summary>Angabe ändern oder korrigieren</summary>
+                    <div class="fp-form">
+                        <div class="fp-field">
+                            <label class="fp-lbl" for="p-feld">Angabe</label>
+                            <select id="p-feld" class="fp-select" @bind="feld" @bind:after="FeldGewaehlt">
+                                <option value="Name">Name (Vorname, Nachname, Titel)</option>
+                                @foreach (var art in Enum.GetValues<PersonMerkmalArt>())
+                                {
+                                    <option value="@art">@Bezeichnung(art)</option>
+                                }
+                            </select>
+                        </div>
+                        @if (feld == "Name")
+                        {
+                            <div class="fp-field"><label class="fp-lbl" for="p-vor">Vorname</label><RadzenTextBox id="p-vor" @bind-Value="vorname" /></div>
+                            <div class="fp-field"><label class="fp-lbl" for="p-nach">Nachname</label><RadzenTextBox id="p-nach" @bind-Value="nachname" /></div>
+                            <div class="fp-field"><label class="fp-lbl" for="p-titel">Titel (akad. Grad)</label><RadzenTextBox id="p-titel" @bind-Value="titel" Placeholder="z. B. Dr." /></div>
+                        }
+                        else
+                        {
+                            <div class="fp-field fp-grow"><label class="fp-lbl" for="p-wert">Neuer Wert (leer = keine Angabe)</label><RadzenTextBox id="p-wert" @bind-Value="wert" /></div>
+                        }
+                    </div>
+                    <div class="fp-form">
+                        <div class="fp-field">
+                            <RadzenRadioButtonList TValue="bool" @bind-Value="korrektur" aria-label="Änderung oder Korrektur">
+                                <Items>
+                                    <RadzenRadioButtonListItem Text="Änderung ab Datum (z. B. Heirat, neues Amt) – vorher bleibt es, wie es war" Value="false" />
+                                    <RadzenRadioButtonListItem Text="Korrektur (Tippfehler) – die am Datum gültige Angabe war schon immer falsch" Value="true" />
+                                </Items>
+                            </RadzenRadioButtonList>
+                        </div>
+                        <div class="fp-field"><label class="fp-lbl">@(korrektur ? "Betroffene Angabe gültig am" : "Gültig ab")</label>
+                            <RadzenDatePicker TValue="DateTime" @bind-Value="datum" DateFormat="dd.MM.yyyy" /></div>
+                        <div class="fp-field fp-grow"><label class="fp-lbl" for="p-grund">Grund</label><RadzenTextBox id="p-grund" @bind-Value="grund" Placeholder="z. B. Heirat, Tippfehler, neue Funktion" /></div>
+                    </div>
+                    <BegruendeterButton Text="@(korrektur ? "Korrektur speichern" : "Änderung speichern")" Icon="save" Size="ButtonSize.Small"
+                                        Freigabe="@(string.IsNullOrWhiteSpace(grund) ? Freigabe.Nein("Bitte einen Grund angeben.") : Freigabe.Ja)" Click="AngabeSpeichernAsync" />
+                </details>
+            }
             <h3>Rollen <Verlauf Versionen="detail.RollenVerlauf" /></h3>
             <div class="fp-auswahl">
                 @foreach (var r in Enum.GetValues<Rolle>())
@@ -76,12 +139,78 @@ else
     private HashSet<Rolle> gewaehlt = [];
     private DateTime ab;
     private string? meldung;
+    private DateTime stichtag;
+    private PersonenStand? amStichtag;
+    private string feld = "Name";
+    private string? vorname, nachname, titel, wert, grund;
+    private bool korrektur;
+    private DateTime datum;
+
+    private static string Bezeichnung(PersonMerkmalArt art) => art switch
+    {
+        PersonMerkmalArt.Anrede => "Anrede",
+        PersonMerkmalArt.Geschlecht => "Geschlecht",
+        PersonMerkmalArt.EMail => "E-Mail",
+        PersonMerkmalArt.Mobil => "Mobil",
+        _ => "Funktion in der Fraktion",
+    };
+
+    private static string? Wert(PersonenStand? s, PersonMerkmalArt art) => s is null ? null : art switch
+    {
+        PersonMerkmalArt.Anrede => s.Anrede,
+        PersonMerkmalArt.Geschlecht => s.Geschlecht,
+        PersonMerkmalArt.EMail => s.EMail,
+        PersonMerkmalArt.Mobil => s.Mobil,
+        _ => s.Funktion,
+    };
+
+    private void FeldGewaehlt()
+    {
+        if (detail?.Heute is { } h)
+        {
+            (vorname, nachname, titel) = (h.Name?.Vorname, h.Name?.Nachname, h.Name?.Titel);
+            wert = Enum.TryParse<PersonMerkmalArt>(feld, out var art) ? Wert(h, art) : null;
+        }
+    }
+
+    private async Task StichtagAsync()
+        => amStichtag = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().StandAmAsync(Id, DateOnly.FromDateTime(stichtag)));
+
+    private async Task AngabeSpeichernAsync()
+    {
+        try
+        {
+            var tag = DateOnly.FromDateTime(datum);
+            if (feld == "Name")
+            {
+                await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().NameAendernAsync(Id, vorname ?? "", nachname ?? "", titel, tag, korrektur, grund!));
+            }
+            else
+            {
+                var art = Enum.Parse<PersonMerkmalArt>(feld);
+                await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().AngabeAendernAsync(Id, art, wert, tag, korrektur, grund!));
+            }
+
+            meldung = korrektur ? "Korrigiert. Die alte Angabe bleibt im Verlauf als ersetzt sichtbar." : $"Geändert ab {datum:dd.MM.yyyy}. Vorher bleibt es, wie es war.";
+            grund = null;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            meldung = ex.Message;
+        }
+
+        await LadenAsync();
+        FeldGewaehlt();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
         benutzer = await Vorgang.BenutzerAsync();
         ab = Ortszeit.Heute(Uhr).ToDateTime(TimeOnly.MinValue);
+        (stichtag, datum) = (ab, ab);
         await LadenAsync();
+        FeldGewaehlt();
+        await StichtagAsync();
     }
 
     private async Task LadenAsync()

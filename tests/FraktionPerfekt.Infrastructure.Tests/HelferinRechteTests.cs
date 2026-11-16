@@ -89,3 +89,35 @@ public sealed class KalenderKlartextTests
         text.ShouldNotContain("dateien/bild");
     }
 }
+
+
+/// <summary>Personendaten zeitlich: Änderung über den Dienst, Name im alten Antrag zum damaligen Stand.</summary>
+public sealed class PersonZeitlichAblaufTests
+{
+    [Fact]
+    public async Task Namensaenderung_ab_heute_alter_Antrag_zeigt_den_damaligen_Namen()
+    {
+        await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
+        await u.AnmeldenAsync("lkuehlert");
+        var antrag = (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Antraege.AntragDienst>().ListeAsync()))
+            .First(z => z.Autor == "Liz Kühlert").Antrag;
+        var liz = (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.IStammdatenSpeicher>().PersonNachKennungAsync("lkuehlert")))!;
+
+        await u.AnmeldenAsync("kalbers", FraktionPerfekt.Domain.Personen.Rolle.Administration);
+        var heute = FraktionPerfekt.Application.Gemeinsam.Ortszeit.Heute(u.Uhr);
+        await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Stammdaten.StammdatenDienst>()
+            .NameAendernAsync(liz.Id, "Liz", "Kühlert-Sommer", null, heute, false, "Heirat"));
+
+        // Personenseite: heute neuer Name, gestern der alte; der alte Antrag zeigt den Namen zum Tag der Antragstellung
+        var detail = (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Stammdaten.StammdatenDienst>().PersonAsync(liz.Id)))!;
+        detail.Heute!.Anzeige.ShouldBe("Liz Kühlert-Sommer");
+        (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Stammdaten.StammdatenDienst>().StandAmAsync(liz.Id, heute.AddDays(-1))))!
+            .Anzeige.ShouldBe("Liz Kühlert");
+        (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Antraege.AntragDienst>().DetailAsync(antrag.Id)))!.Autor.ShouldBe("Liz Kühlert");
+
+        // Nur die Geschäftsführung pflegt Personendaten
+        await u.AnmeldenAsync("thorstmann");
+        await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Stammdaten.StammdatenDienst>()
+            .NameAendernAsync(liz.Id, "X", "Y", null, heute, false, "Test")));
+    }
+}

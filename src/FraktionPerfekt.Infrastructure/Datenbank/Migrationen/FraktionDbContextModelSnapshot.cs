@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116194105_PersonAnsprache";
+    public override string LastMigrationId => "20261116194804_PersonZeitlich";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -867,6 +867,114 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("Personen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonMerkmal", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Art")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("ErfasstAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("ErfasstVon")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Erfassungsart")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("ErsetztAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Grund")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly?>("GueltigBis")
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly>("GueltigVon")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Inhalt")
+                    .IsRequired()
+                    .HasMaxLength(320)
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("PersonId", "GueltigVon");
+
+                b.ToTable("PersonMerkmale");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonName", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("ErfasstAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("ErfasstVon")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Erfassungsart")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("ErsetztAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Grund")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly?>("GueltigBis")
+                    .HasColumnType("TEXT");
+
+                b.Property<DateOnly>("GueltigVon")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Nachname")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("PersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .HasMaxLength(60)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Vorname")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("PersonId", "GueltigVon");
+
+                b.ToTable("PersonNamen");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonRollen", b =>
@@ -2230,6 +2338,24 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired();
             });
 
+        modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonMerkmal", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Personen.Person", null)
+                    .WithMany("Merkmale")
+                    .HasForeignKey("PersonId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonName", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Personen.Person", null)
+                    .WithMany("Namen")
+                    .HasForeignKey("PersonId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.PersonRollen", b =>
             {
                 b.HasOne("FraktionPerfekt.Domain.Personen.Person", null)
@@ -2305,6 +2431,10 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.Person", b =>
             {
+                b.Navigation("Merkmale");
+
+                b.Navigation("Namen");
+
                 b.Navigation("RollenVersionen");
             });
 

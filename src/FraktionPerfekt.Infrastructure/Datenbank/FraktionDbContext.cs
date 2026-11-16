@@ -73,6 +73,24 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.Property(p => p.Begruessungsstil).HasConversion<string>().HasMaxLength(20);
             b.HasMany(p => p.RollenVersionen).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
             b.Navigation(p => p.RollenVersionen).HasField("_rollen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+            b.HasMany(p => p.Namen).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(p => p.Namen).HasField("_namen").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+            b.HasMany(p => p.Merkmale).WithOne().HasForeignKey("PersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
+            b.Navigation(p => p.Merkmale).HasField("_merkmale").UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+            b.Ignore(p => p.AlleVersionen);
+        });
+        Version<PersonName>(modelBuilder, "PersonNamen", "PersonId", b =>
+        {
+            b.Property(v => v.Vorname).HasMaxLength(200);
+            b.Property(v => v.Nachname).HasMaxLength(200);
+            b.Property(v => v.Titel).HasMaxLength(60);
+            b.Ignore(v => v.Anzeige);
+        });
+        Version<PersonMerkmal>(modelBuilder, "PersonMerkmale", "PersonId", b =>
+        {
+            b.Property(v => v.Art).HasConversion<string>().HasMaxLength(20);
+            b.Property(v => v.Inhalt).HasMaxLength(320);
+            b.Ignore(v => v.WertOderNull);
         });
         Version<PersonRollen>(modelBuilder, "PersonRollen", "PersonId", b =>
         {

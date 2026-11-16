@@ -85,7 +85,9 @@ public sealed class AntragDienst(
             return null;
         }
 
-        var namen = (await stammdaten.PersonenAsync(abbruch)).ToDictionary(p => p.Id, p => p.Anzeigename);
+        // Namen zum damaligen Stand (Tag der Antragstellung), wie VibeVHS es bei alten Dokumenten macht
+        var damals = DateOnly.FromDateTime(Ortszeit.AlsOrtszeit(a.ErstelltAm).Date);
+        var namen = (await stammdaten.PersonenAsync(abbruch)).ToDictionary(p => p.Id, p => p.AnzeigenameAm(damals, uhr.GetUtcNow()));
         var fassungen = await daten.ListeAsync(daten.Menge<AntragFassung>().Where(f => f.AntragId == id).OrderBy(f => f.Nummer).ThenBy(f => f.Id), abbruch);
         var kommentare = await daten.ListeAsync(daten.Menge<AntragKommentar>().Where(k => k.AntragId == id).OrderBy(k => k.Am).ThenBy(k => k.Id), abbruch);
         var vorschlaege = await daten.ListeAsync(daten.Menge<Aenderungsvorschlag>().Where(v => v.AntragId == id).OrderBy(v => v.Am).ThenBy(v => v.Id), abbruch);

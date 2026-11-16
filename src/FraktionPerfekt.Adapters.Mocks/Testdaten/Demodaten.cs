@@ -53,10 +53,33 @@ public sealed class Demodaten(
 
         // 1. Personen und Rollen
         var personen = new Dictionary<string, Person>(StringComparer.Ordinal);
+        // Zeitlich gültige Angaben: Ratsmitglieder ab ihrem Rat-Beginn laut RIS (Name, Mitglied-Rolle, „Ratsmitglied“);
+        // Ämter in der Fraktion (Vorstand, Schatzmeister, Medienbeauftragte) ab Beginn der Wahlperiode 05.11.2025.
+        var wahlperiode = new DateOnly(2025, 11, 5);
+        var ratSeit = FraktionGreven.Zugehoerigkeiten.Where(z => z.Zugehoerigkeit.Gremium == "Rat")
+            .ToDictionary(z => z.Person.Kennung, z => z.Zugehoerigkeit.Seit);
         foreach (var d in Demofraktion.Personen)
         {
-            var p = new Person(d.Vorname, d.Nachname, d.Adresse, d.Kennung, jetzt, d.RisId, titel: d.Titel, anrede: d.Anrede);
-            p.RollenFestlegenAb(seit, d.Rollen, Erfassung.Erst(jetzt, Von, $"Demodaten: {d.Funktion}"));
+            var ab = ratSeit.TryGetValue(d.Kennung, out var r) ? r : seit;
+            var amt = d.Rollen.Any(x => x is Rolle.Vorstand or Rolle.Kassier) || d.Funktion is "Medienbeauftragte";
+            var p = new Person(d.Vorname, d.Nachname, d.Adresse, d.Kennung, jetzt, d.RisId, titel: d.Titel, anrede: d.Anrede, gueltigAb: ab,
+                funktion: amt ? (ratSeit.ContainsKey(d.Kennung) ? "Ratsmitglied" : null) : d.Funktion, von: Von);
+            var grundrollen = d.Rollen.Where(x => x is not (Rolle.Vorstand or Rolle.Kassier)).ToList();
+            if (amt && ab < wahlperiode && grundrollen.Count > 0)
+            {
+                p.RollenFestlegenAb(ab, grundrollen, Erfassung.Erst(jetzt, Von, "Demodaten: Ratsmitglied"));
+                p.RollenFestlegenAb(wahlperiode, d.Rollen, Erfassung.Aenderung(jetzt, $"Demodaten: {d.Funktion}", Von));
+            }
+            else
+            {
+                p.RollenFestlegenAb(amt && ab < wahlperiode ? wahlperiode : ab, d.Rollen, Erfassung.Erst(jetzt, Von, $"Demodaten: {d.Funktion}"));
+            }
+
+            if (amt)
+            {
+                p.AngabeAendern(PersonMerkmalArt.Funktion, d.Funktion, wahlperiode > ab ? wahlperiode : ab, Erfassung.Aenderung(jetzt, "Demodaten: Amt in der Fraktion", Von), false);
+            }
+
             stammdaten.Hinzufuegen(p);
             personen[d.Kennung] = p;
         }
