@@ -150,6 +150,45 @@ public sealed partial class AppStartTests : IAsyncLifetime
             System.Text.Encoding.UTF8, "application/json"), abbruch);
         (await aufruf.Content.ReadAsStringAsync(abbruch)).ShouldContain("zwei Wochen");
 
+        // Wiki-Bilder: Einfügen aus der Zwischenablage (Datei „image.png“) über den Upload-Endpunkt mit Antiforgery-Token,
+        // Auslieferung mit privatem Cache; Nicht-Bilder und Anfragen ohne Token werden abgewiesen.
+        var seitenId = System.Text.Json.JsonDocument.Parse(kiSeiten).RootElement.EnumerateArray()
+            .First(e => e.GetProperty("titel").GetString() == "Fraktionssitzung").GetProperty("id").GetString()!;
+        var wikiHtml = await http.GetStringAsync("wiki/seite/Fraktionssitzung", abbruch);
+        MultipartFormDataContent Formular(byte[] inhalt, string name, bool mitToken)
+        {
+            var f = new MultipartFormDataContent();
+            var datei = new ByteArrayContent(inhalt);
+            datei.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+            f.Add(datei, "datei", name);
+            f.Add(new StringContent("Wiki"), "bezugArt");
+            f.Add(new StringContent(seitenId), "bezugId");
+            if (mitToken)
+            {
+                f.Add(new StringContent(Token(wikiHtml)), "__RequestVerificationToken");
+            }
+
+            return f;
+        }
+
+        var png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+        var hoch = await http.PostAsync("dateien/bild", Formular(png, "image.png", true), abbruch);
+        var hochText = await hoch.Content.ReadAsStringAsync(abbruch);
+        hoch.StatusCode.ShouldBe(HttpStatusCode.OK, hochText);
+        var hochJson = System.Text.Json.JsonDocument.Parse(hochText).RootElement;
+        hochJson.GetProperty("name").GetString()!.ShouldStartWith("Eingefügt ");
+        var adresse = hochJson.GetProperty("adresse").GetString()!;
+        var bildAntwort = await http.GetAsync(adresse, abbruch);
+        bildAntwort.StatusCode.ShouldBe(HttpStatusCode.OK);
+        bildAntwort.Content.Headers.ContentType!.MediaType.ShouldBe("image/png");
+        bildAntwort.Headers.CacheControl!.Private.ShouldBeTrue();
+        (await http.PostAsync("dateien/bild", Formular("kein Bild"u8.ToArray(), "trick.png", true), abbruch)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await http.PostAsync("dateien/bild", Formular(png, "image.png", false), abbruch)).IsSuccessStatusCode.ShouldBeFalse();
+        using (var fremd = new HttpClient { BaseAddress = _adresse })
+        {
+            (await fremd.GetStringAsync(adresse, abbruch)).ShouldContain("Testanmeldung"); // ohne Anmeldung kein Bild
+        }
+
         // Handy: Vertretungsanfrage mit Ein-Tipp-Antwort „Ich vertrete“.
         var handy = await http.GetStringAsync("handy", abbruch);
         handy.ShouldContain("Vertretung gesucht");

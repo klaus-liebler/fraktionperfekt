@@ -407,3 +407,17 @@ label.fp-option.sel { border-color: var(--fp-rhoendorf); background: var(--fp-ca
 .fp-offline { max-width: 520px; margin: 40px auto; padding: 16px; }
 @media (max-width: 520px) { .fp-balken { grid-template-columns: minmax(70px, 30%) minmax(40px, 1fr) max-content; } .fp-balken-zahl { font-size: 12px; } }
 .fp-betrag { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Markdown-Editor (TOAST UI) und Bilder im Wiki */
+.fp-editor { margin-bottom: 10px; }
+.fp-editor .toastui-editor-defaultUI { border-radius: 8px; }
+.fp-editor-ersatz { width: 100%; font-family: ui-monospace, monospace; }
+.fp-markdown img { max-width: 100%; height: auto; border-radius: 6px; }
+.fp-markdown table { border-collapse: collapse; margin: 8px 0; }
+.fp-markdown th, .fp-markdown td { border: 1px solid var(--fp-line, #ddd); padding: 4px 8px; text-align: left; }
+.fp-markdown blockquote { border-left: 3px solid var(--fp-line, #ddd); margin: 8px 0; padding: 2px 12px; color: var(--fp-muted); }
+.fp-markdown pre { background: rgba(0,0,0,.05); padding: 8px; border-radius: 6px; overflow-x: auto; }
+.fp-mediathek { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.fp-mediathek li { font-size: 12px; overflow-wrap: anywhere; }
+.fp-mediathek img { width: 100%; height: 72px; object-fit: cover; border-radius: 6px; border: 1px solid var(--fp-line, #ddd); display: block; }
+.fp-inline label { margin-right: .4em; }

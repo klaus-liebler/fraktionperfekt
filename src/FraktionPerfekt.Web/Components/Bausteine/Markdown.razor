@@ -1,9 +1,12 @@
-@using System.Net
-@using System.Text
 @using System.Text.RegularExpressions
+@using Markdig
+@using Markdig.Syntax
+@using Markdig.Syntax.Inlines
 
-@* Einfaches, sicheres Markdown (#, ##, ###, -, **fett**, [[Wiki-Link]], Absätze). Alles wird HTML-kodiert. *@
-<div class="fp-markdown">@((MarkupString)Html(Text))</div>
+@* Markdown mit Markdig (Tabellen, Listen, Zitate, Code, Bilder, Links, [[Wiki-Links]]).
+   Bereinigung: Roh-HTML wird nie übernommen (DisableHtml → als Text kodiert), Links nur http/https/mailto oder relativ,
+   Bilder nur aus der eigenen Bildablage (dateien/bild/…). Überschriften rücken eine Ebene ein (# → h2), weil die Seite h1 hat. *@
+<div class="fp-markdown">@((MarkupString)Html(Text, WikiBasis))</div>
 
 @code {
     [Parameter]
@@ -13,67 +16,66 @@
     [Parameter]
     public string WikiBasis { get; set; } = "wiki/seite/";
 
-    private string Html(string? text)
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+        .DisableHtml().UsePipeTables().UseEmphasisExtras().UseTaskLists().UseAutoLinks().UseSoftlineBreakAsHardlineBreak().Build();
+
+    /// <summary>Markdown → sicheres HTML (öffentlich für Tests).</summary>
+    public static string Html(string? text, string wikiBasis = "wiki/seite/")
     {
-        var sb = new StringBuilder();
-        var liste = false;
-        foreach (var roh in (text ?? string.Empty).Replace("\r", string.Empty).Split('\n'))
+        var quelle = Regex.Replace(text ?? string.Empty, @"\[\[([^\[\]\n]+?)\]\]",
+            m => $"[{m.Groups[1].Value.Replace("]", "\\]")}]({wikiBasis}{Uri.EscapeDataString(m.Groups[1].Value)})", RegexOptions.None, TimeSpan.FromSeconds(1));
+        var dokument = Markdig.Markdown.Parse(quelle, Pipeline);
+        foreach (var link in dokument.Descendants<LinkInline>())
         {
-            var zeile = roh.TrimEnd();
-            if (zeile.StartsWith("- ", StringComparison.Ordinal))
+            if (!SichereAdresse(link.Url, link.IsImage))
             {
-                if (!liste)
-                {
-                    sb.Append("<ul>");
-                    liste = true;
-                }
-
-                sb.Append("<li>").Append(Inline(zeile[2..])).Append("</li>");
-                continue;
-            }
-
-            if (liste)
-            {
-                sb.Append("</ul>");
-                liste = false;
-            }
-
-            if (zeile.Length == 0)
-            {
-                continue;
-            }
-
-            if (zeile.StartsWith("### ", StringComparison.Ordinal))
-            {
-                sb.Append("<h4>").Append(Inline(zeile[4..])).Append("</h4>");
-            }
-            else if (zeile.StartsWith("## ", StringComparison.Ordinal))
-            {
-                sb.Append("<h3>").Append(Inline(zeile[3..])).Append("</h3>");
-            }
-            else if (zeile.StartsWith("# ", StringComparison.Ordinal))
-            {
-                sb.Append("<h2>").Append(Inline(zeile[2..])).Append("</h2>");
-            }
-            else
-            {
-                sb.Append("<p>").Append(Inline(zeile)).Append("</p>");
+                link.Url = link.IsImage ? string.Empty : "#";
             }
         }
 
-        if (liste)
+        foreach (var auto in dokument.Descendants<AutolinkInline>())
         {
-            sb.Append("</ul>");
+            if (!SichereAdresse(auto.Url, false))
+            {
+                auto.Url = "#";
+            }
         }
 
-        return sb.ToString();
+        foreach (var h in dokument.Descendants<HeadingBlock>())
+        {
+            h.Level = Math.Min(6, h.Level + 1);
+        }
+
+        return dokument.ToHtml(Pipeline);
     }
 
-    private string Inline(string text)
+    /// <summary>Links: http, https, mailto oder relativ (ohne Schema, nicht „//“). Bilder: nur „dateien/bild/{Guid}“.</summary>
+    public static bool SichereAdresse(string? url, bool bild)
     {
-        var html = WebUtility.HtmlEncode(text);
-        html = Regex.Replace(html, @"\*\*(.+?)\*\*", "<b>$1</b>");
-        html = Regex.Replace(html, @"\[\[(.+?)\]\]", m => $"<a href=\"{WikiBasis}{Uri.EscapeDataString(WebUtility.HtmlDecode(m.Groups[1].Value))}\">{m.Groups[1].Value}</a>");
-        return html;
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return false;
+        }
+
+        var u = url.Trim();
+        if (bild)
+        {
+            return Regex.IsMatch(u, @"^/?dateien/bild/[0-9a-fA-F-]{36}$", RegexOptions.None, TimeSpan.FromSeconds(1));
+        }
+
+        if (u.StartsWith("//", StringComparison.Ordinal) || u.StartsWith("\\\\", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var doppelpunkt = u.IndexOf(':', StringComparison.Ordinal);
+        var ende = u.IndexOfAny(['/', '?', '#']);
+        if (doppelpunkt < 0 || (ende >= 0 && ende < doppelpunkt))
+        {
+            return true; // relativ
+        }
+
+        var schema = u[..doppelpunkt].ToLowerInvariant();
+        return schema is "http" or "https" or "mailto";
     }
 }

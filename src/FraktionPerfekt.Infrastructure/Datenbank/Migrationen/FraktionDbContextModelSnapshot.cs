@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261115182728_Iteration8Feinschliff";
+    public override string LastMigrationId => "20261116184935_WikiBilder";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -1917,6 +1917,80 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("Schichteintraege");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.Bild", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<int>("Breite")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long?>("GeloeschtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long>("Groesse")
+                    .HasColumnType("INTEGER");
+
+                b.Property<Guid>("HochgeladenVonPersonId")
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("Hoehe")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("OriginalName")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Schluessel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Sha256")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Typ")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Sha256");
+
+                b.ToTable("Bilder");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.BildVerwendung", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("BezugArt")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("BezugId")
+                    .HasColumnType("TEXT");
+
+                b.Property<Guid>("BildId")
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("BezugArt", "BezugId");
+
+                b.HasIndex("BildId", "BezugArt", "BezugId")
+                    .IsUnique();
+
+                b.ToTable("BildVerwendungen");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.Datei", b =>

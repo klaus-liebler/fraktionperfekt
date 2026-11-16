@@ -51,7 +51,7 @@ else
         <section class="fp-card">
             @if (bearbeiten)
             {
-                <RadzenTextArea @bind-Value="text" Rows="18" Style="width:100%; font-family: monospace" aria-label="Seitentext" />
+                <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@BildDienst.Wiki" BezugId="@d.Seite.Id" BildHinzugefuegt="BilderLadenAsync" />
                 <div class="fp-form">
                     <div class="fp-field fp-grow"><label class="fp-lbl" for="w-komm">Was wurde geändert?</label><RadzenTextBox id="w-komm" @bind-Value="kommentar" /></div>
                 </div>
@@ -59,7 +59,8 @@ else
                     <RadzenButton Text="Speichern" Icon="save" Click="SpeichernAsync" />
                     <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => bearbeiten = false)" />
                 </div>
-                <p class="fp-small fp-muted">Formatierung: # Überschrift, ## Unterüberschrift, - Liste, **fett**, [[Seitentitel]] für Verweise.</p>
+                <p class="fp-small fp-muted">Werkzeugleiste für Überschriften, Listen, Tabellen und Links; unten rechts zwischen Markdown und WYSIWYG umschalten.
+                    Bilder einfach einfügen (Strg+V) oder hineinziehen. [[Seitentitel]] verlinkt eine Wiki-Seite.</p>
             }
             else
             {
@@ -108,6 +109,27 @@ else
                     <Vergleich Vorher="@alt.Text" Nachher="@d.Aktuell.Text" />
                 }
             </section>
+            <section class="fp-card">
+                <h2>Bilder dieser Seite</h2>
+                @if (bilder.Count == 0)
+                {
+                    <p class="fp-small fp-muted">Noch keine Bilder. Im Bearbeiten-Modus einfach ein Bild einfügen (Strg+V) oder hineinziehen.</p>
+                }
+                else
+                {
+                    <ul class="fp-mediathek">
+                        @foreach (var b in bilder)
+                        {
+                            <li>
+                                <a href="@b.Bild.Adresse" target="_blank" rel="noopener"><img src="@b.Bild.Adresse" alt="@b.Bild.OriginalName" loading="lazy" /></a>
+                                <span title="@b.Bild.OriginalName">@b.Bild.OriginalName</span><br />
+                                <span class="fp-muted">@b.Bild.Breite×@b.Bild.Hoehe · @(Math.Max(1, b.Bild.Groesse / 1024)) KB@(b.InText ? "" : " · nicht im Text")</span>
+                            </li>
+                        }
+                    </ul>
+                    <p class="fp-small fp-muted">Bilder, die in keinem Seitentext mehr vorkommen, werden nach @BildDienst.Aufbewahrung.Days Tagen gelöscht.</p>
+                }
+            </section>
             <Anhaenge BezugArt="Wiki" BezugId="@d.Seite.Id" Ordner="Wiki" GremiumId="@d.Seite.GremiumId" Vertraulich="@d.Seite.Vertraulich" />
         </aside>
     </div>
@@ -121,6 +143,8 @@ else
     private int? BearbeitenParameter { get; set; }
 
     private WikiDetail? d;
+    private MarkdownEditor? editor;
+    private IReadOnlyList<BildZeile> bilder = [];
     private Dictionary<Guid, string> namen = [];
     private bool bearbeiten;
     private string? text;
@@ -141,12 +165,24 @@ else
 
     private void BearbeitenBeginnen() => (bearbeiten, text) = (true, d?.Aktuell.Text);
 
-    private async Task LadenAsync() => d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<WikiDienst>().SeiteAsync(Titel));
+    private async Task LadenAsync()
+    {
+        d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<WikiDienst>().SeiteAsync(Titel));
+        await BilderLadenAsync();
+    }
+
+    private async Task BilderLadenAsync()
+        => bilder = d is null ? [] : await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BildDienst>().BilderAsync(BildDienst.Wiki, d.Seite.Id, d.Aktuell.Text));
 
     private async Task SpeichernAsync()
     {
         try
         {
+            if (editor is not null)
+            {
+                text = await editor.AktuellerTextAsync();
+            }
+
             await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<WikiDienst>().SpeichernAsync(d!.Seite.Id, text ?? "", kommentar));
             (meldung, fehler, bearbeiten, kommentar) = ("Gespeichert.", false, false, null);
         }

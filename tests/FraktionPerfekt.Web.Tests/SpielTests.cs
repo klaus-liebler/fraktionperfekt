@@ -31,12 +31,21 @@ public sealed class SpielTests
 
     private static string Projektordner()
     {
-        var d = new DirectoryInfo(AppContext.BaseDirectory);
-        while (d is not null && !File.Exists(Path.Combine(d.FullName, "FraktionPerfekt.Web.Tests.csproj")))
+        // Ausgabe im Projektordner (bin/) oder in einem Artefaktordner im Repository (--artifacts-path)
+        for (var d = new DirectoryInfo(AppContext.BaseDirectory); d is not null; d = d.Parent)
         {
-            d = d.Parent;
+            if (File.Exists(Path.Combine(d.FullName, "FraktionPerfekt.Web.Tests.csproj")))
+            {
+                return d.FullName;
+            }
+
+            var imRepo = Path.Combine(d.FullName, "tests", "FraktionPerfekt.Web.Tests");
+            if (File.Exists(Path.Combine(imRepo, "FraktionPerfekt.Web.Tests.csproj")))
+            {
+                return imRepo;
+            }
         }
 
-        return d?.FullName ?? throw new InvalidOperationException("Testprojekt nicht gefunden.");
+        throw new InvalidOperationException("Testprojekt nicht gefunden.");
     }
 }

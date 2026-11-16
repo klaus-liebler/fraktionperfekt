@@ -31,6 +31,8 @@ public static class Registrierung
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Abstimmungen", d.GetRequiredService<Abstimmungen.UmfrageDienst>().FristenPruefenAsync));
         dienste.AddScoped<Wissen.DateiDienst>();
         dienste.AddScoped<Wissen.WikiDienst>();
+        dienste.AddScoped<Wissen.BildDienst>();
+        dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Wiki-Bilder aufräumen", async t => await d.GetRequiredService<Wissen.BildDienst>().AufraeumenAsync(t)));
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Wiki-KI", async t => await d.GetRequiredService<Wissen.WikiDienst>().KiPruefenNachtsAsync(t)));
         dienste.AddScoped<Politik.AnfrageDienst>();
         dienste.AddScoped<Politik.BeschlussArchiv>();

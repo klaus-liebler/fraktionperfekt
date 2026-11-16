@@ -29,6 +29,39 @@ internal static class WissenEndpunkte
                 ? Results.File(d.Inhalt, d.Datei.Typ, d.Datei.Name, enableRangeProcessing: true)
                 : Results.NotFound()).RequireAuthorization();
 
+        // Wiki-Bilder: Auslieferung nur an Berechtigte (Rechte der Seite); Inhalt ändert sich nie (GUID) → lange privat cachen
+        app.MapGet("/dateien/bild/{id:guid}", async (Guid id, BildDienst bilder, HttpContext http) =>
+        {
+            if (await bilder.OeffnenAsync(id) is not { } b)
+            {
+                return Results.NotFound();
+            }
+
+            http.Response.Headers.CacheControl = "private, max-age=31536000, immutable";
+            http.Response.Headers["X-Content-Type-Options"] = "nosniff";
+            return Results.File(b.Inhalt, b.Bild.Typ, entityTag: new Microsoft.Net.Http.Headers.EntityTagHeaderValue($"\"{b.Bild.Sha256}\""));
+        }).RequireAuthorization();
+
+        // Hochladen aus dem Editor (Zwischenablage, Ziehen, Knopf); Formular mit Antiforgery-Token
+        app.MapPost("/dateien/bild", async (IFormFile datei, [Microsoft.AspNetCore.Mvc.FromForm] string bezugArt, [Microsoft.AspNetCore.Mvc.FromForm] Guid bezugId, BildDienst bilder) =>
+        {
+            if (datei.Length > BildDienst.MaxBytes)
+            {
+                return Results.BadRequest(new { Fehler = $"Das Bild ist größer als {BildDienst.MaxBytes / 1024 / 1024} MB." });
+            }
+
+            try
+            {
+                await using var s = datei.OpenReadStream();
+                var b = await bilder.HochladenAsync(bezugArt, bezugId, datei.FileName, s);
+                return Results.Ok(new { b.Id, b.Adresse, Name = b.OriginalName, b.Breite, b.Hoehe });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { Fehler = ex.Message });
+            }
+        }).RequireAuthorization();
+
         app.MapGet("/termine/{id:guid}/termin.ics", async (Guid id, FraktionPerfekt.Application.Termine.KalenderDienst kalender) =>
             await kalender.TerminKalenderAsync(id) is { } ics
                 ? Results.File(Encoding.UTF8.GetBytes(ics), "text/calendar; charset=utf-8", "termin.ics")

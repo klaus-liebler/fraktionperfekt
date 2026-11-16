@@ -1,0 +1,125 @@
+@using Microsoft.AspNetCore.Components.Forms
+@implements IAsyncDisposable
+@inject IJSRuntime Js
+@inject AntiforgeryStateProvider Antiforgery
+
+@* Markdown-Editor (TOAST UI Editor, lokal eingebunden): Markdown- und WYSIWYG-Modus, Vorschau, Tabellen,
+   Bilder per Zwischenablage/Ziehen/Knopf (Hochladen über dateien/bild). Ohne JavaScript bleibt ein einfaches Textfeld. *@
+@* Der Editor baut sein DOM selbst in dieses leere Element; Blazor rendert dort nichts hinein. *@
+<div class="fp-editor" @ref="element"></div>
+@if (!bereit)
+{
+    <textarea class="fp-editor-ersatz" rows="18" aria-label="@Bezeichnung" @bind="Text" @bind:after="TextAnGeben"></textarea>
+}
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@code {
+    [Parameter]
+    public string? Text { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> TextChanged { get; set; }
+
+    /// <summary>Bezug für hochgeladene Bilder (bisher „Wiki“).</summary>
+    [Parameter, EditorRequired]
+    public string BezugArt { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public Guid BezugId { get; set; }
+
+    [Parameter]
+    public string Bezeichnung { get; set; } = "Seitentext";
+
+    /// <summary>Nach jedem hochgeladenen Bild (z. B. um die Mediathek neu zu laden).</summary>
+    [Parameter]
+    public EventCallback BildHinzugefuegt { get; set; }
+
+    private ElementReference element;
+    private DotNetObjectReference<MarkdownEditor>? selbst;
+    private bool bereit;
+    private string? meldung;
+    private bool fehler;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        selbst = DotNetObjectReference.Create(this);
+        var token = Antiforgery.GetAntiforgeryToken();
+        try
+        {
+            bereit = await Js.InvokeAsync<bool>("fpEditor.start", element, selbst, Text ?? string.Empty,
+                new { bezugArt = BezugArt, bezugId = BezugId, token = token?.Value, tokenFeld = token?.FormFieldName });
+        }
+        catch (JSException)
+        {
+            bereit = false;
+        }
+
+        StateHasChanged();
+    }
+
+    /// <summary>Aktuellen Text direkt aus dem Editor holen (vor dem Speichern, ohne auf die Verzögerung zu warten).</summary>
+    public async Task<string?> AktuellerTextAsync()
+    {
+        if (!bereit)
+        {
+            return Text;
+        }
+
+        try
+        {
+            Text = await Js.InvokeAsync<string?>("fpEditor.text", element);
+        }
+        catch (JSException)
+        {
+            // Text aus der letzten Änderungsmeldung behalten
+        }
+
+        return Text;
+    }
+
+    [JSInvokable]
+    public async Task TextGeaendert(string text)
+    {
+        Text = text;
+        await TextChanged.InvokeAsync(text);
+    }
+
+    [JSInvokable]
+    public async Task BildHochgeladen(string name)
+    {
+        (meldung, fehler) = ($"Bild „{name}“ eingefügt.", false);
+        await BildHinzugefuegt.InvokeAsync();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void Meldung(string text, bool istFehler)
+    {
+        (meldung, fehler) = (text, istFehler);
+        StateHasChanged();
+    }
+
+    private Task TextAnGeben() => TextChanged.InvokeAsync(Text);
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("fpEditor.ende", element);
+        }
+        catch (Exception ex) when (ex is JSDisconnectedException or JSException or TaskCanceledException or ObjectDisposedException)
+        {
+            // Verbindung schon weg
+        }
+
+        selbst?.Dispose();
+    }
+}
