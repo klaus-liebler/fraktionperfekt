@@ -1,0 +1,115 @@
+@page "/einstellungen"
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Personen
+@inject Vorgang Vorgang
+
+<PageTitle>Meine Einstellungen</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Meine Einstellungen</h1>
+        <p class="fp-sub">Wie FraktionPerfekt Sie bzw. dich anspricht – auf der Startseite, in Push-Mitteilungen und Mails. Gilt nur für dich bzw. Sie selbst.</p>
+    </div>
+</div>
+
+@if (ich is null)
+{
+    <section class="fp-card"><p>Ihrem Konto ist keine Person zugeordnet.</p></section>
+}
+else
+{
+    <section class="fp-card">
+        <h2>Ansprache</h2>
+        <div class="fp-form">
+            <div class="fp-field">
+                <span class="fp-lbl">Du oder Sie</span>
+                <RadzenRadioButtonList TValue="Anredeform" @bind-Value="form" Change="@((Anredeform _) => Vorschau())" aria-label="Du oder Sie">
+                    <Items>
+                        <RadzenRadioButtonListItem Text="Du (Vorname)" Value="Anredeform.Du" />
+                        <RadzenRadioButtonListItem Text="Sie (Nachname)" Value="Anredeform.Sie" />
+                    </Items>
+                </RadzenRadioButtonList>
+            </div>
+            <div class="fp-field">
+                <span class="fp-lbl">Stil der Begrüßung</span>
+                <RadzenRadioButtonList TValue="Begruessungsstil" @bind-Value="stil" Change="@((Begruessungsstil _) => Vorschau())" aria-label="Stil der Begrüßung">
+                    <Items>
+                        <RadzenRadioButtonListItem Text="locker („Hallo …“)" Value="Begruessungsstil.Locker" />
+                        <RadzenRadioButtonListItem Text="neutral („Guten Tag, …“)" Value="Begruessungsstil.Neutral" />
+                        <RadzenRadioButtonListItem Text="förmlich („Liebe/r …“ bzw. „Sehr geehrte/r …“)" Value="Begruessungsstil.Foermlich" />
+                    </Items>
+                </RadzenRadioButtonList>
+            </div>
+            <div class="fp-field">
+                <span class="fp-lbl">Anrede</span>
+                <RadzenRadioButtonList TValue="string" @bind-Value="anrede" Change="@((string _) => Vorschau())" aria-label="Anrede">
+                    <Items>
+                        <RadzenRadioButtonListItem Text="Herr" Value="@("Herr")" />
+                        <RadzenRadioButtonListItem Text="Frau" Value="@("Frau")" />
+                        <RadzenRadioButtonListItem Text="keine Angabe" Value="@("")" />
+                    </Items>
+                </RadzenRadioButtonList>
+            </div>
+            @if (ich.Titel is not null)
+            {
+                <div class="fp-field">
+                    <label><input type="checkbox" @bind="titel" @bind:after="Vorschau" /> Titel („@ich.Titel“) in der Sie-Form nennen</label>
+                </div>
+            }
+        </div>
+        <div class="fp-alert fp-info" role="status"><b>Vorschau:</b> @vorschau, das steht an.</div>
+        <div class="fp-row">
+            <RadzenButton Text="Speichern" Icon="save" Click="SpeichernAsync" />
+        </div>
+        @if (meldung is not null)
+        {
+            <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+        }
+    </section>
+}
+
+@code {
+    private Person? ich;
+    private Anredeform form;
+    private Begruessungsstil stil;
+    private string anrede = string.Empty;
+    private bool titel = true;
+    private string vorschau = string.Empty;
+    private string? meldung;
+    private bool fehler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ich = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<StammdatenDienst>().IchAsync());
+        if (ich is not null)
+        {
+            (form, stil, anrede, titel) = (ich.Anredeform, ich.Begruessungsstil, ich.Anrede ?? string.Empty, ich.TitelInAnsprache);
+            Vorschau();
+        }
+    }
+
+    /// <summary>Vorschau an der geladenen (nicht gespeicherten) Person berechnen.</summary>
+    private void Vorschau()
+    {
+        if (ich is null)
+        {
+            return;
+        }
+
+        ich.AnspracheEinstellen(anrede, form, stil, titel);
+        vorschau = Ansprache.Begruessung(ich);
+    }
+
+    private async Task SpeichernAsync()
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<StammdatenDienst>().AnspracheSpeichernAsync(anrede, form, stil, titel));
+            (meldung, fehler) = ("Gespeichert. So werden Sie bzw. wirst du ab jetzt angesprochen.", false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+    }
+}

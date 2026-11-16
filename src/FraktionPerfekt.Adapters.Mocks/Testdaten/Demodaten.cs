@@ -55,7 +55,7 @@ public sealed class Demodaten(
         var personen = new Dictionary<string, Person>(StringComparer.Ordinal);
         foreach (var d in Demofraktion.Personen)
         {
-            var p = new Person(d.Vorname, d.Nachname, d.Adresse, d.Kennung, jetzt, d.RisId, titel: d.Titel);
+            var p = new Person(d.Vorname, d.Nachname, d.Adresse, d.Kennung, jetzt, d.RisId, titel: d.Titel, anrede: d.Anrede);
             p.RollenFestlegenAb(seit, d.Rollen, Erfassung.Erst(jetzt, Von, $"Demodaten: {d.Funktion}"));
             stammdaten.Hinzufuegen(p);
             personen[d.Kennung] = p;

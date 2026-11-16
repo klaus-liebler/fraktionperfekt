@@ -74,7 +74,7 @@ internal sealed class TestUmgebung : IAsyncDisposable
                 var jetzt = umgebung.Uhr.GetUtcNow();
                 foreach (var p in Demofraktion.Personen)
                 {
-                    var person = new Person(p.Vorname, p.Nachname, p.Adresse, p.Kennung, jetzt, p.RisId, titel: p.Titel);
+                    var person = new Person(p.Vorname, p.Nachname, p.Adresse, p.Kennung, jetzt, p.RisId, titel: p.Titel, anrede: p.Anrede);
                     person.RollenFestlegenAb(new DateOnly(2025, 11, 1), p.Rollen, Erfassung.Erst(jetzt, "Test"));
                     speicher.Hinzufuegen(person);
                 }

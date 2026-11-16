@@ -181,6 +181,19 @@ public sealed class StammdatenDienst(IStammdatenSpeicher speicher, IAuditProtoko
         await speicher.SpeichernAsync(abbruch);
     }
 
+    /// <summary>Die eigene Person (für „Meine Einstellungen“).</summary>
+    public async Task<Person?> IchAsync(CancellationToken abbruch = default)
+        => (await benutzer.ErmittelnAsync(abbruch)).PersonId is { } id ? await speicher.PersonAsync(id, abbruch) : null;
+
+    /// <summary>Jede Person stellt ihre Ansprache selbst ein (Du/Sie, Stil, Titel, Anrede).</summary>
+    public async Task AnspracheSpeichernAsync(string? anrede, Anredeform form, Begruessungsstil stil, bool titelInAnsprache, CancellationToken abbruch = default)
+    {
+        var person = await IchAsync(abbruch) ?? throw new InvalidOperationException("Ihrem Konto ist keine Person zugeordnet.");
+        person.AnspracheEinstellen(anrede, form, stil, titelInAnsprache);
+        await protokoll.ProtokollierenAsync("Person.AnspracheGeaendert", "Eigene Ansprache eingestellt", nameof(Person), person.Id, abbruch: abbruch);
+        await speicher.SpeichernAsync(abbruch);
+    }
+
     private async Task<Benutzer> PruefenAsync(CancellationToken abbruch)
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);

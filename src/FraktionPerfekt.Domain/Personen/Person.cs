@@ -17,7 +17,7 @@ public sealed class Person
     }
 
     public Person(string vorname, string nachname, string? eMail, string? benutzerkennung, DateTimeOffset angelegtAm, string? risId = null,
-        Guid? id = null, string? titel = null)
+        Guid? id = null, string? titel = null, string? anrede = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(vorname);
         ArgumentException.ThrowIfNullOrWhiteSpace(nachname);
@@ -28,6 +28,7 @@ public sealed class Person
         Benutzerkennung = string.IsNullOrWhiteSpace(benutzerkennung) ? null : benutzerkennung.Trim().ToLowerInvariant();
         RisId = risId;
         Titel = string.IsNullOrWhiteSpace(titel) ? null : titel.Trim();
+        Anrede = AnredePruefen(anrede);
         AngelegtAm = angelegtAm;
         Aktiv = true;
     }
@@ -57,6 +58,33 @@ public sealed class Person
     public bool Aktiv { get; private set; }
 
     public DateTimeOffset AngelegtAm { get; private set; }
+
+    /// <summary>„Herr“, „Frau“ oder <c>null</c> (keine Angabe/divers).</summary>
+    public string? Anrede { get; private set; }
+
+    /// <summary>Persönliche Einstellung: Du oder Sie (Standard: Du).</summary>
+    public Anredeform Anredeform { get; private set; }
+
+    /// <summary>Persönliche Einstellung: Stil der Begrüßung (Standard: locker).</summary>
+    public Begruessungsstil Begruessungsstil { get; private set; }
+
+    /// <summary>Persönliche Einstellung: akademischen Grad in der Sie-Form nennen (Standard: ja).</summary>
+    public bool TitelInAnsprache { get; private set; } = true;
+
+    /// <summary>Wie die Person angesprochen werden möchte; jede Person stellt das für sich ein.</summary>
+    public void AnspracheEinstellen(string? anrede, Anredeform form, Begruessungsstil stil, bool titelInAnsprache)
+    {
+        Anrede = AnredePruefen(anrede);
+        (Anredeform, Begruessungsstil, TitelInAnsprache) = (form, stil, titelInAnsprache);
+    }
+
+    private static string? AnredePruefen(string? anrede) => anrede?.Trim() switch
+    {
+        "Herr" => "Herr",
+        "Frau" => "Frau",
+        null or "" => null,
+        var a => throw new ArgumentException($"Unbekannte Anrede „{a}“ (Herr, Frau oder keine Angabe).", nameof(anrede)),
+    };
 
     public string Anzeigename => Titel is null ? $"{Vorname} {Nachname}" : $"{Titel} {Vorname} {Nachname}";
 

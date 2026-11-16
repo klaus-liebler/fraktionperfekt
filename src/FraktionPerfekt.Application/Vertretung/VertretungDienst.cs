@@ -314,10 +314,11 @@ public sealed class VertretungDienst(
         if (await stammdaten.PersonAsync(vertreterId, abbruch) is { } vertreter)
         {
             var gremium = await stammdaten.GremiumAsync(fall.GremiumId, abbruch);
-            await postausgang.BenachrichtigenAsync(vertreter, $"Du vertrittst: {gremium?.Kurzname ?? "Sitzung"} am {termin.Beginn:dd.MM.}",
-                $"Der Vorstand hat dich für den {termin.Beginn:dd.MM.} um {termin.Beginn:HH:mm} Uhr als Vertretung eingetragen.",
-                $"Hallo {vertreter.Vorname},\n\nwie besprochen hat der Vorstand dich als Vertretung in der Sitzung „{termin.Titel}“ am "
-                + $"{termin.Beginn:dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr ({termin.Ort ?? "Ort folgt"}) eingetragen. Der Termin steht in deinem Kalender.",
+            var v = vertreter;
+            await postausgang.BenachrichtigenAsync(vertreter, $"{Ansprache.DuSie(v, "Du vertrittst", "Sie vertreten")}: {gremium?.Kurzname ?? "Sitzung"} am {termin.Beginn:dd.MM.}",
+                $"Der Vorstand hat {Ansprache.DuSie(v, "dich", "Sie")} für den {termin.Beginn:dd.MM.} um {termin.Beginn:HH:mm} Uhr als Vertretung eingetragen.",
+                $"{Ansprache.Begruessung(v)},\n\nwie besprochen hat der Vorstand {Ansprache.DuSie(v, "dich", "Sie")} als Vertretung in der Sitzung „{termin.Titel}“ am "
+                + $"{termin.Beginn:dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr ({termin.Ort ?? "Ort folgt"}) eingetragen. Der Termin steht in {Ansprache.DuSie(v, "deinem", "Ihrem")} Kalender.",
                 $"termine/{termin.Id}", abbruch: abbruch);
         }
 
@@ -544,11 +545,12 @@ public sealed class VertretungDienst(
                 if (await stammdaten.PersonAsync(anfrage.PersonId, abbruch) is { } gefragt)
                 {
                     var link = $"handy/anfrage/{anfrage.Id}";
+                    var fehlt = gefragt.Anredeform == Anredeform.Sie ? vertretene?.Anzeigename : vertretene?.Vorname;
                     await postausgang.BenachrichtigenAsync(gefragt, $"Vertretung gesucht: {kurz} am {wann}",
-                        $"Kannst du am {wann} im {kurz} vertreten?",
-                        $"Hallo {gefragt.Vorname},\n\n{vertretene?.Vorname ?? "ein Mitglied"} kann an der Sitzung „{termin.Titel}“ am {termin.Beginn:dddd, dd.MM.yyyy} "
-                        + $"um {termin.Beginn:HH:mm} Uhr ({termin.Ort ?? "Ort folgt"}) nicht teilnehmen. Du bist als Stellvertretung an der Reihe.\n\n"
-                        + $"Bitte antworte bis {Ortszeit.AlsOrtszeit(anfrage.FristBis):dd.MM. HH:mm} Uhr: {optionen.Value.Link(link)}\n\n"
+                        Ansprache.DuSie(gefragt, $"Kannst du am {wann} im {kurz} vertreten?", $"Können Sie am {wann} im {kurz} vertreten?"),
+                        $"{Ansprache.Begruessung(gefragt)},\n\n{fehlt ?? "ein Mitglied"} kann an der Sitzung „{termin.Titel}“ am {termin.Beginn:dddd, dd.MM.yyyy} "
+                        + $"um {termin.Beginn:HH:mm} Uhr ({termin.Ort ?? "Ort folgt"}) nicht teilnehmen. {Ansprache.DuSie(gefragt, "Du bist", "Sie sind")} als Stellvertretung an der Reihe.\n\n"
+                        + $"Bitte {Ansprache.DuSie(gefragt, "antworte", "antworten Sie")} bis {Ortszeit.AlsOrtszeit(anfrage.FristBis):dd.MM. HH:mm} Uhr: {optionen.Value.Link(link)}\n\n"
                         + "Ohne Antwort geht die Anfrage an die nächste Stellvertretung.",
                         link, "Ich vertrete", abbruch);
                 }
@@ -569,10 +571,11 @@ public sealed class VertretungDienst(
                 var vertreter = await stammdaten.PersonAsync(vertreterId, abbruch);
                 if (vertretene is not null)
                 {
+                    var vn = vertretene;
                     await postausgang.BenachrichtigenAsync(vertretene, $"Vertretung steht: {kurz} am {wann}",
-                        $"{vertreter?.Vorname ?? "Jemand"} vertritt dich im {kurz} am {wann}.",
-                        $"Hallo {vertretene.Vorname},\n\n{vertreter?.Anzeigename ?? "Eine Stellvertretung"} vertritt dich in der Sitzung „{termin.Titel}“ "
-                        + $"am {termin.Beginn:dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr.\n\nGib bitte deine Unterlagen und Hinweise weiter.",
+                        $"{(vn.Anredeform == Anredeform.Sie ? vertreter?.Anzeigename : vertreter?.Vorname) ?? "Jemand"} vertritt {Ansprache.DuSie(vn, "dich", "Sie")} im {kurz} am {wann}.",
+                        $"{Ansprache.Begruessung(vn)},\n\n{vertreter?.Anzeigename ?? "Eine Stellvertretung"} vertritt {Ansprache.DuSie(vn, "dich", "Sie")} in der Sitzung „{termin.Titel}“ "
+                        + $"am {termin.Beginn:dd.MM.yyyy} um {termin.Beginn:HH:mm} Uhr.\n\n{Ansprache.DuSie(vn, "Gib bitte deine", "Geben Sie bitte Ihre")} Unterlagen und Hinweise weiter.",
                         $"termine/{termin.Id}", abbruch: abbruch);
                 }
 

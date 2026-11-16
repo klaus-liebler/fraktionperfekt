@@ -52,6 +52,28 @@ public sealed class AnspracheTests
             heute.Vorname.ShouldBe(vorname);
         }
     }
+
+    [Fact]
+    public async Task Eigene_Einstellung_Sie_foermlich_wirkt_auf_Startseite_und_Mails()
+    {
+        await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
+        var ich = await u.AnmeldenAsync("djoud");
+        await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Stammdaten.StammdatenDienst>()
+            .AnspracheSpeichernAsync("Herr", FraktionPerfekt.Domain.Personen.Anredeform.Sie, FraktionPerfekt.Domain.Personen.Begruessungsstil.Foermlich, true));
+        (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Heute.HeuteDienst>().LadenAsync())).Begruessung.ShouldBe("Sehr geehrter Herr Joud");
+
+        // Eine neue Vertretungsanfrage an ihn ist in der Sie-Form
+        await u.AnmeldenAsync("thorstmann");
+        var hfwa = (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.IStammdatenSpeicher>().GremienAsync())).Single(g => g.Kurzname == "HFWA");
+        var termin = (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Termine.KalenderDienst>().TermineAsync(new DateOnly(2027, 1, 1), new DateOnly(2027, 3, 31))))
+            .First(z => z.Termin.GremiumId == hfwa.Id).Termin;
+        await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Vertretung.VertretungDienst>().FuerTerminAnfragenAsync(termin.Id));
+        var post = await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Postausgang.INachrichtenSpeicher>().NeuesteAsync(20));
+        var mail = post.First(n => n.PersonId == ich.Id && n.Kanal == FraktionPerfekt.Application.Postausgang.Kanal.EMail);
+        mail.Inhalt.ShouldStartWith("Sehr geehrter Herr Joud,");
+        mail.Inhalt.ShouldContain("Sie sind als Stellvertretung an der Reihe");
+        post.First(n => n.PersonId == ich.Id && n.Kanal == FraktionPerfekt.Application.Postausgang.Kanal.Push).Inhalt.ShouldStartWith("Können Sie");
+    }
 }
 
 public sealed class KalenderKlartextTests

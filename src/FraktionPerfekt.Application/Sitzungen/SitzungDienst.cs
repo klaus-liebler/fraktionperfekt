@@ -361,7 +361,7 @@ public sealed class SitzungDienst(
         foreach (var p in empfaenger)
         {
             await postausgang.BenachrichtigenAsync(p, $"{(erneut ? "Aktualisierte " : "")}Einladung: {s.Titel} am {termin.Beginn:dd.MM.}",
-                $"{s.Titel} am {termin.Beginn:dd.MM.} um {termin.Beginn:HH:mm} Uhr – bitte zu- oder absagen.", $"Hallo {p.Vorname},\n\n{text}",
+                $"{s.Titel} am {termin.Beginn:dd.MM.} um {termin.Beginn:HH:mm} Uhr – bitte zu- oder absagen.", $"{Domain.Personen.Ansprache.Begruessung(p)},\n\n{text}",
                 $"termine/{termin.Id}", "Zusagen", abbruch);
         }
 
