@@ -21,6 +21,7 @@ public static class Abfragewarnungen
         where T : DbContextOptionsBuilder
     {
         ArgumentNullException.ThrowIfNull(optionen);
+        optionen.AddInterceptors(Din5007Kollation.Abfangen);
         return (T)optionen.ConfigureWarnings(w =>
         {
             if (streng)

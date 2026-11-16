@@ -128,6 +128,7 @@ internal sealed class SqliteSicherung(FraktionDbContext db, IConfiguration konfi
             {
                 await using var c = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = test, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
                 await c.OpenAsync(abbruch);
+                FraktionPerfekt.Infrastructure.Datenbank.Din5007Kollation.Registrieren(c);   // Indizes mit DIN-5007-Collation prüfen
                 var integritaet = (await Skalar(c, "PRAGMA integrity_check", abbruch))?.ToString();
                 migration = (await Skalar(c, "SELECT MigrationId FROM __EFMigrationsHistory ORDER BY MigrationId DESC LIMIT 1", abbruch))?.ToString();
                 var zaehlung = new List<string>();

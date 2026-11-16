@@ -15,7 +15,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116214057_GremienZeitlich";
+    public override string LastMigrationId => "20261116214352_NamenDin5007";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -1067,7 +1067,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Nachname")
                     .IsRequired()
                     .HasMaxLength(200)
-                    .HasColumnType("TEXT");
+                    .HasColumnType("TEXT")
+                    .UseCollation("DIN5007_2");
 
                 b.Property<bool>("NurEinName")
                     .HasColumnType("INTEGER");
@@ -1078,19 +1079,26 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Vorname")
                     .IsRequired()
                     .HasMaxLength(200)
-                    .HasColumnType("TEXT");
+                    .HasColumnType("TEXT")
+                    .UseCollation("DIN5007_2");
 
                 b.Property<string>("Vorsatz")
                     .HasMaxLength(60)
-                    .HasColumnType("TEXT");
+                    .HasColumnType("TEXT")
+                    .HasColumnName("Namensvorsatz")
+                    .UseCollation("DIN5007_2");
 
                 b.Property<string>("Zusatz")
                     .HasMaxLength(30)
-                    .HasColumnType("TEXT");
+                    .HasColumnType("TEXT")
+                    .HasColumnName("Namenszusatz");
 
                 b.HasKey("Id");
 
                 b.HasIndex("PersonId", "GueltigVon");
+
+                b.HasIndex("Nachname", "Vorname", "Vorsatz")
+                    .HasDatabaseName("IX_PersonNamen_DIN5007");
 
                 b.ToTable("PersonNamen");
             });

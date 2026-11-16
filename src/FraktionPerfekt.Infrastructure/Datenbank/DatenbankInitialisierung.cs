@@ -35,5 +35,5 @@ public static class DatenbankInitialisierung
 internal sealed class DesignZeitFabrik : Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory<FraktionDbContext>
 {
     public FraktionDbContext CreateDbContext(string[] args)
-        => new(new DbContextOptionsBuilder<FraktionDbContext>().UseSqlite("Data Source=designzeit.db").Options);
+        => new(new DbContextOptionsBuilder<FraktionDbContext>().UseSqlite("Data Source=designzeit.db").Konfigurieren(false).Options);
 }

@@ -408,6 +408,8 @@ public static class Spalteneinstufung
             },
             ["PersonNamen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
+                ["Namenszusatz"] = (Spaltenart.Version, "Namenszusatz („jun.“)"),
+                ["Namensvorsatz"] = (Spaltenart.Version, "Namensvorsatz („von“, „van der“), Collation DIN5007_2; mehrteilige Nachnamen bleiben im Nachnamen"),
                 ["Id"] = (Spaltenart.Version, "Zeilen-Id = Version"),
                 ["ErfasstAm"] = (Spaltenart.Version, "Wissenszeit: erfasst am"),
                 ["ErfasstVon"] = (Spaltenart.Version, "Änderungsvorgang: wer (wandert nach Aenderungsvorgaenge, Etappe 3)"),
@@ -417,8 +419,6 @@ public static class Spalteneinstufung
                 ["GueltigBis"] = (Spaltenart.Version, "Gültigkeit bis (ausschließlich), leer = offen"),
                 ["GueltigVon"] = (Spaltenart.Version, "Gültigkeit von (einschließlich)"),
                 ["Nachname"] = (Spaltenart.Version, null),
-                ["Vorsatz"] = (Spaltenart.Version, "Namensvorsatz („von“), sortiert nach DIN 5007-2 hinten"),
-                ["Zusatz"] = (Spaltenart.Version, "Namenszusatz („jun.“)"),
                 ["NurEinName"] = (Spaltenart.Version, "laut Ausweis nur ein Name: Vorname bewusst leer"),
                 ["PersonId"] = (Spaltenart.Version, null),
                 ["Vorname"] = (Spaltenart.Version, null),

@@ -74,7 +74,7 @@ Datenbank (`VACUUM INTO`) geprüft.
 | Ist | Abweichung | Etappe |
 |---|---|---|
 | Titel ist eigenes Feld der Namensversion (zeitlich, nie Teil von Vor-/Nachname). | in VibeVHS eigenes Merkmal | 1: eigenes versioniertes Merkmal „Titel“; Hinweis „Als Titel übernehmen?“, wenn im Vornamen ein Grad steht. |
-| Namensvorsatz/-zusatz („von“, „jun.“) | fehlen | 1: Felder in der Namensversion, Sortierung nach DIN 5007-2 („von Berg“ unter B). |
+| Namensvorsatz/-zusatz („von“, „jun.“) | fehlen | 1: erledigt – Spalten `Namensvorsatz`, `Namenszusatz`; Sortierung in SQL mit Collation `DIN5007_2` und Index, kein gespeicherter Sortierschlüssel (Festlegung Klaus 16.11.2026). Haken: externe Werkzeuge ohne Collation können nicht nach Namen sortieren und nicht in `PersonNamen` schreiben (siehe `docs/datenbank-einleitung.md`). |
 | Nur ein Name laut Ausweis | Vorname ist Pflicht | 1: leerer Vorname mit Kennzeichen. |
 | Geschlecht und Anrede versioniert | – | – |
 | Persönliche Ansprache (Du/Sie, Stil, Titel nennen) | Benutzereinstellung ohne Historie (Spalten an `Personen`) | 1: Merkmal mit Gültigkeit. |

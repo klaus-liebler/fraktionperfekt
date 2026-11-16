@@ -93,8 +93,12 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
         {
             b.Property(v => v.Vorname).HasMaxLength(200);
             b.Property(v => v.Nachname).HasMaxLength(200);
-            b.Property(v => v.Vorsatz).HasMaxLength(60);
-            b.Property(v => v.Zusatz).HasMaxLength(30);
+            // Sortierung nach DIN 5007-2 in SQL: Collation an den Spalten, Index für die Personenliste (kein gespeicherter Sortierschlüssel)
+            b.Property(v => v.Nachname).UseCollation(Din5007Kollation.Name);
+            b.Property(v => v.Vorname).UseCollation(Din5007Kollation.Name);
+            b.Property(v => v.Vorsatz).HasColumnName("Namensvorsatz").HasMaxLength(60).UseCollation(Din5007Kollation.Name);
+            b.Property(v => v.Zusatz).HasColumnName("Namenszusatz").HasMaxLength(30);
+            b.HasIndex(v => new { v.Nachname, v.Vorname, v.Vorsatz }).HasDatabaseName("IX_PersonNamen_DIN5007");
             b.Ignore(v => v.Anzeige);
         });
         Version<PersonMerkmal>(modelBuilder, "PersonMerkmale", "PersonId", b =>

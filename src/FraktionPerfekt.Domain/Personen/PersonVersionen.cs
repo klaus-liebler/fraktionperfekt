@@ -57,12 +57,12 @@ public sealed class PersonName : BitemporaleVersion<PersonName>
     /// ae/oe/ue, ß als ss, ohne Groß-/Kleinschreibung. „von Berg“ steht unter B.
     /// </summary>
     public static string Sortierschluessel(string? vorname, string? vorsatz, string nachname)
-    {
-        static string Norm(string? t) => (t ?? string.Empty).ToLowerInvariant()
-            .Replace("ä", "ae", StringComparison.Ordinal).Replace("ö", "oe", StringComparison.Ordinal).Replace("ü", "ue", StringComparison.Ordinal)
-            .Replace("ß", "ss", StringComparison.Ordinal);
-        return $"{Norm(nachname)} {Norm(vorname)} {Norm(vorsatz)}".TrimEnd();
-    }
+        => $"{Normalisieren(nachname)} {Normalisieren(vorname)} {Normalisieren(vorsatz)}".TrimEnd();
+
+    /// <summary>Normalform nach DIN 5007-2 (dieselbe Regel wie die SQLite-Collation „DIN5007_2“): klein, ä = ae, ö = oe, ü = ue, ß = ss.</summary>
+    public static string Normalisieren(string? t) => (t ?? string.Empty).ToLowerInvariant()
+        .Replace("ä", "ae", StringComparison.Ordinal).Replace("ö", "oe", StringComparison.Ordinal).Replace("ü", "ue", StringComparison.Ordinal)
+        .Replace("ß", "ss", StringComparison.Ordinal);
 
     public override string Datenart => "Name";
 

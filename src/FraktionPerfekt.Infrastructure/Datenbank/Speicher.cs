@@ -28,10 +28,12 @@ internal sealed class FraktionSpeicher(FraktionDbContext db, TimeProvider uhr) :
 
     /// <summary>
     /// Alle Personen mit allen Versionen (je Versionstabelle eine Abfrage für alle Personen, nicht N+1), Stand heute berechnet,
-    /// sortiert nach DIN 5007-2 („von Berg“ unter B).
+    /// sortiert nach DIN 5007-2 in SQL über die heute gültige Namensversion (Collation „DIN5007_2“, Index IX_PersonNamen_DIN5007).
     /// </summary>
     public async Task<IReadOnlyList<Person>> PersonenAsync(CancellationToken abbruch = default)
     {
+        var heute = Application.Gemeinsam.Ortszeit.Heute(uhr);
+        var reihenfolge = await NamenslisteAsync(heute, abbruch);
         var personen = await db.Personen.OrderBy(p => p.Id).AsSplitQuery().ToListAsync(abbruch);
         var jetzt = uhr.GetUtcNow();
         foreach (var p in personen)
@@ -39,7 +41,18 @@ internal sealed class FraktionSpeicher(FraktionDbContext db, TimeProvider uhr) :
             p.StandHeuteBerechnen(jetzt);
         }
 
-        return personen.OrderBy(p => p.Sortierschluessel, StringComparer.Ordinal).ThenBy(p => p.Id).ToList();
+        var platz = reihenfolge.Select((id, i) => (id, i)).GroupBy(x => x.id).ToDictionary(g => g.Key, g => g.First().i);
+        return personen.OrderBy(p => platz.GetValueOrDefault(p.Id, int.MaxValue)).ThenBy(p => p.Sortierschluessel, StringComparer.Ordinal).ThenBy(p => p.Id).ToList();
+    }
+
+    /// <summary>Personen-Ids in Listenreihenfolge (DIN 5007-2: Nachname, Vorname, Namensvorsatz) nach der am Tag gültigen Namensversion.</summary>
+    public Task<List<Guid>> NamenslisteAsync(DateOnly tag, CancellationToken abbruch = default, int? hoechstens = null)
+    {
+        var abfrage = db.Set<PersonName>()
+            .Where(n => n.ErsetztAm == null && n.GueltigVon <= tag && (n.GueltigBis == null || n.GueltigBis > tag))
+            .OrderBy(n => n.Nachname).ThenBy(n => n.Vorname).ThenBy(n => n.Vorsatz).ThenBy(n => EF.Property<Guid>(n, "PersonId"))
+            .Select(n => EF.Property<Guid>(n, "PersonId"));
+        return (hoechstens is { } h ? abfrage.Take(h) : abfrage).ToListAsync(abbruch);
     }
 
     public async Task<Person?> PersonAsync(Guid id, CancellationToken abbruch = default)

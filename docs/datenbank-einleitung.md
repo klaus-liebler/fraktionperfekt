@@ -45,6 +45,21 @@ WHERE a.PersonId = :person
 
 Im Code übernimmt das `ZeitlicheHistorie.AlsStichtag(gueltigAm, bekanntAm)`; `Person.StandAm(tag, bekannt)` liefert den ganzen Stand.
 
+### Sortierung nach DIN 5007-2 (Collation „DIN5007_2“)
+
+Namenslisten sortieren nach DIN 5007-2 (ä = ae, ö = oe, ü = ue, ß = ss, ohne Groß-/Kleinschreibung; Nachname ohne Vorsatz, dann Vorname,
+dann Namensvorsatz – „von Berg“ steht unter B; mehrteilige Nachnamen wie „Schulze Höping Pellengahr“ sind kein Vorsatz). Es gibt **keinen
+gespeicherten Sortierschlüssel**: `PersonNamen.Nachname`, `Vorname` und `Namensvorsatz` tragen die eigene SQLite-Collation `DIN5007_2`,
+der Index `IX_PersonNamen_DIN5007` (Nachname, Vorname, Namensvorsatz) bedient `ORDER BY … LIMIT` direkt (geprüft per `EXPLAIN QUERY PLAN`).
+Die Collation wird bei jedem Öffnen einer Verbindung registriert (`Din5007Kollation`, zentral für alle DbContexte, Tests, Migrationen und
+den Wiederherstellungstest der Sicherung).
+
+**Haken für externe Werkzeuge** (DB Browser for SQLite, `sqlite3`), die die Collation nicht kennen (getestet in `Din5007Tests`):
+Lesen (`SELECT *`, Zählen) und Ändern anderer Spalten geht; **Sortieren oder Vergleichen** über die Namensspalten und **jedes Einfügen**
+in `PersonNamen` sowie das Ändern der Namensspalten scheitert mit „no such collation sequence: DIN5007_2“. Für Auswertungen von außen die
+lesbaren Views verwenden bzw. nur lesen; Änderungen nur über die Anwendung. Auch `PRAGMA integrity_check` braucht die Collation – mit einer
+falsch nachgebauten Vergleichsregel meldet es fehlende Indexeinträge, obwohl die Datei in Ordnung ist.
+
 ### Keine Kopien
 
 Die Datenbank ist in 3. Normalform: Es gibt keine Spalten, die Werte aus anderen Tabellen oder Versionen kopieren. Der aktuelle Stand
