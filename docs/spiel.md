@@ -61,7 +61,7 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
    Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**. **Chani:** Live-Story bei
    Hohlbein und Dröhn → sie stolpern in den Bauwagen. Bauzaun-Tor.
 5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lore reden →
-   Lastenrad. Durch den Haupteingang in den Schulflur (Klassenzimmer 1a, 2b, 4c mit Absagen), dort die Kellertür benutzen
+   Lastenrad. Durch den Haupteingang in den Schulflur (Klassenzimmer 1a, 2b und WC mit Absagen; die Schule ist zweizügig), dort die Kellertür benutzen
    (nach 20:30 Uhr, Taschenlampe nötig).
 6. **Krypta:** **Chani:** Wandfresko deuten → „von unten nach oben“. Symbolschloss: **Urne, Buch, Waage** →
    Tempelschlüssel. Tor benutzen (drei Siegel + Schlüssel).

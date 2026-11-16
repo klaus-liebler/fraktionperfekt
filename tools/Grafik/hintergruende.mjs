@@ -245,7 +245,7 @@ export function schulhof() {
 }
 
 // ---------- Flur der Grundschule ----------
-// Klassenzimmertüren 1a (x 36–60), 2b (x 88–112), 4c (x 140–164), Kellertür mit Absperrband (x 196–222), Ausgang zum Hof links.
+// Zweizügige Schule: Klassenzimmer 1a (x 36–60), 2b (x 88–112), WC (x 140–164), Kellertür mit Absperrband (x 196–222), Ausgang zum Hof links.
 export function schulflur() {
     const b = new Bild(B, H, F.creme);
     // Wand: oben hell, unten abwaschbare Fliesen
@@ -263,10 +263,17 @@ export function schulflur() {
     b.rechteck(0, 40, 22, 64, F.dunkelgrau); b.rechteck(2, 44, 18, 36, F.nacht2); sterne(b, 0, 1, 1);
     b.rechteck(4, 30, 16, 8, F.gruen); b.rechteck(7, 33, 8, 1, F.weiss); b.rechteck(8, 32, 1, 3, F.weiss); b.rechteck(7, 33, 1, 1, F.weiss);
     // Klassenzimmer
-    const klassen = [['1A', 36, F.rot], ['2B', 88, F.blau], ['4C', 140, F.gruen]];
+    const klassen = [['1A', 36, F.rot], ['2B', 88, F.blau], ['WC', 140, F.gruen]];
     for (const [name, x, farbe] of klassen) {
         tuer(b, x, 44, 24, 60, farbe, F.dunkelgrau, F.hellgrau, F.eisblau);
-        b.rechteck(x + 4, 34, 16, 7, F.weiss); text(b, name, x + 12 - Math.floor(textBreite(name) / 2), 35, F.fastschwarz);
+        b.rechteck(x + 4, 34, 16, 7, F.weiss);
+        if (name === 'WC') {
+            // breites W (5 px), damit es nicht wie „HC“ aussieht; C aus der Schrift
+            const w = ['10001', '10001', '10101', '10101', '01010'];
+            w.forEach((zeile, j) => [...zeile].forEach((p, i) => { if (p === '1') { b.setze(x + 7 + i, 35 + j, F.fastschwarz); } }));
+            text(b, 'C', x + 13, 35, F.fastschwarz);
+        }
+        else { text(b, name, x + 12 - Math.floor(textBreite(name) / 2), 35, F.fastschwarz); }
     }
     // Kinderbilder und Garderobe zwischen den Türen
     const bilder = [[66, F.gelb, F.rot], [118, F.hellgruen, F.blau], [170, F.rosa, F.lila]];

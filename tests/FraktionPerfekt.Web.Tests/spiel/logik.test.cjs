@@ -225,7 +225,7 @@ test('Schule: erst der Flur mit Klassenzimmern, der Keller nur über die Kellert
     assert.equal(S.sichtbareHotspots(z).some((h) => h.id === 'kellergang'), false);
     S.aktion(z, 'benutzen', 'eingang');
     assert.equal(z.szene, 'schulflur');
-    for (const k of ['klasse1a', 'klasse2b', 'klasse4c']) { const e = S.aktion(z, 'benutzen', k); assert.equal(z.szene, 'schulflur'); assert.ok(e.text.length > 0); }
+    for (const k of ['klasse1a', 'klasse2b', 'wc']) { const e = S.aktion(z, 'benutzen', k); assert.equal(z.szene, 'schulflur'); assert.ok(e.text.length > 0); }
     assert.match(S.aktion(z, 'benutzen', 'kellertuer').text.join(' '), /20:30/);
     z.flags.abend = true; z.inventar.push('taschenlampe');
     S.aktion(z, 'benutzen', 'kellertuer');

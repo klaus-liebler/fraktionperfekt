@@ -401,12 +401,14 @@
         schulflur: {
             titel: 'Flur der Martin-Luther-Grundschule',
             stimmung: 'schule',
-            einstieg: 'Ein langer Flur: Kinderbilder, Turnbeutel, drei Klassenzimmer. Am Ende die Kellertür – mit Absperrband.',
+            einstieg: 'Ein langer Flur: Kinderbilder, Turnbeutel, zwei Klassenzimmer und das WC. Am Ende die Kellertür – mit Absperrband.',
             hotspots: [
                 {
                     id: 'klasse1a', name: 'Klasse 1a', x: 14, y: 30.6, b: 9.4, h: 41.7, form: 'tuer',
-                    ansehen: () => antwort('Klasse 1a. An der Tür hängt ein Zettel: „Bitte nicht stören – Mathearbeit wird korrigiert.“'),
-                    benutzen: () => antwort(['Abgeschlossen. Von drinnen ruft eine Lehrerin: „Ich korrigiere! Mit Rotstift!“', 'Ihr tretet einen respektvollen Schritt zurück.'])
+                    ansehen: () => antwort('Klasse 1a. Ein Schild: „Klassenrat tagt“.'),
+                    benutzen: (z) => antwort(istJoe(z)
+                        ? 'Joe klopft. Ein Kind öffnet: „Haben Sie einen Antrag? Ohne Antrag kein Rederecht.“ Die Tür geht wieder zu.'
+                        : 'Chani klopft. Ein Kind öffnet: „Wir stimmen gerade über die Hofpause ab. Gäste nur mit Tagesordnungspunkt.“ Die Tür geht wieder zu.')
                 },
                 {
                     id: 'klasse2b', name: 'Klasse 2b', x: 34.4, y: 30.6, b: 9.4, h: 41.7, form: 'tuer',
@@ -414,11 +416,9 @@
                     benutzen: () => antwort(['Ihr öffnet die Tür einen Spalt. Drinnen tagt seit 19 Uhr der Elternabend – Thema: die Farbe der Turnbeutel.', 'Eine Mutter: „Wollen Sie sich als Klassenpflegschaft aufstellen lassen?“ Ihr schließt die Tür sehr leise.'])
                 },
                 {
-                    id: 'klasse4c', name: 'Klasse 4c', x: 54.7, y: 30.6, b: 9.4, h: 41.7, form: 'tuer',
-                    ansehen: () => antwort('Klasse 4c. Ein Schild: „Klassenrat tagt“.'),
-                    benutzen: (z) => antwort(istJoe(z)
-                        ? 'Joe klopft. Ein Kind öffnet: „Haben Sie einen Antrag? Ohne Antrag kein Rederecht.“ Die Tür geht wieder zu.'
-                        : 'Chani klopft. Ein Kind öffnet: „Wir stimmen gerade über die Hofpause ab. Gäste nur mit Tagesordnungspunkt.“ Die Tür geht wieder zu.')
+                    id: 'wc', name: 'WC', x: 54.7, y: 30.6, b: 9.4, h: 41.7, form: 'tuer',
+                    ansehen: () => antwort('Die Toilette. Ein Schild: „Bitte Hände waschen!“'),
+                    benutzen: () => antwort('Besetzt. Von drinnen: „Moment noch!“')
                 },
                 {
                     id: 'kellertuer', name: 'Kellertür', x: 75.8, y: 27.8, b: 11.7, h: 44.4, form: 'tuer',
