@@ -58,7 +58,7 @@ const joe = Bild.laden(join(ASSETS, 'joe_spritesheet_32x64.png')), chani = Bild.
 const sheets = [['joe', joe], ['chani', chani]];
 for (const [name, bild] of figurenSheets(joe, chani)) { speichere(name, bild, 'Figuren'); sheets.push([name.replace('_spritesheet_32x64.png', ''), bild]); }
 const joeHut = mitHut(joe); speichere('joe_hut_spritesheet_32x64.png', joeHut, 'Figuren'); sheets.push(['joe_hut', joeHut]);
-const GEGNER = ['hohlbein', 'droehn'];
+const GEGNER = ['pinsel', 'ledeiw'];
 for (const [name, bild] of sheets) {
     speichere(`${name}_posen_32x64.png`, posen(bild, name.startsWith('joe') ? 'kartusche' : name === 'chani' ? 'handy' : null), 'Posen');
     speichere(`${name}_portraet_64x64.png`, portraets(bild, GEGNER.includes(name) ? F.steindunkel : F.sand), 'Porträts');

@@ -186,7 +186,7 @@ test('Grafiken: alle Bilder liegen in assets/, jede Szene und jeder Spielstand h
     };
     pruefe();
     for (const schritt of S.KOMPLETTLOESUNG) { S.schritt(z, schritt); pruefe(); }
-    for (const n of ['joe', 'joe_hut', 'chani', 'hohlbein']) {
+    for (const n of ['joe', 'joe_hut', 'chani', 'pinsel']) {
         for (const zustand of ['stehen', 'gehen', 'reden', 'benutzen', 'erschrocken']) { assert.ok(G.NAMEN.includes(G.rahmen(n, zustand, 7, true).bild)); }
         for (const a of ['neutral', 'lacht', 'erschrocken']) { assert.ok(G.NAMEN.includes(G.portraet(n, a).bild)); }
     }

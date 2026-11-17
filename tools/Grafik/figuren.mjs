@@ -49,7 +49,7 @@ function christian(joe) {
     return b;
 }
 
-function hohlbein(joe) {
+function pinsel(joe) {
     const b = kopie(joe);
     ersetze(b, [[JOE.jacke, F.grau], [JOE.jackeD, F.dunkelgrau], [JOE.anstecker, F.grau], [JOE.bart, JOE.haut], [JOE.brille, JOE.haut], [JOE.glas, F.weiss], [JOE.brau, F.ocker], [JOE.haar, F.ocker]]);
     jeBild(b, (b, x0, frontal) => {
@@ -61,7 +61,7 @@ function hohlbein(joe) {
     return b;
 }
 
-function droehn(joe) {
+function ledeiw(joe) {
     const b = kopie(joe);
     ersetze(b, [[JOE.jacke, F.dunkelblau], [JOE.jackeD, [0, 24, 88]], [JOE.anstecker, F.dunkelblau], [JOE.bart, JOE.haut], [JOE.haar, F.dunkelgrau]]);
     jeBild(b, (b, x0, frontal) => {
@@ -117,8 +117,8 @@ function kemper(chani) {
 export function figurenSheets(joe, chani) {
     return [
         ['christian_spritesheet_32x64.png', christian(joe)],
-        ['hohlbein_spritesheet_32x64.png', hohlbein(joe)],
-        ['droehn_spritesheet_32x64.png', droehn(joe)],
+        ['pinsel_spritesheet_32x64.png', pinsel(joe)],
+        ['ledeiw_spritesheet_32x64.png', ledeiw(joe)],
         ['joanna_spritesheet_32x64.png', joanna(chani)],
         ['lore_spritesheet_32x64.png', lore(chani)],
         ['kemper_spritesheet_32x64.png', kemper(chani)]

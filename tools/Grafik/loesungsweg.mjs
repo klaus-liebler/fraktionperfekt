@@ -16,7 +16,7 @@ const G = require(join(wurzel, 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js
 const kopie = (z) => JSON.parse(JSON.stringify(z));
 const FIGUR = { joe: 'Joe', chani: 'Chani' };
 const VERB = { ansehen: 'Schau an', benutzen: 'Benutze', reden: 'Rede mit', f1: null, f2: null, gegenstand: 'Gib/Benutze' };
-const PERSON = { christian: 'Chris', joanna: 'Johanna', lore: 'Lorette', kemper: 'Frau Kemper', hohlbein: 'Pinsel', droehn: 'Ledeiw', joe: 'Joe', chani: 'Chani' };
+const PERSON = { christian: 'Chris', joanna: 'Johanna', lore: 'Lorette', kemper: 'Frau Kemper', pinsel: 'Pinsel', ledeiw: 'Ledeiw', joe: 'Joe', chani: 'Chani' };
 const BILD = {
     buero_zukunftsschmiede_v2: 'Büro mit Umschlag', buero_zukunftsschmiede_v2_ohne_umschlag: 'Büro ohne Umschlag', rathaus_flur_v2: 'Rathausflur vor der Archivtür',
     archiv_v2: 'Archiv (Tür offen)', ems_ufer: 'Emsdeich am Kanuverleih', baustelle_bad: 'Baustelle, Grube unter Wasser', baustelle_bad_grube_trocken: 'Baustelle, Grube trocken',

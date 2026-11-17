@@ -7,7 +7,7 @@
     const BODEN = 136;                      // Fußlinie der Helden
     const FUSS_X = 16, FUSS_Y = 62;         // Fußpunkt im 32×64-Bild
 
-    const PERSONEN = ['joe', 'joe_hut', 'chani', 'christian', 'joanna', 'lore', 'kemper', 'hohlbein', 'droehn'];
+    const PERSONEN = ['joe', 'joe_hut', 'chani', 'christian', 'joanna', 'lore', 'kemper', 'pinsel', 'ledeiw'];
     const HINTERGRUENDE = ['buero_zukunftsschmiede_v2', 'buero_zukunftsschmiede_v2_ohne_umschlag', 'rathaus_flur_v2', 'archiv_v2', 'ems_ufer',
         'baustelle_bad', 'baustelle_bad_grube_trocken', 'schulhof_nacht', 'schulflur', 'krypta', 'tempel_eingang', 'tempel_eingang_offen', 'tempel_abgrund',
         'tempel_abgrund_bruecke', 'tempel_finale', 'karte_greven'].map((n) => n + '_256x144');
@@ -95,14 +95,14 @@
             const r = R(h, z), mitte = r.x + r.b / 2, fuss = Math.min(BODEN - 2, r.y + r.h);
             if (n === 'gegner' && h.hinten && h.hinten(z)) {
                 // perspektivisch weiter hinten: verkleinert, dunkler, Fußpunkt höher; Abstand wie im Vordergrund (keine Figur vor einer anderen)
-                p.push({ id: h.id, name: 'hohlbein', x: mitte - ABSTAND / 2, y: fuss, skala: HINTEN, hinten: true, klebt: true },
-                    { id: h.id, name: 'droehn', x: mitte + ABSTAND / 2, y: fuss - 1, skala: HINTEN, hinten: true, klebt: true });
+                p.push({ id: h.id, name: 'pinsel', x: mitte - ABSTAND / 2, y: fuss, skala: HINTEN, hinten: true, klebt: true },
+                    { id: h.id, name: 'ledeiw', x: mitte + ABSTAND / 2, y: fuss - 1, skala: HINTEN, hinten: true, klebt: true });
             }
-            else if (n === 'gegner') { p.push({ id: h.id, name: 'hohlbein', x: mitte - ABSTAND / 2, y: fuss }, { id: h.id, name: 'droehn', x: mitte + ABSTAND / 2, y: fuss - 1 }); }
+            else if (n === 'gegner') { p.push({ id: h.id, name: 'pinsel', x: mitte - ABSTAND / 2, y: fuss }, { id: h.id, name: 'ledeiw', x: mitte + ABSTAND / 2, y: fuss - 1 }); }
             else { p.push({ id: h.id, name: n, x: mitte, y: fuss }); }
         }
         if (z.szene === 'tempel' && z.flags.kugelGeschafft) {
-            p.push({ id: 'finale', name: 'hohlbein', x: z.ende ? 208 : 196, y: BODEN - 4 }, { id: 'finale', name: 'droehn', x: z.ende ? 236 : 222, y: BODEN - 5 });
+            p.push({ id: 'finale', name: 'pinsel', x: z.ende ? 208 : 196, y: BODEN - 4 }, { id: 'finale', name: 'ledeiw', x: z.ende ? 236 : 222, y: BODEN - 5 });
         }
         return p;
     }

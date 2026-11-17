@@ -158,8 +158,8 @@
         for (const p of (gehalten || G.npcPlaetze(z, hs))) {
             const redet = (sprecher === p.id || (sprecher === 'gegner' && p.id === 'finale')) && !textbox.hidden;
             let zustand = redet ? (sprecherSchreck ? 'erschrocken' : 'reden') : 'stehen';
-            if (p.id === 'finale') { zustand = z.ende ? 'erschrocken' : p.name === 'hohlbein' ? 'reden' : 'stehen'; }
-            const wackel = p.id === 'finale' && p.name === 'droehn' ? Math.floor(zeit * 3) % 2 : 0;
+            if (p.id === 'finale') { zustand = z.ende ? 'erschrocken' : p.name === 'pinsel' ? 'reden' : 'stehen'; }
+            const wackel = p.id === 'finale' && p.name === 'ledeiw' ? Math.floor(zeit * 3) % 2 : 0;
             figuren.push({ y: p.y - wackel, name: p.name, x: p.x, zustand, blick: p.x > held[z.figur].x ? -1 : 1, skala: p.skala, hinten: p.hinten, klebt: p.klebt });
         }
         for (const n of ['joe', 'chani']) {
@@ -235,7 +235,7 @@
         const vy = spurY(sim.gegnerSpur) + sinkt * 12 + (sim.sinken === null ? Math.sin(zeit * 6) : 0);
         if (sinkt < 2.2) {
             t2.save(); t2.globalAlpha = Math.max(0, 1 - sinkt / 2.2);
-            oberkoerper('hohlbein', 10, vy - 30); oberkoerper('droehn', 28, vy - 32);
+            oberkoerper('pinsel', 10, vy - 30); oberkoerper('ledeiw', 28, vy - 32);
             teil({ bild: 'motorboot_64x24', sx: 0, b: 64, h: 24, x: 2, y: vy - 2 });
             t2.restore();
         }
@@ -373,7 +373,7 @@
     }
 
     // ---------- Text, Porträts, Dialoge ----------
-    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Chris', 'christian'], ['Johanna', 'joanna'], ['Lorette', 'lore'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Pinsel', 'hohlbein'], ['Ledeiw', 'droehn'], ['Relbeil', 'relbeil']];
+    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Chris', 'christian'], ['Johanna', 'joanna'], ['Lorette', 'lore'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Pinsel', 'pinsel'], ['Ledeiw', 'ledeiw'], ['Relbeil', 'relbeil']];
     function sprecherAus(zeile) {
         for (const [n, id] of SPRECHER) { if (zeile.startsWith(n + ':') || zeile.startsWith(n + ' ')) { return id; } }
         return null;
@@ -401,7 +401,7 @@
         const wer = sprecherAus(zeile);
         sprecherSchreck = ausdruck(zeile) === 'erschrocken';
         // Sprecher → Hotspot der Figur (für die Sprechanimation); Chris' Bilder heißen weiter „christian“
-        sprecher = wer === 'hohlbein' || wer === 'droehn' ? 'gegner' : ({ christian: 'chris', kemper: 'bauleiter' })[wer] || wer;
+        sprecher = wer === 'pinsel' || wer === 'ledeiw' ? 'gegner' : ({ christian: 'chris', kemper: 'bauleiter' })[wer] || wer;
         portraitEl.replaceChildren();
         if (wer) { const bild = portraetBild(wer, ausdruck(zeile)); bild.className = 'portraitbild'; portraitEl.appendChild(bild); portraitEl.hidden = false; } else { portraitEl.hidden = true; }
         textEl.textContent = zeile;

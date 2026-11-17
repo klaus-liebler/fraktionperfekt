@@ -88,8 +88,8 @@ Kleine Abweichungen passe ich beim Einbau an.
 | `tanja_spritesheet_32x64.png` | **Johanna (Linke-Typ)**, Frau mittleren Alters, kurze schwarze Haare, violetter Kapuzenpullover, Jutebeutel, Klemmbrett | „woman with short black hair, purple hoodie, cloth tote bag over the shoulder, clipboard“ |
 | `mia_spritesheet_32x64.png` | **Lorette (Grünen-Typ)**, junge Frau, blonder Zopf, grüner Fahrradhelm, grüne Regenjacke, dickes Gutachten unter dem Arm | „young woman with blonde ponytail, green bicycle helmet, green rain jacket, thick report under her arm“ |
 | `kemper_spritesheet_32x64.png` | **Frau Kemper**, Bauleiterin, gelber Bauhelm, orange Warnweste über grauer Jacke, Klemmbrett | „female construction site manager, yellow hard hat, orange high-visibility vest over grey jacket, clipboard“ |
-| `hohlbein_spritesheet_32x64.png` | **Pinsel** (Gegner, Karikatur), kräftig, kurzes blondes Haar mit Seitenscheitel, zu enger grauer Anzug, Krawatte, selbstgefälliges Grinsen. Kein Abzeichen | „stocky man with short blond side-parted hair, too tight grey suit, tie, smug grin, no badges or symbols“ |
-| `droehn_spritesheet_32x64.png` | **Ledeiw** (Gegner, Karikatur), groß und dünn, gegelte dunkle Haare, kleine Brille, dunkelblauer Anzug, rote Krawatte. Kein Abzeichen | „tall thin man with slicked-back dark hair, small glasses, dark blue suit, red tie, pompous posture, no badges or symbols“ |
+| `pinsel_spritesheet_32x64.png` | **Pinsel** (Gegner, Karikatur), kräftig, kurzes blondes Haar mit Seitenscheitel, zu enger grauer Anzug, Krawatte, selbstgefälliges Grinsen. Kein Abzeichen | „stocky man with short blond side-parted hair, too tight grey suit, tie, smug grin, no badges or symbols“ |
+| `ledeiw_spritesheet_32x64.png` | **Ledeiw** (Gegner, Karikatur), groß und dünn, gegelte dunkle Haare, kleine Brille, dunkelblauer Anzug, rote Krawatte. Kein Abzeichen | „tall thin man with slicked-back dark hair, small glasses, dark blue suit, red tie, pompous posture, no badges or symbols“ |
 
 **Zusatzposen für alle Figuren** (je ein Sheet `<name>_posen_32x64.png`, 192×64, transparent):
 
@@ -108,7 +108,7 @@ Joe mit Dichtstoff-Kartusche im Anschlag (in `joe_posen`, Bild 3/4). **Chani** m
 
 | Datei (Vorschlag) | Inhalt | Prompt |
 |---|---|---|
-| `<name>_portraet_64x64.png` (je Figur: joe, chani, christian, joanna, lore, kemper, hohlbein, droehn) | Sheet 192×64 aus 3 Bildern à 64×64: neutral, lacht, erschrocken. Kopf und Schultern, frontal, schlichter Hintergrund | „portrait sheet 192×64 pixels, three 64×64 head-and-shoulders portraits of the same character: neutral, laughing, startled; plain background“ + Figurbeschreibung |
+| `<name>_portraet_64x64.png` (je Figur: joe, chani, christian, joanna, lore, kemper, pinsel, ledeiw) | Sheet 192×64 aus 3 Bildern à 64×64: neutral, lacht, erschrocken. Kopf und Schultern, frontal, schlichter Hintergrund | „portrait sheet 192×64 pixels, three 64×64 head-and-shoulders portraits of the same character: neutral, laughing, startled; plain background“ + Figurbeschreibung |
 
 ## Objekte, die sich im Spiel ändern (Sprites, transparent)
 
