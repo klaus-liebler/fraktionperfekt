@@ -139,5 +139,21 @@ public sealed partial class FraktionDbContext
             b.HasIndex(x => x.Endpunkt).IsUnique();
             b.HasIndex(x => x.PersonId);
         });
+        Hilfe(modelBuilder);
+    }
+
+    /// <summary>Hilfe, Doku und Impressum (aus VibeVHS übernommen): Kommentare je Abschnitt, Impressum der Fraktion.</summary>
+    private static void Hilfe(ModelBuilder modelBuilder)
+    {
+        Einfach<Domain.Dokumentation.Kommentar>(modelBuilder, "Kommentare", b =>
+        {
+            b.Property(k => k.Dokument).HasMaxLength(200);
+            b.Property(k => k.Abschnitt).HasMaxLength(200);
+            b.Property(k => k.AbschnittTitel).HasMaxLength(300);
+            b.Property(k => k.Text).HasMaxLength(Domain.Dokumentation.Kommentar.TextMaxZeichen);
+            b.HasIndex(k => new { k.Dokument, k.Abschnitt });
+            b.HasIndex(k => k.AntwortAuf);
+        });
+        Einfach<Domain.Dokumentation.Impressum>(modelBuilder, "Impressum", b => b.Property(i => i.Text).HasMaxLength(Domain.Dokumentation.Impressum.MaxZeichen));
     }
 }

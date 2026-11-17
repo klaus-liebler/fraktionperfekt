@@ -1,0 +1,151 @@
+@page "/dokumentation"
+@page "/dokumentation/{Bereich}/{Name}"
+@using FraktionPerfekt.Application.Dokumentation
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Web.Dokumentation
+@inject Vorgang Vorgang
+@inject Dokumentkatalog Katalog
+
+@* Konzept und Doku in der Anwendung – Administration und Vorstand; Kommentare je Abschnitt (aus VibeVHS übernommen). *@
+
+<PageTitle>@(dokument?.Titel ?? "Dokumentation") · FraktionPerfekt</PageTitle>
+
+@if (!recht.Erlaubt)
+{
+    <div class="fp-head"><div><h1>Dokumentation</h1></div></div>
+    <div class="fp-alert fp-info">@recht.Begruendung Die Hilfe zur Bedienung steht allen offen: <a href="hilfe">Hilfe</a>.</div>
+}
+else if (Bereich is null)
+{
+    <div class="fp-head">
+        <div>
+            <h1>Dokumentation</h1>
+            <p class="fp-sub">Konzept, Abnahme-Drehbücher und technische Doku. Kommentare je Abschnitt – zum Einarbeiten gesammelt unter „Alle Kommentare“.</p>
+        </div>
+        <div class="fp-row"><a class="fp-btn" href="dokumentation/kommentare/alle">Alle Kommentare (@alle.Count(f => !f.Start.Kommentar.Erledigt) offen)</a></div>
+    </div>
+
+    @foreach (var gruppe in Dokumentkatalog.Alle.GroupBy(d => d.Gruppe))
+    {
+        <section class="fp-card">
+            <h2>@gruppe.Key</h2>
+            <div class="fp-list">
+                @foreach (var d in gruppe)
+                {
+                    var (gesamt, offenAnzahl) = Zaehlen(d.Schluessel);
+                    var da = Katalog.Vorhanden(d);
+                    <div>
+                        <div class="fp-grow">
+                            @if (da)
+                            {
+                                <a href="@d.Adresse"><b>@d.Titel</b></a>
+                            }
+                            else
+                            {
+                                <b class="fp-muted">@d.Titel</b> <span class="fp-small fp-muted">(noch nicht im Repo – nur das Archiv)</span>
+                            }
+                            <br /><span class="fp-small fp-muted">@d.Beschreibung</span>
+                        </div>
+                        @if (gesamt > 0)
+                        {
+                            <StatusPille Stil="@(offenAnzahl > 0 ? "warn" : "neutral")">@gesamt Kommentar(e), @offenAnzahl offen</StatusPille>
+                        }
+                        @if (d.Archiv is { } url)
+                        {
+                            <a class="fp-small fp-muted" href="@url" target="_blank" rel="noopener" title="Claude-Dokument, Stand 17.11.2026">Archiv ↗</a>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    }
+}
+else if (Bereich == "kommentare")
+{
+    <div class="fp-head">
+        <div>
+            <a href="dokumentation" class="fp-small">← Dokumentation</a>
+            <h1>Alle Kommentare</h1>
+            <p class="fp-sub">@alle.Count(f => !f.Start.Kommentar.Erledigt) offen, @alle.Count(f => f.Start.Kommentar.Erledigt) erledigt.</p>
+        </div>
+        <div class="fp-row"><a class="fp-btn fp-btn-haupt" href="dokumentation/kommentare.md">Als Markdown herunterladen</a></div>
+    </div>
+    <nav class="fp-chips" aria-label="Filter">
+        <a class="fp-chip @(Erledigt != 1 ? "on" : "")" href="dokumentation/kommentare/alle">nur offene</a>
+        <a class="fp-chip @(Erledigt == 1 ? "on" : "")" href="dokumentation/kommentare/alle?erledigt=1">auch erledigte</a>
+    </nav>
+    <section class="fp-card fp-tbl">
+        <table>
+            <thead><tr><th>Dokument / Abschnitt</th><th>Kommentar</th><th>Von</th><th>Antworten</th><th>Status</th></tr></thead>
+            <tbody>
+                @{ var sichtbar = alle.Where(f => Erledigt == 1 || !f.Start.Kommentar.Erledigt).ToList(); }
+                @if (sichtbar.Count == 0) { <tr><td colspan="5" class="fp-muted">Keine Kommentare.</td></tr> }
+                @foreach (var f in sichtbar)
+                {
+                    var k = f.Start.Kommentar;
+                    var d = Dokumentkatalog.Finden(k.Dokument);
+                    <tr>
+                        <td><a href="@($"{d?.Adresse ?? "dokumentation"}#{k.Abschnitt}")">@(d?.Titel ?? k.Dokument)</a><br />
+                            <span class="fp-small fp-muted">@(k.AbschnittTitel.Length > 0 ? k.AbschnittTitel : "ganzes Dokument")</span></td>
+                        <td class="fp-doku-kommentar-text">@k.Text</td>
+                        <td class="fp-small">@f.Start.Verfasst<br /><span class="fp-muted">@Ortszeit.AlsOrtszeit(k.Am).ToString("dd.MM.yyyy")</span></td>
+                        <td>@f.Antworten.Count</td>
+                        <td><StatusPille Stil="@(k.Erledigt ? "gut" : "warn")">@(k.Erledigt ? "erledigt" : "offen")</StatusPille></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+else if (dokument is null || abschnitte is null)
+{
+    <div class="fp-head"><div><a href="dokumentation" class="fp-small">← Dokumentation</a><h1>Dokument nicht gefunden</h1></div></div>
+    <div class="fp-alert fp-warn">Dieses Dokument gibt es in dieser Version nicht (oder die Datei fehlt in der Auslieferung).</div>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <a href="dokumentation" class="fp-small">← Dokumentation</a>
+            <h1>@dokument.Titel</h1>
+            <p class="fp-sub">@dokument.Gruppe · @dokument.Beschreibung</p>
+        </div>
+    </div>
+    <DokumentAnsicht Dokument="@dokument" Abschnitte="@abschnitte" Kommentieren="true" />
+}
+
+@code {
+    [Parameter]
+    public string? Bereich { get; set; }
+
+    [Parameter]
+    public string? Name { get; set; }
+
+    [SupplyParameterFromQuery(Name = "erledigt")]
+    private int? Erledigt { get; set; }
+
+    private Freigabe recht = Freigabe.Ja;
+    private Dokument? dokument;
+    private IReadOnlyList<Abschnitt>? abschnitte;
+    private IReadOnlyList<Kommentarfaden> alle = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var rolle = (await Vorgang.BenutzerAsync()).Rolle;
+        recht = Rechte.DokumentationKommentieren(rolle);
+        if (!recht.Erlaubt)
+        {
+            return;
+        }
+
+        alle = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DokumentationDienst>().AlleAsync());
+        dokument = Bereich is null or "kommentare" ? null : Dokumentkatalog.Finden($"{Bereich}/{Name}");
+        abschnitte = dokument is null ? null : Katalog.Laden(dokument, rolle);
+    }
+
+    private (int Gesamt, int Offen) Zaehlen(string schluessel)
+    {
+        var liste = alle.Where(f => f.Start.Kommentar.Dokument == schluessel).ToList();
+        return (liste.Count, liste.Count(f => !f.Start.Kommentar.Erledigt));
+    }
+}

@@ -293,6 +293,13 @@ public static class Spalteneinstufung
                 ["WiderrufenAm"] = (Spaltenart.Stammdatum, null),
                 ["ZuletztAbgerufenAm"] = (Spaltenart.Stammdatum, null),
             },
+            ["Impressum"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (genau ein Eintrag)"),
+                ["GeaendertAm"] = (Spaltenart.Vorgang, null),
+                ["GeaendertVonPersonId"] = (Spaltenart.Vorgang, "wer zuletzt geändert hat"),
+                ["Text"] = (Spaltenart.Vorgang, "Impressum als Markdown; leer = Platzhalter"),
+            },
             ["Kampagnen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
@@ -318,6 +325,20 @@ public static class Spalteneinstufung
                 ["Quelle"] = (Spaltenart.Beleg, null),
                 ["QuelleId"] = (Spaltenart.Beleg, null),
                 ["Text"] = (Spaltenart.Beleg, null),
+            },
+            ["Kommentare"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["Abschnitt"] = (Spaltenart.Vorgang, "Anker der Überschrift"),
+                ["AbschnittTitel"] = (Spaltenart.Beleg, "Überschrift zum Zeitpunkt des Kommentars (kann sich im Dokument später ändern)"),
+                ["Am"] = (Spaltenart.Vorgang, null),
+                ["AntwortAuf"] = (Spaltenart.Vorgang, null),
+                ["Dokument"] = (Spaltenart.Vorgang, null),
+                ["Erledigt"] = (Spaltenart.Vorgang, null),
+                ["ErledigtAm"] = (Spaltenart.Vorgang, null),
+                ["ErledigtVonPersonId"] = (Spaltenart.Vorgang, "wer als erledigt markiert hat"),
+                ["Text"] = (Spaltenart.Vorgang, null),
+                ["VerfasstVonPersonId"] = (Spaltenart.Vorgang, "Verfasser; Name zur Laufzeit"),
             },
             ["Kontakte"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {

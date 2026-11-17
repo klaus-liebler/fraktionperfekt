@@ -34,6 +34,7 @@ public static class Registrierung
         dienste.AddScoped<Abstimmungen.UmfrageDienst>();
         dienste.AddScoped<Antraege.AntragDienst>();
         dienste.AddScoped<Ressourcen.RessourcenDienst>();
+        dienste.AddScoped<Dokumentation.DokumentationDienst>();
         dienste.AddScoped<Termine.BesetzungDienst>();
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Abstimmungen", d.GetRequiredService<Abstimmungen.UmfrageDienst>().FristenPruefenAsync));
         dienste.AddScoped<Wissen.DateiDienst>();

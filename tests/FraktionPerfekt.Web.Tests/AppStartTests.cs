@@ -105,6 +105,7 @@ public sealed partial class AppStartTests : IAsyncLifetime
         (await http.GetAsync("sw.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetAsync("offline.html", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetStringAsync("spiel/", abbruch)).ShouldContain("Testanmeldung"); // Easteregg nur angemeldet
+        (await http.GetStringAsync("impressum", abbruch)).ShouldContain("Impressum"); // öffentlich, ohne Anmeldung
 
         // Sicherheitsheader (CSP mit Hash der Import-Map, kein Framing) und no-store auf dem Kalender-Abo.
         var kopf = await http.GetAsync("anmelden", abbruch);
@@ -126,11 +127,14 @@ public sealed partial class AppStartTests : IAsyncLifetime
         antwort.IsSuccessStatusCode.ShouldBeTrue();
 
         // Alle Hauptseiten laden (vorgerendert, Status 200).
-        foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit", "sitzungen", "aufgaben", "antraege", "abstimmungen", "ressourcen", "besetzung", "wahlkampf", "auslagen", "handy/plakat", "handy/auslage", "anfragen", "beschluesse", "anliegen", "presse", "kontakte", "suche?q=Haushalt", "wiki", "wiki/vorschlaege", "wiki/seite/Fraktionssitzung", "dateien" })
+        foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit", "sitzungen", "aufgaben", "antraege", "abstimmungen", "ressourcen", "besetzung", "wahlkampf", "auslagen", "handy/plakat", "handy/auslage", "anfragen", "beschluesse", "anliegen", "presse", "kontakte", "suche?q=Haushalt", "wiki", "wiki/vorschlaege", "wiki/seite/Fraktionssitzung", "dateien", "hilfe", "dokumentation", "impressum" })
         {
             var r = await http.GetAsync(seite, abbruch);
             r.StatusCode.ShouldBe(HttpStatusCode.OK, $"Seite /{seite}");
         }
+
+        (await http.GetStringAsync("hilfe", abbruch)).ShouldContain("Grundprinzipien");
+        (await http.GetAsync("dokumentation/kommentare.md", abbruch)).StatusCode.ShouldBe(HttpStatusCode.Forbidden); // Mitglied: kein Zugang
 
         // Easteregg-Spiel (angemeldet)
         (await http.GetStringAsync("spiel/", abbruch)).ShouldContain("Gral der Demokratie");

@@ -14,7 +14,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261117075645_Initial";
+    public override string LastMigrationId => "20261117114400_HilfeImpressumKommentare";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -517,6 +517,78 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id");
 
                 b.ToTable("Themenpaten");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Dokumentation.Impressum", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<long>("GeaendertAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("GeaendertVonPersonId")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Text")
+                    .HasMaxLength(8000)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.ToTable("Impressum");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Dokumentation.Kommentar", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Abschnitt")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("AbschnittTitel")
+                    .IsRequired()
+                    .HasMaxLength(300)
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("AntwortAuf")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Dokument")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<bool>("Erledigt")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long?>("ErledigtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("ErledigtVonPersonId")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasMaxLength(4000)
+                    .HasColumnType("TEXT");
+
+                b.Property<byte[]>("VerfasstVonPersonId")
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("AntwortAuf");
+
+                b.HasIndex("Dokument", "Abschnitt");
+
+                b.ToTable("Kommentare");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Finanzen.Auslage", b =>

@@ -43,6 +43,12 @@ public static class Rechte
     /// <summary>Das Kampagnenteam sieht nur öffentliche Termine und Kampagnentermine.</summary>
     public static bool SiehtTermin(Rolle? rolle, Terminart art) => rolle is not Rolle.Helferin || art.IstOeffentlich();
 
+    /// <summary>Konzept und technische Doku lesen und kommentieren (Hilfe lesen dürfen alle).</summary>
+    public static Freigabe DokumentationKommentieren(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Administration, Rolle.Vorstand);
+
+    /// <summary>Impressum der Fraktion pflegen.</summary>
+    public static Freigabe ImpressumPflegen(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Administration);
+
     /// <summary>Der Abwesenheitsgrund kann Gesundheitsdaten enthalten: nur die Person selbst und die Administration.</summary>
     public static bool SiehtAbwesenheitsgrund(Benutzer benutzer, Guid personId)
         => benutzer.PersonId == personId || benutzer.Rolle == Rolle.Administration;

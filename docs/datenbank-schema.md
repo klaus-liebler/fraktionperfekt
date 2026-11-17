@@ -115,9 +115,11 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Gremien](#gremien) – 4 Spalten
 - [GremiumVersionen](#gremiumversionen) – 9 Spalten
 - [Haushaltsposten](#haushaltsposten) – 5 Spalten
+- [Impressum](#impressum) – 4 Spalten
 - [KalenderAbos](#kalenderabos) – 6 Spalten
 - [Kampagnen](#kampagnen) – 9 Spalten
 - [Kassenbuchungen](#kassenbuchungen) – 11 Spalten
+- [Kommentare](#kommentare) – 11 Spalten
 - [Kontakte](#kontakte) – 11 Spalten
 - [Mitgliedschaften](#mitgliedschaften) – 4 Spalten
 - [MitgliedschaftsVersionen](#mitgliedschaftsversionen) – 10 Spalten
@@ -556,6 +558,17 @@ Klasse: `FraktionPerfekt.Domain.Finanzen.Haushaltsposten`
 
 Indizes: (Kasse, Jahr)
 
+## Impressum
+
+Klasse: `FraktionPerfekt.Domain.Dokumentation.Impressum`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (genau ein Eintrag) |
+| GeaendertAm | INTEGER | ja |  | G |  |
+| GeaendertVonPersonId | BLOB |  |  | G | wer zuletzt geändert hat |
+| Text | TEXT(8000) |  |  | G | Impressum als Markdown; leer = Platzhalter |
+
 ## KalenderAbos
 
 Klasse: `FraktionPerfekt.Domain.Termine.KalenderAbo`
@@ -608,6 +621,26 @@ Klasse: `FraktionPerfekt.Domain.Finanzen.Kassenbuchung` – Kassenbuch: Buchunge
 | Text | TEXT | ja |  | B |  |
 
 Indizes: (Kasse, Datum)
+
+## Kommentare
+
+Klasse: `FraktionPerfekt.Domain.Dokumentation.Kommentar`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| Abschnitt | TEXT(200) | ja | Index | G | Anker der Überschrift |
+| AbschnittTitel | TEXT(300) | ja |  | B | Überschrift zum Zeitpunkt des Kommentars (kann sich im Dokument später ändern) |
+| Am | INTEGER | ja |  | G |  |
+| AntwortAuf | BLOB |  | Index | G |  |
+| Dokument | TEXT(200) | ja | Index | G |  |
+| Erledigt | INTEGER | ja |  | G |  |
+| ErledigtAm | INTEGER |  |  | G |  |
+| ErledigtVonPersonId | BLOB |  |  | G | wer als erledigt markiert hat |
+| Text | TEXT(4000) | ja |  | G |  |
+| VerfasstVonPersonId | BLOB |  |  | G | Verfasser; Name zur Laufzeit |
+
+Indizes: (AntwortAuf); (Dokument, Abschnitt)
 
 ## Kontakte
 

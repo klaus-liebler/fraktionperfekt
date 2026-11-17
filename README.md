@@ -13,6 +13,8 @@ Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
 | Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md), [`docs/abnahme-4.md`](docs/abnahme-4.md), [`5`](docs/abnahme-5.md), [`6`](docs/abnahme-6.md), [`7`](docs/abnahme-7.md), [`8`](docs/abnahme-8.md); **Gesamt:** [`docs/abnahme-gesamt.md`](docs/abnahme-gesamt.md) |
 | Betrieb, Sicherung, Wiederherstellung | [`docs/betrieb.md`](docs/betrieb.md) |
 | Sicherheit (OWASP-Checkliste) | [`docs/sicherheit.md`](docs/sicherheit.md) |
+| Hilfe zur Bedienung (auch in der App unter `/hilfe`) | [`docs/hilfe.md`](docs/hilfe.md) |
+| Schnittstellen nach außen mit Stand | [`docs/schnittstellen.md`](docs/schnittstellen.md) |
 | Handy-Test im LAN (HTTPS) | [`docs/handy-test.md`](docs/handy-test.md) |
 
 ## Voraussetzungen
@@ -116,6 +118,28 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
 - Bewusst nicht übernommen, weil für eine Fraktion mit 10 bis 40 Personen unnötig: virtuelle Listen mit Keyset-Nachladen
   und FTS5-Suche, Webshop-API mit Proof-of-Work. Das Muster „Anmeldelink per Mail“ (15 Minuten, einmalig, Bestätigung
   per POST) ist für die echte Anmeldung vorgemerkt.
+
+### Übertragung vom 17.11.2026: Hilfe, Doku, Impressum, Touren
+
+Übernommen aus VibeVHS (dort FA-159/160, QA-56/57), inhaltlich angepasst:
+
+- **Hilfe** `/hilfe` für alle Rollen (`docs/hilfe.md`, aus Konzept, Leitlinien und Gesamt-Drehbuch), Link oben, in der
+  Navigation und in der Handy-Fußzeile.
+- **Impressum** `/impressum` ohne Anmeldung, verlinkt in den Fußzeilen; gepflegt von der Administration unter
+  **Betrieb → Impressum** (Markdown, Vorlage nach § 5 DDG, solange leer ein markierter Platzhalter).
+- **Dokumentation** `/dokumentation` für Administration und Vorstand: Doku aus `docs/` und README mit **Kommentaren je
+  Abschnitt** (Antworten, offen/erledigt, Übersicht, Export `/dokumentation/kommentare.md`); Rechte im
+  `DokumentationDienst`. Das Konzept erscheint dort, sobald es als `docs/spezifikation/konzept.md` im Repo liegt.
+- **Abnahme- und Schulungsmodus** (`Abnahmemodus:Aktiv`, nur Entwicklung): acht geführte Touren nach dem Gesamt-Drehbuch
+  mit Kontowechsel (`wwwroot/tour.js`, `wwwroot/touren/abnahme.json`); `node tests/Touren/tourpruefung.mjs
+  http://localhost:5290` spielt sie durch.
+- **Schnittstellenübersicht** `docs/schnittstellen.md`.
+
+Bewusst anders als in VibeVHS: Kommentare und Impressum liegen in der **Hauptdatenbank** (Zusatzmigration
+`HilfeImpressumKommentare`), weil sie hier dank Migrationen erhalten bleibt – keine eigene `kommentare.db`. Verfasser als
+`PersonId`, Namen zur Laufzeit (Datenbankregeln). Nicht übernommen: `deploy.ps1 -DbNeu` (Migrationen statt Neuaufbau) und
+der Leerzeichen-Fix bei „Rolle“ (hier schon über `column-gap` gelöst). Auf dem Testsystem bleibt der Abnahmemodus aus
+(keine Demodaten, keine Testanmeldung).
 
 ## Iteration 1: was es gibt
 

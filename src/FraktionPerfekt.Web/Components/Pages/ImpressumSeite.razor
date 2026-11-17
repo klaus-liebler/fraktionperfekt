@@ -1,0 +1,40 @@
+@page "/impressum"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout LeeresLayout
+@using FraktionPerfekt.Application.Dokumentation
+@using FraktionPerfekt.Web.Dokumentation
+@inject IServiceScopeFactory Bereiche
+
+@* Öffentliches Impressum (ohne Anmeldung). Inhalt: Betrieb → Impressum (Administration, Markdown). Aus VibeVHS übernommen. *@
+
+<PageTitle>Impressum · FraktionPerfekt</PageTitle>
+
+<div class="fp-login fp-impressum">
+    <Marke />
+    <h1>Impressum</h1>
+    @if (html is null)
+    {
+        <div class="fp-alert fp-warn" role="note">
+            <b>Platzhalter – Impressum noch nicht gepflegt.</b><br />
+            Die Angaben nach § 5 DDG (Anbieter, Anschrift, Vertretungsberechtigte, Kontakt, inhaltlich Verantwortliche) trägt die
+            Administration unter <b>Betrieb → Impressum</b> ein.
+        </div>
+    }
+    else
+    {
+        <div class="fp-doku-text">@((MarkupString)html)</div>
+    }
+    <p class="fp-small fp-muted"><a href="">Zur Anwendung</a></p>
+</div>
+
+@code {
+    private string? html;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var bereich = Bereiche.CreateAsyncScope();
+        var text = await bereich.ServiceProvider.GetRequiredService<DokumentationDienst>().ImpressumAsync();
+        html = text is { Length: > 0 } ? MarkdownDarstellung.AlsHtml(text) : null;
+    }
+}

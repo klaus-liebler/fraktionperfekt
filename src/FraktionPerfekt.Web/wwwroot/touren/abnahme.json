@@ -1,0 +1,308 @@
+{
+  "beschreibung": "Geführte Touren nach docs/abnahme-gesamt.md (Abnahme- und Schulungsmodus, tour.js, aus VibeVHS übernommen). Ziele über sichtbaren Text oder Feldbeschriftung. Geprüft mit tests/Touren/tourpruefung.mjs.",
+  "touren": [
+    {
+      "id": "f01-heute-vertretung",
+      "titel": "1. Heute: Vertretung mit einem Tipp zusagen",
+      "konto": "Dames Joud (Mitglied, Schatzmeister)",
+      "kontoName": "Dames Joud",
+      "richtzeit": "3 min",
+      "start": "",
+      "beschreibung": "Die Startseite „Heute“ zeigt nur, was jetzt zu tun ist – mit Ein-Tipp-Antworten.",
+      "abschluss": "Die Vertretung ist zugesagt; der Vorstand sieht die Sitzung als besetzt.",
+      "schritte": [
+        {
+          "seite": "",
+          "text": "Das ist **Heute**: nächste Termine, offene Anfragen und Abstimmungen, jeweils mit einer Ein-Tipp-Antwort. Oben stehen die **Schnellaktionen**. Danach „Weiter“.",
+          "weiter": "knopf"
+        },
+        {
+          "seite": "",
+          "text": "Sie sind als **Vertretung** gefragt. Sagen Sie zu: **Ich vertrete**.",
+          "ziel": {
+            "text": "Ich vertrete",
+            "genau": true
+          },
+          "weiter": "klick",
+          "bedingt": "offene Vertretungsanfrage an dieses Konto"
+        },
+        {
+          "text": "Zugesagt. Der Vorstand sieht die Sitzung jetzt als besetzt, und der Termin steht in Ihrem Kalender. Unter **Offene Vertretungen** sehen Sie alle Fälle.",
+          "ziel": {
+            "text": "Offene Vertretungen",
+            "in": ".fp-nav"
+          },
+          "weiter": "klick"
+        }
+      ]
+    },
+    {
+      "id": "f02-abwesenheit",
+      "titel": "2. Abwesenheit melden – Vertretungen laufen der Rangfolge nach",
+      "konto": "Martinus Benning (Vorstand, Mitglied)",
+      "kontoName": "Martinus Benning",
+      "richtzeit": "4 min",
+      "start": "abwesenheit",
+      "beschreibung": "Abwesenheit eintragen; als nächster Schritt „Vertretung anfragen“.",
+      "abschluss": "Die Stellvertretungen werden in ihrer Rangfolge angefragt; bleibt die Stelle offen, eskaliert die Anfrage an den Vorstand.",
+      "schritte": [
+        {
+          "seite": "abwesenheit",
+          "text": "Tragen Sie bei **Von** und **Bis (einschließlich)** einen Zeitraum ein, in dem eine Ausschusssitzung liegt (z. B. die nächsten zwei Wochen). Danach „Weiter“.",
+          "ziel": {
+            "feld": "Von"
+          },
+          "weiter": "knopf"
+        },
+        {
+          "seite": "abwesenheit",
+          "text": "Der **Grund** ist freiwillig und privat: nur Sie und die Administration sehen ihn, nie das Protokoll. Tragen Sie z. B. **Urlaub** ein.",
+          "ziel": {
+            "feld": "Grund"
+          },
+          "weiter": "eingabe",
+          "wert": "Urlaub"
+        },
+        {
+          "seite": "abwesenheit",
+          "text": "**Abwesenheit eintragen**",
+          "ziel": {
+            "text": "Abwesenheit eintragen"
+          },
+          "weiter": "klick"
+        },
+        {
+          "text": "Als nächster Schritt schlägt FraktionPerfekt vor, für betroffene Sitzungen eine **Vertretung anzufragen** – die Stellvertretungen werden in ihrer Rangfolge benachrichtigt. Danach „Weiter“.",
+          "weiter": "knopf"
+        }
+      ]
+    },
+    {
+      "id": "f03-antrag",
+      "titel": "3. Antrag starten",
+      "konto": "Liz Kühlert (Mitglied)",
+      "kontoName": "Liz Kühlert",
+      "richtzeit": "4 min",
+      "start": "antraege",
+      "beschreibung": "Antrag anlegen, gemeinsam schreiben, später abstimmen lassen.",
+      "abschluss": "Der Antrag ist angelegt; Fassungen, Kommentare und die Abstimmung in der Fraktion hängen daran.",
+      "schritte": [
+        {
+          "seite": "antraege",
+          "text": "Klicken Sie auf **Antrag starten**.",
+          "ziel": {
+            "text": "Antrag starten",
+            "in": "main"
+          },
+          "weiter": "klick"
+        },
+        {
+          "seite": "antraege",
+          "text": "Titel, z. B. **Mehr Sitzbänke in der Innenstadt**",
+          "ziel": {
+            "feld": "Titel"
+          },
+          "weiter": "eingabe",
+          "wert": "Mehr Sitzbänke in der Innenstadt"
+        },
+        {
+          "seite": "antraege",
+          "text": "Wählen Sie das **Ziel-Gremium** (z. B. den Ausschuss für Stadtentwicklung) und ein **Politikfeld**. Danach „Weiter“.",
+          "ziel": {
+            "feld": "Ziel-Gremium"
+          },
+          "weiter": "knopf"
+        },
+        {
+          "seite": "antraege",
+          "text": "**Anlegen**",
+          "ziel": {
+            "text": "Anlegen",
+            "genau": true
+          },
+          "weiter": "klick",
+          "bedingt": "Ziel-Gremium gewählt"
+        },
+        {
+          "text": "Der Antrag beginnt als **Idee**. Auf seiner Seite schreiben Sie gemeinsam im Editor, vergleichen Fassungen und stellen ihn zur **Abstimmung**. Danach „Weiter“.",
+          "weiter": "knopf"
+        }
+      ]
+    },
+    {
+      "id": "f04-sitzung",
+      "titel": "4. Fraktionssitzung einladen",
+      "konto": "Martinus Benning (Vorstand, Mitglied)",
+      "kontoName": "Martinus Benning",
+      "richtzeit": "5 min",
+      "start": "",
+      "beschreibung": "Einladung mit Tagesordnung aus Vorlage, Raum buchen als Folgeschritt.",
+      "abschluss": "Die Einladung geht über den Postausgang raus; „Raum buchen“ und die Tagesordnung stehen als nächste Schritte bereit.",
+      "schritte": [
+        {
+          "seite": "",
+          "text": "Schnellaktion **Fraktionssitzung einladen**.",
+          "ziel": {
+            "text": "Fraktionssitzung einladen",
+            "in": "main"
+          },
+          "weiter": "klick"
+        },
+        {
+          "seite": "sitzungen",
+          "text": "Hier bereiten Sie Sitzungen vor. Die Tagesordnung entsteht aus der Vorlage (feste TOPs), dazu kommen Themen aus dem RIS und anstehende Anträge. Legen Sie die **Fraktionssitzung** an und laden Sie ein. Danach „Weiter“.",
+          "ziel": {
+            "text": "Fraktionssitzung",
+            "genau": true,
+            "in": "main"
+          },
+          "weiter": "knopf"
+        },
+        {
+          "text": "Nach dem Einladen bietet FraktionPerfekt **Raum buchen** an – die Buchung hängt dann am Termin. Danach „Weiter“.",
+          "weiter": "knopf"
+        }
+      ]
+    },
+    {
+      "id": "f05-auslage",
+      "titel": "5. Auslage mit Beleg einreichen",
+      "konto": "Silke Eisenrichter (Mitglied)",
+      "kontoName": "Silke Eisenrichter",
+      "richtzeit": "3 min",
+      "start": "auslagen",
+      "beschreibung": "Auslage mit Belegfoto; der Kassier prüft und zahlt aus.",
+      "abschluss": "Die Auslage liegt beim Kassier als Aufgabe „Auslage prüfen“; nach der Auszahlung schließt sie sich selbst.",
+      "schritte": [
+        {
+          "seite": "auslagen",
+          "text": "**Wofür?** z. B. **Kaffee für die Fraktionssitzung**",
+          "ziel": {
+            "feld": "Wofür"
+          },
+          "weiter": "eingabe",
+          "wert": "Kaffee für die Fraktionssitzung"
+        },
+        {
+          "seite": "auslagen",
+          "text": "**Betrag (€)**, z. B. **12,50**",
+          "ziel": {
+            "feld": "Betrag"
+          },
+          "weiter": "eingabe",
+          "wert": "12,50"
+        },
+        {
+          "seite": "auslagen",
+          "text": "Prüfen Sie **Datum** und **Kasse** und hängen Sie – am Handy direkt mit der Kamera – den **Beleg** an. Danach „Weiter“.",
+          "ziel": {
+            "feld": "Beleg"
+          },
+          "weiter": "knopf"
+        },
+        {
+          "seite": "auslagen",
+          "text": "**Einreichen**",
+          "ziel": {
+            "text": "Einreichen",
+            "genau": true
+          },
+          "weiter": "klick",
+          "bedingt": "Pflichtangaben vollständig (Beleg)"
+        },
+        {
+          "text": "Der Kassier bekommt die Aufgabe **Auslage prüfen** mit Push. Am Handy geht das noch schneller: **Handy-Ansicht „Auslage“**. Danach „Weiter“.",
+          "weiter": "knopf"
+        }
+      ]
+    },
+    {
+      "id": "f06-aufgaben",
+      "titel": "6. Aufgabenkorb: übernehmen",
+      "konto": "Katrin Albers (Administration)",
+      "kontoName": "Katrin Albers",
+      "richtzeit": "3 min",
+      "start": "aufgaben",
+      "beschreibung": "Aufgaben aus dem Korb übernehmen; ein Klick auf den Titel führt zur passenden Seite.",
+      "abschluss": "Übernommene Aufgaben stehen bei Ihnen; erledigte Anlässe schließen ihre Aufgabe selbst.",
+      "schritte": [
+        {
+          "seite": "aufgaben",
+          "text": "Jede Aktion, die jemand anderes erledigen muss, legt hier eine **Aufgabe mit Frist** in den passenden Korb. Übernehmen Sie eine: **Übernehmen**.",
+          "ziel": {
+            "text": "Übernehmen",
+            "genau": true,
+            "in": "main"
+          },
+          "weiter": "klick",
+          "bedingt": "Aufgabe im Korb"
+        },
+        {
+          "text": "Ein Klick auf den **Titel** öffnet die passende Seite (z. B. „Auslage prüfen“ → Kasse). Ist der Anlass erledigt, schließt sich die Aufgabe selbst. Danach „Weiter“.",
+          "weiter": "knopf"
+        }
+      ]
+    },
+    {
+      "id": "f07-kalender-abo",
+      "titel": "7. Kalender-Abo aufs Handy",
+      "konto": "Liz Kühlert (Mitglied)",
+      "kontoName": "Liz Kühlert",
+      "richtzeit": "2 min",
+      "start": "kalender-abo",
+      "beschreibung": "Persönlicher Abo-Link für die Kalender-App, widerrufbar.",
+      "abschluss": "Der Abo-Link steht bereit; ein neuer Link sperrt den alten.",
+      "schritte": [
+        {
+          "seite": "kalender-abo",
+          "text": "Damit niemand einen zweiten Kalender pflegen muss: **Neuen Abo-Link erzeugen** und in der Kalender-App des Handys hinzufügen.",
+          "ziel": {
+            "text": "Neuen Abo-Link erzeugen"
+          },
+          "weiter": "klick"
+        },
+        {
+          "text": "Der Link ist persönlich und widerrufbar – ein neuer Link sperrt den alten. Push-Mitteilungen schalten Sie hier ebenfalls ein. Danach „Weiter“.",
+          "weiter": "knopf"
+        }
+      ]
+    },
+    {
+      "id": "f08-betrieb",
+      "titel": "8. Betrieb: Sicherung, Impressum, Protokoll",
+      "konto": "Katrin Albers (Administration)",
+      "kontoName": "Katrin Albers",
+      "richtzeit": "3 min",
+      "start": "betrieb",
+      "beschreibung": "Sicherung mit Wiederherstellungstest, Impressum pflegen, Protokoll nur mit Pseudonymen.",
+      "abschluss": "Gesichert und geprüft; das Protokoll zeigt Pseudonyme statt Namen.",
+      "schritte": [
+        {
+          "seite": "betrieb",
+          "text": "**Jetzt sichern** – direkt danach läuft der Wiederherstellungstest.",
+          "ziel": {
+            "text": "Jetzt sichern"
+          },
+          "weiter": "klick"
+        },
+        {
+          "seite": "betrieb",
+          "text": "Weiter unten pflegen Sie das **Impressum** (öffentlich unter /impressum). Danach „Weiter“.",
+          "ziel": {
+            "text": "Impressum speichern"
+          },
+          "weiter": "knopf"
+        },
+        {
+          "text": "Im **Protokoll** stehen alle Aktionen – mit Pseudonymen („Person #…“) statt Namen.",
+          "ziel": {
+            "text": "Protokoll",
+            "genau": true,
+            "in": ".fp-nav"
+          },
+          "weiter": "klick"
+        }
+      ]
+    }
+  ]
+}

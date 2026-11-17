@@ -23,7 +23,7 @@
                 }
             }
         </nav>
-        <div class="fp-foot">Stufe 2 · Iteration 8<br />Entwicklungsstand, Mock-Anbindungen</div>
+        <div class="fp-foot">Stufe 2 · Iteration 8<br />Entwicklungsstand, Mock-Anbindungen<br /><a href="impressum">Impressum</a></div>
     </aside>
     <div class="fp-main">
         <div class="fp-streifen" aria-hidden="true"></div>
@@ -57,6 +57,7 @@
                         {
                             <span class="fp-why" tabindex="0" data-why="Diesem Konto ist nur diese eine Rolle zugeordnet.">Rolle <b>@benutzer?.Rolle?.Anzeigename()</b></span>
                         }
+                        <a href="hilfe" class="fp-link" title="Bedienung, Abläufe Schritt für Schritt, geführte Touren">Hilfe</a>
                         <a href="einstellungen" class="fp-link" title="Persönliche Ansprache (Du/Sie, Begrüßung)">Einstellungen</a>
                         <a href="anmelden" class="fp-link" title="Mit einem anderen Testkonto anmelden">Konto wechseln</a>
                         <form method="post" action="abmelden" class="fp-inline">
@@ -113,6 +114,7 @@
     [
         new("Übersicht", "Heute", ""),
         new("Übersicht", "Kalender", "kalender"),
+        new("Übersicht", "Hilfe", "hilfe"),
         new("Übersicht", "Aufgaben", "aufgaben", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur die Kampagnen.") : Freigabe.Ja),
         new("Sitzungen", "Abwesenheit melden", "abwesenheit", Rechte.AbwesenheitMelden),
         new("Sitzungen", "Offene Vertretungen", "vertretungen", r => r is Rolle.Helferin ? Freigabe.Nein("Nur für Mitglieder, sachkundige Bürger:innen, Vorstand und Administration.") : Freigabe.Ja),
@@ -137,6 +139,7 @@
         new("Verwaltung", "Postausgang", "postausgang", Rechte.VerwaltungEinsehen),
         new("Verwaltung", "Protokoll", "protokoll", Rechte.VerwaltungEinsehen),
         new("Verwaltung", "Betrieb und Sicherung", "betrieb", Rechte.BetriebSteuern),
+        new("Verwaltung", "Dokumentation", "dokumentation", Rechte.DokumentationKommentieren),
     ];
 
     [CascadingParameter]

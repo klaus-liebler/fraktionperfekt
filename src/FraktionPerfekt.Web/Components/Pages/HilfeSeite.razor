@@ -1,0 +1,61 @@
+@page "/hilfe"
+@using FraktionPerfekt.Web.Dokumentation
+@inject Vorgang Vorgang
+@inject Dokumentkatalog Katalog
+@inject IConfiguration Konfiguration
+
+@* Hilfe zur Bedienung (docs/hilfe.md) für alle; in Entwicklung und Schulung mit geführten Touren (aus VibeVHS übernommen). *@
+
+<PageTitle>Hilfe · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Hilfe</h1>
+        <p class="fp-sub">Wie FraktionPerfekt funktioniert – Grundprinzipien und die wichtigsten Abläufe Schritt für Schritt.</p>
+    </div>
+    @if (dokuRecht.Erlaubt)
+    {
+        <div class="fp-row"><a class="fp-link" href="dokumentation">Konzept und Doku →</a></div>
+    }
+</div>
+
+@if (Konfiguration.GetValue("Abnahmemodus:Aktiv", false))
+{
+    <section class="fp-card" id="touren">
+        <div class="fp-head">
+            <div>
+                <h2>Abnahme- und Schulungsmodus</h2>
+                <p class="fp-sub">Geführte Touren nach dem Abnahme-Drehbuch: Sprechblasen zeigen direkt an der Oberfläche, was als Nächstes
+                    anzutippen oder einzutragen ist, und gehen weiter, sobald es getan ist. Jederzeit „Zurück“, „Überspringen“ oder „Beenden“.</p>
+            </div>
+        </div>
+        <div class="fp-touren" data-touren-liste>
+            <noscript><div class="fp-alert fp-warn">Die Touren brauchen JavaScript.</div></noscript>
+            <p class="fp-small fp-muted" data-touren-laden>Touren werden geladen …</p>
+        </div>
+        <p class="fp-small fp-muted">Die Touren arbeiten mit den Demodaten und der Testanmeldung. Moderation: Zeiten und Beobachtungen notieren wie im
+            Gesamt-Drehbuch (docs/abnahme-gesamt.md).</p>
+    </section>
+}
+
+@if (abschnitte is null)
+{
+    <div class="fp-alert fp-warn">Die Hilfedatei fehlt in dieser Auslieferung (docs/hilfe.md).</div>
+}
+else
+{
+    <DokumentAnsicht Dokument="@hilfe" Abschnitte="@abschnitte" Kommentieren="@dokuRecht.Erlaubt" />
+}
+
+@code {
+    private readonly Dokument hilfe = Dokumentkatalog.Finden(Dokumentkatalog.Hilfe)!;
+    private IReadOnlyList<Abschnitt>? abschnitte;
+    private Freigabe dokuRecht = Freigabe.Ja;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var rolle = (await Vorgang.BenutzerAsync()).Rolle;
+        dokuRecht = Rechte.DokumentationKommentieren(rolle);
+        abschnitte = Katalog.Laden(hilfe, rolle);
+    }
+}

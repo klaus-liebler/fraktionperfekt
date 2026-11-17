@@ -17,6 +17,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Hilfe, Konzept und Doku in der Anwendung (aus VibeVHS übernommen): docs/**/*.md und README.md → Dokumentation/… -->
+    <Content Include="..\..\docs\**\*.md" Exclude="..\..\docs\spiel*.md" Link="Dokumentation\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\README.md" Link="Dokumentation\README.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FraktionPerfekt.Application\FraktionPerfekt.Application.csproj" />
     <ProjectReference Include="..\FraktionPerfekt.Infrastructure\FraktionPerfekt.Infrastructure.csproj" />
     <ProjectReference Include="..\FraktionPerfekt.Adapters.Mocks\FraktionPerfekt.Adapters.Mocks.csproj" />

@@ -60,6 +60,22 @@ else
             </table>
         }
     </section>
+
+    <section class="fp-card" aria-labelledby="h-impressum">
+        <div class="fp-head"><h2 id="h-impressum">Impressum</h2>
+            <span class="fp-small fp-muted">öffentlich unter <a href="impressum" target="_blank">/impressum</a>, verlinkt in den Fußzeilen; Markdown (z. B. **fett**, Leerzeile = neuer Absatz)</span></div>
+        @if (impressumGespeichert is null)
+        {
+            <div class="fp-alert fp-warn">Noch kein Impressum gepflegt – die Seite zeigt einen Platzhalter. Die Vorlage unten bitte vollständig anpassen.</div>
+        }
+        <textarea class="fp-textarea fp-mono" rows="12" maxlength="@FraktionPerfekt.Domain.Dokumentation.Impressum.MaxZeichen" aria-label="Impressum (Markdown)"
+                  @bind="impressum" @bind:event="oninput"></textarea>
+        <div class="fp-row">
+            <BegruendeterButton Text="Impressum speichern" Icon="save" Click="ImpressumSpeichernAsync"
+                                Freigabe="@(Rechte.ImpressumPflegen(benutzer?.Rolle).Und(() => impressum == (impressumGespeichert ?? ImpressumVorlage) ? Freigabe.Nein("Bitte zuerst den Text anpassen – noch keine Änderung.") : Freigabe.Ja))" />
+            <span class="fp-small fp-muted">@(impressum?.Length ?? 0) / @FraktionPerfekt.Domain.Dokumentation.Impressum.MaxZeichen Zeichen</span>
+        </div>
+    </section>
 }
 
 @code {
@@ -68,11 +84,30 @@ else
     private string? meldung;
     private bool fehler;
     private bool laeuft;
+    private string? impressum;
+    private string? impressumGespeichert;
+
+    /// <summary>Vorlage für ein leeres Impressum (§ 5 DDG); wird nicht gespeichert, solange sie unverändert ist.</summary>
+    private static readonly string ImpressumVorlage = """
+        **[Name der Fraktion]** im Rat der Stadt [ … ]
+        [Straße Hausnummer]
+        [PLZ Ort]
+
+        **Vertreten durch:** [Fraktionsvorsitz, Name]
+
+        **Kontakt:** Telefon [ … ] · E-Mail [ … ]
+
+        **Verantwortlich für den Inhalt:** [Name, Anschrift]
+
+        **Betrieb des Systems:** [Betreiber, Kontakt]
+        """;
 
     protected override async Task OnInitializedAsync()
     {
         benutzer = await Vorgang.BenutzerAsync();
         await LadenAsync();
+        impressumGespeichert = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Dokumentation.DokumentationDienst>().ImpressumAsync());
+        impressum = impressumGespeichert ?? ImpressumVorlage;
     }
 
     private async Task LadenAsync()
@@ -98,6 +133,21 @@ else
 
         laeuft = false;
         await LadenAsync();
+    }
+
+    private async Task ImpressumSpeichernAsync()
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Dokumentation.DokumentationDienst>()
+                .ImpressumSetzenAsync(impressum == ImpressumVorlage ? null : impressum));
+            impressumGespeichert = impressum == ImpressumVorlage ? null : impressum?.Trim();
+            (meldung, fehler) = ("Impressum gespeichert – öffentlich unter /impressum.", false);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
     }
 
     private async Task PruefenAsync(string datei)

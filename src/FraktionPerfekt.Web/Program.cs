@@ -50,6 +50,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BenutzerKontext>();
 builder.Services.AddScoped<IAktuellerBenutzer, AktuellerBenutzer>();
 builder.Services.AddScoped<Vorgang>();
+// Hilfe, Konzept und Doku (docs/**/*.md, README.md → Dokumentation/), aus VibeVHS übernommen.
+builder.Services.AddSingleton(new FraktionPerfekt.Web.Dokumentation.Dokumentkatalog());
 // Mandant je Anfrage über den Host (Datenbank-Regel 6); Hintergrundaufträge nutzen den Standardmandanten
 builder.Services.AddScoped<FraktionPerfekt.Application.Gemeinsam.IAktuellerMandant>(d =>
 {
@@ -198,6 +200,19 @@ FraktionPerfekt.Web.Dokumente.DokumentEndpunkte.MapDokumente(app);
 FraktionPerfekt.Web.Wissen.WissenEndpunkte.MapWissen(app);
 FraktionPerfekt.Web.Kampagnen.KampagnenEndpunkte.MapKampagnen(app);
 FraktionPerfekt.Web.Spiel.SpielEndpunkte.MapSpiel(app);
+// Kommentare zu Konzept, Hilfe und Doku als Markdown (zum Einarbeiten); Rechte prüft der Dienst.
+app.MapGet("/dokumentation/kommentare.md", async (FraktionPerfekt.Application.Dokumentation.DokumentationDienst dienst) =>
+{
+    try
+    {
+        return Results.File(System.Text.Encoding.UTF8.GetBytes(await dienst.AlsMarkdownAsync()), "text/markdown; charset=utf-8", "kommentare-fraktionperfekt.md");
+    }
+    catch (InvalidOperationException)
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+}).RequireAuthorization();
+
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 await app.RunAsync();
