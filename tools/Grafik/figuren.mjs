@@ -21,7 +21,7 @@ function inZeilen(b, x0, y0, y1, farben, nach, xBedingung) {
 }
 
 function mittelSpalte(b, x0, y, farbe) {
-    let min = 99, max = -1;
+    let min = Infinity, max = -1;
     for (let x = x0; x < x0 + 32; x++) { if (gleich(b.lies(x, y), farbe)) { min = Math.min(min, x); max = Math.max(max, x); } }
     return max < 0 ? null : Math.round((min + max) / 2);
 }
@@ -31,7 +31,7 @@ function linkesteSpalte(b, x0, y) { for (let x = x0; x < x0 + 32; x++) { if (b.l
 /** Krawatte: frontal mittig im Hemd, seitlich am vorderen Hemdrand (rechts). */
 function krawatte(b, x0, frontal, farbe) {
     for (let y = 23; y <= 42; y++) {
-        let min = 99, max = -1;
+        let min = Infinity, max = -1;
         for (let x = x0 + 8; x < x0 + 26; x++) { if (gleich(b.lies(x, y), JOE.weiss)) { min = Math.min(min, x); max = Math.max(max, x); } }
         if (max < 0) { continue; }
         if (frontal) { const m = Math.round((min + max) / 2); b.setze(m, y, farbe); b.setze(m + 1, y, farbe); } else { b.setze(max, y, farbe); }
@@ -194,7 +194,7 @@ export function mitHut(sheet) {
     for (let i = 0; i < 6; i++) {
         const x0 = i * 32; let oben = -1;
         for (let y = 0; y < 20 && oben < 0; y++) { for (let x = x0; x < x0 + 32; x++) { if (b.lies(x, y)[3]) { oben = y; break; } } }
-        let l = 99, r = -1; for (let x = x0; x < x0 + 32; x++) { if (b.lies(x, oben + 4)[3]) { l = Math.min(l, x); r = Math.max(r, x); } }
+        let l = Infinity, r = -1; for (let x = x0; x < x0 + 32; x++) { if (b.lies(x, oben + 4)[3]) { l = Math.min(l, x); r = Math.max(r, x); } }
         if (r < 0) { continue; }
         b.rechteck(l + 1, 0, r - l - 1, oben + 4, F.braun); b.rechteck(l + 1, oben + 3, r - l - 1, 1, F.holzdunkel); b.rechteck(l - 2, oben + 4, r - l + 5, 1, F.holz); b.rechteck(l + 3, 0, 2, 2, [160, 104, 56]);
         const links = linkesteSpalte(b, x0, 36);
