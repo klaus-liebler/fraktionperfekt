@@ -45,15 +45,58 @@ test('Rätsel: falsche Symbolfolge öffnet das Schloss nicht, richtige schon', (
     assert.equal(z.inventar.includes('tempelschluessel'), true);
 });
 
-test('Fallgitter öffnet sich nur, wenn beide Figuren auf verschiedenen Platten stehen', () => {
+test('Fallgitter: Joe auf die schmale linke, Chani auf die dicke rechte Plattform – jede Figur steht allein auf ihrer', () => {
+    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+    const z = S.neuerZustand();
+    z.szene = 'tempel';
+    S.aktion(z, 'benutzen', 'platte_rechts');          // Joe gehört nicht auf die rechte
+    assert.equal(z.platten.rechts, null);
+    S.aktion(z, 'benutzen', 'platte_links');
+    assert.equal(z.platten.links, 'joe');
+    assert.equal(z.flags.gitterOffen, undefined);
+    S.figurWechseln(z);
+    S.aktion(z, 'benutzen', 'platte_links');           // Chani gehört nicht auf die linke
+    assert.equal(z.platten.links, 'joe');
+    // Joe steht für sich auf seiner Plattform (verkleinert im Hintergrund), Chani bewegt sich unabhängig
+    const joe = G.aufPlattform(z, 'joe');
+    assert.ok(joe && joe.skala < 1 && joe.y < G.BODEN && joe.seite === 'links');
+    assert.equal(G.aufPlattform(z, 'chani'), null);
+    const [links, rechts] = G.plattformen(z);
+    assert.ok(links.dicke < rechts.dicke, 'links schmaler als rechts');
+    assert.ok(links.oben > G.PLATTFORMEN.links.oben, 'belegte Plattform senkt sich');
+    assert.equal(rechts.oben, G.PLATTFORMEN.rechts.oben, 'die andere Plattform bewegt sich nicht mit');
+    S.aktion(z, 'benutzen', 'platte_rechts');
+    assert.equal(z.flags.gitterOffen, true);
+});
+
+test('Plattform verlassen: Wer woandershin geht, steigt herunter; die andere Figur bleibt stehen', () => {
     const z = S.neuerZustand();
     z.szene = 'tempel';
     S.aktion(z, 'benutzen', 'platte_links');
-    S.aktion(z, 'benutzen', 'platte_rechts'); // dieselbe Figur wechselt nur die Platte
-    assert.equal(z.flags.gitterOffen, undefined);
     S.figurWechseln(z);
-    S.aktion(z, 'benutzen', 'platte_links');
-    assert.equal(z.flags.gitterOffen, true);
+    S.platteVerlassen(z, 'chani');
+    assert.equal(z.platten.links, 'joe');
+    S.figurWechseln(z);
+    S.platteVerlassen(z, 'joe');
+    assert.equal(z.platten.links, null);
+});
+
+test('Tempel: Bis zur Brücke bleiben Joe und Chani links des Abgrunds, danach erreichen sie den Gang', () => {
+    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+    const z = S.neuerZustand();
+    for (const s of S.KOMPLETTLOESUNG) { if (s[0] === 'dialog' && s[1] === 'bruecke') { break; } S.schritt(z, s); }
+    assert.equal(z.szene, 'tempel'); assert.equal(z.flags.brueckeDa, undefined);
+    const hs = S.sichtbareHotspots(z);
+    const st = G.startplaetze(z, hs);
+    assert.ok(st.joe <= G.ABGRUND_LINKS && st.chani <= G.ABGRUND_LINKS);
+    for (const ziel of [hs.find((h) => h.id === 'gang'), hs.find((h) => h.id === 'abgrund'), 250]) {
+        const p = G.standplaetze(z, hs, ziel, 60, 40);
+        assert.ok(p.aktiv <= G.ABGRUND_LINKS && p.begleit <= G.ABGRUND_LINKS, JSON.stringify(p));
+    }
+    assert.match(S.aktion(z, 'benutzen', 'gang').text.join(' '), /Brücke/);
+    S.dialogWahl(z, 'bruecke', '1');
+    const p = G.standplaetze(z, S.sichtbareHotspots(z), S.sichtbareHotspots(z).find((h) => h.id === 'gang'), 60, 40);
+    assert.ok(p.aktiv > 196, `über die Brücke: ${p.aktiv}`);
 });
 
 test('Geschäftsordnungs-Quiz: Fehler setzt zurück, mit Geschäftsordnung gibt es einen Tipp', () => {
@@ -174,24 +217,71 @@ test('Keine Figur steht vor einer anderen: Start- und Stehplätze überlappen ni
     for (const schritt of S.KOMPLETTLOESUNG) { S.schritt(z, schritt); pruefe(); }
 });
 
-test('Archiv: Christian schließt erst bei TOP 2 auf', () => {
+test('Archiv: Chris blockiert die Tür, bis er den SPD-Antrag aus dem Briefkasten bekommt', () => {
     const z = S.neuerZustand();
     for (const schritt of S.KOMPLETTLOESUNG.slice(0, 6)) { S.schritt(z, schritt); }
+    assert.ok(z.inventar.includes('spd_antrag'));
     S.reisen(z, 'archiv');
-    S.aktion(z, 'gegenstand', 'christian', 'tagesordnung');
+    assert.match(S.aktion(z, 'reden', 'chris').text.join(' '), /erinnern/);
     assert.equal(z.flags.archivOffen, undefined);
-    assert.match(S.aktion(z, 'benutzen', 'archivtuer').text.join(' '), /TOP 2/);
-    S.aktion(z, 'reden', 'christian');
+    assert.match(S.aktion(z, 'benutzen', 'archivtuer').text.join(' '), /Chris/);
+    const e = S.aktion(z, 'gegenstand', 'chris', 'spd_antrag');
+    assert.match(e.text.join(' '), /Tag-der-offenen-Tür/);
     assert.equal(z.flags.archivOffen, true);
+    assert.equal(z.inventar.includes('spd_antrag'), false);
+});
+
+test('Ältere Spielstände: Mustertagesordnung wird zum SPD-Antrag, der gegründete Arbeitskreis zum übergebenen Antrag', () => {
+    const alt = S.laden(JSON.stringify({ version: 1, szene: 'archiv', inventar: ['handy', 'tagesordnung'], flags: { agGegruendet: true } }));
+    assert.deepEqual(alt.inventar, ['handy', 'spd_antrag']);
+    assert.equal(alt.flags.antragUebergeben, true);
+});
+
+test('Emsdeich: Inschrift an der Skulptur, Boot vom Kanuverleih, Flucht endet am Hallenbad', () => {
+    const z = S.neuerZustand();
+    for (const s of S.KOMPLETTLOESUNG) { if (s[0] === 'aktion' && s[2] === 'skulptur') { break; } S.schritt(z, s); }
+    assert.equal(z.szene, 'ems');
+    assert.equal(S.sichtbareHotspots(z).some((h) => /Brücke/.test(h.name)), false);
+    assert.ok(S.sichtbareHotspots(z).some((h) => h.id === 'verleih'));
+    assert.match(S.aktion(z, 'benutzen', 'boot').text.join(' '), /Tafel an der Skulptur/);   // ohne Inschrift kein Ziel
+    S.aktion(z, 'f1', 'skulptur');
+    const start = S.aktion(z, 'benutzen', 'boot');
+    assert.equal(start.minispiel, 'boot');
+    assert.match(start.text.join(' '), /alternativen Fakten/);
+    const ende = S.minispielEnde(z, 'boot', true);
+    assert.equal(z.szene, 'baustelle');
+    assert.equal(ende.szene, 'baustelle');
+    assert.deepEqual(ende.erscheinen, ['gegner']);
+    assert.match(ende.text.join(' '), /geht unter/);
+    assert.ok(z.inventar.includes('siegel_exekutive'));
+    assert.ok(z.orte.includes('baustelle'));
+    // Im Archiv kleben jetzt nur noch die Schuhsohlen
+    z.szene = 'karte'; S.reisen(z, 'archiv');
+    const ids = S.sichtbareHotspots(z).map((h) => h.id);
+    assert.ok(ids.includes('sohlen') && !ids.includes('gegner'));
+});
+
+test('Bootsflucht: Die Verfolger schießen alternative Fakten von hinten; sind sie verschossen, sinkt ihr Boot', () => {
+    const b = S.bootNeu(5);
+    let schuesse = 0, sinken = false;
+    while (b.status === 'laeuft') {
+        const vorher = b.munition;
+        S.bootSchritt(b, 1 / 30, S.bootAutopilot(b));
+        if (b.munition < vorher) { schuesse++; assert.ok(b.schuesse[b.schuesse.length - 1].x < S.BOOT_X, 'Schuss kommt von hinten'); }
+        if (b.sinken !== null) { sinken = true; assert.equal(b.munition, 0); }
+    }
+    assert.equal(b.status, 'gewonnen');
+    assert.equal(schuesse, S.ALTERNATIVE_FAKTEN.length);
+    assert.ok(sinken);
 });
 
 test('Bedienung: Verb → Gegenstand → Ziel ohne Zwischenklick, auch wenn noch ein Text steht', () => {
     const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
-    assert.equal(G.klickBeiText('gib', 'tagesordnung', true), 'ausfuehren');
+    assert.equal(G.klickBeiText('gib', 'spd_antrag', true), 'ausfuehren');
     assert.equal(G.klickBeiText('benutze', 'stadtplan', true), 'ausfuehren');
     assert.equal(G.klickBeiText('benutze', null, true), 'ausfuehren');
     assert.equal(G.klickBeiText('gehe', null, true), 'weiter');
-    assert.equal(G.klickBeiText('gib', 'tagesordnung', false), 'weiter');
+    assert.equal(G.klickBeiText('gib', 'spd_antrag', false), 'weiter');
 });
 
 test('Erkennungsmelodie: Fanfare, unverändertes Haydn-Zitat, Schluss; Stimmung stimmt', () => {
@@ -205,7 +295,7 @@ test('Erkennungsmelodie: Fanfare, unverändertes Haydn-Zitat, Schluss; Stimmung 
     assert.equal(M.spielen(), 0); // ohne Browser: still, kein Fehler
 });
 
-test('Archiv: Hohlbein und Dröhn kleben nach dem Rätsel verkleinert im Hintergrund, der Ausgang ist frei', () => {
+test('Archiv: Pinsel und Ledeiw kleben nach dem Rätsel verkleinert im Hintergrund, der Ausgang ist frei', () => {
     const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
     const z = S.neuerZustand();
     for (const s of S.KOMPLETTLOESUNG) { S.schritt(z, s); if (z.flags.gegnerArchivFest) { break; } }
@@ -236,7 +326,8 @@ test('Schule: erst der Flur mit Klassenzimmern, der Keller nur über die Kellert
 
 test('Karte: Die Baustelle ist am Hallenbad (das Freibad ist nicht im Umbau)', () => {
     assert.match(S.ORTE.baustelle.name, /Hallenbad/);
-    assert.match(S.SZENEN.baustelle.einstieg, /Hallenbad/);
+    assert.match(S.einstieg(S.neuerZustand(), 'baustelle'), /Hallenbad/);
+    assert.ok(S.ORTE.ems.y > S.ORTE.baustelle.y, 'der Emsdeich liegt flussauf (südlich) vom Hallenbad');
 });
 
 test('Archiv: Nach Festkleben, Speichern und Neuladen stehen beide verkleinert im Hintergrund', () => {
@@ -273,11 +364,11 @@ test('Joes Handy: Professor Relbeil nennt an jeder Stelle der Komplettlösung de
     assert.match(S.anrufen(z, 'hilfe').text.join(' '), /geschafft/);
     assert.ok(z.punkte >= 400);
     assert.match(S.anrufen(z, 'hallo').text[1], /^Relbeil:/);
-    // Konkret: am Anfang den Brief, im Archiv nach dem Rätsel die Kartusche bei Hohlbein und Dröhn
+    // Konkret: am Anfang den Brief, im Archiv nach dem Rätsel die Kartusche bei Pinsel und Ledeiw
     const neu = S.neuerZustand();
     assert.match(S.naechsterSchritt(neu).join(' '), /Umschlag/);
     for (const s of S.KOMPLETTLOESUNG) { if (s[0] === 'aktion' && s[1] === 'f1' && s[2] === 'gegner') { break; } S.schritt(neu, s); }
-    assert.match(S.naechsterSchritt(neu).join(' '), /Kartusche.*Hohlbein/);
+    assert.match(S.naechsterSchritt(neu).join(' '), /Kartusche.*Pinsel/);
 });
 
 test('Vorstellung nennt nur Fähigkeiten, die es im Spiel gibt', () => {

@@ -105,7 +105,8 @@ export function icons() {
     const z = [
         (x) => { b.rechteck(x + 1, 4, 14, 9, F.weiss); b.linie(x + 1, 4, x + 8, 9, F.hellgrau); b.linie(x + 14, 4, x + 8, 9, F.hellgrau); b.rechteck(x + 7, 8, 3, 2, F.rot); },
         (x) => { b.rechteck(x + 1, 2, 14, 12, F.creme); b.linie(x + 4, 2, x + 6, 13, F.blau); b.linie(x + 7, 6, x + 14, 9, F.lehm); b.rechteck(x + 10, 6, 3, 3, F.rot); },
-        (x) => { b.rechteck(x + 3, 1, 10, 14, F.weiss); for (let i = 0; i < 5; i++) { b.rechteck(x + 5, 3 + i * 2, 6, 1, F.grau); } },
+        // SPD-Antrag: Blatt mit rotem Kopf und Stempel
+        (x) => { b.rechteck(x + 3, 1, 10, 14, F.weiss); b.rechteck(x + 3, 1, 10, 3, F.rot); for (let i = 0; i < 4; i++) { b.rechteck(x + 5, 6 + i * 2, 6, 1, F.grau); } b.rechteck(x + 9, 12, 3, 2, F.dunkelrot); },
         (x) => { b.rechteck(x + 3, 2, 10, 12, F.dunkelblau); b.rechteck(x + 3, 2, 2, 12, F.navy); b.rechteck(x + 7, 5, 4, 1, F.gelb); b.rechteck(x + 12, 3, 1, 10, F.weiss); },
         (x) => { b.rechteck(x + 2, 6, 9, 4, F.dunkelgrau); b.rechteck(x + 11, 5, 3, 6, F.hellgrau); b.rechteck(x + 14, 6, 1, 4, F.hellgelb); },
         (x) => { b.linie(x + 2, 14, x + 10, 6, F.holz); b.linie(x + 3, 14, x + 11, 6, F.holzhell); b.ellipse(x + 12, 4, 3, 2, F.holz); },

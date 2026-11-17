@@ -16,7 +16,7 @@
     const NAMEN = HINTERGRUENDE.concat(OBJEKTE,
         PERSONEN.map((p) => p + '_spritesheet_32x64'), PERSONEN.map((p) => p + '_posen_32x64'), PERSONEN.map((p) => p + '_portraet_64x64'));
 
-    const ICONS = ['brief', 'stadtplan', 'tagesordnung', 'geschaeftsordnung', 'taschenlampe', 'paddel', 'siegel_legislative', 'siegel_exekutive', 'siegel_judikative', 'tempelschluessel', 'handy'];
+    const ICONS = ['brief', 'stadtplan', 'spd_antrag', 'geschaeftsordnung', 'taschenlampe', 'paddel', 'siegel_legislative', 'siegel_exekutive', 'siegel_judikative', 'tempelschluessel', 'handy'];
     const AUSDRUCK = { neutral: 0, lacht: 1, erschrocken: 2 };
     const FACKELN = { krypta: [[104, 36], [158, 36], [238, 36]], tempel_eingang: [[40, 46], [214, 46]], tempel_eingang_offen: [[40, 46], [214, 46]] };
 
@@ -47,17 +47,15 @@
     function ueberlagerungen(z, t) {
         const f = z.flags, o = [];
         const teil = (bild, i, b, h, x, y) => o.push({ bild, sx: i * b, sy: 0, b, h, x, y });
-        if (z.szene === 'ems' && !f.bootGewonnen) { teil('ruderboot_46x14', 0, 46, 14, 144, 93 + (Math.floor(t * 1.5) % 2)); }
+        if (z.szene === 'ems' && !f.bootGewonnen) { teil('ruderboot_46x14', 0, 46, 14, 58, 93 + (Math.floor(t * 1.5) % 2)); }
         if (z.szene === 'baustelle' && !f.grubeTrocken) { teil('leck_26x12_x3', Math.floor(t * 6) % 3, 26, 12, 118, 76); }
         if (z.szene === 'schule') {
             teil('uhr_zeiger_26x23_x2', f.abend ? 1 : 0, 26, 23, 154, 20);
             if (f.abend) { for (let i = 0; i < 4; i++) { teil('fledermaeuse_8x6_x4', Math.floor(t * 8 + i) % 4, 8, 6, Math.round((i * 67 + t * 26) % (B + 16)) - 8, Math.round(24 + i * 9 + Math.sin(t * 3 + i) * 5)); } }
         }
         if (z.szene === 'krypta' && f.tempelOffen) { teil('tor_siegel_46x72', 0, 46, 72, 179, 26); }
-        if (z.szene === 'tempel' && !f.gitterOffen) {
-            if (z.platten && z.platten.links) { teil('bodenplatte_leuchtend_36x9', 0, 36, 9, 56, 104); }
-            if (z.platten && z.platten.rechts) { teil('bodenplatte_leuchtend_36x9', 0, 36, 9, 159, 104); }
-        }
+        // Archiv nach der Flucht über die Ems: Die Schuhsohlen kleben noch an der Rückwand
+        if (z.szene === 'archiv' && f.gegnerArchivFest && f.gegnerBefreit) { teil('klebemasse_32x6', 0, 32, 6, 52, 105); teil('klebemasse_32x6', 0, 32, 6, 76, 105); }
         return o;
     }
 
@@ -85,7 +83,7 @@
     const ABSTAND = 24;                      // Mindestabstand zweier Fußpunkte (Körperbreite ≈ 22 px)
     const RAND_X = 14;
     const HINTEN = 0.65;                     // Maßstab von Figuren im Hintergrund
-    const NPC = { christian: 'christian', joanna: 'joanna', lore: 'lore', bauleiter: 'kemper' };
+    const NPC = { chris: 'christian', joanna: 'joanna', lore: 'lore', bauleiter: 'kemper' };
     function npcName(h) { return h.form === 'gegner' ? 'gegner' : NPC[h.id] || null; }
 
     /** Plätze der Nebenfiguren (Fußpunkt x/y) für den Spielstand; dieselben Plätze zeichnet die Darstellung. */
@@ -109,12 +107,44 @@
         return p;
     }
 
-    /** Nächster freier Platz zu wunsch (Abstand ≥ ABSTAND zu allen belegten Plätzen, innerhalb des Bildes). */
-    function freiesZiel(wunsch, belegt) {
-        const frei = (x) => x >= RAND_X && x <= B - RAND_X && belegt.every((b) => Math.abs(b - x) >= ABSTAND);
-        const w = Math.max(RAND_X, Math.min(B - RAND_X, Math.round(wunsch)));
+    /**
+     * Begehbarer Bereich (Fußpunkte x) im Spielstand: Im Tempel bleiben Joe und Chani links des Abgrunds, bis die Brücke da ist.
+     * Der Abgrund reicht unten von x 108 bis 196; eine Figur ist etwa 22 px breit.
+     */
+    const ABGRUND_LINKS = 96;
+    function bereich(z) {
+        if (z && z.szene === 'tempel' && z.flags.gitterOffen && !z.flags.brueckeDa && !z.flags.kugelGeschafft) { return [RAND_X, ABGRUND_LINKS]; }
+        return [RAND_X, B - RAND_X];
+    }
+
+    /** Nächster freier Platz zu wunsch (Abstand ≥ ABSTAND zu allen belegten Plätzen, innerhalb des begehbaren Bereichs). */
+    function freiesZiel(wunsch, belegt, grenzen) {
+        const [min, max] = grenzen || [RAND_X, B - RAND_X];
+        const frei = (x) => x >= min && x <= max && belegt.every((b) => Math.abs(b - x) >= ABSTAND);
+        const w = Math.max(min, Math.min(max, Math.round(wunsch)));
         for (let d = 0; d <= B; d++) { if (frei(w - d)) { return w - d; } if (frei(w + d)) { return w + d; } }
         return w;
+    }
+
+    // ---------- Balance-Plattformen im Tempel (unabhängig: jede Figur steht allein auf ihrer) ----------
+    // Links schmal (Joe), rechts dick (Chani); Fußpunkt der verkleinerten Figur = Oberkante der Platte.
+    const PLATTFORMEN = {
+        links: { x: 56, b: 36, dicke: 3, oben: 108, figur: 'joe' },
+        rechts: { x: 159, b: 36, dicke: 7, oben: 108, figur: 'chani' }
+    };
+    const PLATTFORM_BODEN = 120, PLATTFORM_SENKUNG = 2;
+    /** Platten mit Lage für den Spielstand (belegt: senkt sich und leuchtet). Nur vor dem Fallgitter. */
+    function plattformen(z) {
+        if (!z || z.szene !== 'tempel' || z.flags.gitterOffen) { return []; }
+        return ['links', 'rechts'].map((seite) => {
+            const p = PLATTFORMEN[seite], belegt = !!(z.platten && z.platten[seite]);
+            return { seite, x: p.x, b: p.b, dicke: p.dicke, oben: p.oben + (belegt ? PLATTFORM_SENKUNG : 0), boden: PLATTFORM_BODEN, belegt, figur: belegt ? z.platten[seite] : null };
+        });
+    }
+    /** Wo eine Heldin/ein Held auf einer Plattform steht (oder null): verkleinert, im Hintergrund. */
+    function aufPlattform(z, held) {
+        const p = plattformen(z).find((x) => x.figur === held);
+        return p ? { x: p.x + p.b / 2, y: p.oben, skala: HINTEN, seite: p.seite } : null;
     }
 
     /** Stehplätze für aktive Figur und Begleitung beim Gang zu einem Hotspot (oder zu einem x ohne Hotspot). */
@@ -128,18 +158,19 @@
             // Personen spricht man von der Seite an, von der man kommt: daneben stehen, nicht davor
             wunsch = eigene.length ? (aktivX <= mitte ? Math.min(...eigene) - ABSTAND - 2 : Math.max(...eigene) + ABSTAND + 2) : mitte;
         }
-        const aktiv = freiesZiel(wunsch, npc);
+        const grenzen = bereich(z);
+        const aktiv = freiesZiel(wunsch, npc, grenzen);
         const seite = aktiv > begleitX ? -1 : 1;
-        const begleit = freiesZiel(aktiv + seite * (ABSTAND + 2), npc.concat([aktiv]));
+        const begleit = freiesZiel(aktiv + seite * (ABSTAND + 2), npc.concat([aktiv]), grenzen);
         return { aktiv, begleit };
     }
 
     /** Startplätze beim Betreten einer Szene. */
     function startplaetze(z, hotspots) {
-        const wunsch = z.szene === 'buero' ? 64 : z.szene === 'tempel' && z.flags.kugelGeschafft ? 116 : 92;
-        const npc = npcPlaetze(z, hotspots).map((p) => p.x);
-        const joe = freiesZiel(wunsch, npc);
-        return { joe, chani: freiesZiel(joe + ABSTAND + 2, npc.concat([joe])) };
+        const wunsch = z.szene === 'buero' ? 64 : z.szene === 'ems' ? 128 : z.szene === 'tempel' && z.flags.kugelGeschafft ? 116 : 92;
+        const npc = npcPlaetze(z, hotspots).map((p) => p.x), grenzen = bereich(z);
+        const joe = freiesZiel(wunsch, npc, grenzen);
+        return { joe, chani: freiesZiel(joe + ABSTAND + 2, npc.concat([joe]), grenzen) };
     }
 
     /**
@@ -167,7 +198,7 @@
         return c;
     }
 
-    const api = { B, H, BODEN, FUSS_X, FUSS_Y, NAMEN, ICONS, ABSTAND, HINTEN, R, npcName, npcPlaetze, freiesZiel, standplaetze, startplaetze, klickBeiText, hintergrund, ueberlagerungen, fackeln, rahmen, portraet, icon, laden, bild, ausschnitt };
+    const api = { B, H, BODEN, FUSS_X, FUSS_Y, NAMEN, ICONS, ABSTAND, HINTEN, ABGRUND_LINKS, PLATTFORMEN, R, npcName, npcPlaetze, bereich, plattformen, aufPlattform, freiesZiel, standplaetze, startplaetze, klickBeiText, hintergrund, ueberlagerungen, fackeln, rahmen, portraet, icon, laden, bild, ausschnitt };
     wurzel.Grafik = api;
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 })(typeof globalThis !== 'undefined' ? globalThis : this);

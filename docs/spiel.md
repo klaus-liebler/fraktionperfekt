@@ -30,14 +30,15 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
 - Joes Handy (immer im Inventar): Antippen oder „Benutze“ ruft Professor Relbeil an (fiktive Figur). „Guten Tag!“ = Plauderei,
   „Ich brauche deine Hilfe!“ = der nächste Schritt, abgeleitet aus dem Spielstand und der Komplettlösung (kostet keine Punkte).
 - Wer während eines offenen Textes Verben, Figuren oder Gegenstände anklickt, bekommt kurz den Hinweis „Erst zu Ende lesen“.
-- Figuren verschwinden oder wechseln den Platz erst, wenn der zugehörige Text gelesen ist. Hohlbein und Dröhn bleiben nach dem
+- Figuren verschwinden oder wechseln den Platz erst, wenn der zugehörige Text gelesen ist. Pinsel und Ledeiw bleiben nach dem
   Festkleben im Archiv verkleinert und abgedunkelt im Hintergrund stehen (mit schwarzer Klebemasse unter den Schuhen), der Ausgang ist frei.
 - Stadtplan: Station 4 ist das Hallenbad Greven (OSM-Gebäude „Hallenbad Greven“, Am Hallenbad 3); das Freibad steht ohne Nummer auf der Karte.
+  Station 3 ist der Emsdeich mit Skulpturen und Kanuverleih, ein Stück flussauf (südlich) vom Hallenbad.
 
 ## Bedienung
 
 - **Verbleiste** unten: Gehe zu, Schau an, Nimm, Benutze, Rede mit, Gib und die zwei Fähigkeiten der aktiven Figur; die
-  Satzzeile zeigt, was passiert („Benutze Mustertagesordnung mit Genosse Christian“). Gegenstände: Verb „Benutze“ oder „Gib“
+  Satzzeile zeigt, was passiert („Gib SPD-Antrag „Tag der offenen Tür“ an Genosse Chris“). Gegenstände: Verb „Benutze“ oder „Gib“
   wählen, dann Icon im Inventar, dann das Ziel.
 - **Tippen/Klicken** in der Szene: Die Figur läuft hin und führt das gewählte Verb aus; mit „Gehe zu“ die naheliegende
   Aktion (Personen ansprechen, Ausgänge benutzen, sonst ansehen). **Langes Drücken** öffnet das Verbmenü am Objekt.
@@ -48,33 +49,36 @@ Karte, Minispiele). Joe und Chani sind nach Fotos stilisiert; die Fotos liegen n
   (Inschriften, Gemälde, Wappen), Live-Story (lenkt ab).
 - **Pause-Menü:** Speichern auf Platz 1–3, Laden (auch Autospeicher bei jedem Szenenwechsel), Ton an/aus, neues Spiel.
   Spielstände liegen im `localStorage` des Browsers; ohne Speicher läuft das Spiel trotzdem.
-- **Minispiele:** Bootsverfolgung auf der Ems (↑/↓ oder oben/unten tippen, 35 Sekunden, drei Treffer erlaubt) und die
-  rollende Wahlkugel (tippen/Leertaste/→ für Tempo; mit Lores Lastenrad leichter). Verloren = einfach noch einmal.
+- **Minispiele:** Bootsflucht die Ems hinab (↑/↓ oder oben/unten tippen; Treibgut von vorn, alternative Fakten von hinten, drei Treffer
+  erlaubt; sind Pinsel und Ledeiw die Fakten ausgegangen, geht ihr Motorboot unter) und die
+  rollende Wahlkugel (tippen/Leertaste/→ für Tempo; mit Lorettes Lastenrad leichter). Verloren = einfach noch einmal.
 
 ## Komplettlösung
 
+Ausführlich mit allen Texten und Regieanweisungen: [`spiel-loesungsweg.md`](spiel-loesungsweg.md) (erzeugt mit `node tools/Grafik/loesungsweg.mjs`).
+
 1. **Zukunftsschmiede (Parteibüro, Marktstraße):** Umschlag nehmen. Als **Joe** das Faxgerät benutzen (Stadtplan 1949). Regal benutzen
-   (Geschäftsordnung), Postfach benutzen (Mustertagesordnung), Garderobe benutzen (Taschenlampe). Tür → Karte.
-2. **Rathausarchiv:** Christian die **Mustertagesordnung** geben (TOP 1: Arbeitskreis „Archivöffnung“ wird gegründet), dann **mit Christian reden** – erst bei TOP 2 „Verschiedenes“ schließt er die Archivtür auf.
-   **Chani:** Gemälde „Der Rat von 1949“ deuten → „Protokoll 47“. Regal mit Ratsprotokollen benutzen → **Siegel der
-   Beschlüsse**. Hohlbein und Dröhn versperren den Ausgang: **Joe**, Kartusche auf die beiden → festgeklebt. Ausgang.
-3. **Ems-Ufer:** Joanna den **Stadtplan** geben (Umverteilung) → Paddel. **Chani:** Inschrift an der Brücke deuten →
-   „dritter von sieben Pfählen“. Boot benutzen → **Bootsverfolgung** schaffen. Sieben Pfähle benutzen → **Siegel der
-   Ausführung**. Weg zur Straße.
-4. **Baustelle Hallenbad** (Sanierung; das Freibad ist nur beschriftet und nicht im Umbau): **Joe:** Kartusche auf die leckende Leitung (Grube läuft leer). **Joe:**
-   Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**. **Chani:** Live-Story bei
-   Hohlbein und Dröhn → sie stolpern in den Bauwagen. Bauzaun-Tor.
-5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lore reden →
-   Lastenrad. Durch den Haupteingang in den Schulflur (Klassenzimmer 1a, 2b und WC mit Absagen; die Schule ist zweizügig), dort die Kellertür benutzen
-   (nach 20:30 Uhr, Taschenlampe nötig).
-6. **Krypta:** **Chani:** Wandfresko deuten → „von unten nach oben“. Symbolschloss: **Urne, Buch, Waage** →
-   Tempelschlüssel. Tor benutzen (drei Siegel + Schlüssel).
-7. **Tempel:** Mit einer Figur auf die linke Bodenplatte, Figur wechseln, mit der anderen auf die rechte → Fallgitter
-   offen. Tafel der Geschäftsordnung: **Sofort, vor der Sache selbst** – **Die Bürgermeisterin oder der Bürgermeister** –
-   **Die Mehrheit der abgegebenen Stimmen**. Abgrund: **Antrag zur Geschäftsordnung** → Brücke. Gang benutzen →
-   **Wahlkugel** entkommen.
-8. **Finale:** Den goldenen Pokal ruhig ansehen (Kegelpokal von 1987). Die **schlichte Holzkiste** benutzen – der Gral
-   der Demokratie ist eine Wahlurne mit einem Bleistift an der Schnur. Sie lässt sich nur gemeinsam tragen.
+   (Geschäftsordnung), Briefkasten benutzen (**SPD-Antrag** „Tag-der-offenen-Tür-Ordnung für öffentliche Gebäude“, vorab mit der CDU-Fraktion abgestimmt),
+   Garderobe benutzen (Taschenlampe). Tür → Karte.
+2. **Rathausarchiv:** Genosse **Chris** (SPD) erinnert sich an keine Absprache und blockiert die Archivtür. Ihm seinen eigenen **SPD-Antrag** geben →
+   er erinnert sich und schließt auf. **Chani:** Gemälde „Der Rat von 1949“ deuten → „Protokoll 47“. Regal mit Ratsprotokollen benutzen → **Siegel der
+   Beschlüsse**. Pinsel und Ledeiw versperren den Ausgang: **Joe**, Kartusche auf die beiden → festgeklebt. Ausgang.
+3. **Emsdeich am Kanuverleih** (flussauf vom Hallenbad, mit Skulpturen): Johanna (sie hat den Kanuverleih „vergesellschaftet“) den **Stadtplan** geben →
+   Paddel. **Chani:** Inschrift an der Steinskulptur deuten → „dritter von sieben Pfählen, flussab, wo das Wasser warm ist“. Ruderboot benutzen →
+   **Bootsflucht**: Pinsel und Ledeiw haben sich aus dem Dichtstoff befreit (auf Socken) und schießen von hinten alternative Fakten; als sie keine mehr haben,
+   geht ihr Boot unter. Ihr treibt bis zum Bootssteg am Hallenbad: dritter Pfahl → **Siegel der Ausführung**. Es geht direkt an der Baustelle weiter.
+4. **Baustelle Hallenbad** (Sanierung; das Freibad ist nur beschriftet und nicht im Umbau): **Joe:** Kartusche auf die leckende Leitung (Grube läuft leer).
+   **Joe:** Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**. **Chani:** Live-Story bei Pinsel und Ledeiw → sie
+   stolpern in den Bauwagen. Bauzaun-Tor.
+5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lorette reden → Lastenrad. Durch den Haupteingang
+   in den Schulflur (Klassenzimmer 1a, 2b und WC mit Absagen; die Schule ist zweizügig), dort die Kellertür benutzen (nach 20:30 Uhr, Taschenlampe nötig).
+6. **Krypta:** **Chani:** Wandfresko deuten → „von unten nach oben“. Symbolschloss: **Urne, Buch, Waage** → Tempelschlüssel. Tor benutzen (drei Siegel + Schlüssel).
+7. **Tempel:** Zwei Balance-Plattformen auf Drehzapfen: **Chani** auf die dicke rechte (Kamera), **Joe** auf die schmale linke (Hut). Jede Figur steht
+   allein und verkleinert im Hintergrund auf ihrer Plattform; die andere bewegt sich unabhängig → Fallgitter offen. Tafel der Geschäftsordnung:
+   **Sofort, vor der Sache selbst** – **Die Bürgermeisterin oder der Bürgermeister** – **Die Mehrheit der abgegebenen Stimmen**. Bis zur Brücke bleiben
+   Joe und Chani links des Abgrunds. Abgrund: **Antrag zur Geschäftsordnung** → Hängebrücke. Gang benutzen → **Wahlkugel** entkommen.
+8. **Finale:** Den goldenen Pokal ruhig ansehen (Kegelpokal von 1987). Die **schlichte Holzkiste** benutzen – der Gral der Demokratie ist eine
+   Wahlurne mit einem Bleistift an der Schnur. Sie lässt sich nur gemeinsam tragen.
 
 ## Technik und Tests
 

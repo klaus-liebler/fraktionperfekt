@@ -21,7 +21,7 @@
     const GEGENSTAENDE = {
         brief: { name: 'Anonymer Brief', text: '„Drei Siegel öffnen den Tempel: das, was beschließt, das, was ausführt, das, was richtet. Das erste ruht bei den Räten von 1949.“' },
         stadtplan: { name: 'Stadtplan von 1949 (Fax)', text: 'Ein gefaxter Stadtplan. Leicht verschmiert, aber mit Liebe gefaxt.' },
-        tagesordnung: { name: 'Mustertagesordnung', text: '„TOP 1: Gründung eines Arbeitskreises. TOP 2: Verschiedenes.“' },
+        spd_antrag: { name: 'SPD-Antrag „Tag der offenen Tür“', text: '„Antrag der SPD-Fraktion: Tag-der-offenen-Tür-Ordnung für öffentliche Gebäude. Vorab abgestimmt mit der CDU-Fraktion.“ Unterschrift: Chris.' },
         geschaeftsordnung: { name: 'Geschäftsordnung (Taschenbuch)', text: 'Die Geschäftsordnung des Rates. Eselsohren auf jeder Seite über Anträge zur Geschäftsordnung.' },
         taschenlampe: { name: 'Taschenlampe', text: 'Eine Werbe-Taschenlampe: „Dicht ist Pflicht“.' },
         paddel: { name: 'Paddel', text: 'Ein Paddel. Vergesellschaftet, aber funktionstüchtig.' },
@@ -46,11 +46,19 @@
         '(Unten wechselt ihr zwischen Joe und Chani; ihre Fähigkeiten stehen bei den Verben. Esc überspringt die Vorstellung.)'
     ];
 
+    /** Einleitung nach der Vorstellung (neues Spiel). */
+    const EINLEITUNG = [
+        'Greven, Montagabend in der Zukunftsschmiede an der Marktstraße. Die Fraktionssitzung ist vorbei, die Kekse sind alle.',
+        'Joe: „Chani, hast du den Umschlag auf dem Tisch gesehen? Ohne Absender.“',
+        'Chani: „Und draußen steigen zwei Gestalten in zu engen Anzügen aus einem Wagen … Das gefällt mir nicht.“',
+        '(Antippen = gehen und die naheliegende Aktion. Verben unten wählen, Gegenstände mit „Benutze“ oder „Gib“ kombinieren. Langes Drücken öffnet alle Aktionen. Esc: Pause.)'
+    ];
+
     // Orte auf der Reisekarte (x/y in Prozent der Karte)
     const ORTE = {
         buero: { name: 'Zukunftsschmiede', x: 51.8, y: 27.9 },
         archiv: { name: 'Rathausarchiv', x: 47.2, y: 35 },
-        ems: { name: 'Ems-Ufer', x: 35.3, y: 29.9 },
+        ems: { name: 'Emsdeich (Kanuverleih)', x: 35.2, y: 58.4 },
         baustelle: { name: 'Baustelle Hallenbad', x: 40.0, y: 43.0 },
         schule: { name: 'Martin-Luther-Grundschule', x: 47.6, y: 24.2 }
     };
@@ -89,7 +97,7 @@
 
     // ---------- Szenen ----------
     // Jeder Hotspot: id, name, x/y/b/h (Prozent der Szene), form (Darstellung), sichtbar(z), Handler je Aktion.
-    // Aktionen: ansehen, benutzen, reden, f1, f2 (Fähigkeiten der aktiven Figur), gegenstand (mit z.B. { tagesordnung: fn }).
+    // Aktionen: ansehen, benutzen, reden, f1, f2 (Fähigkeiten der aktiven Figur), gegenstand (mit z.B. { spd_antrag: fn }).
     const SZENEN = {
         buero: {
             titel: 'Zukunftsschmiede, Marktstraße',
@@ -127,12 +135,14 @@
                     f1: (z) => antwort(istJoe(z) ? 'Joe: „Die Fuge hinter dem Regal ist undicht. Später.“' : 'Chani deutet die Buchrücken: Die Haushaltspläne werden jedes Jahr dicker, die Ideen-Ordner dünner.')
                 },
                 {
-                    id: 'postfach', name: 'Postfach', x: 27.3, y: 36.1, b: 9.4, h: 16.7, form: 'kasten',
-                    ansehen: () => antwort('Das Postfach der Fraktion. Ganz unten liegt etwas.'),
+                    id: 'postfach', name: 'Briefkasten', x: 27.3, y: 36.1, b: 9.4, h: 16.7, form: 'kasten',
+                    ansehen: () => antwort('Der Briefkasten der Fraktion. Ganz unten liegt ein Umschlag mit rotem Stempel.'),
                     benutzen: (z) => {
-                        if (hat(z, 'tagesordnung') || z.flags.agGegruendet) { return antwort('Nur noch Werbung für Wahlplakat-Kabelbinder.'); }
-                        geben(z, 'tagesordnung');
-                        return antwort('Eine Mustertagesordnung „Gründung eines Arbeitskreises“. Davon gibt es hier viele.');
+                        if (hat(z, 'spd_antrag') || z.flags.antragUebergeben) { return antwort('Nur noch Werbung für Wahlplakat-Kabelbinder.'); }
+                        geben(z, 'spd_antrag');
+                        return antwort(['Im Briefkasten liegt ein Antrag der SPD-Fraktion: „Tag-der-offenen-Tür-Ordnung für öffentliche Gebäude“.',
+                            'Daran klebt ein Zettel: „Wie besprochen – vorab abgestimmt mit der CDU-Fraktion. Gruß, Chris“.',
+                            `${name(z)}: „Nett. Den nehmen wir mit.“`]);
                     }
                 },
                 {
@@ -155,38 +165,37 @@
         archiv: {
             titel: 'Rathausarchiv',
             stimmung: 'archiv',
-            einstieg: 'Staub, Neonlicht, Regale bis zur Decke. Vor der Archivtür sitzt Genosse Christian von der SPD, ehrenamtlicher Archivpfleger.',
+            einstieg: 'Staub, Neonlicht, Regale bis zur Decke. Vor der Archivtür steht Genosse Chris von der SPD, ehrenamtlicher Archivpfleger, und verschränkt die Arme.',
             hotspots: [
                 {
-                    id: 'christian', name: 'Genosse Christian (SPD)', x: 53.9, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#c0392b',
+                    id: 'chris', name: 'Genosse Chris (SPD)', x: 53.9, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#c0392b',
                     lage: (z) => (z.flags.archivOffen ? { x: 86, y: 48.6, b: 9.4, h: 45.8 } : null),
-                    ansehen: () => antwort('Christian. Strickjacke, Thermoskanne, Schlüsselbund. Hält Ordnung für eine Tugend und Arbeitskreise für eine Lebensform.'),
+                    ansehen: () => antwort('Chris. Strickjacke, Thermoskanne, Schlüsselbund. Hält Ordnung für eine Tugend und sein Gedächtnis für unfehlbar.'),
                     reden: (z) => {
-                        if (z.flags.archivOffen) { return antwort('Christian: „Wenn ihr Hilfe braucht: Der Gewerkschaftsbus steht bereit. Solidarität hat einen Diesel.“'); }
-                        if (z.flags.agGegruendet) {
-                            // Die Tür ist TOP 2 – erst wenn die Sitzung dort angekommen ist, schließt Christian auf.
-                            z.flags.archivOffen = true; punkte(z, 'top2');
-                            return antwort(['Christian: „Dann rufe ich auf: TOP 2, Verschiedenes – Öffnung der Archivtür. Wortmeldungen? Keine. Einstimmig.“', 'Christian schließt die Tür auf. „Das ging ja zügig. Zwölf Minuten!“']);
-                        }
-                        return antwort(['Christian: „Ins Archiv? Gerne. Aber erst gründen wir einen Arbeitskreis. Ordentlich, mit Tagesordnung.“', `${name(z)}: „Eine Tagesordnung … hatten wir nicht so etwas im Büro?“`]);
+                        if (z.flags.archivOffen) { return antwort('Chris: „Wenn ihr Hilfe braucht: Der Gewerkschaftsbus steht bereit. Solidarität hat einen Diesel.“'); }
+                        return antwort(['Chris: „Ins Archiv? Ausgerechnet ihr? Da könnte ja jeder kommen.“',
+                            `${name(z)}: „Aber Chris, wir hatten doch etwas miteinander abgestimmt …“`,
+                            'Chris: „Abgestimmt? Mit der CDU? Daran würde ich mich erinnern.“ Er stellt sich breitbeinig vor die Tür.',
+                            hat(z, 'spd_antrag') ? `${name(z)}: „Vielleicht hilft ihm sein eigener Antrag auf die Sprünge.“` : `${name(z)}: „Lag im Büro nicht etwas von der SPD im Briefkasten?“`]);
                     },
                     gegenstand: {
-                        tagesordnung: (z) => {
-                            nehmen(z, 'tagesordnung'); z.flags.agGegruendet = true; punkte(z, 'ag');
-                            return antwort(['Christian eröffnet die Sitzung. TOP 1: Gründung des Arbeitskreises „Archivöffnung“ – einstimmig.', 'Christian: „Die Tür steht unter TOP 2: Verschiedenes. Vorher schließe ich nicht auf – Ordnung muss sein. Sprecht mich an, dann rufe ich TOP 2 auf.“']);
+                        spd_antrag: (z) => {
+                            nehmen(z, 'spd_antrag'); z.flags.antragUebergeben = true; z.flags.archivOffen = true; punkte(z, 'antrag');
+                            return antwort([`${name(z)} überreicht Chris den Antrag seiner eigenen Fraktion.`,
+                                'Chris liest halblaut: „Tag-der-offenen-Tür-Ordnung für öffentliche Gebäude … vorab abgestimmt mit der CDU-Fraktion … Gruß, Chris.“ Er wird rot.',
+                                'Chris: „Ach, DER Antrag! Ja, natürlich. Ein Archiv ist ein öffentliches Gebäude. Da muss die Tür selbstverständlich offen sein.“',
+                                'Chris schließt die Archivtür auf und tritt zur Seite.']);
                         }
                     },
                     f2: (z) => antwort(istJoe(z)
-                        ? 'Joe bietet Christian einen Rahmenvertrag über Fugendichtstoff an. Christian will das erst im Ortsverein beraten.'
-                        : 'Chani startet eine Live-Story. Christian winkt und fragt, ob man das auch ausdrucken kann.')
+                        ? 'Joe bietet Chris einen Rahmenvertrag über Fugendichtstoff an. Chris will das erst im Ortsverein beraten.'
+                        : 'Chani startet eine Live-Story. Chris winkt und fragt, ob man das auch ausdrucken kann.')
                 },
                 {
                     id: 'archivtuer', name: 'Archivtür', x: 63.7, y: 13.9, b: 27.3, h: 58.3, form: 'tuer',
                     sichtbar: (z) => !z.flags.archivOffen,
                     ansehen: () => antwort('Eine Stahltür. Schild: „Zutritt nur nach Beschluss“.'),
-                    benutzen: (z) => antwort(z.flags.agGegruendet
-                        ? 'Christian: „Nicht so hastig! Die Tür ist TOP 2. Sprecht mich an, dann rufe ich ihn auf.“'
-                        : 'Abgeschlossen. Christian hat den Schlüssel.')
+                    benutzen: () => antwort('Chris stellt sich davor: „Zutritt nur nach Beschluss. Und beschlossen ist hier gar nichts.“')
                 },
                 {
                     id: 'wappen', name: 'Gemälde „Der Rat von 1949“', x: 63.7, y: 13.9, b: 22.7, h: 29.2, form: 'bild',
@@ -206,34 +215,41 @@
                         if (hat(z, 'siegel_legislative')) { return antwort('Protokoll 47 ist jetzt eine sehr gründliche Lektüre ohne Siegel.'); }
                         if (!z.flags.hinweisProtokoll) { return antwort('Hunderte Protokolle. Ohne Hinweis sucht ihr bis zur nächsten Kommunalwahl.'); }
                         geben(z, 'siegel_legislative'); z.flags.gegnerArchiv = true; punkte(z, 'siegel1', 20);
-                        return antwort(['In Protokoll 47 steckt ein Siegel: ein aufgeschlagenes Buch. Das erste Siegel!', 'Da poltert es an der Tür: Zwei Herren in zu engen Anzügen. „Der Gral gehört uns! Wir sind das Original!“']);
+                        return antwort(['In Protokoll 47 steckt ein Siegel: ein aufgeschlagenes Buch. Das erste Siegel!', 'Da poltert es an der Tür: Zwei Gestalten in zu engen Anzügen. „Der Gral gehört uns! Wir sind das Original!“']);
                     }
                 },
                 {
-                    id: 'gegner', name: 'Hohlbein und Dröhn (AfD)', x: 11.7, y: 48.6, b: 17.2, h: 45.8, form: 'gegner',
-                    sichtbar: (z) => z.flags.gegnerArchiv,
+                    id: 'gegner', name: 'Pinsel und Ledeiw (AfD)', x: 11.7, y: 48.6, b: 17.2, h: 45.8, form: 'gegner',
+                    sichtbar: (z) => z.flags.gegnerArchiv && !z.flags.gegnerBefreit,
                     // Festgeklebt: verkleinert hinten an der Wand (perspektivisch weiter weg), der Ausgang ist frei
                     hinten: (z) => z.flags.gegnerArchivFest,
                     lage: (z) => (z.flags.gegnerArchivFest ? { x: 25, y: 46, b: 12, h: 30 } : null),
                     ansehen: (z) => antwort(z.flags.gegnerArchivFest
-                        ? 'Hohlbein und Dröhn kleben hinten an der Wand fest – mitsamt Parkettdiele. Sie diskutieren, ob Dichtstoff „Systemkleber“ ist.'
-                        : 'Kreissprecher Hohlbein und Beisitzer Dröhn. Großes Auftreten, kleines Leseverständnis. Sie versperren den Ausgang.'),
+                        ? 'Pinsel und Ledeiw kleben hinten an der Wand fest – mitsamt Parkettdiele. Sie diskutieren, ob Dichtstoff „Systemkleber“ ist.'
+                        : 'Pinsel und Ledeiw. Großes Auftreten, kleines Leseverständnis. Sie versperren den Ausgang.'),
                     reden: (z) => (z.flags.gegnerArchivFest
-                        ? antwort(['Hohlbein: „Das ist Freiheitsberaubung! Ich rufe meinen Anwalt!“', 'Dröhn: „Unser Anwalt klebt auch. Der war gestern hier.“'])
-                        : antwort(['Hohlbein: „Hier steht ‚Ausgang‘. Das heißt bestimmt ‚Ausland‘. Da gehen wir nicht hin.“', 'Dröhn: „Wir bleiben in der Tür stehen, bis die Altparteien den Gral rausrücken!“'])),
+                        ? antwort(['Pinsel: „Das ist Freiheitsberaubung! Ich rufe meinen Anwalt!“', 'Ledeiw: „Unser Anwalt klebt auch. Der war gestern hier.“'])
+                        : antwort(['Pinsel: „Hier steht ‚Ausgang‘. Das heißt bestimmt ‚Ausland‘. Da gehen wir nicht hin.“', 'Ledeiw: „Wir bleiben in der Tür stehen, bis die Altparteien den Gral rausrücken!“'])),
                     f1: (z) => {
                         if (z.flags.gegnerArchivFest) { return antwort('Joe: „Hält. 24 Stunden Haftung, wie versprochen.“'); }
                         if (!istJoe(z)) {
                             return antwort('Chani deutet die Körpersprache: breitbeinig, Arme verschränkt, Blick auf das Handy – sie warten auf eine Sprachnachricht vom Bundesvorstand.');
                         }
                         z.flags.gegnerArchivFest = true; ortFrei(z, 'ems'); punkte(z, 'kartusche1');
-                        return antwort(['Joe zieht die Kartusche wie einen Revolver. Zwei saubere Raupen Dichtstoff auf das Parkett – genau vor ihre Schuhspitzen.', 'Hohlbein tritt vor und klebt fest. Dröhn will ihn retten und klebt auch. „Elastisch, überstreichbar, 24 Stunden Haftung“, sagt Joe.', 'Christian schiebt die beiden samt loser Parkettdiele an die Rückwand. „Ordnung muss sein.“ Der Ausgang ist frei.', '(Neuer Ort auf der Karte: Ems-Ufer)']);
+                        return antwort(['Joe zieht die Kartusche wie einen Revolver. Zwei saubere Raupen Dichtstoff auf das Parkett – genau vor ihre Schuhspitzen.', 'Pinsel tritt vor und klebt fest. Ledeiw will ihn retten und klebt auch. „Elastisch, überstreichbar, 24 Stunden Haftung“, sagt Joe.', 'Chris schiebt die beiden samt loser Parkettdiele an die Rückwand. „Ordnung muss sein.“ Der Ausgang ist frei.', '(Neuer Ort auf der Karte: Emsdeich)']);
                     },
                     f2: (z) => antwort(z.flags.gegnerArchivFest
                         ? (istJoe(z) ? 'Joe bietet Lösungsmittel an. Zum Listenpreis. Sie lehnen ab – „aus Prinzip“.' : 'Chani geht live. Die beiden winken von der Rückwand. Mehr Bewegung ist gerade nicht drin.')
                         : istJoe(z)
                             ? 'Joe will ihnen Fugendichtstoff verkaufen. Sie fragen, ob der auch „aus Deutschland“ ist. Er ist es. Sie kaufen trotzdem nichts.'
                             : 'Chani geht live. Die beiden posieren und erklären zehn Minuten lang das Wort „Altparteien“. Sie stehen dabei aber weiter in der Tür.')
+                },
+                {
+                    // Nach der Flucht über die Ems: Pinsel und Ledeiw sind weg, ihre Schuhsohlen kleben noch am Parkett
+                    id: 'sohlen', name: 'Zwei Paar Schuhsohlen im Dichtstoff', x: 20.3, y: 71.5, b: 22, h: 8, form: 'sohlen',
+                    sichtbar: (z) => z.flags.gegnerArchivFest && z.flags.gegnerBefreit,
+                    ansehen: () => antwort('Zwei Paar Schuhsohlen, Größe 46, fest im Dichtstoff. Pinsel und Ledeiw sind auf Socken weiter.'),
+                    f1: (z) => antwort(istJoe(z) ? 'Joe: „Elastisch, überstreichbar, 24 Stunden Haftung. Die Sohlen haben gehalten – die Schuhe nicht.“' : 'Chani: „Zeitgenössische Installation. Titel: ‚Abgang‘.“')
                 },
                 {
                     id: 'flurausgang', name: 'Tür zum Treppenhaus', x: 39.8, y: 16.7, b: 11.7, h: 55.6, form: 'tuer',
@@ -246,63 +262,68 @@
                     sichtbar: (z) => z.flags.archivOffen,
                     ansehen: () => antwort('Die Tür zurück in den Flur.'),
                     benutzen: (z) => (z.flags.gegnerArchiv && !z.flags.gegnerArchivFest)
-                        ? antwort('Hohlbein und Dröhn stehen breitbeinig im Ausgang.')
+                        ? antwort('Pinsel und Ledeiw stehen breitbeinig im Ausgang.')
                         : antwort('Zur Karte.', { szene: 'karte' })
                 }
             ]
         },
 
         ems: {
-            titel: 'Ems-Ufer an der alten Brücke',
+            titel: 'Emsdeich am Kanuverleih',
             stimmung: 'ems',
-            einstieg: 'Die Ems glitzert. Am Steg liegt ein Ruderboot mit einem selbstgemalten Schild: „Volkseigentum“. Daneben Genossin Joanna von der Linken.',
+            einstieg: 'Der Emsdeich, ein Stück flussauf vom Hallenbad. Am Ufer stehen Skulpturen, daneben der Kanuverleih mit einem Ruderboot am Steg – selbstgemaltes Schild: „Volkseigentum“. Davor Genossin Johanna von der Linken.',
             hotspots: [
                 {
-                    id: 'joanna', name: 'Genossin Joanna (Linke)', x: 12, y: 48.6, b: 9.4, h: 45, form: 'person', farbe: '#8e44ad',
-                    ansehen: () => antwort('Joanna. Jutebeutel, Klemmbrett, Umverteilungsliste.'),
+                    id: 'joanna', name: 'Genossin Johanna (Linke)', x: 12, y: 48.6, b: 9.4, h: 45, form: 'person', farbe: '#8e44ad',
+                    ansehen: () => antwort('Johanna. Jutebeutel, Klemmbrett, Umverteilungsliste. Sie hat den Kanuverleih „in Selbstverwaltung übernommen“.'),
                     reden: (z) => {
-                        if (hat(z, 'paddel') || z.flags.bootGewonnen) { return antwort('Joanna: „Viel Erfolg! Und wenn ihr den Gral findet: Der gehört allen.“'); }
-                        return antwort(['Joanna: „Das Boot habe ich vergesellschaftet. Das Paddel auch. Ihr kriegt es – aber ich verteile um.“', '„Gebt mir etwas aus eurem Inventar, dann gebe ich euch das Paddel. Gerecht ist gerecht.“']);
+                        if (hat(z, 'paddel') || z.flags.bootGewonnen) { return antwort('Johanna: „Viel Erfolg! Und wenn ihr den Gral findet: Der gehört allen.“'); }
+                        return antwort(['Johanna: „Den Kanuverleih habe ich vergesellschaftet. Die Kanus sind alle mit dem Ortsverein auf Tour – aber das Ruderboot ist noch da.“', '„Das Paddel kriegt ihr. Aber ich verteile um: Gebt mir etwas aus eurem Inventar. Gerecht ist gerecht.“']);
                     },
                     gegenstand: {
                         stadtplan: (z) => {
                             nehmen(z, 'stadtplan'); z.flags.stadtplanWeg = true; geben(z, 'paddel'); punkte(z, 'joanna');
-                            return antwort('Joanna nimmt den Stadtplan („Kartenmaterial gehört dem Volk“) und gibt euch das Paddel. Sie heftet den Plan an den Bürgerbus-Fahrplan.');
+                            return antwort('Johanna nimmt den Stadtplan („Kartenmaterial gehört dem Volk“) und gibt euch das Paddel. Sie heftet den Plan an die Preistafel des Kanuverleihs.');
                         },
-                        geschaeftsordnung: () => antwort('Joanna: „Die Geschäftsordnung? Die bleibt bei euch. Die braucht ihr noch, glaubt mir.“'),
-                        taschenlampe: () => antwort('Joanna: „Die Lampe braucht ihr selber. Ich verteile nicht von arm zu arm.“'),
-                        brief: () => antwort('Joanna: „Persönliche Post verteile ich nicht um. Ich habe Grundsätze.“')
+                        geschaeftsordnung: () => antwort('Johanna: „Die Geschäftsordnung? Die bleibt bei euch. Die braucht ihr noch, glaubt mir.“'),
+                        taschenlampe: () => antwort('Johanna: „Die Lampe braucht ihr selber. Ich verteile nicht von arm zu arm.“'),
+                        brief: () => antwort('Johanna: „Persönliche Post verteile ich nicht um. Ich habe Grundsätze.“')
                     },
                     f2: (z) => antwort(istJoe(z)
-                        ? 'Joe bietet ihr Dichtstoff zum Einkaufspreis. Joanna: „Gibt es den auch genossenschaftlich?“'
+                        ? 'Joe bietet ihr Dichtstoff für die Kanus zum Einkaufspreis. Johanna: „Gibt es den auch genossenschaftlich?“'
                         : 'Chani macht eine Story über das Volkseigentum-Boot. 2000 Aufrufe in drei Minuten.')
                 },
                 {
-                    id: 'bruecke', name: 'Inschrift an der alten Brücke', x: 65, y: 18, b: 17, h: 7, form: 'inschrift',
-                    ansehen: () => antwort('In den Brückenpfeiler ist etwas gemeißelt, halb von Moos bedeckt.'),
+                    id: 'verleih', name: 'Kanuverleih', x: 1.5, y: 31, b: 6.5, h: 46, form: 'huette',
+                    ansehen: () => antwort('Eine Holzhütte mit Schild „KANUVERLEIH“. Das Wort „Preise“ auf der Tafel ist durchgestrichen, darüber steht „Solidarität“.'),
+                    benutzen: () => antwort('Die Hütte ist leer. Auf einem Zettel: „Alle Kanus beim Ortsverein. Rückgabe: nach der Revolution.“')
+                },
+                {
+                    id: 'skulptur', name: 'Steinskulptur mit Inschrift', x: 64, y: 38, b: 9.5, h: 36, form: 'inschrift',
+                    ansehen: () => antwort('Eine Skulptur aus Sandstein, eine von mehreren am Emsdeich. Auf der Rückseite eine Bronzetafel, halb von Moos bedeckt.'),
                     f1: (z) => {
-                        if (istJoe(z)) { return antwort('Joe: „Die Fuge im Pfeiler ist seit 1949 nicht nachgearbeitet. Unglaublich.“'); }
+                        if (istJoe(z)) { return antwort('Joe: „Die Fuge zwischen Sockel und Stein ist seit 1949 nicht nachgearbeitet. Unglaublich.“'); }
                         z.flags.hinweisPfahl = true; punkte(z, 'bruecke');
-                        return antwort(['Chani kratzt das Moos ab: „Frühe Nachkriegs-Antiqua, sehr selbstbewusst gesetzt.“', '„Was ausführt, ruht im dritten von sieben Pfählen, flussab.“']);
+                        return antwort(['Chani kratzt das Moos von der Tafel: „Frühe Nachkriegs-Antiqua, sehr selbstbewusst gesetzt.“', '„Was ausführt, ruht im dritten von sieben Pfählen – flussab, wo das Wasser warm ist.“', 'Chani: „Flussab, wo das Wasser warm ist … das Hallenbad!“']);
                     }
                 },
                 {
-                    id: 'boot', name: 'Ruderboot „Volkseigentum“', x: 56.25, y: 64.6, b: 18, h: 9.7, form: 'boot',
-                    sichtbar: (z) => !z.flags.bootGewonnen,
-                    ansehen: () => antwort('Ein Ruderboot. Flussabwärts tuckert ein Motorboot – Hohlbein und Dröhn haben sich wohl losgeschnitten.'),
-                    benutzen: (z) => hat(z, 'paddel')
-                        ? antwort(['Ihr springt ins Boot. Hinter euch heult ein Motor auf: Hohlbein und Dröhn!', '(Ausweichen mit ↑/↓ oder oben/unten tippen. Drei Treffer, dann von vorn.)'], { minispiel: 'boot' })
-                        : antwort('Ohne Paddel wird das eine sehr langsame Verfolgungsjagd.')
+                    id: 'skulpturen', name: 'Weitere Skulpturen', x: 77.5, y: 45, b: 9, h: 31, form: 'inschrift',
+                    ansehen: () => antwort('Eine verrostete Stahlwelle und ein Bronzering. Keine Inschrift, aber sehr viel Kunst.'),
+                    f1: (z) => antwort(istJoe(z) ? 'Joe: „Stahl, verzinkt. Da hält nichts.“' : 'Chani: „Zeitgenössisch. Schön, aber hier steht nichts geschrieben.“')
                 },
                 {
-                    id: 'pfaehle', name: 'Sieben Pfähle im Wasser', x: 72.7, y: 56, b: 19.5, h: 14, form: 'pfaehle',
-                    sichtbar: (z) => z.flags.bootGewonnen,
-                    ansehen: () => antwort('Sieben alte Holzpfähle ragen aus dem Wasser.'),
+                    id: 'boot', name: 'Ruderboot „Volkseigentum“', x: 22.7, y: 64.6, b: 18, h: 9.7, form: 'boot',
+                    sichtbar: (z) => !z.flags.bootGewonnen,
+                    ansehen: () => antwort('Das Ruderboot des Kanuverleihs. Johanna hat „Volkseigentum“ daraufgemalt.'),
                     benutzen: (z) => {
-                        if (hat(z, 'siegel_exekutive')) { return antwort('Der dritte Pfahl ist jetzt einfach ein Pfahl.'); }
-                        if (!z.flags.hinweisPfahl) { return antwort('Sieben Pfähle. Welcher? Vielleicht verrät die Inschrift an der Brücke mehr.'); }
-                        geben(z, 'siegel_exekutive'); ortFrei(z, 'baustelle'); punkte(z, 'siegel2', 20);
-                        return antwort(['Der dritte Pfahl flussab ist hohl. Darin: ein Siegel mit einem Schlüsselbund. Das zweite Siegel!', '(Neuer Ort auf der Karte: Baustelle Hallenbad)']);
+                        if (!hat(z, 'paddel')) { return antwort('Ohne Paddel wird das eine sehr langsame Fahrt.'); }
+                        if (!z.flags.hinweisPfahl) { return antwort(`${name(z)}: „Und wohin? Erst sollten wir wissen, was auf der Tafel an der Skulptur steht.“`); }
+                        z.flags.gegnerBefreit = true;
+                        return antwort(['Ihr springt ins Boot und legt ab, flussab Richtung Hallenbad.',
+                            'Hinter euch heult ein Motor auf: Pinsel und Ledeiw! Sie haben sich aus dem Dichtstoff befreit – auf Socken. Ihre Schuhsohlen kleben noch im Archiv.',
+                            'Pinsel: „Feuer frei! Mit alternativen Fakten!“',
+                            '(Ausweichen mit ↑/↓ oder oben/unten tippen. Drei Treffer, dann von vorn.)'], { minispiel: 'boot' });
                     }
                 },
                 {
@@ -315,7 +336,9 @@
         baustelle: {
             titel: 'Baustelle Hallenbad',
             stimmung: 'baustelle',
-            einstieg: 'Das Hallenbad wird saniert: Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Hohlbein und Dröhn schrauben Wegweiser ab.',
+            einstieg: (z) => z.flags.gegnerBaustelleWeg
+                ? 'Das Hallenbad wird saniert: Bauzaun, Bagger, ein leeres Becken. Aus dem Bauwagen ruft es leise „Lügenpresse!“.'
+                : 'Das Hallenbad wird saniert: Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Pinsel und Ledeiw, noch tropfnass von der Ems, schrauben Wegweiser ab.',
             hotspots: [
                 {
                     id: 'bauleiter', name: 'Bauleiterin Frau Kemper', x: 11.7, y: 48.6, b: 9.4, h: 45, form: 'person', farbe: '#f39c12',
@@ -349,15 +372,15 @@
                     }
                 },
                 {
-                    id: 'gegner', name: 'Hohlbein und Dröhn (AfD)', x: 68.75, y: 48.6, b: 17, h: 45, form: 'gegner',
+                    id: 'gegner', name: 'Pinsel und Ledeiw (AfD)', x: 68.75, y: 48.6, b: 17, h: 45, form: 'gegner',
                     sichtbar: (z) => !z.flags.gegnerBaustelleWeg,
-                    ansehen: () => antwort('Hohlbein und Dröhn schrauben Wegweiser ab und stapeln sie vor dem Ausgang.'),
-                    reden: () => antwort(['Dröhn: „Der Wegweiser nach Münster muss weg. Der zeigt ins Ausland!“', 'Hohlbein: „Wir remigrieren alle Schilder. Auch das hier: ‚Nordwalde‘. Klingt schon so nordisch, der darf bleiben.“']),
+                    ansehen: () => antwort('Pinsel und Ledeiw, tropfnass und auf Socken, schrauben Wegweiser ab und stapeln sie vor dem Ausgang.'),
+                    reden: () => antwort(['Ledeiw: „Der Wegweiser nach Münster muss weg. Der zeigt ins Ausland!“', 'Pinsel: „Wir remigrieren alle Schilder. Auch das hier: ‚Nordwalde‘. Klingt schon so nordisch, der darf bleiben.“']),
                     f1: (z) => antwort(istJoe(z)
                         ? 'Joe überlegt, sie festzukleben. Aber auf Sand hält selbst der beste Dichtstoff nicht. Berufsehre.'
                         : 'Chani deutet: „Sie suchen nach Bestätigung, nicht nach dem Gral. Eine Kamera würde sie ablenken.“'),
                     f2: (z) => {
-                        if (istJoe(z)) { return antwort('Joe will ihnen Dichtstoff verkaufen. „Ist da Gender drin?“, fragt Dröhn. Gespräch beendet.'); }
+                        if (istJoe(z)) { return antwort('Joe will ihnen Dichtstoff verkaufen. „Ist da Gender drin?“, fragt Ledeiw. Gespräch beendet.'); }
                         z.flags.gegnerBaustelleWeg = true; punkte(z, 'story');
                         return antwort(['Chani hebt das Handy: „Wir sind live! Wollen Sie den Menschen etwas sagen?“', 'Beide stürzen zur Kamera, drehen sich ins beste Licht – und laufen dabei rückwärts in den Bauwagen. Die Tür fällt zu. Von innen: „Lügenpresse!“ Chani: „Ich bin Kunsthistorikerin.“']);
                     }
@@ -365,7 +388,7 @@
                 {
                     id: 'zurkarte', name: 'Bauzaun-Tor', x: 88.3, y: 40.3, b: 8.6, h: 32, form: 'pfeil',
                     benutzen: (z) => {
-                        if (!z.flags.gegnerBaustelleWeg) { return antwort('Vor dem Tor liegt ein Stapel abgeschraubter Wegweiser. Hohlbein bewacht ihn.'); }
+                        if (!z.flags.gegnerBaustelleWeg) { return antwort('Vor dem Tor liegt ein Stapel abgeschraubter Wegweiser. Pinsel bewacht ihn.'); }
                         if (hat(z, 'siegel_judikative')) { ortFrei(z, 'schule'); }
                         return antwort(hat(z, 'siegel_judikative') ? ['Drei Siegel! Laut Brief führt der Weg zum Tempel unter die Martin-Luther-Grundschule.', '(Neuer Ort auf der Karte: Martin-Luther-Grundschule)'] : 'Zur Karte.', { szene: 'karte' });
                     }
@@ -376,22 +399,22 @@
         schule: {
             titel: 'Hof der Martin-Luther-Grundschule',
             stimmung: 'schule',
-            einstieg: 'Ein leerer Schulhof. Im Haupteingang brennt Licht – Elternabend. Davor: Lore von den Grünen, mit Lastenrad und Gutachten.',
+            einstieg: 'Ein leerer Schulhof. Im Haupteingang brennt Licht – Elternabend. Davor: Lorette von den Grünen, mit Lastenrad und Gutachten.',
             hotspots: [
                 {
-                    id: 'lore', name: 'Lore (Grüne)', x: 19.5, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#27ae60',
-                    ansehen: () => antwort('Lore. Fahrradhelm, Lastenrad, ein Gutachten unter dem Arm, dick wie ein Haushaltsplan.'),
+                    id: 'lore', name: 'Lorette (Grüne)', x: 19.5, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#27ae60',
+                    ansehen: () => antwort('Lorette. Fahrradhelm, Lastenrad, ein Gutachten unter dem Arm, dick wie ein Haushaltsplan.'),
                     reden: (z) => {
                         if (z.flags.abend && !z.flags.lastenrad) {
                             z.flags.lastenrad = true; punkte(z, 'lastenrad');
-                            return antwort(['Lore: „Die Fledermäuse sind ausgeflogen. Geht ruhig rein.“', '„Und nehmt das Lastenrad mit. Für den Rückweg – man weiß ja nie, was in so einem Tempel herumrollt.“']);
+                            return antwort(['Lorette: „Die Fledermäuse sind ausgeflogen. Geht ruhig rein.“', '„Und nehmt das Lastenrad mit. Für den Rückweg – man weiß ja nie, was in so einem Tempel herumrollt.“']);
                         }
-                        if (z.flags.lastenrad) { return antwort('Lore: „Und bringt mir das Lastenrad mit vollem Akku zurück!“'); }
-                        return antwort(['Lore: „Der Kellergang ist gesperrt. Fledermausgutachten! Hier überwintern Zwergfledermäuse.“', '„Erst wenn sie zur Nacht ausfliegen, ab halb neun, darf jemand durch. Steht auf Seite 212.“']);
+                        if (z.flags.lastenrad) { return antwort('Lorette: „Und bringt mir das Lastenrad mit vollem Akku zurück!“'); }
+                        return antwort(['Lorette: „Der Kellergang ist gesperrt. Fledermausgutachten! Hier überwintern Zwergfledermäuse.“', '„Erst wenn sie zur Nacht ausfliegen, ab halb neun, darf jemand durch. Steht auf Seite 212.“']);
                     },
                     f2: (z) => antwort(istJoe(z)
-                        ? 'Joe bietet an, den Gang fledermausfreundlich abzudichten. Lore: „Dafür brauchen wir ein Gutachten.“'
-                        : 'Chani macht eine Story über Zwergfledermäuse. Lore ist begeistert und teilt sie sofort.')
+                        ? 'Joe bietet an, den Gang fledermausfreundlich abzudichten. Lorette: „Dafür brauchen wir ein Gutachten.“'
+                        : 'Chani macht eine Story über Zwergfledermäuse. Lorette ist begeistert und teilt sie sofort.')
                 },
                 {
                     id: 'uhr', name: 'Schulhofuhr', x: 60.9, y: 15.3, b: 8.6, h: 15.3, form: 'uhr',
@@ -440,7 +463,7 @@
                     id: 'kellertuer', name: 'Kellertür', x: 75.8, y: 27.8, b: 11.7, h: 44.4, form: 'tuer',
                     ansehen: () => antwort('Eine Stahltür, Aufschrift „KELLER“. Absperrband und ein Zettel: „Fledermausquartier – siehe Gutachten, Seite 212“.'),
                     benutzen: (z) => {
-                        if (!z.flags.abend) { return antwort('Auf dem Zettel steht: „Zutritt erst nach dem Ausflug der Fledermäuse (ab 20:30 Uhr)“. Lore hat ihn unterschrieben.'); }
+                        if (!z.flags.abend) { return antwort('Auf dem Zettel steht: „Zutritt erst nach dem Ausflug der Fledermäuse (ab 20:30 Uhr)“. Lorette hat ihn unterschrieben.'); }
                         if (!hat(z, 'taschenlampe')) { return antwort('Hinter der Tür ist es stockdunkel. Ohne Licht geht hier niemand runter.'); }
                         return antwort('Ihr knipst die Taschenlampe an und steigt die Kellertreppe hinab …', { szene: 'krypta' });
                     }
@@ -496,7 +519,7 @@
         tempel: {
             titel: 'Tempel des Grundgesetzes',
             stimmung: 'tempel',
-            einstieg: 'Eine Halle aus Sandstein, Säulen, Fackeln. Vor euch ein Fallgitter, zwei Bodenplatten und eine Inschrift.',
+            einstieg: 'Eine Halle aus Sandstein, Säulen, Fackeln. Vor euch ein Fallgitter, links und rechts davon zwei Plattformen auf Drehzapfen und eine Inschrift.',
             hotspots: [
                 {
                     id: 'inschrift', name: 'Inschrift über dem Fallgitter', x: 33.2, y: 6.9, b: 32, h: 11.1, form: 'inschrift',
@@ -504,16 +527,18 @@
                     ansehen: () => antwort('„FRAKTIONSZWANG“ steht über dem Gitter. Darunter kleiner Text.'),
                     f1: (z) => antwort(istJoe(z)
                         ? 'Joe: „Steht da was von Dichtstoff? Nein? Dann soll Chani das lesen.“'
-                        : ['Chani liest: „Wer im Gleichschritt kommt, bleibt draußen. Das Gewissen öffnet das Tor.“', '„Wir müssen auf verschiedenen Platten stehen – jede für sich.“'])
+                        : ['Chani liest: „Wer im Gleichschritt kommt, bleibt draußen. Das Gewissen öffnet das Tor.“', '„Jeder auf seine eigene Plattform, jeder für sich: Auf der schmalen ist ein Hut eingraviert, auf der dicken eine Kamera.“'])
                 },
                 {
-                    id: 'platte_links', name: 'Linke Bodenplatte', x: 21.9, y: 72.2, b: 14, h: 6.25, form: 'platte',
+                    id: 'platte_links', name: 'Linke Plattform (schmal, mit Hut)', x: 21.9, y: 66, b: 14, h: 18, form: 'platte',
                     sichtbar: (z) => !z.flags.gitterOffen,
+                    ansehen: () => antwort('Eine schmale Steinplattform auf einem Drehzapfen. Sie wippt schon, wenn man sie ansieht. Eingraviert: ein Hut.'),
                     benutzen: (z) => platteBetreten(z, 'links')
                 },
                 {
-                    id: 'platte_rechts', name: 'Rechte Bodenplatte', x: 62.1, y: 72.2, b: 14, h: 6.25, form: 'platte',
+                    id: 'platte_rechts', name: 'Rechte Plattform (dick, mit Kamera)', x: 62.1, y: 66, b: 14, h: 18, form: 'platte',
                     sichtbar: (z) => !z.flags.gitterOffen,
+                    ansehen: () => antwort('Eine dicke Steinplattform auf einem Drehzapfen. Eingraviert: eine Kamera.'),
                     benutzen: (z) => platteBetreten(z, 'rechts')
                 },
                 {
@@ -532,22 +557,22 @@
                 {
                     id: 'abgrund', name: 'Abgrund', x: 40.6, y: 72.2, b: 37.5, h: 27.8, form: 'abgrund',
                     sichtbar: (z) => z.flags.goGeloest && !z.flags.brueckeDa,
-                    ansehen: () => antwort('Ein Abgrund. Auf der anderen Seite ein Pult mit der Aufschrift: „Die Brücke erscheint für den Antrag, der allen anderen vorgeht.“'),
-                    benutzen: () => antwort('Ihr tretet ans Pult. Welchen Antrag stellt ihr?', { dialog: 'bruecke' })
+                    ansehen: () => antwort('Ein Abgrund, zu breit zum Springen. Auf der anderen Seite ein Pult mit der Aufschrift: „Die Brücke erscheint für den Antrag, der allen anderen vorgeht.“'),
+                    benutzen: () => antwort('Ihr tretet an die Kante und ruft zum Pult hinüber. Welchen Antrag stellt ihr?', { dialog: 'bruecke' })
                 },
                 {
                     id: 'gang', name: 'Langer abschüssiger Gang', x: 75.4, y: 27.8, b: 15.6, h: 44.4, form: 'tuer',
-                    sichtbar: (z) => z.flags.brueckeDa && !z.flags.kugelGeschafft,
+                    sichtbar: (z) => z.flags.gitterOffen && !z.flags.kugelGeschafft,
                     ansehen: () => antwort('Ein langer Gang, leicht abschüssig. Am oberen Ende: eine riesige steinerne Wahlkugel. Sie wackelt.'),
-                    benutzen: (z) => antwort(['Ein Knirschen. Die Wahlkugel löst sich und rollt los!', z.flags.lastenrad
-                        ? '(Lores Lastenrad! Tippen oder Leertaste/→ für Tempo.)'
+                    benutzen: (z) => !z.flags.brueckeDa ? antwort('Der Gang liegt auf der anderen Seite des Abgrunds. Ohne Brücke kommt ihr da nicht hin.') : antwort(['Ein Knirschen. Die Wahlkugel löst sich und rollt los!', z.flags.lastenrad
+                        ? '(Lorettes Lastenrad! Tippen oder Leertaste/→ für Tempo.)'
                         : '(Rennen! Tippen oder Leertaste/→ für Tempo.)'], { minispiel: 'kugel' })
                 },
                 {
                     id: 'pokal', name: 'Goldener Pokal auf einem Podest', x: 29.3, y: 36.1, b: 11.7, h: 36, form: 'pokal',
                     sichtbar: (z) => z.flags.kugelGeschafft && !z.ende,
-                    ansehen: () => antwort('Ein goldener Pokal, mit Edelsteinen. Hohlbein und Dröhn stürzen aus einem Seitengang darauf zu: „Der Gral! Unserer!“'),
-                    benutzen: () => antwort('Hohlbein reißt euch den Pokal aus der Hand. „Aus Gold! Wie früher!“ Auf der Unterseite steht: „Bezirksmeister Kegeln 1987“.'),
+                    ansehen: () => antwort('Ein goldener Pokal, mit Edelsteinen. Pinsel und Ledeiw starren ihn mit großen Augen an: „Der Gral! Unserer!“'),
+                    benutzen: () => antwort('Pinsel reißt euch den Pokal aus der Hand. „Aus Gold! Wie früher!“ Auf der Unterseite steht: „Bezirksmeister Kegeln 1987“.'),
                     f1: (z) => antwort(istJoe(z)
                         ? 'Joe klopft daran: „Hohl. Wie manche Argumente.“'
                         : 'Chani: „Pressgold, Fabrikware, um 1987. Das ist nicht der Gral. Der Gral ist das unscheinbare Ding daneben.“')
@@ -565,33 +590,43 @@
         }
     };
 
+    // Balance-Plattformen: links (schmal, Hut) gehört Joe, rechts (dick, Kamera) gehört Chani; jede Figur steht für sich allein.
+    const PLATZ = { links: 'joe', rechts: 'chani' };
     function platteBetreten(z, seite) {
-        const andere = seite === 'links' ? 'rechts' : 'links';
-        if (z.platten[andere] === z.figur) { z.platten[andere] = null; }
+        if (PLATZ[seite] !== z.figur) {
+            return antwort(seite === 'links'
+                ? ['Chani steigt auf die schmale linke Plattform. Sie kippt sofort weg, Chani springt ab.', 'Chani: „Da ist ein Hut eingraviert. Das ist Joes Platz.“']
+                : ['Joe steigt auf die dicke rechte Plattform. Sie rührt sich keinen Millimeter.', 'Joe: „Eine Kamera ist eingraviert. Das ist eher was für Chani.“']);
+        }
         z.platten[seite] = z.figur;
-        const texte = [`${name(z)} stellt sich auf die ${seite === 'links' ? 'linke' : 'rechte'} Platte.`];
-        if (z.platten.links && z.platten.rechts && z.platten.links !== z.platten.rechts) {
+        const texte = [`${name(z)} steigt auf die ${seite === 'links' ? 'schmale linke' : 'dicke rechte'} Plattform. Sie senkt sich ein Stück und rastet ein.`];
+        if (z.platten.links === 'joe' && z.platten.rechts === 'chani') {
             z.flags.gitterOffen = true; punkte(z, 'gitter', 20);
-            texte.push('Jeder auf seiner Platte, jeder nach seinem Gewissen: Das Fallgitter hebt sich knirschend.');
-            texte.push('Dahinter: eine Steintafel und ein Abgrund.');
+            texte.push('Jeder auf seiner Plattform, jeder nach seinem Gewissen: Das Fallgitter hebt sich knirschend.');
+            texte.push('Joe und Chani springen herunter und gehen hindurch. Dahinter: eine Steintafel und ein Abgrund.');
         } else {
-            texte.push('Das Gitter bleibt unten. (Tipp: Figur wechseln.)');
+            texte.push(`Das Gitter bleibt unten. (Tipp: Figur wechseln – ${z.figur === 'joe' ? 'Chani gehört auf die rechte' : 'Joe gehört auf die linke'} Plattform.)`);
         }
         return antwort(texte);
+    }
+
+    /** Die aktive Figur geht woandershin: Sie steigt von ihrer Plattform herunter (die andere bleibt stehen, wo sie ist). */
+    function platteVerlassen(z, figur) {
+        for (const s of ['links', 'rechts']) { if (z.platten[s] === figur && !z.flags.gitterOffen) { z.platten[s] = null; } }
     }
 
     function finale(z) {
         z.ende = true; z.flags.ende = true; punkte(z, 'finale', 50);
         const hilfe = [];
-        hilfe.push(z.flags.agGegruendet ? 'Genosse Christian fährt mit dem Gewerkschaftsbus vor: „Solidarität!“' : 'Ein Bus hupt draußen.');
-        hilfe.push(z.flags.lastenrad ? 'Lore schiebt das Lastenrad heran: „Die Urne fährt im Lastenkorb – angeschnallt.“' : '');
-        hilfe.push(z.flags.stadtplanWeg ? 'Joanna hat den Tragegurt organisiert: „Gemeinsam tragen. Alle.“' : '');
+        hilfe.push(z.flags.antragUebergeben ? 'Genosse Chris fährt mit dem Gewerkschaftsbus vor: „Solidarität!“' : 'Ein Bus hupt draußen.');
+        hilfe.push(z.flags.lastenrad ? 'Lorette schiebt das Lastenrad heran: „Die Urne fährt im Lastenkorb – angeschnallt.“' : '');
+        hilfe.push(z.flags.stadtplanWeg ? 'Johanna hat den Tragegurt organisiert: „Gemeinsam tragen. Alle.“' : '');
         return antwort([
-            'Hohlbein jubelt über seinen Kegelpokal. Dröhn ruft: „Den Rest remigrieren wir auch!“ – und versucht, die Wahlurne allein hochzuheben.',
+            'Pinsel jubelt über seinen Kegelpokal. Ledeiw ruft: „Den Rest remigrieren wir auch!“ – und versucht, die Wahlurne allein hochzuheben.',
             'Sie bewegt sich keinen Millimeter. Eine Inschrift am Boden: „Ich werde nur getragen, wenn viele mitanfassen.“',
             'Joe hebt eine Seite an, Chani die andere. Und plötzlich ist die Urne ganz leicht.',
             ...hilfe.filter((h) => h),
-            'Hohlbein und Dröhn folgen ihrer „alternativen Faktenkarte“ zum Ausgang – und landen in der Fledermaus-Sackgasse. Lore ruft: „Seite 212!“',
+            'Pinsel und Ledeiw folgen ihrer „alternativen Faktenkarte“ zum Ausgang – und landen in der Fledermaus-Sackgasse. Lorette ruft: „Seite 212!“',
             'Der Gral der Demokratie ist kein Gold. Er ist eine Kiste mit einem Schlitz und ein Bleistift an einer Schnur. Gold wäre einfacher gewesen. Aber nicht so wertvoll.',
             'ENDE – Danke fürs Spielen!',
             'Kartendaten der Reisekarte: © OpenStreetMap-Mitwirkende (ODbL).'
@@ -669,14 +704,14 @@
             z.quiz += 1;
             if (z.quiz < QUIZ.length) { return antwort('Richtig! Die nächste Zeile leuchtet auf.', { dialog: 'quiz' }); }
             z.flags.goGeloest = true; z.quiz = 0; punkte(z, 'quiz', 20);
-            return antwort(['Alle Fragen richtig. Die Tafel gleitet zur Seite und gibt den Blick auf einen Abgrund frei.']);
+            return antwort(['Alle Fragen richtig. Die Tafel erlischt. Jetzt fehlt nur noch ein Weg über den Abgrund.']);
         }
         if (art === 'bruecke') {
             if (Number(wahl) !== BRUECKE.richtig) {
                 return antwort(['Nichts geschieht. Aus der Tiefe ruft ein Echo: „… zur Sache! … zur Sache!“']);
             }
             z.flags.brueckeDa = true; punkte(z, 'bruecke2', 20);
-            return antwort(['„Antrag zur Geschäftsordnung!“ ruft Joe. Ein Steg schiebt sich über den Abgrund – Anträge zur Geschäftsordnung gehen eben vor.', 'Am anderen Ende: ein langer, abschüssiger Gang.']);
+            return antwort(['„Antrag zur Geschäftsordnung!“ ruft Joe. Es knirscht: Aus beiden Kanten schieben sich Steinbalken, Bohlen klappen herab, Seile spannen sich – eine Hängebrücke über den Abgrund. Anträge zur Geschäftsordnung gehen eben vor.', 'Am anderen Ende: ein langer, abschüssiger Gang.']);
         }
         return antwort('…');
     }
@@ -728,7 +763,13 @@
         if (z.orte.indexOf(ort) < 0) { return antwort('Diesen Ort kennt ihr noch nicht.'); }
         const ziel = ort === 'schule' && z.flags.tempelOffen ? 'tempel' : ort;
         wechseln(z, ziel);
-        return antwort(SZENEN[ziel].einstieg, { szene: ziel });
+        return antwort(einstieg(z, ziel), { szene: ziel });
+    }
+
+    /** Einstiegstext einer Szene (darf vom Spielstand abhängen). */
+    function einstieg(z, szene) {
+        const e = SZENEN[szene] && SZENEN[szene].einstieg;
+        return typeof e === 'function' ? e(z) : e;
     }
 
     function figurWechseln(z) {
@@ -738,14 +779,26 @@
 
     function minispielEnde(z, art, gewonnen) {
         if (!gewonnen) {
-            return antwort(art === 'boot' ? 'Gekentert! Nasse Füße, aber nichts passiert. Noch einmal.' : 'Die Kugel holt euch ein – ihr springt in eine Nische. Zurück zum Anfang des Gangs.');
+            return antwort(art === 'boot' ? 'Zu viele alternative Fakten abbekommen – das Boot kentert am Ufer. Nasse Füße, aber nichts passiert. Noch einmal.' : 'Die Kugel holt euch ein – ihr springt in eine Nische. Zurück zum Anfang des Gangs.');
         }
         if (art === 'boot') {
+            // Nach der Flucht geht es nicht zurück zum Kanuverleih, sondern flussab direkt zum Hallenbad.
             z.flags.bootGewonnen = true; punkte(z, 'boot', 30);
-            return antwort(['Geschafft! Hohlbein und Dröhn folgen ihrer „alternativen Faktenkarte“ in einen Altarm. Ihr Motor blubbert im Schilf.', 'Ihr legt an den sieben Pfählen an.']);
+            geben(z, 'siegel_exekutive'); ortFrei(z, 'baustelle'); punkte(z, 'siegel2', 20);
+            wechseln(z, 'baustelle');
+            return antwort([
+                'Pinsel und Ledeiw gehen die alternativen Fakten aus. Ledeiw: „Schieß doch mit der Wahrheit!“ – Pinsel: „Haben wir nicht an Bord.“',
+                'Beide lehnen sich gleichzeitig über dieselbe Bordwand, um nach Nachschub zu suchen. Das Motorboot kippt, läuft voll und geht unter. Blubb. Vor lauter Dummheit.',
+                'Ihr treibt flussab bis zum alten Bootssteg hinter dem Hallenbad. Sieben Pfähle ragen aus dem Wasser.',
+                'Der dritte Pfahl ist hohl. Darin: ein Siegel mit einem Schlüsselbund. Das zweite Siegel!',
+                '(Neuer Ort auf der Karte: Baustelle Hallenbad)',
+                'Hinter dem Steg: die Baustelle des Hallenbads. Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Bauleiterin Frau Kemper schaut euch skeptisch an.',
+                'Da prusten Pinsel und Ledeiw aus der Ems, stapfen tropfnass und auf Socken durch den Bauzaun – und schrauben sofort Wegweiser ab.'
+            ], { szene: 'baustelle', ohneEinstieg: true, erscheinen: ['gegner'] });
         }
         z.flags.kugelGeschafft = true; punkte(z, 'kugel', 30);
-        return antwort(['Ihr hechtet in die Halle – die Kugel donnert vorbei und bleibt im Torbogen stecken.', 'Vor euch: ein goldener Pokal auf einem Podest. Und daneben eine schlichte Holzkiste.']);
+        return antwort(['Ihr hechtet in die Halle – die Kugel donnert vorbei und bleibt im Torbogen stecken.', 'Vor euch: ein goldener Pokal auf einem Podest. Und daneben eine schlichte Holzkiste.',
+            'Aus einem Seitengang stolpern Pinsel und Ledeiw herein, außer Atem und immer noch auf Socken.'], { erscheinen: ['finale'] });
     }
 
     // ---------- Minispiele (deterministisch, mit eigenem Zufall) ----------
@@ -754,9 +807,18 @@
         return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
     }
 
-    /** Bootsverfolgung: drei Spuren, Hindernisse kommen von rechts; 35 Sekunden überstehen, drei Treffer erlaubt. */
+    /**
+     * Bootsverfolgung: drei Spuren. Das Ruderboot fährt in der Bildmitte nach rechts (flussab); Treibgut kommt von vorn (rechts),
+     * Pinsel und Ledeiw sitzen hinten (links) im Motorboot und schießen alternative Fakten in die Spur, in der ihr gerade seid.
+     * Sind die Fakten verschossen, geht ihr Boot unter – gewonnen. Drei Treffer erlaubt.
+     */
+    const BOOT_X = 0.55;
+    const ALTERNATIVE_FAKTEN = ['Die Ems fließt bergauf!', 'Wasser ist links-grün!', 'Paddeln ist Gender!', 'Wir sind das Volk!', 'Der Gral ist aus Gold!', 'Das Boot gehört uns!',
+        'Klimawandel? Nebel!', 'Früher war mehr Ems!', 'Brücken sind Ideologie!', 'Enten sind Ausländer!', 'Wir haben gewonnen!', 'Fakten sind Meinung!'];
+
     function bootNeu(seed) {
-        return { art: 'boot', zeit: 0, dauer: 35, leben: 3, spur: 1, hindernisse: [], naechstes: 1.2, rnd: zufall(seed || 7), status: 'laeuft', treffer: 0 };
+        return { art: 'boot', zeit: 0, leben: 3, spur: 1, hindernisse: [], schuesse: [], munition: ALTERNATIVE_FAKTEN.length, gegnerSpur: 1,
+            naechstes: 1.6, naechsterSchuss: 2.2, sinken: null, rnd: zufall(seed || 7), status: 'laeuft', treffer: 0 };
     }
 
     const BOOT_ARTEN = ['Treibholz', 'Entenfamilie', 'Schild „Alternative Route“', 'Plakat „Grenzen dicht!“ (treibt)'];
@@ -766,32 +828,52 @@
         if (eingabe === 'hoch') { s.spur = Math.max(0, s.spur - 1); }
         if (eingabe === 'runter') { s.spur = Math.min(2, s.spur + 1); }
         s.zeit += dt;
-        const tempo = 0.45 + Math.min(0.4, s.zeit / 60);
+        // Treibgut von vorn
+        const tempo = 0.4 + Math.min(0.25, s.zeit / 80);
         s.naechstes -= dt;
-        if (s.naechstes <= 0) {
-            const spur = Math.floor(s.rnd() * 3);
-            s.hindernisse.push({ x: 1.05, spur, art: BOOT_ARTEN[Math.floor(s.rnd() * BOOT_ARTEN.length)] });
-            s.naechstes = 0.9 + s.rnd() * 0.7 - Math.min(0.4, s.zeit / 80);
+        if (s.naechstes <= 0 && s.sinken === null) {
+            s.hindernisse.push({ x: 1.05, spur: Math.floor(s.rnd() * 3), art: BOOT_ARTEN[Math.floor(s.rnd() * BOOT_ARTEN.length)] });
+            s.naechstes = 1.5 + s.rnd() * 1.1;
         }
         for (const h of s.hindernisse) { h.x -= tempo * dt; }
-        const getroffen = s.hindernisse.filter((h) => h.x < 0.2 && h.x > 0.08 && h.spur === s.spur);
-        if (getroffen.length > 0) {
-            s.leben -= getroffen.length; s.treffer += getroffen.length;
+        // Verfolger zielen auf eure Spur und schießen alternative Fakten von hinten
+        s.gegnerSpur += Math.sign(s.spur - s.gegnerSpur) * Math.min(Math.abs(s.spur - s.gegnerSpur), dt * 2.5);
+        s.naechsterSchuss -= dt;
+        if (s.naechsterSchuss <= 0 && s.munition > 0) {
+            s.munition -= 1;
+            s.schuesse.push({ x: 0.2, spur: s.spur, text: ALTERNATIVE_FAKTEN[s.munition] });
+            s.naechsterSchuss = 1.6 + s.rnd() * 1.0;
+        }
+        for (const f of s.schuesse) { f.x += 0.5 * dt; }
+        const nah = (x) => Math.abs(x - BOOT_X) < 0.06;
+        const getroffen = s.hindernisse.filter((h) => nah(h.x) && h.spur === s.spur);
+        const beschossen = s.schuesse.filter((f) => nah(f.x) && f.spur === s.spur);
+        const n = getroffen.length + beschossen.length;
+        if (n > 0) {
+            s.leben -= n; s.treffer += n;
             s.hindernisse = s.hindernisse.filter((h) => getroffen.indexOf(h) < 0);
+            s.schuesse = s.schuesse.filter((f) => beschossen.indexOf(f) < 0);
         }
         s.hindernisse = s.hindernisse.filter((h) => h.x > -0.1);
-        if (s.leben <= 0) { s.status = 'verloren'; } else if (s.zeit >= s.dauer) { s.status = 'gewonnen'; }
+        s.schuesse = s.schuesse.filter((f) => f.x < 1.1);
+        // Keine Fakten mehr und alle verschossen: Das Motorboot geht unter
+        if (s.munition === 0 && s.schuesse.length === 0 && s.sinken === null) { s.sinken = 0; }
+        if (s.sinken !== null) { s.sinken += dt; }
+        if (s.leben <= 0) { s.status = 'verloren'; } else if (s.sinken !== null && s.sinken >= 2.5) { s.status = 'gewonnen'; }
         return s;
     }
 
-    /** Ausweich-Hilfe für Tests und Demo: freie Spur vor dem nächsten Hindernis wählen. */
+    /** Ausweich-Hilfe für Tests und Demo: Zeit bis zum nächsten Treffer je Spur; rechtzeitig in die sicherste Nachbarspur wechseln. */
     function bootAutopilot(s) {
-        const gefahr = s.hindernisse.filter((h) => h.x < 0.45 && h.x > 0.08).map((h) => h.spur);
-        if (gefahr.indexOf(s.spur) < 0) { return null; }
-        for (const kandidat of [s.spur - 1, s.spur + 1]) {
-            if (kandidat >= 0 && kandidat <= 2 && gefahr.indexOf(kandidat) < 0) { return kandidat < s.spur ? 'hoch' : 'runter'; }
-        }
-        return s.spur > 0 ? 'hoch' : 'runter';
+        const tempo = 0.4 + Math.min(0.25, s.zeit / 80);
+        const zeitBis = (spur) => Math.min(Infinity,
+            ...s.hindernisse.filter((h) => h.spur === spur && h.x > BOOT_X - 0.06).map((h) => Math.max(0, h.x - (BOOT_X + 0.06)) / tempo),
+            ...s.schuesse.filter((f) => f.spur === spur && f.x < BOOT_X + 0.06).map((f) => Math.max(0, (BOOT_X - 0.06) - f.x) / 0.5));
+        if (zeitBis(s.spur) > 0.45) { return null; }
+        const ziel = [0, 1, 2].sort((a, b) => zeitBis(b) - zeitBis(a) || Math.abs(a - s.spur) - Math.abs(b - s.spur))[0];
+        if (ziel === s.spur) { return null; }
+        const naechste = s.spur + (ziel < s.spur ? -1 : 1);
+        return zeitBis(naechste) > 0.05 ? (ziel < s.spur ? 'hoch' : 'runter') : null;
     }
 
     /** Wahlkugel: Spieler (pos 0..1) muss das Ende erreichen, bevor die Kugel ihn einholt. Tippen gibt Tempo. */
@@ -826,10 +908,11 @@
         const z = neuerZustand();
         if (typeof d.szene === 'string' && (SZENEN[d.szene] || d.szene === 'karte')) { z.szene = d.szene; }
         if (d.figur === 'joe' || d.figur === 'chani') { z.figur = d.figur; }
-        if (Array.isArray(d.inventar)) { z.inventar = d.inventar.filter((g) => typeof g === 'string' && GEGENSTAENDE[g]); }
+        if (Array.isArray(d.inventar)) { z.inventar = d.inventar.map((g) => (g === 'tagesordnung' ? 'spd_antrag' : g)).filter((g) => typeof g === 'string' && GEGENSTAENDE[g]); }
         if (z.inventar.indexOf('handy') < 0) { z.inventar.unshift('handy'); }   // ältere Spielstände: Joes Handy gehört immer dazu
         if (d.flags && typeof d.flags === 'object') {
             for (const k of Object.keys(d.flags)) { if (/^[a-zA-Z_0-9]+$/.test(k) && d.flags[k] === true) { z.flags[k] = true; } }
+            if (z.flags.agGegruendet) { z.flags.antragUebergeben = true; }   // ältere Spielstände (vorher: Mustertagesordnung)
         }
         if (Array.isArray(d.orte)) { z.orte = d.orte.filter((o) => typeof o === 'string' && ORTE[o]); if (z.orte.indexOf('buero') < 0) { z.orte.unshift('buero'); } }
         if (d.platten && typeof d.platten === 'object') {
@@ -868,8 +951,7 @@
         ['aktion', 'benutzen', 'garderobe'],
         ['aktion', 'benutzen', 'tuer'],
         ['reisen', 'archiv'],
-        ['aktion', 'gegenstand', 'christian', 'tagesordnung'],
-        ['aktion', 'reden', 'christian'],
+        ['aktion', 'gegenstand', 'chris', 'spd_antrag'],
         ['figur'],
         ['aktion', 'f1', 'wappen'],
         ['aktion', 'benutzen', 'protokolle'],
@@ -879,12 +961,9 @@
         ['reisen', 'ems'],
         ['aktion', 'gegenstand', 'joanna', 'stadtplan'],
         ['figur'],
-        ['aktion', 'f1', 'bruecke'],
+        ['aktion', 'f1', 'skulptur'],
         ['aktion', 'benutzen', 'boot'],
         ['minispiel', 'boot', true],
-        ['aktion', 'benutzen', 'pfaehle'],
-        ['aktion', 'benutzen', 'zurkarte'],
-        ['reisen', 'baustelle'],
         ['figur'],
         ['aktion', 'f1', 'leitung'],
         ['aktion', 'f2', 'bauleiter'],
@@ -903,9 +982,9 @@
         ['dialog', 'schloss', 'buch'],
         ['dialog', 'schloss', 'waage'],
         ['aktion', 'benutzen', 'tor'],
-        ['aktion', 'benutzen', 'platte_links'],
-        ['figur'],
         ['aktion', 'benutzen', 'platte_rechts'],
+        ['figur'],
+        ['aktion', 'benutzen', 'platte_links'],
         ['aktion', 'benutzen', 'tafel'],
         ['dialog', 'quiz', '0'],
         ['dialog', 'quiz', '1'],
@@ -935,7 +1014,7 @@
         switch (s[0]) {
             case 'reisen': return `Reist über die Karte zu: ${ORTE[s[1]].name}.`;
             case 'figur': return `Wechselt die Figur – jetzt wird ${vorher.figur === 'joe' ? 'Chani' : 'Joe'} gebraucht.`;
-            case 'minispiel': return s[1] === 'boot' ? 'Gewinnt das Bootsrennen auf der Ems: hoch und runter steuern, den Hindernissen ausweichen.' : 'Rennt vor der Kugel davon – im richtigen Moment springen.';
+            case 'minispiel': return s[1] === 'boot' ? 'Flieht im Boot die Ems hinab: hoch und runter steuern, dem Treibgut und den alternativen Fakten ausweichen, bis Pinsel und Ledeiw nichts mehr haben.' : 'Rennt vor der Kugel davon – im richtigen Moment springen.';
             case 'dialog': {
                 const d = dialogInhalt(vorher, s[1]);
                 const o = d && d.optionen.find((x) => x.id === s[2]);
@@ -1014,9 +1093,10 @@
     }
 
     const api = {
-        VERSION, FIGUREN, VORSTELLUNG, GEGENSTAENDE, ORTE, SZENEN, SIEGEL, QUIZ, KOMPLETTLOESUNG, RICHTIGE_KOMBINATION,
-        neuerZustand, sichtbareHotspots, aktion, reisen, figurWechseln, dialogInhalt, dialogWahl, minispielEnde, anrufen, naechsterSchritt,
-        bootNeu, bootSchritt, bootAutopilot, kugelNeu, kugelSchritt, speichern, laden, speicherplaetze, schritt
+        VERSION, FIGUREN, VORSTELLUNG, EINLEITUNG, GEGENSTAENDE, ORTE, SZENEN, SIEGEL, QUIZ, KOMPLETTLOESUNG, RICHTIGE_KOMBINATION,
+        ALTERNATIVE_FAKTEN, BOOT_X, PLATZ, neuerZustand, sichtbareHotspots, aktion, reisen, einstieg, platteVerlassen, figurWechseln, dialogInhalt, dialogWahl, minispielEnde, anrufen, naechsterSchritt,
+        bootNeu, bootSchritt, bootAutopilot, kugelNeu, kugelSchritt, speichern, laden, speicherplaetze, schritt,
+        BRUECKE, PLAUDEREI, STANDARD
     };
     wurzel.GralSpiel = api;
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; }

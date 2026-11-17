@@ -54,6 +54,7 @@ function bis(bedingung, nachher) {
 }
 
 const bilder = [
+    ['20-zukunftsschmiede', S.neuerZustand()],
     ['15-archiv-festgeklebt', bis((z) => z.flags.gegnerArchivFest)],
     ['16-karte-hallenbad', bis((z) => z.orte.includes('baustelle') && z.szene === 'karte')],
     ['17-baustelle-hallenbad', bis((z) => z.szene === 'baustelle')],

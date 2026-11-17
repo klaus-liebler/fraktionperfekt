@@ -11,7 +11,8 @@ const KX = 60, KY = 4, KB = 136, KH = 132;
 export const STATIONEN = [
     { nr: '1', name: 'SCHMIEDE', lang: 'Zukunftsschmiede', lat: 52.0938, lon: 7.6120 },
     { nr: '2', name: 'RATHAUS', lang: 'Rathaus', lat: 52.09232, lon: 7.60944 },
-    { nr: '3', name: 'EMS-UFER', lang: 'Ems-Ufer', lat: null, lon: null },
+    // Emsdeich mit Skulpturen und Kanuverleih: ein Stück flussauf vom Hallenbad (Flusspunkt aus den OSM-Daten)
+    { nr: '3', name: 'EMSDEICH', lang: 'Emsdeich (Skulpturen, Kanuverleih)', lat: 52.08747, lon: 7.60266 },
     // Hallenbad Greven, Am Hallenbad 3 (OSM way 45506851, Mittelpunkt des Gebäudes): Baustelle der Sanierung
     { nr: '4', name: 'HALLENBAD', lang: 'Hallenbad / Baustelle Sanierung', lat: 52.09067, lon: 7.60537 },
     { nr: '5', name: 'SCHULE', lang: 'Martin-Luther-Grundschule', lat: 52.09457, lon: 7.60966 },
@@ -52,10 +53,7 @@ export function karteGreven(datei) {
     for (let y = KY; y < KY + KH; y++) { for (let x = KX; x < KX + KB; x++) { const p = karte.lies(x, y); if (p[3]) { b.setze(x, y, p); } } }
     b.rahmen(KX - 1, KY - 1, KB + 2, KH + 2, F.holz);
 
-    // Ems-Station: nächster Flusspunkt zum Rathaus
-    const ems = daten.elemente.filter((e) => e.k === 'fluss').flatMap((e) => e.g)
-        .reduce((best, p) => { const d = (p[0] - 52.0922) ** 2 + ((p[1] - 7.6094) * 0.62) ** 2; return d < best.d ? { d, p } : best; }, { d: 1e9, p: null }).p;
-    const stationen = STATIONEN.map((s) => (s.nr === '3' ? { ...s, lat: ems[0], lon: ems[1] } : s));
+    const stationen = STATIONEN;
 
     // Freibad Greven (OSM way 72563305, Mittelpunkt des Geländes): nur beschriftet, keine Station – das Freibad ist nicht im Umbau
     {

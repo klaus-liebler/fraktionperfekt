@@ -116,13 +116,36 @@
         return py;
     }
 
+    // Balance-Plattformen: Drehzapfen, Platte (links schmal, rechts dick), Gravur; belegt: senkt sich und leuchtet
+    const FARBE = { stein: 'rgb(188,172,140)', steinhell: 'rgb(216,204,172)', steindunkel: 'rgb(140,124,96)', fastschwarz: 'rgb(36,36,44)', gelb: 'rgb(248,184,0)', hellgelb: 'rgb(248,216,120)', holzdunkel: 'rgb(80,40,8)' };
+    function zeichnePlattformen(liste) {
+        for (const p of liste) {
+            const m = Math.round(p.x + p.b / 2), unten = p.oben + p.dicke;
+            t2.fillStyle = FARBE.fastschwarz; t2.globalAlpha = 0.3; t2.beginPath(); t2.ellipse(m, p.boden, 14, 2, 0, 0, Math.PI * 2); t2.fill(); t2.globalAlpha = 1;
+            t2.fillStyle = FARBE.steindunkel; t2.fillRect(m - 9, p.boden - 2, 18, 2); t2.fillRect(m - 4, unten, 8, p.boden - unten);
+            t2.fillStyle = FARBE.stein; t2.fillRect(m - 3, unten, 3, p.boden - unten - 2);
+            t2.fillStyle = FARBE.steindunkel; t2.fillRect(p.x, p.oben, p.b, p.dicke);
+            t2.fillStyle = p.belegt ? FARBE.gelb : FARBE.stein; t2.fillRect(p.x + 1, p.oben, p.b - 2, p.dicke - 1);
+            t2.fillStyle = p.belegt ? FARBE.hellgelb : FARBE.steinhell; t2.fillRect(p.x + 1, p.oben, p.b - 2, 1);
+            // Gravur am Sockel: links ein Hut (Joe), rechts eine Kamera (Chani)
+            t2.fillStyle = FARBE.holzdunkel;
+            if (p.seite === 'links') { t2.fillRect(m - 4, p.boden - 6, 9, 1); t2.fillRect(m - 2, p.boden - 9, 5, 3); }
+            else { t2.fillRect(m - 4, p.boden - 9, 9, 5); t2.fillRect(m - 2, p.boden - 10, 3, 1); t2.fillStyle = FARBE.stein; t2.fillRect(m, p.boden - 8, 2, 2); }
+        }
+    }
+
+    /** Anzeige-Spielstand: Öffnet sich das Fallgitter, bleibt der Raum mit Plattformen sichtbar, bis der Text gelesen ist. */
+    let gitterGehalten = false;
+    function anzeige() { return gitterGehalten ? Object.assign({}, z, { flags: Object.assign({}, z.flags, { gitterOffen: false }) }) : z; }
+
     function zeichneSzene() {
-        const hs = S.sichtbareHotspots(z);
-        const bg = G.bild(G.hintergrund(z));
+        const hs = S.sichtbareHotspots(z), za = anzeige();
+        const bg = G.bild(G.hintergrund(za));
         if (bg) { t2.drawImage(bg, 0, 0); }
-        for (const o of G.ueberlagerungen(z, zeit)) { teil(o); }
+        for (const o of G.ueberlagerungen(za, zeit)) { teil(o); }
+        zeichnePlattformen(G.plattformen(za));
         // Fackeln flackern
-        for (const [fx, fy] of G.fackeln(z)) {
+        for (const [fx, fy] of G.fackeln(za)) {
             const f = Math.floor(zeit * 10 + fx) % 3;
             t2.fillStyle = f === 0 ? 'rgb(252,152,56)' : f === 1 ? 'rgb(252,216,120)' : 'rgb(252,252,188)';
             t2.fillRect(fx + (f === 2 ? 0 : 1), fy - 9 - f, 1 + (f === 1 ? 1 : 0), 2);
@@ -141,8 +164,11 @@
         }
         for (const n of ['joe', 'chani']) {
             const hh = held[n];
-            const geht = Math.abs(hh.ziel - hh.x) > 0.5;
             const istSprecher = sprecher === n && !textbox.hidden;
+            // Auf der eigenen Plattform: verkleinert im Hintergrund, unabhängig von der anderen Figur
+            const pl = G.aufPlattform(za, n);
+            if (pl) { figuren.push({ y: pl.y, name: figurName(n), x: pl.x, zustand: istSprecher ? (sprecherSchreck ? 'erschrocken' : 'reden') : 'stehen', blick: 1, skala: pl.skala, hinten: true, held: n }); continue; }
+            const geht = Math.abs(hh.ziel - hh.x) > 0.5;
             const zustand = geht ? 'gehen' : (istSprecher ? (sprecherSchreck ? 'erschrocken' : 'reden') : (benutzenBis > zeit && n === z.figur ? 'benutzen' : 'stehen'));
             figuren.push({ y: BODEN, name: figurName(n), x: hh.x, zustand, blick: hh.blick, held: n });
         }
@@ -150,7 +176,7 @@
         for (const f of figuren) {
             const bildNr = f.zustand === 'gehen' ? Math.floor(zeit * 10) : f.zustand === 'reden' ? Math.floor(zeit * 7) : f.zustand === 'benutzen' ? (benutzenBis - zeit > 0.4 ? 0 : 1) : 0;
             const blinzeln = f.zustand === 'stehen' && (Math.floor(zeit * 8) + f.name.length * 11) % 41 === 0;
-            const py = zeichneFigur(f.name, f.zustand, bildNr, f.x, f.y, f.blick, blinzeln, true, f.skala, f.hinten, f.klebt);
+            const py = zeichneFigur(f.name, f.zustand, bildNr, f.x, f.y, f.blick, blinzeln, !(f.held && f.skala), f.skala, f.hinten, f.klebt);
             if (f.held && f.held === z.figur && !mini && py !== undefined) { t2.fillStyle = 'rgb(255,214,79)'; t2.fillRect(Math.round(f.x) - 1, py - 4, 3, 2); t2.fillRect(Math.round(f.x), py - 2, 1, 1); }
         }
         // Hover-Rahmen (dezent)
@@ -191,21 +217,32 @@
     function oberkoerper(name, x, y) { const r = G.rahmen(name, 'stehen', 0, false), b = G.bild(r.bild); if (b) { t2.drawImage(b, r.sx, 0, 32, 40, Math.round(x), Math.round(y), 32, 40); } }
 
     const BOOT_ART = { Treibholz: 0, Entenfamilie: 1, Schild: 2, Plakat: 3 };
+    const spurY = (sp) => 50 + sp * 30;
+    /** Flucht flussab: Ruderboot in der Mitte, Treibgut von vorn (rechts), hinten (links) Pinsel und Ledeiw im Motorboot. */
     function zeichneBoot(sim) {
         streifen('minispiel_ems_512x144', zeit * 70);
-        const spurY = (sp) => 50 + sp * 30;
+        const mx = Math.round(S.BOOT_X * B);
         const by = spurY(sim.spur) + (Math.floor(zeit * 4) % 2);
-        oberkoerper('joe_hut', 14, by - 30); oberkoerper('chani', 34, by - 30);
-        teil({ bild: 'ruderboot_46x14', sx: 0, b: 46, h: 14, x: 12, y: by + 4 });
-        t2.fillStyle = 'rgb(188,228,252)'; for (let i = 0; i < 4; i++) { t2.fillRect(8 - i * 5, by + 14 + (i % 2), 4, 1); }
+        oberkoerper('joe_hut', mx - 22, by - 30); oberkoerper('chani', mx - 2, by - 30);
+        teil({ bild: 'ruderboot_46x14', sx: 0, b: 46, h: 14, x: mx - 23, y: by + 4 });
+        t2.fillStyle = 'rgb(188,228,252)'; for (let i = 0; i < 4; i++) { t2.fillRect(mx - 28 - i * 5, by + 14 + (i % 2), 4, 1); }
         for (const h of sim.hindernisse) {
             const i = BOOT_ART[Object.keys(BOOT_ART).find((k) => h.art.indexOf(k) === 0)] || 0;
-            teil({ bild: 'hindernisse_ems_96x24', sx: i * 24, b: 24, h: 24, x: h.x * B, y: spurY(h.spur) - 4 });
+            teil({ bild: 'hindernisse_ems_96x24', sx: i * 24, b: 24, h: 24, x: h.x * B - 12, y: spurY(h.spur) - 4 });
         }
-        const vy = spurY(1) + Math.sin(zeit * 1.5) * 26;
-        oberkoerper('hohlbein', B - 66, vy - 30); oberkoerper('droehn', B - 46, vy - 32);
-        t2.save(); t2.translate(2 * (B - 70) + 64, 0); t2.scale(-1, 1); teil({ bild: 'motorboot_64x24', sx: 0, b: 64, h: 24, x: B - 70, y: vy - 2 }); t2.restore(); // Bug nach links
-        t2.fillStyle = 'rgb(188,228,252)'; for (let i = 0; i < 5; i++) { t2.fillRect(B - 6 + i * 2, vy + 14 + (Math.floor(zeit * 20 + i) % 3), 2, 1); }
+        // Verfolger hinten: zielen auf eure Spur; ohne Fakten sinkt das Boot (Blasen steigen auf)
+        const sinkt = sim.sinken !== null ? sim.sinken : 0;
+        const vy = spurY(sim.gegnerSpur) + sinkt * 12 + (sim.sinken === null ? Math.sin(zeit * 6) : 0);
+        if (sinkt < 2.2) {
+            t2.save(); t2.globalAlpha = Math.max(0, 1 - sinkt / 2.2);
+            oberkoerper('hohlbein', 10, vy - 30); oberkoerper('droehn', 28, vy - 32);
+            teil({ bild: 'motorboot_64x24', sx: 0, b: 64, h: 24, x: 2, y: vy - 2 });
+            t2.restore();
+        }
+        if (sim.sinken !== null) { t2.fillStyle = 'rgb(188,228,252)'; for (let i = 0; i < 6; i++) { const t = (zeit * 1.5 + i * 0.37) % 1; t2.fillRect(14 + i * 8, Math.round(spurY(sim.gegnerSpur) + 16 - t * 18), 2, 2); } }
+        else { t2.fillStyle = 'rgb(188,228,252)'; for (let i = 0; i < 5; i++) { t2.fillRect(i * 2, vy + 14 + (Math.floor(zeit * 20 + i) % 3), 2, 1); } }
+        // Geschosse: kleine rot-weiße Sprechblasen (der Text steht im Overlay)
+        for (const f of sim.schuesse) { const x = Math.round(f.x * B), y = spurY(f.spur) + 2; t2.fillStyle = 'rgb(216,40,0)'; t2.fillRect(x - 6, y, 12, 7); t2.fillStyle = 'rgb(252,252,252)'; t2.fillRect(x - 5, y + 1, 10, 5); t2.fillStyle = 'rgb(216,40,0)'; t2.fillRect(x - 1, y + 2, 2, 2); t2.fillRect(x - 9, y + 3, 3, 1); }
     }
 
     function zeichneKugel(sim) {
@@ -235,7 +272,17 @@
 
     function overlay() {
         if (mini) {
-            if (mini.art === 'boot') { textMitSchatten(`Noch ${Math.max(0, Math.ceil(mini.dauer - mini.zeit))} s   Leben ${'♥'.repeat(Math.max(0, mini.leben))}`, 16, 34, 26, '#ffe08a'); textMitSchatten('↑/↓ oder oben/unten tippen', B * SKALA - 16, 34, 20, '#fff', 'right'); }
+            if (mini.art === 'boot') {
+                textMitSchatten(mini.sinken !== null ? `Blubb!   Leben ${'♥'.repeat(Math.max(0, mini.leben))}` : `Alternative Fakten: ${mini.munition + mini.schuesse.length}   Leben ${'♥'.repeat(Math.max(0, mini.leben))}`, 16, 34, 26, '#ffe08a');
+                textMitSchatten('↑/↓ oder oben/unten tippen', B * SKALA - 16, 34, 20, '#fff', 'right');
+                // Die alternativen Fakten als Sprechblasen über den Geschossen
+                g.font = 'bold 15px "Courier New", ui-monospace, monospace'; g.textAlign = 'center';
+                for (const f of mini.schuesse) {
+                    const x = f.x * B * SKALA, y = (spurY(f.spur) - 6) * SKALA, w = g.measureText(f.text).width + 12;
+                    g.fillStyle = '#fff'; g.fillRect(x - w / 2, y - 18, w, 24); g.strokeStyle = '#000'; g.lineWidth = 2; g.strokeRect(x - w / 2, y - 18, w, 24);
+                    g.fillStyle = '#c0392b'; g.fillText(f.text, x, y);
+                }
+            }
             else { textMitSchatten('Tippen / Leertaste / → für Tempo!', B * SKALA - 16, 34, 22, '#fff', 'right'); g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(16, 16, 300, 18); g.fillStyle = '#f4d03f'; g.fillRect(16, 16, 300 * Math.min(1, mini.pos), 18); }
             return;
         }
@@ -267,7 +314,12 @@
             if (blende) { blende.t += dt * 1.6; if (blende.t >= 0.5 && !blende.gewechselt) { blende.gewechselt = true; blende.wechsel(); } if (blende.t >= 1) { blende = null; } }
             if (mini && textbox.hidden && dialogEl.hidden) {
                 if (mini.art === 'boot') { S.bootSchritt(mini, dt, eingabeBoot); eingabeBoot = null; } else { S.kugelSchritt(mini, dt, eingabeKugel); eingabeKugel = false; }
-                if (mini.status !== 'laeuft') { const art = mini.art, ok = mini.status === 'gewonnen'; mini = null; klang(ok ? 'erfolg' : 'fehler'); ergebnis(S.minispielEnde(z, art, ok)); if (ok && art === 'kugel') { aufStart(); } if (!ok) { danach = { minispiel: art }; } }
+                if (mini.status !== 'laeuft') {
+                    const art = mini.art, ok = mini.status === 'gewonnen', v = z.szene; mini = null; klang(ok ? 'erfolg' : 'fehler');
+                    const e = S.minispielEnde(z, art, ok);
+                    if (z.szene !== v) { const neu = z.szene; z.szene = v; szenenwechsel(() => { z.szene = neu; ergebnis(e, v); }); }
+                    else { ergebnis(e); if (ok && art === 'kugel') { aufStart(); } if (!ok) { danach = { minispiel: art }; } }
+                }
             }
             if (reise) { reise.t += dt * 0.9; if (reise.t >= 1.15) { const ziel = reise.nach; reise = null; szenenwechsel(() => { const v = z.szene; ergebnis(S.reisen(z, ziel), v); }); } }
             laufen(dt);
@@ -296,22 +348,32 @@
     /** Taucht eine Person dort auf, wo jemand steht (z. B. die Gegner im Archiv), treten die Helden zur Seite. */
     function ausweichen() {
         if (!z || z.szene === 'karte' || laufAuftrag) { return; }
-        const npc = G.npcPlaetze(z, S.sichtbareHotspots(z)).map((p) => p.x);
+        const npc = G.npcPlaetze(z, S.sichtbareHotspots(z)).map((p) => p.x), grenzen = G.bereich(z);
         const a = held[z.figur], b = held[z.figur === 'joe' ? 'chani' : 'joe'];
-        a.ziel = G.freiesZiel(a.ziel, npc);
-        b.ziel = G.freiesZiel(b.ziel, npc.concat([a.ziel]));
+        a.ziel = G.freiesZiel(a.ziel, npc, grenzen);
+        b.ziel = G.freiesZiel(b.ziel, npc.concat([a.ziel]), grenzen);
     }
 
     /** Gehen zu einem Hotspot oder einer x-Position; Stehplätze überlappen nie mit anderen Personen. */
     function gehe(ziel, danachTun) {
-        const a = held[z.figur], b = held[z.figur === 'joe' ? 'chani' : 'joe'];
+        const andere = z.figur === 'joe' ? 'chani' : 'joe';
+        const a = held[z.figur], b = held[andere];
+        // Balance-Plattformen: Wer auf seiner Plattform steht, bleibt dort, bis er selbst woandershin geht
+        const aufA = G.aufPlattform(z, z.figur);
+        const zielPlatte = ziel && typeof ziel === 'object' ? ({ platte_links: 'links', platte_rechts: 'rechts' })[ziel.id] : null;
+        if (aufA) {
+            a.x = a.ziel = aufA.x;
+            if (aufA.seite === zielPlatte) { laufAuftrag = danachTun || null; return; }
+            S.platteVerlassen(z, z.figur);
+        }
         const p = G.standplaetze(z, S.sichtbareHotspots(z), ziel, a.x, b.x);
-        a.ziel = p.aktiv; b.ziel = p.begleit;
+        a.ziel = p.aktiv;
+        if (!G.aufPlattform(z, andere)) { b.ziel = p.begleit; }
         laufAuftrag = danachTun || null;
     }
 
     // ---------- Text, Porträts, Dialoge ----------
-    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Christian', 'christian'], ['Joanna', 'joanna'], ['Lore', 'lore'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Hohlbein', 'hohlbein'], ['Dröhn', 'droehn'], ['Relbeil', 'relbeil']];
+    const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Chris', 'christian'], ['Johanna', 'joanna'], ['Lorette', 'lore'], ['Kemper', 'kemper'], ['Frau Kemper', 'kemper'], ['Pinsel', 'hohlbein'], ['Ledeiw', 'droehn'], ['Relbeil', 'relbeil']];
     function sprecherAus(zeile) {
         for (const [n, id] of SPRECHER) { if (zeile.startsWith(n + ':') || zeile.startsWith(n + ' ')) { return id; } }
         return null;
@@ -326,6 +388,8 @@
         if (warteschlange.length === 0) {
             textbox.hidden = true; sprecher = null;
             if (gehalten) { gehalten = null; ausweichen(); }
+            // Fallgitter offen und Text gelesen: Joe und Chani springen von den Plattformen und gehen hindurch (Blende)
+            if (gitterGehalten) { gitterGehalten = false; szenenwechsel(() => aufStart()); }
             const d = danach; danach = null;
             if (d && d.dialog) { dialogZeigen(d.dialog); }
             if (d && d.gespraech) { gespraechZeigen(d.gespraech); }
@@ -336,7 +400,8 @@
         const zeile = warteschlange.shift();
         const wer = sprecherAus(zeile);
         sprecherSchreck = ausdruck(zeile) === 'erschrocken';
-        sprecher = wer === 'hohlbein' || wer === 'droehn' ? 'gegner' : (['christian', 'joanna', 'lore'].includes(wer) ? wer : wer === 'kemper' ? 'bauleiter' : wer);
+        // Sprecher → Hotspot der Figur (für die Sprechanimation); Chris' Bilder heißen weiter „christian“
+        sprecher = wer === 'hohlbein' || wer === 'droehn' ? 'gegner' : ({ christian: 'chris', kemper: 'bauleiter' })[wer] || wer;
         portraitEl.replaceChildren();
         if (wer) { const bild = portraetBild(wer, ausdruck(zeile)); bild.className = 'portraitbild'; portraitEl.appendChild(bild); portraitEl.hidden = false; } else { portraitEl.hidden = true; }
         textEl.textContent = zeile;
@@ -348,11 +413,13 @@
         warteschlange = warteschlange.concat(e.text || []);
         if (e.dialog || e.minispiel) { danach = { dialog: e.dialog, minispiel: e.minispiel }; }
         if (z.szene !== vorher) {
-            if (z.szene !== 'karte' && S.SZENEN[z.szene] && !(e.text || []).includes(S.SZENEN[z.szene].einstieg)) { warteschlange.push(S.SZENEN[z.szene].einstieg); }
+            if (z.szene !== 'karte' && S.SZENEN[z.szene] && !e.ohneEinstieg && !(e.text || []).includes(S.einstieg(z, z.szene))) { warteschlange.push(S.einstieg(z, z.szene)); }
             if (S.ORTE[vorher]) { letzterOrt = vorher; }
             aufStart();
             plaetze.schreiben('auto', z);
         }
+        // Figuren, die erst nach dem Text auftauchen (z. B. Pinsel und Ledeiw nach dem Bootsunglück am Hallenbad oder nach der Wahlkugel)
+        if (e.erscheinen) { gehalten = G.npcPlaetze(z, S.sichtbareHotspots(z)).filter((p) => !e.erscheinen.includes(p.id)); }
         if (e.ende) { plaetze.schreiben('auto', z); if (window.Musik && window.Musik.an) { window.Musik.spielen(true); } else { klang('ende'); } }
         hover = null; auswahl = -1;
         ausweichen();
@@ -416,8 +483,9 @@
 
     // ---------- Aktionen ----------
     function handlung(art, h, gegenstand) {
-        const vorher = z.punkte, szene = z.szene;
+        const vorher = z.punkte, szene = z.szene, gitterVorher = !!z.flags.gitterOffen;
         const e = halten(() => S.aktion(z, art, h.id, gegenstand));
+        if (!gitterVorher && z.flags.gitterOffen && z.szene === 'tempel') { gitterGehalten = true; }
         if (art === 'f1' && z.figur === 'joe') { klang('kartusche'); } else { klang(z.punkte > vorher ? 'erfolg' : 'klick'); }
         if (art !== 'ansehen' && art !== 'reden') { benutzenBis = zeit + 0.8; }
         if (z.szene !== szene) {
@@ -605,19 +673,13 @@
     function starten(zustand, neu) {
         z = zustand; mini = null; reise = null; blende = null; pausiert = false; laufAuftrag = null;
         menueEl.hidden = true; titelEl.hidden = true; dialogEl.hidden = true; kontextEl.hidden = true;
-        warteschlange = []; danach = null; verb = 'gehe'; objekt = null; gehalten = null;
+        warteschlange = []; danach = null; verb = 'gehe'; objekt = null; gehalten = null; gitterGehalten = false;
         aufStart();
         letzterOrt = S.ORTE[z.szene] ? z.szene : 'buero';
         $('leiste').hidden = false;
         leisteAktualisieren();
         if (neu) {
-            ergebnis({ text: [
-                ...S.VORSTELLUNG,
-                'Greven, Montagabend in der Zukunftsschmiede an der Marktstraße. Die Fraktionssitzung ist vorbei, die Kekse sind alle.',
-                'Joe: „Chani, hast du den Umschlag auf dem Tisch gesehen? Ohne Absender.“',
-                'Chani: „Und draußen steigen zwei Herren in zu engen Anzügen aus einem Wagen … Das gefällt mir nicht.“',
-                '(Antippen = gehen und die naheliegende Aktion. Verben unten wählen, Gegenstände mit „Benutze“ oder „Gib“ kombinieren. Langes Drücken öffnet alle Aktionen. Esc: Pause.)'
-            ] });
+            ergebnis({ text: [...S.VORSTELLUNG, ...S.EINLEITUNG] });
         } else {
             ergebnis({ text: [z.szene === 'karte' ? 'Weiter geht’s – auf der Karte.' : `Weiter geht’s: ${S.SZENEN[z.szene].titel}.`] });
         }

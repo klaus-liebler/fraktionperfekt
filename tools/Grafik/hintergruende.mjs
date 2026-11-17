@@ -38,7 +38,6 @@ function regalBuecher(b, x, y, w, h, faecher, saat) {
 }
 function fackel(b, x, y) { b.rechteck(x, y, 3, 9, F.holzdunkel); b.rechteck(x - 1, y - 1, 5, 2, F.dunkelgrau); b.rechteck(x - 1, y - 6, 5, 5, F.orange); b.rechteck(x, y - 8, 3, 4, F.gelb); b.rechteck(x + 1, y - 9, 1, 2, F.hellgelb); }
 function sterne(b, n, saat, maxY) { let s = saat; for (let i = 0; i < n; i++) { s = (s * 1103515245 + 12345) & 0x7fffffff; const x = s % B; s = (s * 1103515245 + 12345) & 0x7fffffff; b.setze(x, s % maxY, i % 5 === 0 ? F.gelb : F.weiss); } }
-function bodenplatte(b, x, y, w, h, aktiv) { b.rechteck(x, y, w, h, F.steindunkel); b.rechteck(x + 1, y + 1, w - 2, h - 2, aktiv ? F.gelb : F.stein); b.rechteck(x + Math.round(w / 2) - 3, y + 3, 6, 3, aktiv ? F.hellgelb : F.sand2); }
 
 // ---------- Zukunftsschmiede (Parteibüro, Ladenlokal Marktstraße) ----------
 export function zukunftsschmiede(mitUmschlag = true) {
@@ -130,35 +129,50 @@ export function flurV2(vorlage, schildBereich) {
     return b;
 }
 
-// ---------- Ems-Ufer bei Sonnenuntergang ----------
+// ---------- Emsdeich am Kanuverleih (flussauf vom Hallenbad), bei Sonnenuntergang ----------
+// Links der Kanuverleih (Hütte x 2–44), Steg mit Kanus und Ruderboot (Boot x 58–104), rechts Skulpturen am Deich:
+// Sandsteinskulptur mit Bronzetafel (x 164–188, Inschrift), Stahlwelle und Bronzering (x 198–222); Weg zur Straße rechts.
 export function emsUfer() {
     const b = new Bild(B, H);
     b.baender(0, 0, B, 40, [F.lila, F.rosa, F.lachs, F.hellorange, F.hellgelb]);
-    b.ellipse(40, 40, 12, 12, F.gelb); b.ellipse(40, 40, 9, 9, F.hellgelb);
-    for (const [x, y, w] of [[90, 8, 26], [150, 14, 34], [210, 6, 22]]) { b.rechteck(x, y, w, 3, F.pfirsich); b.rechteck(x + 4, y - 2, w - 10, 2, F.pfirsich); b.rechteck(x + 2, y + 3, w - 4, 1, F.rosa); }
-    // ferne Bäume und Wiese
+    b.ellipse(150, 40, 12, 12, F.gelb); b.ellipse(150, 40, 9, 9, F.hellgelb);
+    for (const [x, y, w] of [[60, 8, 26], [170, 14, 34], [220, 6, 22]]) { b.rechteck(x, y, w, 3, F.pfirsich); b.rechteck(x + 4, y - 2, w - 10, 2, F.pfirsich); b.rechteck(x + 2, y + 3, w - 4, 1, F.rosa); }
+    // ferne Bäume und gegenüberliegender Deich
     b.rechteck(0, 40, B, 14, F.dunkelgruen);
     for (let x = 0; x < B; x += 9) { b.ellipse(x + 4, 41 - (x * 7) % 5, 6, 6, (x / 9) % 2 ? F.dunkelgruen : F.petroldunkel); }
-    b.rechteck(0, 54, B, 6, F.gruen);
+    b.rechteck(0, 54, B, 6, F.gruen); b.rechteck(0, 54, B, 1, F.hellgruen);
     // Ems
     b.rechteck(0, 60, B, 52, F.blau);
     for (let y = 63; y < 110; y += 6) { for (let x = (y * 7) % 23; x < B; x += 23) { b.rechteck(x, y, 8, 1, F.hellblau); } }
-    b.rechteck(30, 62, 20, 1, F.hellgelb); b.rechteck(34, 66, 14, 1, F.hellgelb); b.rechteck(36, 70, 10, 1, F.hellgelb);
-    // alte Steinbrücke mit drei Bögen (x 150–230, y 25–60), Inschrift (x 165–210, y 33–45)
-    b.rechteck(146, 24, 88, 14, F.stein); b.rechteck(146, 24, 88, 2, F.steinhell); b.rechteck(146, 36, 88, 2, F.steindunkel);
-    for (let i = 0; i < 4; i++) { b.rechteck(148 + i * 27, 38, 10, 26, F.stein); b.rechteck(155 + i * 27, 38, 3, 26, F.steindunkel); }
-    for (let i = 0; i < 3; i++) { b.ellipse(165 + i * 27, 38, 8, 6, F.blau); b.rechteck(157 + i * 27, 38, 17, 1, F.steindunkel); }
-    b.rechteck(166, 26, 44, 10, F.steinhell); b.rechteck(166, 35, 44, 1, F.steindunkel);
-    for (let i = 0; i < 9; i++) { b.rechteck(168 + i * 4 + (i % 2), 28, 3, 2, F.steindunkel); b.rechteck(169 + i * 4, 32, 2, 2, F.steindunkel); }
-    for (let i = 0; i < 4; i++) { b.rechteck(148 + i * 27, 64, 10, 3, F.dunkelblau); }
-    // sieben Pfähle (x 184–235, y 81–101)
-    for (let i = 0; i < 7; i++) { const x = 186 + i * 7; b.rechteck(x, 81 + (i % 2) * 2, 4, 20 - (i % 2) * 2, F.holz); b.rechteck(x, 81 + (i % 2) * 2, 4, 1, F.holzhell); b.rechteck(x + 3, 83, 1, 17, F.holzdunkel); b.rechteck(x - 1, 100, 6, 1, F.hellblau); }
-    // Ufer vorn mit Steg
+    b.rechteck(140, 62, 20, 1, F.hellgelb); b.rechteck(144, 66, 14, 1, F.hellgelb); b.rechteck(146, 70, 10, 1, F.hellgelb);
+    // Ufer vorn (Deichfuß)
     b.rechteck(0, 110, B, 34, F.gras); b.rechteck(0, 110, B, 2, F.gruen); for (let x = 0; x < B; x += 5) { b.rechteck(x, 113 + (x % 3), 1, 2, F.dunkelgruen); b.rechteck(x + 2, 125 + (x % 4), 1, 2, F.dunkelgruen); }
-    b.rechteck(60, 102, 82, 5, F.holzhell); b.rechteck(60, 107, 82, 1, F.holz); for (let i = 0; i < 5; i++) { b.rechteck(62 + i * 19, 108, 3, 6, F.holz); }
-    for (let x = 60; x < 142; x += 8) { b.rechteck(x, 102, 1, 5, F.holz); }
-    // Schilf und Uferpfad nach rechts (Ausgang x 230–250, y 43–86 → Pfad rechts am Ufer)
-    for (let i = 0; i < 14; i++) { const x = 4 + i * 4; b.rechteck(x, 96 + (i % 3) * 2, 1, 16, F.dunkelgruen); b.rechteck(x, 94 + (i % 3) * 2, 1, 3, F.braun); }
+    // Steg des Kanuverleihs
+    b.rechteck(52, 102, 96, 5, F.holzhell); b.rechteck(52, 107, 96, 1, F.holz); for (let i = 0; i < 6; i++) { b.rechteck(54 + i * 18, 108, 3, 6, F.holz); }
+    for (let x = 52; x < 148; x += 8) { b.rechteck(x, 102, 1, 5, F.holz); }
+    // zwei Kanus am Steg (rot und gelb), das Ruderboot liegt links daneben
+    for (const [x, y, c, d] of [[114, 90, F.gelb, F.ocker], [108, 96, F.rot, F.dunkelrot]]) {
+        b.polygon([[x, y], [x + 32, y], [x + 28, y + 4], [x + 4, y + 4]], c); b.rechteck(x + 2, y, 28, 1, d); b.rechteck(x + 14, y - 1, 4, 1, F.holz);
+    }
+    // Kanuverleih: Holzhütte mit Schild, Preistafel und Paddeln
+    b.rechteck(2, 80, 42, 32, F.holz); for (let x = 2; x < 44; x += 4) { b.rechteck(x, 80, 1, 32, F.holzdunkel); }
+    b.polygon([[0, 82], [23, 68], [46, 82]], F.dunkelrot); b.rechteck(0, 81, 46, 2, F.holzschwarz);
+    b.rechteck(8, 66, 1, 6, F.holzdunkel); b.rechteck(38, 66, 1, 6, F.holzdunkel);
+    b.rechteck(0, 58, 47, 8, F.weiss); b.rahmen(0, 58, 47, 8, F.holzdunkel); text(b, 'KANUVERLEIH', 2, 60, F.blau);
+    b.rechteck(8, 90, 12, 22, F.holzschwarz); b.rechteck(9, 91, 10, 21, F.holzdunkel); b.rechteck(16, 101, 2, 2, F.gelb);
+    b.rechteck(25, 88, 14, 11, F.fastschwarz); b.rechteck(26, 89, 12, 9, F.dunkelgruen); for (let i = 0; i < 3; i++) { b.rechteck(28, 91 + i * 3, 8, 1, F.weiss); }
+    for (const x of [42, 46]) { b.rechteck(x, 86, 1, 24, F.holzhell); b.ellipse(x, 109, 1, 3, F.holzhell); }
+    // Sandsteinskulptur mit Durchbruch und Bronzetafel (Inschrift)
+    b.rechteck(164, 100, 24, 10, F.steindunkel); b.rechteck(164, 100, 24, 2, F.stein);
+    b.polygon([[168, 100], [170, 62], [176, 56], [184, 60], [186, 100]], F.sand2); b.polygon([[170, 100], [172, 64], [176, 58], [180, 62], [180, 100]], F.sand);
+    b.ellipse(177, 72, 4, 5, F.blau); b.ellipse(177, 72, 3, 4, F.hellblau);
+    b.rechteck(171, 84, 12, 9, F.senf); b.rahmen(171, 84, 12, 9, F.holzdunkel); for (let i = 0; i < 3; i++) { b.rechteck(173, 86 + i * 2, 8 - (i % 2) * 2, 1, F.petroldunkel); }
+    b.rechteck(171, 92, 4, 2, F.gruen); b.rechteck(180, 84, 3, 2, F.gruen);
+    // Stahlwelle (Rost) und Bronzering
+    for (let i = 0; i < 14; i++) { const y = 74 + Math.round(Math.sin(i / 2.2) * 6); b.rechteck(198 + i, y, 2, 108 - y, i % 3 ? F.orange : F.braun); }
+    b.rechteck(197, 106, 17, 4, F.steindunkel);
+    b.ellipse(218, 92, 6, 8, F.ocker); b.ellipse(218, 92, 3, 5, F.blau); b.rechteck(216, 100, 5, 8, F.ocker); b.rechteck(213, 106, 11, 4, F.steindunkel);
+    // Deichweg nach rechts zur Straße (Ausgang x 232–256, y 86–112)
     b.polygon([[226, 112], [256, 104], [256, 144], [236, 144]], F.sand2); b.polygon([[232, 112], [256, 106], [256, 112]], F.sand);
     b.rechteck(244, 88, 2, 22, F.holzdunkel); b.rechteck(236, 86, 18, 6, F.weiss); text(b, 'STADT', 237, 87, F.gruen);
     return b;
@@ -340,7 +354,7 @@ export function tempelEingang(offen) {
     const unten = offen ? 36 : 101;
     for (let i = 0; i < 7; i++) { const x = 102 + i * 7; b.rechteck(x, 26, 3, unten - 26, F.dunkelgrau); b.rechteck(x, 26, 1, unten - 26, F.grau); b.polygon([[x - 1, unten], [x + 1, unten + 4], [x + 4, unten]], F.dunkelgrau); }
     for (let y = 30; y < unten - 4; y += 14) { b.rechteck(100, y, 52, 2, F.grau); }
-    bodenplatte(b, 56, 104, 36, 9, false); bodenplatte(b, 159, 104, 36, 9, false);
+    // Die Balance-Plattformen zeichnet das Spiel selbst (sie senken sich einzeln, wenn jemand darauf steht).
     return b;
 }
 
@@ -355,7 +369,25 @@ export function tempelAbgrund(bruecke) {
     b.polygon([[116, 104], [188, 104], [196, 144], [108, 144]], F.fastschwarz);
     b.polygon([[120, 108], [184, 108], [190, 144], [114, 144]], F.schwarz);
     b.rechteck(116, 104, 72, 2, F.steindunkel); b.rechteck(114, 104, 2, 40, F.sand2); b.rechteck(188, 104, 2, 40, F.sand2);
-    if (bruecke) { b.rechteck(104, 116, 96, 10, F.steinhell); b.rechteck(104, 116, 96, 2, F.weiss); b.rechteck(104, 124, 96, 2, F.steindunkel); for (let x = 108; x < 200; x += 12) { b.rechteck(x, 118, 1, 6, F.stein); } }
+    // Felskanten mit Schichten, damit der Abgrund Tiefe hat
+    for (let y = 108; y < H; y += 6) { b.rechteck(117 + Math.round((y - 104) * -0.2), y, 3, 2, F.holzschwarz); b.rechteck(184 + Math.round((y - 104) * 0.2), y, 3, 2, F.holzschwarz); }
+    // Brückenköpfe (Steinblöcke an beiden Kanten, auch ohne Brücke schon da)
+    for (const x of [100, 192]) { b.rechteck(x, 126, 12, 14, F.steindunkel); b.rechteck(x + 1, 126, 10, 3, F.stein); b.rechteck(x + 1, 129, 10, 1, F.steinhell); }
+    if (bruecke) {
+        // Hängebrücke auf Höhe der Fußlinie (y 136): Bohlen von Kante zu Kante, Pfosten, Halteseile, Hänger
+        for (const [x, oben] of [[106, 112], [196, 112]]) { b.rechteck(x, oben, 3, 138 - oben, F.holz); b.rechteck(x, oben, 1, 138 - oben, F.holzhell); b.rechteck(x - 1, oben - 1, 5, 2, F.holzdunkel); }
+        const seil = (y0, durchhang) => { const p = []; for (let x = 108; x <= 197; x++) { const t = (x - 108) / 89; p.push([x, Math.round(y0 + Math.sin(t * Math.PI) * durchhang)]); } return p; };
+        const s1 = seil(113, 7), s2 = seil(121, 5);
+        for (const [x, y] of s1) { b.setze(x, y, F.braun); }
+        for (const [x, y] of s2) { b.setze(x, y, F.braun); b.setze(x, y + 1, F.holzdunkel); }
+        for (let i = 4; i < s1.length - 3; i += 8) { const [x, y] = s1[i]; b.rechteck(x, y + 1, 1, 134 - y - 1, F.holzdunkel); }
+        b.rechteck(104, 134, 96, 2, F.holzhell); b.rechteck(104, 136, 96, 2, F.holz); b.rechteck(106, 138, 92, 1, F.holzschwarz);
+        for (let x = 107; x < 198; x += 5) { b.rechteck(x, 134, 1, 4, F.holzdunkel); }
+        // Schatten unter der Brücke in der Tiefe
+        b.rechteck(110, 140, 82, 2, F.fastschwarz);
+    }
+    // Pult jenseits des Abgrunds
+    b.rechteck(238, 90, 12, 14, F.stein); b.rechteck(238, 90, 12, 2, F.steinhell); b.polygon([[235, 90], [253, 86], [253, 89], [235, 92]], F.steindunkel);
     // Gang mit Kugel (x 195–231, y 43–101)
     b.rechteck(193, 40, 40, 64, F.steinhell); b.polygon([[191, 40], [213, 30], [235, 40]], F.stein);
     b.rechteck(197, 46, 32, 58, F.holzschwarz); b.rechteck(201, 50, 24, 54, F.fastschwarz);
