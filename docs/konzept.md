@@ -249,7 +249,7 @@ Das MVP deckt die Abläufe ab, die jede Woche anfallen: Sitzungen, Termine und V
 | 3 – Außenwirkung | Anfragen, Beschlusslage, Bürgeranliegen, Pressearbeit, Kontakte, Kampagnen (früher Wahlkampf) und Finanzen | I6–I7 | ✅ (Kampagnen am 17.11.2026 ausgebaut) |
 | Feinschliff | Heute mit Hinweisen und Schnellaktionen, globale Suche, PWA, Web Push, Erinnerungen, Löschfristen; danach Datenbank-Regeln aus VibeVHS, große Editor-Dialoge, Betrieb auf dem Server | I8 und folgende | ✅ |
 | Easteregg | Spiel „Joe & Chani und der Gral der Demokratie“ | I9 | ✅ |
-| Vor dem Echtbetrieb | Passkeys/echte Anmeldung, SMTP, produktive Web-Push-Schlüssel, echte KI, echte OParl- und Nextcloud-Anbindung, Capacitor-Hülle, Mandanten-Rest, Datenschutzdokumente | – | ⏳ |
+| Vor dem Echtbetrieb | Passkeys/echte Anmeldung, SMTP, produktive Web-Push-Schlüssel, echte KI, echte OParl- und Nextcloud-Anbindung, Capacitor-Hülle, Mandanten-Rest, Datenschutzdokumente, geführte Touren ohne Kontowechsel und ohne Demodaten-Annahmen (heute wechseln sie per Testanmeldung das Konto und lösen echte Aktionen aus) | – | ⏳ |
 
 Die Reihenfolge von Stufe 2 und 3 sollte vom nächsten Wahltermin abhängen; umgesetzt sind inzwischen alle drei Stufen. Die Zusatzmodule 10 bis 20 sind in ihrer Tabelle einer Stufe zugeordnet.
 

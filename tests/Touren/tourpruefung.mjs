@@ -2,7 +2,7 @@
 //
 //   node tests/Touren/tourpruefung.mjs [basis-url] [tour-id …]
 //
-// Voraussetzung: laufende VibeVHS-Instanz mit Demodaten und Abnahmemodus (Standard http://localhost:5199, eigene DB!).
+// Voraussetzung: laufende FraktionPerfekt-Instanz mit Demodaten (Standard http://localhost:5199, eigene DB!).
 // Je Schritt: Ziel muss erscheinen (≤ 8 s); dann tut der Prüfer, was die Sprechblase verlangt (klicken, Wert eintragen,
 // „Weiter“), und erwartet, dass die Tour weiterschaltet. Fehlschläge werden gemeldet und der Schritt übersprungen.
 // Ausgabe: je Tour die Schritte mit ok/FEHLER; Exitcode 1 bei Fehlern. Touren bauen aufeinander auf (Reihenfolge wie Drehbuch).

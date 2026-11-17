@@ -138,7 +138,7 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
 - **Dokumentation** `/dokumentation` für Administration und Vorstand: Doku aus `docs/` und README mit **Kommentaren je
   Abschnitt** (Antworten, offen/erledigt, Übersicht, Export `/dokumentation/kommentare.md`); Rechte im
   `DokumentationDienst`. Das Konzept erscheint dort, sobald es als `docs/spezifikation/konzept.md` im Repo liegt.
-- **Abnahme- und Schulungsmodus** (`Abnahmemodus:Aktiv`, nur Entwicklung): acht geführte Touren nach dem Gesamt-Drehbuch
+- **Geführte Touren** (immer auf der Hilfeseite): acht Touren nach dem Gesamt-Drehbuch
   mit Kontowechsel (`wwwroot/tour.js`, `wwwroot/touren/abnahme.json`); `node tests/Touren/tourpruefung.mjs
   http://localhost:5290` spielt sie durch.
 - **Schnittstellenübersicht** `docs/schnittstellen.md`.
@@ -146,8 +146,8 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
 Bewusst anders als in VibeVHS: Kommentare und Impressum liegen in der **Hauptdatenbank** (Zusatzmigration
 `HilfeImpressumKommentare`), weil sie hier dank Migrationen erhalten bleibt – keine eigene `kommentare.db`. Verfasser als
 `PersonId`, Namen zur Laufzeit (Datenbankregeln). Nicht übernommen: `deploy.ps1 -DbNeu` (Migrationen statt Neuaufbau) und
-der Leerzeichen-Fix bei „Rolle“ (hier schon über `column-gap` gelöst). Auf dem Testsystem bleibt der Abnahmemodus aus
-(keine Demodaten, keine Testanmeldung).
+der Leerzeichen-Fix bei „Rolle“ (hier schon über `column-gap` gelöst). Die Touren brauchen Demodaten und Testanmeldung;
+vor dem Echtbetrieb werden sie überarbeitet (`docs/konzept.md`).
 
 ## Iteration 1: was es gibt
 
