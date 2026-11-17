@@ -114,12 +114,22 @@
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             MockAnmeldung.Anmelden(benutzer, CookieAuthenticationDefaults.AuthenticationScheme));
         Log.LogInformation("Testanmeldung: {Pseudonym}", FraktionPerfekt.Domain.Gemeinsam.Pseudonym.Person(person.Id));
-        Navigation.NavigateTo(SicheresZiel(ReturnUrl));
+        Navigation.NavigateTo(SicheresZiel(ReturnUrl, new Uri(Navigation.BaseUri).AbsolutePath));
     }
 
-    private static string SicheresZiel(string? ziel)
-        => !string.IsNullOrEmpty(ziel) && ziel.StartsWith('/') && !ziel.StartsWith("//", StringComparison.Ordinal)
-           && !ziel.StartsWith("/anmelden", StringComparison.OrdinalIgnoreCase)
-            ? ziel.TrimStart('/')
-            : "./";
+    /// <summary>Nur lokale Ziele; die Pfad-Basis (z. B. „/fraktionperfekt/“ hinter nginx) steckt schon in der ReturnUrl und wird entfernt.</summary>
+    internal static string SicheresZiel(string? ziel, string basis = "/")
+    {
+        if (string.IsNullOrEmpty(ziel) || !ziel.StartsWith('/') || ziel.StartsWith("//", StringComparison.Ordinal) || ziel.Contains('\\', StringComparison.Ordinal))
+        {
+            return "./";
+        }
+
+        if (basis.Length > 1 && ziel.StartsWith(basis, StringComparison.OrdinalIgnoreCase))
+        {
+            ziel = "/" + ziel[basis.Length..];
+        }
+
+        return ziel.StartsWith("/anmelden", StringComparison.OrdinalIgnoreCase) ? "./" : ziel.TrimStart('/');
+    }
 }

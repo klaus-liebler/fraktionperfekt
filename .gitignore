@@ -496,3 +496,6 @@ logs/
 
 # OSM-Rohabruf (groß); die Karte nutzt greven-osm-kompakt.json
 tools/Grafik/daten/greven-osm.json
+
+# Bau-Ausgabe des Deployments
+deploy/ausgabe/

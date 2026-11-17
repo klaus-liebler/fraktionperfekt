@@ -80,6 +80,37 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath,
         builder.Configuration["Speicher:Schluessel"] ?? "data/schluessel")));
 
+// Betrieb hinter nginx (Testsystem): Proxy-Header nur von Loopback bzw. konfigurierten Netzen, nur der eigene Host.
+var hinterProxy = builder.Configuration.GetValue("ReverseProxy:Aktiv", false);
+if (hinterProxy)
+{
+    var netze = builder.Configuration.GetSection("ReverseProxy:VertrauteNetze").Get<string[]>() ?? [];
+    builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(o =>
+    {
+        o.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                             | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+                             | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedHost;
+        foreach (var netz in netze)
+        {
+            o.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(netz));
+        }
+
+        if (builder.Configuration["ReverseProxy:Host"] is { Length: > 0 } host)
+        {
+            o.AllowedHosts = [host];
+        }
+    });
+}
+
+// Sicherheitsstand: Es gibt nur die Testanmeldung (Konto wählen, kein Passwort). Außerhalb der Entwicklung startet die Anwendung
+// deshalb nur, wenn das bewusst erlaubt ist (Testsystem hinter dem Zugangspasswort von nginx), siehe docs/deploy.md.
+if (!builder.Environment.IsDevelopment() && !builder.Configuration.GetValue("Anmeldung:TestanmeldungErlaubt", false))
+{
+    throw new InvalidOperationException(
+        "Nur Testanmeldung vorhanden (ohne Passwort). Start außerhalb der Entwicklung nur mit Anmeldung:TestanmeldungErlaubt=true "
+        + "und vorgeschaltetem Zugangsschutz (nginx Basic Auth), siehe docs/deploy.md.");
+}
+
 var app = builder.Build();
 
 await DatenbankInitialisierung.InitialisierenAsync(app.Services);
@@ -93,6 +124,20 @@ if (app.Configuration.GetValue("Demodaten:Anlegen", false))
             demo.Personen, demo.Gremien, demo.Termine, demo.Vertretungsfaelle);
     }
 }
+
+if (hinterProxy)
+{
+    app.UseForwardedHeaders();
+}
+
+if (app.Configuration["PathBase"] is { Length: > 1 } pfadBasis)
+{
+    app.UsePathBase(pfadBasis);
+}
+
+// Routing ausdrücklich NACH der Pfad-Basis: sonst ordnet das automatisch vorangestellte Routing die Pfade mit „/fraktionperfekt“
+// zu (GET klappt über Umwege, Formular-POSTs enden mit 405).
+app.UseRouting();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -110,6 +155,11 @@ app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+
+// Lebenszeichen für das Ausrollen und den Proxy: Datenbank erreichbar? Ohne Anmeldung, ohne Inhalte.
+app.MapGet("/gesund", async (FraktionDbContext db) => await db.Database.CanConnectAsync()
+    ? Results.Text("ok")
+    : Results.Text("Datenbank nicht erreichbar", statusCode: StatusCodes.Status503ServiceUnavailable)).AllowAnonymous().DisableRateLimiting();
 app.MapPost("/abmelden", async (HttpContext http) =>
 {
     await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

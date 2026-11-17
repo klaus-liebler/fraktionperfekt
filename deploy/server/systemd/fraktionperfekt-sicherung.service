@@ -1,0 +1,7 @@
+# Nächtliche Online-Sicherung der FraktionPerfekt-Datenbank (Vorlage, Schritt 01 → /etc/systemd/system/@DIENST@-sicherung.service)
+[Unit]
+Description=FraktionPerfekt: Datenbank sichern
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/@DIENST@-sicherung.sh nacht

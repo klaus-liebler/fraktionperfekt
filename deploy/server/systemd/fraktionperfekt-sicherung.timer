@@ -1,0 +1,10 @@
+# Täglich 01:45 Uhr (nach VibeVHS um 01:30) – Vorlage, Schritt 01 → /etc/systemd/system/@DIENST@-sicherung.timer
+[Unit]
+Description=FraktionPerfekt: Datenbank täglich sichern
+
+[Timer]
+OnCalendar=*-*-* 01:45:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

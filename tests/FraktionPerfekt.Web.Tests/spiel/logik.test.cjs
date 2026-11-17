@@ -353,7 +353,7 @@ test('Archiv: Nach Festkleben, Speichern und Neuladen stehen beide verkleinert i
 test('Service Worker hält das Spiel nie im Cache (sonst laufen nach Änderungen alte Skripte)', () => {
     const fs = require('node:fs');
     const sw = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'wwwroot', 'sw.js'), 'utf8');
-    assert.match(sw, /startsWith\('\/spiel\/'\)/);
+    assert.match(sw, /startsWith\(BASIS \+ 'spiel\/'\)/); // Pfad-Basis (z. B. /fraktionperfekt/) aus dem Geltungsbereich
     assert.doesNotMatch(sw, /fp-huelle-v1'/);
 });
 
