@@ -52,6 +52,6 @@ gesund() { for _ in $(seq 1 "${1:-90}"); do curl -fsS -o /dev/null "$GESUND" && 
 
 # Ohne echte Anmeldung nur hinter dem Zugangspasswort: nginx-Einbindung und Passwortdatei müssen da sein.
 zugangsschutz_aktiv() {
-    [[ -s "$HTPASSWD" ]] && grep -qs "include /etc/nginx/snippets/$DIENST-locations.conf;" "$NGINX_SITE" \
+    [[ -s "$HTPASSWD" ]] && grep -qs "include /etc/nginx/snippets/$DIENST-locations.conf;" "/etc/nginx/liebler.d/$DIENST.conf" "$NGINX_SITE" \
         && grep -qs "auth_basic_user_file $HTPASSWD;" "/etc/nginx/snippets/$DIENST-locations.conf"
 }

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Schritt 01: FraktionPerfekt auf dem Server einrichten, auf dem schon das VibeVHS-Kit läuft (nginx, Zertifikat, Firewall, sqlite3).
 # Legt an: Dienstbenutzer, Verzeichnisse, Umgebungsdatei, systemd-Unit, nächtliche Sicherung, nginx-Snippets mit Zugangspasswort
-# und die include-Zeile im Server-Block. Die Anwendung selbst bringt deploy.ps1.
+# und die eigene nginx-Datei /etc/nginx/liebler.d/fraktionperfekt.conf. Die Anwendung selbst bringt deploy.ps1.
 # Start:   ssh -t srvadmin@liebler.iui.hs-osnabrueck.de "sudo bash /tmp/fraktionperfekt-kit/schritte/01-einrichten.sh"
 # Rückweg: sudo bash /tmp/fraktionperfekt-kit/schritte/01-zurueck.sh   (Daten in /var/lib/fraktionperfekt bleiben)
 source "$(dirname "$0")/gemeinsam.sh"
+source "$(dirname "$0")/liebler-nginx.sh"
 als_root
 
 command -v nginx >/dev/null && command -v sqlite3 >/dev/null && command -v htpasswd >/dev/null \
@@ -44,29 +45,16 @@ if [[ ! -s "$HTPASSWD" ]]; then
     ok "$HTPASSWD angelegt"
 fi
 
-# nginx: Snippets und include-Zeile im Server-Block (vor dem VibeVHS-Abschnitt); bei Fehler zurück
-sichern "$NGINX_SITE"
+# nginx: Snippets nach /etc/nginx/snippets, Einbindung als eigene Datei /etc/nginx/liebler.d/$DIENST.conf
+# (gemeinsames Schema mit VibeVHS und Podium, schritte/liebler-nginx.sh): die Einträge anderer Apps bleiben unberührt,
+# eine frühere include-Zeile direkt in liebler.conf wird nach liebler.d/ umgezogen; bei Fehler (nginx -t) zurück.
 vorlage_einspielen nginx/fraktionperfekt-proxy.conf "/etc/nginx/snippets/$DIENST-proxy.conf" || true
 vorlage_einspielen nginx/fraktionperfekt-locations.conf "/etc/nginx/snippets/$DIENST-locations.conf" || true
 vorlage_einspielen nginx/fraktionperfekt-ohne-passwort.conf "/etc/nginx/snippets/$DIENST-ohne-passwort.conf" || true
-include="include /etc/nginx/snippets/$DIENST-locations.conf;"
-if ! grep -qsF "$include" "$NGINX_SITE"; then
-    grep -q "# ---------- VibeVHS" "$NGINX_SITE" \
-        || fehler "Markierung „# ---------- VibeVHS“ in $NGINX_SITE nicht gefunden – bitte von Hand in den 443-Server-Block setzen: $include"
-    awk -v inc="    $include" '
-        !gesetzt && /# ---------- VibeVHS/ { print "    # ---------- FraktionPerfekt (Kit fraktionperfekt) ----------"; print inc; print ""; gesetzt = 1 }
-        { print }' "$NGINX_SITE" > "$NGINX_SITE.neu"
-    mv "$NGINX_SITE.neu" "$NGINX_SITE"
-    ok "include-Zeile in $NGINX_SITE gesetzt"
-fi
-if nginx -t 2>/dev/null; then
-    systemctl reload nginx && ok "nginx neu geladen"
-else
-    nginx -t || true
-    cp -a "$SICHERUNG$NGINX_SITE" "$NGINX_SITE"
-    fehler "nginx-Konfiguration fehlerhaft – $NGINX_SITE zurückgesetzt (Sicherung: $SICHERUNG)"
-fi
-warn "Hinweis: Spielt das VibeVHS-Kit (Schritt 03) liebler.conf neu ein, fehlt die include-Zeile – dann Schritt 01 erneut ausführen."
+eintrag=$(mktemp)
+printf '# FraktionPerfekt – Ziel: %s/%s.conf (Kit fraktionperfekt, Schritt 01)\ninclude /etc/nginx/snippets/%s-locations.conf;\n' "$LIEBLER_D" "$DIENST" "$DIENST" > "$eintrag"
+liebler_app_setzen "$DIENST" "$eintrag"
+rm -f "$eintrag"
 
 if ! grep -qE '^\s*Anmeldung__TestanmeldungErlaubt=true' "$UMGEBUNG"; then
     warn "In $UMGEBUNG ist Anmeldung__TestanmeldungErlaubt noch nicht gesetzt – ohne diese bewusste Entscheidung startet die Anwendung nicht."
