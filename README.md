@@ -45,26 +45,34 @@ Datei:
 dotnet run --project tools\Testdaten -- C:\temp\demo.db
 ```
 
-### Testkonten (alle Personen erfunden)
+### Testkonten
+
+Die Demodaten enthalten die **echten Mitglieder der CDU-Fraktion Greven** (Name und Funktion laut Personenübersicht im RIS,
+November 2026; zentrale Liste `Adapters.Mocks/Testdaten/FraktionGreven.cs`). Ausschusssitze und alle Vorgänge sind erfunden
+und neutral gehalten (keine Krankheitsgründe, keine Geldbeträge auf echte Personen); E-Mail-Adressen nur, soweit geliefert,
+sonst `…@demo.invalid`. Wegen der echten Namen gehen Mails im Demobetrieb nie über echte Kanäle. Katrin Albers, Felix Bäumer
+und Nora Feldhaus sind fiktiv.
 
 | Konto | Rollen | Gut zum Ausprobieren |
 |---|---|---|
-| Katrin Albers | Administration | Rollen und Vertretungsrang pflegen, RIS-Abgleich, Postausgang, Protokoll |
-| Thomas Brinkmann | Vorstand, Mitglied | Aufgabe „Vertretung offen“ (eskaliert), Vertretung selbst eintragen |
-| Sabine Hölscher | Vorstand, Mitglied | Abwesenheit melden → Vertretung anfragen |
-| Markus Terhaar | Kassier, Mitglied | Kasse und Budget, Auslagen freigeben und auszahlen, Spenden |
-| Anna Wewers | Mitglied | ist als Vertretung für den HFA gefragt (Startseite und `/handy`) |
-| Jens Overmeyer, Petra Lammers, Dirk Schulze-Eling, Melanie Kock, Stefan Grüter, Ralf Niehues | Mitglied | |
-| Lena Hagedorn, Yusuf Demir, Claudia Rensing | Sachkundige Bürger:innen | |
-| Felix Bäumer, Nora Feldhaus | Helfer:innen | Wahlkampf: Plakate am Handy, Schichten, Gebiete, Auslagen |
+| Katrin Albers (fiktiv) | Administration | Rollen und Vertretungsrang pflegen, RIS-Abgleich, Postausgang, Protokoll, Betrieb, Impressum |
+| Johannes Wilp | Vorstand (Vorsitz), Mitglied | Aufgabe „Vertretung offen“ (SozA, eskaliert), Vertretung selbst eintragen, Fraktionssitzung |
+| Eike Brinkhaus | Vorstand, Mitglied | Abwesenheit melden → Vertretung anfragen, Abstimmung starten |
+| Philipp Nientiedt, Martinus Benning | Vorstand, Mitglied | |
+| Dames Joud | Kassier (Schatzmeister), Mitglied | ist als Vertretung für den HFWA gefragt (Startseite und `/handy`); Kasse und Budget, Auslagen prüfen und auszahlen, Spenden |
+| Liz Kühlert | Mitglied | Antrag „Elternbefragung“, Themenpatin Schule und Bildung, abwesend um die ASKU-Sitzung |
+| Michael Gries | Mitglied | Themenpate Stadtentwicklung und Verkehr (Bürgeranliegen), fehlt im RPA (Vertretung besetzt) |
+| Chantal Sluka | Mitglied (Medienbeauftragte) | Pressearbeit |
+| Steve Sterthues, Bettina Kurney, Thomas Horstmann, Silke Eisenrichter, Klaus Schwenken, Dr. Tim Schubert, Dr. Klaus Liebler, Alfons Schulte Jochmaring, Anika Stöcker, Christa Waschkowitz-Biggeleben | Mitglied | |
+| Uta Ahrens, Hüseyin Akkus, Alexandra Cleve | Sachkundige Bürger:innen | Alexandra Cleve fehlt im SozA (Vertretung eskaliert) |
+| Felix Bäumer, Nora Feldhaus (fiktiv) | Kampagnenteam | Kampagnen: Plakate am Handy, Gebiete, Infostand, Auslagen |
 
-Demodaten: sieben fiktive Grevener Gremien aus dem RIS-Mock (Rat, Haupt- und Finanzausschuss, Ausschuss für Schule und
-Bildung, Ausschuss für Stadtentwicklung und Verkehr, Soziales, Klima, Rechnungsprüfung) mit ordentlichen Mitgliedern und
-Stellvertretungen in Rangfolge, Sitzungen im festen Rhythmus, die Fraktion selbst und ein Arbeitskreis, 14-tägliche
-Fraktionssitzungen und öffentliche Termine. Themen echt (Stand November 2026: Grundschulplanung inkl.
-Martin-Luther-Grundschule, Ganztag ab 2026, Haushalt 2026, Prioritätenliste Bauinvestitionen, Badsanierung durch die
-Stadtwerke, Radfahrstreifen Rathausstraße), alle Inhalte und Personen erfunden. Vertretungen in allen Zuständen:
-angefragt (HFA), abwesend aber noch nicht angefragt (ASV), beim Vorstand eskaliert (ASFS), besetzt (RPA).
+Demodaten: die Grevener Gremien aus dem RIS-Mock (Rat, HFWA, ASKU, Schulausschuss, Sozialausschuss, AKSF, RPA, ACI, JHA)
+mit ordentlichen Mitgliedern und Stellvertretungen in Rangfolge, Sitzungen im festen Rhythmus, die Fraktion selbst und ein
+Arbeitskreis, 14-tägliche Fraktionssitzungen und öffentliche Termine. Themen echt (Stand November 2026: Grundschulplanung
+inkl. Martin-Luther-Grundschule, Ganztag ab 2026, Haushalt 2026, Prioritätenliste Bauinvestitionen, Badsanierung durch die
+Stadtwerke, Radfahrstreifen Rathausstraße), alle Inhalte erfunden. Vertretungen in allen Zuständen: angefragt (HFWA),
+abwesend aber noch nicht angefragt (ASKU), beim Vorstand eskaliert (SozA), besetzt (RPA).
 
 ## Bauen und testen
 

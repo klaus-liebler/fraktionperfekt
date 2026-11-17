@@ -4,11 +4,11 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 20 Mi
 
 | Nr. | Aufgabe | Testkonto (Rolle) | Richtzeit |
 |---|---|---|---|
-| 1 | Raum für die Fraktionssitzung buchen | Thomas Brinkmann (Vorstand) | 3 min |
-| 2 | Buchung mit Freigabe | Anna Wewers (Mitglied), Katrin Albers (Administration) | 4 min |
-| 3 | Besetzungsanfrage anlegen | Sabine Hölscher (Vorstand) | 3 min |
-| 4 | Interesse melden, Warteliste, Nachrücken | Anna Wewers, Melanie Kock | 4 min |
-| 5 | Kurzbericht nach dem Termin | Anna Wewers (Mitglied) | 2 min |
+| 1 | Raum für die Fraktionssitzung buchen | Johannes Wilp (Vorstand) | 3 min |
+| 2 | Buchung mit Freigabe | Dames Joud (Mitglied), Katrin Albers (Administration) | 4 min |
+| 3 | Besetzungsanfrage anlegen | Eike Brinkhaus (Vorstand) | 3 min |
+| 4 | Interesse melden, Warteliste, Nachrücken | Dames Joud, Liz Kühlert | 4 min |
+| 5 | Kurzbericht nach dem Termin | Johannes Wilp (Vorstand, Mitglied) | 2 min |
 
 ## 1. Raum für die Fraktionssitzung buchen
 
@@ -23,11 +23,11 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 20 Mi
 ## 2. Buchung mit Freigabe
 
 - **Startpunkt:** **Räume und Ressourcen**.
-- **Aufgabe:** Buchen Sie als Anna Wewers den Besprechungsraum im Bürgerhaus und danach denselben Zeitraum noch einmal.
+- **Aufgabe:** Buchen Sie als Dames Joud den Besprechungsraum im Bürgerhaus und danach denselben Zeitraum noch einmal.
   Geben Sie die Buchung als Katrin Albers frei.
 - **Erwartung:**
   - Die Buchung steht als „wartet auf Freigabe“ (gelb) und blockiert den Raum bereits.
-  - Die Geschäftsführung hat eine Aufgabe im Korb; nach der Freigabe ist sie erledigt, und Anna bekommt eine
+  - Die Geschäftsführung hat eine Aufgabe im Korb; nach der Freigabe ist sie erledigt, und Dames bekommt eine
     Push-Mitteilung.
 - **Zeit:** ____ min. **Beobachtungen:**
 
@@ -41,8 +41,8 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 20 Mi
 ## 4. Interesse melden, Warteliste, Nachrücken
 
 - **Startpunkt:** Startseite, Bereich „Wer geht hin?“.
-- **Aufgabe:** Melden Sie sich als Anna Wewers und als Melanie Kock für das Jubiläum des Heimatvereins (ein Platz,
-  schon vergeben). Ziehen Sie dann als Petra Lammers zurück.
+- **Aufgabe:** Melden Sie sich als Dames Joud und als Liz Kühlert für das Jubiläum des Heimatvereins (ein Platz,
+  schon vergeben). Ziehen Sie dann als Bettina Kurney zurück.
 - **Erwartung:**
   - Wer zu spät kommt, steht auf der Warteliste.
   - Nach dem Rückzug rückt die erste Person der Warteliste nach, bekommt eine Push-Mitteilung und hat den Termin im

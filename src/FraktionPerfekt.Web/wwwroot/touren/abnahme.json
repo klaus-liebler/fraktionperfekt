@@ -39,8 +39,8 @@
     {
       "id": "f02-abwesenheit",
       "titel": "2. Abwesenheit melden – Vertretungen laufen der Rangfolge nach",
-      "konto": "Martinus Benning (Vorstand, Mitglied)",
-      "kontoName": "Martinus Benning",
+      "konto": "Eike Brinkhaus (Vorstand, Mitglied)",
+      "kontoName": "Eike Brinkhaus",
       "richtzeit": "4 min",
       "start": "abwesenheit",
       "beschreibung": "Abwesenheit eintragen; als nächster Schritt „Vertretung anfragen“.",
@@ -80,8 +80,8 @@
     {
       "id": "f03-antrag",
       "titel": "3. Antrag starten",
-      "konto": "Liz Kühlert (Mitglied)",
-      "kontoName": "Liz Kühlert",
+      "konto": "Dames Joud (Mitglied, Schatzmeister)",
+      "kontoName": "Dames Joud",
       "richtzeit": "4 min",
       "start": "antraege",
       "beschreibung": "Antrag anlegen, gemeinsam schreiben, später abstimmen lassen.",
@@ -132,8 +132,8 @@
     {
       "id": "f04-sitzung",
       "titel": "4. Fraktionssitzung einladen",
-      "konto": "Martinus Benning (Vorstand, Mitglied)",
-      "kontoName": "Martinus Benning",
+      "konto": "Johannes Wilp (Vorstand, Mitglied)",
+      "kontoName": "Johannes Wilp",
       "richtzeit": "5 min",
       "start": "",
       "beschreibung": "Einladung mit Tagesordnung aus Vorlage, Raum buchen als Folgeschritt.",
@@ -167,8 +167,8 @@
     {
       "id": "f05-auslage",
       "titel": "5. Auslage mit Beleg einreichen",
-      "konto": "Silke Eisenrichter (Mitglied)",
-      "kontoName": "Silke Eisenrichter",
+      "konto": "Felix Bäumer (Kampagnenteam)",
+      "kontoName": "Felix Bäumer",
       "richtzeit": "3 min",
       "start": "auslagen",
       "beschreibung": "Auslage mit Belegfoto; der Kassier prüft und zahlt aus.",
@@ -176,12 +176,12 @@
       "schritte": [
         {
           "seite": "auslagen",
-          "text": "**Wofür?** z. B. **Kaffee für die Fraktionssitzung**",
+          "text": "**Wofür?** z. B. **Kabelbinder für Plakate**",
           "ziel": {
             "feld": "Wofür"
           },
           "weiter": "eingabe",
-          "wert": "Kaffee für die Fraktionssitzung"
+          "wert": "Kabelbinder für Plakate"
         },
         {
           "seite": "auslagen",
@@ -246,8 +246,8 @@
     {
       "id": "f07-kalender-abo",
       "titel": "7. Kalender-Abo aufs Handy",
-      "konto": "Liz Kühlert (Mitglied)",
-      "kontoName": "Liz Kühlert",
+      "konto": "Eike Brinkhaus (Vorstand, Mitglied)",
+      "kontoName": "Eike Brinkhaus",
       "richtzeit": "2 min",
       "start": "kalender-abo",
       "beschreibung": "Persönlicher Abo-Link für die Kalender-App, widerrufbar.",

@@ -4,11 +4,11 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 20 Mi
 
 | Nr. | Aufgabe | Testkonto (Rolle) | Richtzeit |
 |---|---|---|---|
-| 1 | Was steht heute an? | Felix Bäumer (Helfer), Markus Terhaar (Kassier) | 3 min |
-| 2 | Alles finden | Anna Wewers (Mitglied), Lena Hagedorn (sachkundige Bürgerin) | 3 min |
+| 1 | Was steht heute an? | Felix Bäumer (Helfer), Dames Joud (Kassier) | 3 min |
+| 2 | Alles finden | Dames Joud (Mitglied), Uta Ahrens (sachkundige Bürgerin) | 3 min |
 | 3 | App installieren und offline öffnen | beliebig, Handy | 4 min |
 | 4 | Push aktivieren (nur mit `Push:Art=WebPush`) | beliebig | 4 min |
-| 5 | Termin in den eigenen Kalender | Anna Wewers (Mitglied) | 2 min |
+| 5 | Termin in den eigenen Kalender | Dames Joud (Mitglied) | 2 min |
 | 6 | Erinnerung vor der Sitzung | Katrin Albers (Administration) | 3 min |
 
 ## 1. Was steht heute an?
@@ -16,14 +16,14 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 20 Mi
 - **Startpunkt:** **Heute**.
 - **Erwartung:** Felix sieht unter „Steht an“ seine Infostand-Schicht und das Gebiet „Greven-Innenstadt“; bei den
   Schnellaktionen sind „Plakat erfassen“ und „Auslage einreichen“ frei, „Anfrage schreiben“ ist gesperrt (Begründung beim
-  Darüberfahren). Markus (Rolle Kassier) sieht „Zuwendungsbestätigungen offen“, im Korb „Auslage prüfen“.
+  Darüberfahren). Dames (Rolle Kassier) sieht „Zuwendungsbestätigungen offen“, im Korb „Auslage prüfen“.
 - **Zeit:** ____ min. **Beobachtungen:**
 
 ## 2. Alles finden
 
 - **Aufgabe:** Suchen Sie oben im Suchfeld „Grundschul“, danach „Stellungnahme Stadtwerke“.
-- **Erwartung:** Treffer gruppiert nach Termine, Anträge, Beschlüsse, Wiki, Dateien …; die vertrauliche HFA-Stellungnahme
-  findet Anna (HFA-Vertretung), Lena nicht.
+- **Erwartung:** Treffer gruppiert nach Termine, Anträge, Beschlüsse, Wiki, Dateien …; die vertrauliche HFWA-Stellungnahme
+  findet Dames (HFWA-Vertretung), Uta nicht.
 - **Zeit:** ____ min. **Beobachtungen:**
 
 ## 3. App installieren und offline öffnen
@@ -55,6 +55,6 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 20 Mi
 
 - **Startpunkt:** **Postausgang** am Tag vor einer Ausschusssitzung (oder in der Demo die Testuhr; der Fristen-Job läuft
   stündlich).
-- **Erwartung:** Je Mitglied genau eine Push-Mitteilung „Morgen 17:00: HFA“; wer abgesagt hat oder abwesend ist, bekommt
+- **Erwartung:** Je Mitglied genau eine Push-Mitteilung „Morgen 17:00: HFWA“; wer abgesagt hat oder abwesend ist, bekommt
   keine.
 - **Zeit:** ____ min. **Beobachtungen:**

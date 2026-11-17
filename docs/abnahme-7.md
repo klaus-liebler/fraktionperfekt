@@ -7,11 +7,11 @@ Handy im selben Netz verwenden (siehe [`handy-test.md`](handy-test.md)), Standor
 |---|---|---|---|
 | 1 | Plakat am Handy erfassen | Felix Bäumer (Helfer) | 3 min |
 | 2 | Nach der Wahl abhängen | Nora Feldhaus (Helferin) | 3 min |
-| 3 | Plakatkarte und Gebiete | Sabine Hölscher (Vorstand) | 4 min |
+| 3 | Plakatkarte und Gebiete | Eike Brinkhaus (Vorstand) | 4 min |
 | 4 | Infostand-Schicht übernehmen | Nora Feldhaus (Helferin) | 2 min |
 | 5 | Auslage mit Belegfoto | Felix Bäumer (Helfer) | 3 min |
-| 6 | Auslage prüfen und auszahlen | Markus Terhaar (Kassier) | 4 min |
-| 7 | Spende und Kassenbericht | Markus Terhaar (Kassier) | 4 min |
+| 6 | Auslage prüfen und auszahlen | Dames Joud (Kassier) | 4 min |
+| 7 | Spende und Kassenbericht | Dames Joud (Kassier) | 4 min |
 
 ## 1. Plakat am Handy erfassen
 

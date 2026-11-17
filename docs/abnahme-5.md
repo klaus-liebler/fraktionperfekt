@@ -4,12 +4,12 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 25 Mi
 
 | Nr. | Aufgabe | Testkonto (Rolle) | Richtzeit |
 |---|---|---|---|
-| 1 | Datei im Ausschussordner finden und ablegen | Markus Terhaar (Mitglied) | 3 min |
-| 2 | Vertrauliches bleibt vertraulich | Lena Hagedorn (sachkundige Bürgerin), Felix Bäumer (Helfer) | 3 min |
-| 3 | Anhang an einem Antrag | Anna Wewers (Mitglied) | 2 min |
-| 4 | Wiki-Seite aus Vorlage anlegen und verlinken | Anna Wewers (Mitglied) | 5 min |
-| 5 | Suchen und die KI fragen | Jens Overmeyer (Mitglied) | 3 min |
-| 6 | KI-Vorschläge prüfen und entscheiden | Thomas Brinkmann (Vorstand) | 6 min |
+| 1 | Datei im Ausschussordner finden und ablegen | Chantal Sluka (Mitglied) | 3 min |
+| 2 | Vertrauliches bleibt vertraulich | Uta Ahrens (sachkundige Bürgerin), Felix Bäumer (Helfer) | 3 min |
+| 3 | Anhang an einem Antrag | Dames Joud (Mitglied) | 2 min |
+| 4 | Wiki-Seite aus Vorlage anlegen und verlinken | Dames Joud (Mitglied) | 5 min |
+| 5 | Suchen und die KI fragen | Steve Sterthues (Mitglied) | 3 min |
+| 6 | KI-Vorschläge prüfen und entscheiden | Johannes Wilp (Vorstand) | 6 min |
 | 7 | KI-Schnittstelle (technisch) | – | 3 min |
 
 ## 1. Datei im Ausschussordner finden und ablegen
@@ -22,8 +22,8 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 25 Mi
 
 ## 2. Vertrauliches bleibt vertraulich
 
-- **Aufgabe:** Melden Sie sich als Lena Hagedorn an und öffnen Sie den HFA-Ordner. Danach als Felix Bäumer **Dateien**.
-- **Erwartung:** Lena sieht die Eckdaten, aber nicht die vertrauliche Stellungnahme zur Badsanierung. Felix sieht nur
+- **Aufgabe:** Melden Sie sich als Uta Ahrens an und öffnen Sie den HFWA-Ordner. Danach als Felix Bäumer **Dateien**.
+- **Erwartung:** Uta sieht die Eckdaten, aber nicht die vertrauliche Stellungnahme zur Badsanierung. Felix sieht nur
   den Ordner „Wahlkampf“.
 - **Zeit:** ____ min. **Beobachtungen:**
 

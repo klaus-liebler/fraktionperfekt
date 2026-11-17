@@ -527,7 +527,7 @@ a.fp-kampagne h2 { margin: 0; }
 #fp-tour-blase button:disabled { opacity: 0.4; cursor: default; }
 #fp-tour-blase button:focus-visible { outline: 2px solid #ffd166; outline-offset: 2px; }
 .fp-tourenliste { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.fp-tourenliste li > div { display: inline-block; vertical-align: top; width: calc(100% - 140px); min-width: 220px; }
-.fp-tourenliste li { padding: 6px 0; border-bottom: 1px solid var(--fp-line); }
-.fp-tourenliste li button { float: right; }
+.fp-tourenliste li { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--fp-line); }
+.fp-tourenliste li > div { flex: 1 1 320px; min-width: 0; }
+.fp-tourenliste li button { flex: 0 0 auto; }
 @media (prefers-reduced-motion: reduce) { #fp-tour-ring { transition: none; } }

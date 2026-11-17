@@ -4,12 +4,12 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 30 Mi
 
 | Nr. | Aufgabe | Testkonto (Rolle) | Richtzeit |
 |---|---|---|---|
-| 1 | Antrag starten und überarbeiten | Anna Wewers (Mitglied) | 5 min |
-| 2 | Kommentieren und Änderung vorschlagen | Melanie Kock (Mitglied) | 3 min |
-| 3 | Vorschläge entscheiden, Abstimmung starten | Sabine Hölscher (Vorstand) | 4 min |
-| 4 | Abstimmen | Anna Wewers, Lena Hagedorn | 3 min |
-| 5 | Abstimmung abschließen, einreichen, PDF | Thomas Brinkmann (Vorstand) | 4 min |
-| 6 | Meinungsbild und Terminfindung | Sabine Hölscher (Vorstand) | 4 min |
+| 1 | Antrag starten und überarbeiten | Dames Joud (Mitglied) | 5 min |
+| 2 | Kommentieren und Änderung vorschlagen | Liz Kühlert (Mitglied) | 3 min |
+| 3 | Vorschläge entscheiden, Abstimmung starten | Eike Brinkhaus (Vorstand) | 4 min |
+| 4 | Abstimmen | Dames Joud, Uta Ahrens | 3 min |
+| 5 | Abstimmung abschließen, einreichen, PDF | Johannes Wilp (Vorstand) | 4 min |
+| 6 | Meinungsbild und Terminfindung | Eike Brinkhaus (Vorstand) | 4 min |
 
 ## 1. Antrag starten und überarbeiten
 
@@ -44,11 +44,11 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 30 Mi
 ## 4. Abstimmen
 
 - **Startpunkt:** Startseite, Bereich **Bitte abstimmen**.
-- **Aufgabe:** Stimmen Sie als Anna Wewers mit „Ja“ und ändern Sie danach Ihre Stimme. Versuchen Sie es dann als
-  Lena Hagedorn (sachkundige Bürgerin).
+- **Aufgabe:** Stimmen Sie als Dames Joud mit „Ja“ und ändern Sie danach Ihre Stimme. Versuchen Sie es dann als
+  Uta Ahrens (sachkundige Bürgerin).
 - **Erwartung:**
   - Die Stimme ist bis zur Frist änderbar.
-  - Lena Hagedorn kann über Anträge nicht abstimmen; die Begründung nennt die Ratsmitglieder.
+  - Uta Ahrens kann über Anträge nicht abstimmen; die Begründung nennt die Ratsmitglieder.
   - Der Zwischenstand zeigt Balken und die Namen, wer schon abgestimmt hat (nicht, wie).
 - **Zeit:** ____ min. **Beobachtungen:**
 
@@ -56,7 +56,7 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 30 Mi
 
 - **Startpunkt:** **Abstimmungen und Umfragen** → „Antrag: Verbindliche Prioritätenliste …“.
 - **Aufgabe:** Schließen Sie die Abstimmung ab. Reichen Sie den beschlossenen Antrag beim Rat ein, ordnen Sie ihn der
-  nächsten HFA-Sitzung zu und öffnen Sie das PDF.
+  nächsten HFWA-Sitzung zu und öffnen Sie das PDF.
 - **Erwartung:**
   - Ohne Quorum gilt der Antrag als abgelehnt; mit Quorum und Mehrheit als beschlossen.
   - Beim Einreichen bekommt der Antrag eine Nummer (A-2026-…).

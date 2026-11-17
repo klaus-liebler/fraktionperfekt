@@ -9,17 +9,17 @@ Modul. Vorbereitung: Datenordner löschen, Anwendung starten (frische Demodaten)
 
 | Nr. | Szene | Konto | Module | Detail |
 |---|---|---|---|---|
-| 1 | Morgens: „Heute“ am Handy – Vertretung für den HFA mit einem Tipp zusagen | Anna Wewers | Heute, Vertretung | [1](abnahme-1.md) |
-| 2 | Abwesenheit melden, Vertretungen laufen der Rangfolge nach | Sabine Hölscher | Abwesenheit, Vertretung | [1](abnahme-1.md) |
-| 3 | Fraktionssitzung einladen, Tagesordnung aus RIS und Anträgen, Raum buchen | Thomas Brinkmann | Sitzungen, Ressourcen | [2](abnahme-2.md), [4](abnahme-4.md) |
-| 4 | Antrag gemeinsam schreiben, Fassungen vergleichen, Fraktion stimmt ab | Melanie Kock, Thomas Brinkmann | Anträge, Abstimmungen | [3](abnahme-3.md) |
+| 1 | Morgens: „Heute“ am Handy – Vertretung für den HFWA mit einem Tipp zusagen | Dames Joud | Heute, Vertretung | [1](abnahme-1.md) |
+| 2 | Abwesenheit melden, Vertretungen laufen der Rangfolge nach | Eike Brinkhaus | Abwesenheit, Vertretung | [1](abnahme-1.md) |
+| 3 | Fraktionssitzung einladen, Tagesordnung aus RIS und Anträgen, Raum buchen | Johannes Wilp | Sitzungen, Ressourcen | [2](abnahme-2.md), [4](abnahme-4.md) |
+| 4 | Antrag gemeinsam schreiben, Fassungen vergleichen, Fraktion stimmt ab | Liz Kühlert, Johannes Wilp | Anträge, Abstimmungen | [3](abnahme-3.md) |
 | 5 | Sitzung durchführen, Protokoll mit Beschlüssen und Aufgaben, PDF | Katrin Albers | Sitzungen, Aufgaben | [2](abnahme-2.md) |
-| 6 | Unterlagen ablegen, Wiki-Seite pflegen, KI-Vorschläge entscheiden | Anna Wewers, Thomas Brinkmann | Dateien, Wiki, KI | [5](abnahme-5.md) |
-| 7 | Anfrage an die Verwaltung, Beschlusslage recherchieren | Melanie Kock, Lena Hagedorn | Anfragen, Beschlüsse | [6](abnahme-6.md) |
-| 8 | Bürgeranliegen zuweisen und beantworten, Pressemitteilung freigeben | Jens Overmeyer, Katrin Albers, Sabine Hölscher | Anliegen, Presse | [6](abnahme-6.md) |
-| 9 | Öffentlicher Termin: Wer geht hin? Kurzbericht danach | Anna Wewers | Terminbesetzung | [4](abnahme-4.md) |
+| 6 | Unterlagen ablegen, Wiki-Seite pflegen, KI-Vorschläge entscheiden | Dames Joud, Johannes Wilp | Dateien, Wiki, KI | [5](abnahme-5.md) |
+| 7 | Anfrage an die Verwaltung, Beschlusslage recherchieren | Liz Kühlert, Uta Ahrens | Anfragen, Beschlüsse | [6](abnahme-6.md) |
+| 8 | Bürgeranliegen zuweisen und beantworten, Pressemitteilung freigeben | Steve Sterthues, Katrin Albers, Eike Brinkhaus | Anliegen, Presse | [6](abnahme-6.md) |
+| 9 | Öffentlicher Termin: Wer geht hin? Kurzbericht danach | Dames Joud | Terminbesetzung | [4](abnahme-4.md) |
 | 10 | Wahlkampf: Plakat am Handy, Schicht übernehmen, Gebiet abhaken | Felix Bäumer | Wahlkampf | [7](abnahme-7.md) |
-| 11 | Auslage mit Belegfoto, Kassier prüft und zahlt aus, Kassenbericht | Felix Bäumer, Markus Terhaar | Finanzen | [7](abnahme-7.md) |
+| 11 | Auslage mit Belegfoto, Kassier prüft und zahlt aus, Kassenbericht | Felix Bäumer, Dames Joud | Finanzen | [7](abnahme-7.md) |
 | 12 | Suche, Kalender-Abo, Push, Offline-Start | beliebig | Feinschliff | [8](abnahme-8.md) |
 | 13 | Betrieb: Sicherung, Postausgang, Protokoll (nur Pseudonyme) | Katrin Albers | Betrieb | [1](abnahme-1.md), [`betrieb.md`](betrieb.md) |
 

@@ -4,13 +4,13 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 30 Mi
 
 | Nr. | Aufgabe | Testkonto (Rolle) | Richtzeit |
 |---|---|---|---|
-| 1 | Fraktionssitzung vorbereiten und einladen | Thomas Brinkmann (Vorstand) | 4 min |
-| 2 | Eigenen TOP anmelden | Anna Wewers (Mitglied) | 2 min |
-| 3 | Tagesordnung umbauen | Thomas Brinkmann (Vorstand) | 3 min |
+| 1 | Fraktionssitzung vorbereiten und einladen | Johannes Wilp (Vorstand) | 4 min |
+| 2 | Eigenen TOP anmelden | Dames Joud (Mitglied) | 2 min |
+| 3 | Tagesordnung umbauen | Johannes Wilp (Vorstand) | 3 min |
 | 4 | Sitzung protokollieren | Katrin Albers (Administration) | 6 min |
-| 5 | Protokoll freigeben | Thomas Brinkmann (Vorstand) | 3 min |
-| 6 | Aufgaben übernehmen, zuweisen, erledigen | Sabine Hölscher (Vorstand) | 4 min |
-| 7 | Altes Protokoll finden | Anna Wewers (Mitglied) | 2 min |
+| 5 | Protokoll freigeben | Johannes Wilp (Vorstand) | 3 min |
+| 6 | Aufgaben übernehmen, zuweisen, erledigen | Eike Brinkhaus (Vorstand) | 4 min |
+| 7 | Altes Protokoll finden | Dames Joud (Mitglied) | 2 min |
 
 ## 1. Fraktionssitzung vorbereiten und einladen
 
@@ -28,7 +28,7 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 30 Mi
 - **Startpunkt:** Sitzung vom 07.12. → Reiter **Tagesordnung**.
 - **Aufgabe:** Melden Sie „Ganztag ab 2026: Raumbedarf der Grundschulen“ an.
 - **Erwartung:**
-  - Der TOP steht vor „Verschiedenes“, mit „angemeldet von Anna Wewers“.
+  - Der TOP steht vor „Verschiedenes“, mit „angemeldet von Dames Joud“.
   - Umsortieren, Vertagen und Einladen sind für Mitglieder gesperrt; der Tooltip nennt den Grund.
 - **Zeit:** ____ min. **Beobachtungen:**
 
@@ -48,12 +48,12 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 30 Mi
 - **Aufgabe:**
   - Beginnen Sie die Sitzung und korrigieren Sie die Anwesenheit einer Person.
   - Schreiben Sie zum Badsanierungs-TOP eine Notiz und erfassen Sie einen Beschluss (10 ja, 2 nein, 1 Enthaltung).
-  - Weisen Sie Markus Terhaar eine Aufgabe mit Frist zu.
+  - Weisen Sie Chantal Sluka eine Aufgabe mit Frist zu.
   - Vertagen Sie „Rathausstraße“ und beenden Sie die Sitzung.
 - **Erwartung:**
   - Die Anwesenheit ist aus den Zu- und Absagen vorbelegt.
   - Der Beschluss zeigt „Angenommen (10 ja, 2 nein, 1 Enthaltung)“.
-  - Markus Terhaar bekommt eine Push-Mitteilung (Postausgang).
+  - Chantal Sluka bekommt eine Push-Mitteilung (Postausgang).
   - Nach dem Beenden steht im Reiter **Protokoll** der Entwurf.
 - **Zeit:** ____ min. **Beobachtungen:**
 
@@ -71,7 +71,7 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 30 Mi
 ## 6. Aufgaben übernehmen, zuweisen, erledigen
 
 - **Startpunkt:** **Aufgaben**.
-- **Aufgabe:** Übernehmen Sie „Pressetermin zur Grundschulplanung abstimmen“, weisen Sie sie Thomas Brinkmann zu, und
+- **Aufgabe:** Übernehmen Sie „Pressetermin zur Grundschulplanung abstimmen“, weisen Sie sie Johannes Wilp zu, und
   versuchen Sie danach, sie zu erledigen.
 - **Erwartung:**
   - Die Aufgabe wandert von „Im Korb“ nach „Meine Aufgaben“ und dann nach „Bei anderen“.

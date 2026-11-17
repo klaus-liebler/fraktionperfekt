@@ -47,10 +47,10 @@ Handy und PC müssen im selben WLAN sein; Gäste-WLANs trennen Geräte oft vonei
 ## 4. Testablauf
 
 1. Am Handy `https://<LAN-IP>:7290/handy` öffnen und die Zertifikatswarnung einmal bestätigen.
-2. Als **Anna Wewers** anmelden. Unter „Heute“ steht „Vertretung gesucht“ (HFA). „Ich vertrete“ tippen: Erwartet wird
+2. Als **Dames Joud** anmelden. Unter „Heute“ steht „Vertretung gesucht“ (HFWA). „Ich vertrete“ tippen: Erwartet wird
    „Danke! Sie vertreten am …“.
-3. Gegenprobe am PC als Thomas Brinkmann (Vorstand): In **Offene Vertretungen** ist der HFA nicht mehr offen. Im
-   **Postausgang** (als Katrin Albers) steht die Mitteilung „Vertretung steht“ an Jens Overmeyer.
+3. Gegenprobe am PC als Johannes Wilp (Vorstand): In **Offene Vertretungen** ist der HFWA nicht mehr offen. Im
+   **Postausgang** (als Katrin Albers) steht die Mitteilung „Vertretung steht“ an Steve Sterthues.
 4. Am Handy **Abwesend** tippen, einen Zeitraum mit Sitzung eintragen (z. B. den Tag der nächsten ASB-Sitzung) und
    „Vertretung anfragen“ tippen.
 5. „Zum Startbildschirm hinzufügen“: Das App-Symbol öffnet direkt `/handy` (Manifest; die Kurzbefehle „Abwesenheit
