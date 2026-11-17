@@ -71,9 +71,14 @@ falls doch `*.db` oder `data/` im Archiv landen. Auf dem Server: Datenbank siche
 `.vorher`), starten – die Migrationen laufen beim Start –, `/gesund` abwarten. Antwortet die neue Version nicht, kommt die vorige
 automatisch zurück.
 
-**Achtung, Initial-Migration:** Solange die Migration „Initial“ noch neu erzeugt wird (Entwicklungsphase, nur Testdaten), passt eine
-vorhandene Server-Datenbank danach nicht mehr – die neue Version startet nicht und das Ausrollen fällt auf die vorige zurück. Dann
-bewusst neu anlegen (Testdaten gehen verloren, die Sicherung bleibt):
+**Regel seit dem ersten Ausrollen (17.11.2026): Die Migration „Initial“ (`20261117075645_Initial`) wird nicht mehr neu erzeugt
+oder verändert.** Jede Schemaänderung kommt als **zusätzliche** Migration
+(`dotnet ef migrations add <Name> --project src/FraktionPerfekt.Infrastructure --startup-project src/FraktionPerfekt.Infrastructure
+--output-dir Datenbank/Migrationen`), damit die Datenbank auf dem Server beim Start nur ergänzt wird und erhalten bleibt. Daten, die
+eine Änderung umformt, gehören in dieselbe Migration (SQL in `Up`), getestet gegen eine Kopie einer Server-Sicherung.
+
+Nur im Notfall (Schema doch neu aufgesetzt): Eine vorhandene Server-Datenbank passt dann nicht mehr – die neue Version startet nicht
+und das Ausrollen fällt auf die vorige zurück. Dann bewusst neu anlegen (Daten gehen verloren, die Sicherung bleibt):
 
 ```bash
 sudo systemctl stop fraktionperfekt
@@ -83,7 +88,6 @@ sudo rm -f /var/lib/fraktionperfekt/fraktionperfekt.db-wal /var/lib/fraktionperf
 sudo bash /tmp/fraktionperfekt-kit/schritte/ausrollen.sh /tmp/fraktionperfekt.tar.gz   # oder deploy.ps1 erneut
 ```
 
-Sobald echte Daten auf dem Server liegen, nur noch neue Migrationen anhängen, die Initial-Migration nicht mehr ersetzen.
 
 ## Sicherung und Rücksicherung
 

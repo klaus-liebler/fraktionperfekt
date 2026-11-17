@@ -31,6 +31,10 @@ Dann <http://localhost:5290> öffnen und bei der **Testanmeldung** ein Konto wä
 aktive Rolle oben rechts. Die schlanke Handy-Ansicht liegt unter <http://localhost:5290/handy>.
 
 Beim ersten Start wird `src/FraktionPerfekt.Web/data/fraktionperfekt.db` angelegt (SQLite, WAL, Migrationen automatisch).
+
+> **Regel seit dem ersten Ausrollen auf den Server (17.11.2026):** Die Migration „Initial“ wird nicht mehr neu erzeugt oder geändert.
+> Schemaänderungen nur als **zusätzliche** Migrationen – die Datenbank auf dem Testsystem muss erhalten bleiben (siehe `docs/deploy.md`).
+
 In der Entwicklungsumgebung kommen die **Demodaten** dazu (`Demodaten:Anlegen` in `appsettings.Development.json`).
 Zurücksetzen: Anwendung beenden und den Ordner `src/FraktionPerfekt.Web/data` löschen. Dieselben Daten für eine beliebige
 Datei:
