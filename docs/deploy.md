@@ -103,7 +103,7 @@ sudo bash /tmp/fraktionperfekt-kit/schritte/ausrollen.sh /tmp/fraktionperfekt.ta
 
 - **Pfad-Basis:** `PathBase=/fraktionperfekt` (Unit). Die Anwendung setzt `<base href>`, Routing läuft nach der Pfad-Basis; der
   Service Worker ermittelt die Basis aus seinem Geltungsbereich (Cache-Version `fp-huelle-v3`, das Spiel wird nie gecacht).
-- **Geführte Touren** stehen immer auf der Hilfeseite. Sie arbeiten mit Demodaten und Testanmeldung (Kontowechsel) und müssen vor dem Echtbetrieb überarbeitet werden (siehe `docs/konzept.md`).
+- **Geführte Touren** auf der Hilfeseite: Schalter `Abnahmemodus:Aktiv`, Standard **an**. Sie arbeiten mit Demodaten und Testanmeldung (Kontowechsel) – vor dem Echtbetrieb ausschalten (`Abnahmemodus__Aktiv=false` in der Umgebungsdatei) oder überarbeiten (siehe `docs/konzept.md`).
 - **Proxy:** `ReverseProxy__Aktiv=true`, Weiterleitungs-Header nur von Loopback und nur für den eigenen Host.
 - **Data-Protection-Schlüssel** (Anmelde-Cookies) in `/var/lib/fraktionperfekt/schluessel` (0700, nur der Dienst); neue Dateien des
   Dienstes entstehen mit `UMask=0027`.

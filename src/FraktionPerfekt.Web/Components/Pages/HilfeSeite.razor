@@ -2,9 +2,10 @@
 @using FraktionPerfekt.Web.Dokumentation
 @inject Vorgang Vorgang
 @inject Dokumentkatalog Katalog
+@inject IConfiguration Konfiguration
 
-@* Hilfe zur Bedienung (docs/hilfe.md) für alle, mit geführten Touren (aus VibeVHS übernommen). Die Touren arbeiten mit Demodaten und
-   Testanmeldung (Kontowechsel) – vor dem Echtbetrieb überarbeiten, siehe docs/konzept.md. *@
+@* Hilfe zur Bedienung (docs/hilfe.md) für alle, mit geführten Touren (aus VibeVHS übernommen). Schalter Abnahmemodus:Aktiv, Standard an.
+   Die Touren arbeiten mit Demodaten und Testanmeldung (Kontowechsel) – vor dem Echtbetrieb ausschalten oder überarbeiten (docs/konzept.md). *@
 
 <PageTitle>Hilfe · FraktionPerfekt</PageTitle>
 
@@ -19,21 +20,24 @@
     }
 </div>
 
-<section class="fp-card" id="touren">
-    <div class="fp-head">
-        <div>
-            <h2>Geführte Touren</h2>
-            <p class="fp-sub">Nach dem Abnahme-Drehbuch: Sprechblasen zeigen direkt an der Oberfläche, was als Nächstes
-                anzutippen oder einzutragen ist, und gehen weiter, sobald es getan ist. Jederzeit „Zurück“, „Überspringen“ oder „Beenden“.</p>
+@if (Konfiguration.GetValue("Abnahmemodus:Aktiv", true))
+{
+    <section class="fp-card" id="touren">
+        <div class="fp-head">
+            <div>
+                <h2>Geführte Touren</h2>
+                <p class="fp-sub">Nach dem Abnahme-Drehbuch: Sprechblasen zeigen direkt an der Oberfläche, was als Nächstes
+                    anzutippen oder einzutragen ist, und gehen weiter, sobald es getan ist. Jederzeit „Zurück“, „Überspringen“ oder „Beenden“.</p>
+            </div>
         </div>
-    </div>
-    <div class="fp-touren" data-touren-liste>
-        <noscript><div class="fp-alert fp-warn">Die Touren brauchen JavaScript.</div></noscript>
-        <p class="fp-small fp-muted" data-touren-laden>Touren werden geladen …</p>
-    </div>
-    <p class="fp-small fp-muted">Die Touren arbeiten mit den Demodaten und der Testanmeldung. Moderation: Zeiten und Beobachtungen notieren wie im
-        Gesamt-Drehbuch (docs/abnahme-gesamt.md).</p>
-</section>
+        <div class="fp-touren" data-touren-liste>
+            <noscript><div class="fp-alert fp-warn">Die Touren brauchen JavaScript.</div></noscript>
+            <p class="fp-small fp-muted" data-touren-laden>Touren werden geladen …</p>
+        </div>
+        <p class="fp-small fp-muted">Die Touren arbeiten mit den Demodaten und der Testanmeldung. Moderation: Zeiten und Beobachtungen notieren wie im
+            Gesamt-Drehbuch (docs/abnahme-gesamt.md).</p>
+    </section>
+}
 
 @if (abschnitte is null)
 {
