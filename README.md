@@ -1,7 +1,7 @@
 # FraktionPerfekt
 
 Webbasiertes System für eine kommunalpolitische Fraktion (Stadt Greven, NRW): Termine, Sitzungen, Vertretungen,
-Anträge, Protokolle, Wissen, politische Arbeit, Wahlkampf und Finanzen an einem Ort statt in Messenger-Gruppen,
+Anträge, Protokolle, Wissen, politische Arbeit, Kampagnen und Finanzen an einem Ort statt in Messenger-Gruppen,
 Verteilern und Tabellen. Internes
 Werkzeug, auf dem Handy genauso nutzbar wie am Rechner.
 
@@ -9,7 +9,7 @@ Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
 
 | Dokument | Link |
 |---|---|
-| Konzept | https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb |
+| Konzept (führend) | [`docs/konzept.md`](docs/konzept.md) – maßgeblich; das frühere Claude-Dokument (https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb) ist nur noch Archiv |
 | Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md), [`docs/abnahme-4.md`](docs/abnahme-4.md), [`5`](docs/abnahme-5.md), [`6`](docs/abnahme-6.md), [`7`](docs/abnahme-7.md), [`8`](docs/abnahme-8.md); **Gesamt:** [`docs/abnahme-gesamt.md`](docs/abnahme-gesamt.md) |
 | Betrieb, Sicherung, Wiederherstellung | [`docs/betrieb.md`](docs/betrieb.md) |
 | Sicherheit (OWASP-Checkliste) | [`docs/sicherheit.md`](docs/sicherheit.md) |
