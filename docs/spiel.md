@@ -61,8 +61,8 @@ Ausführlich mit allen Texten und Regieanweisungen: [`spiel-loesungsweg.md`](spi
    (Geschäftsordnung), Briefkasten benutzen (**SPD-Antrag** „Tag-der-offenen-Tür-Ordnung für öffentliche Gebäude“, vorab mit der CDU-Fraktion abgestimmt),
    Garderobe benutzen (Taschenlampe). Tür → Karte.
 2. **Rathausarchiv:** Genosse **Chris** (SPD) erinnert sich an keine Absprache und blockiert die Archivtür. Ihm seinen eigenen **SPD-Antrag** geben →
-   er erinnert sich und schließt auf. **Chani:** Gemälde „Der Rat von 1949“ deuten → „Protokoll 47“. Regal mit Ratsprotokollen benutzen → **Siegel der
-   Beschlüsse**. Pinsel und Ledeiw versperren den Ausgang: **Joe**, Kartusche auf die beiden → festgeklebt. Ausgang.
+   er erinnert sich, schließt auf und geht. Gleich danach poltern Pinsel und Ledeiw herein und versperren den Ausgang. **Chani:** Gemälde „Der Rat
+   von 1949“ deuten → „Protokoll 47“. Regal mit Ratsprotokollen benutzen → **Siegel der Beschlüsse**. **Joe**, Kartusche auf die beiden → festgeklebt. Ausgang.
 3. **Emsdeich am Kanuverleih** (flussauf vom Hallenbad, mit Skulpturen): Johanna (sie hat den Kanuverleih „vergesellschaftet“) den **Stadtplan** geben →
    Paddel. **Chani:** Inschrift an der Steinskulptur deuten → „dritter von sieben Pfählen, flussab, wo das Wasser warm ist“. Ruderboot benutzen →
    **Bootsflucht**: Pinsel und Ledeiw haben sich aus dem Dichtstoff befreit (auf Socken) und schießen von hinten alternative Fakten; als sie keine mehr haben,

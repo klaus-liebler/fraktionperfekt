@@ -419,7 +419,7 @@
             plaetze.schreiben('auto', z);
         }
         // Figuren, die erst nach dem Text auftauchen (z. B. Pinsel und Ledeiw nach dem Bootsunglück am Hallenbad oder nach der Wahlkugel)
-        if (e.erscheinen) { gehalten = G.npcPlaetze(z, S.sichtbareHotspots(z)).filter((p) => !e.erscheinen.includes(p.id)); }
+        if (e.erscheinen) { gehalten = (gehalten || G.npcPlaetze(z, S.sichtbareHotspots(z))).filter((p) => !e.erscheinen.includes(p.id)); }
         if (e.ende) { plaetze.schreiben('auto', z); if (window.Musik && window.Musik.an) { window.Musik.spielen(true); } else { klang('ende'); } }
         hover = null; auswahl = -1;
         ausweichen();

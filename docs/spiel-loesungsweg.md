@@ -108,9 +108,11 @@ _Regie: Rote Reiselinie wächst vom letzten Ort zum Ziel, dann Blende._
 >
 > Chris: „Ach, DER Antrag! Ja, natürlich. Ein Archiv ist ein öffentliches Gebäude. Da muss die Tür selbstverständlich offen sein.“
 >
-> Chris schließt die Archivtür auf und tritt zur Seite.
+> Chris schließt die Archivtür auf: „So. Ich muss zum Ortsverein, der Gewerkschaftsbus wartet.“ Er geht.
+>
+> Kaum ist er weg, poltert es an der Tür: Zwei Gestalten in zu engen Anzügen. „Der Gral gehört uns! Wir sind das Original!“
 
-_Regie: Inventar weg: SPD-Antrag „Tag der offenen Tür“ · Hintergrund wechselt sofort: Rathausflur vor der Archivtür → Archiv (Tür offen) · Wechselt den Platz (nach dem Text): Chris · Neu anklickbar: Gemälde „Der Rat von 1949“, Regal mit Ratsprotokollen, Ausgang · Nicht mehr anklickbar: Archivtür, Tür zum Treppenhaus_
+_Regie: Inventar weg: SPD-Antrag „Tag der offenen Tür“ · Hintergrund wechselt sofort: Rathausflur vor der Archivtür → Archiv (Tür offen) · Erscheint (nach dem Text): Pinsel, Ledeiw · Verschwindet (nach dem Text): Chris · Neu anklickbar: Gemälde „Der Rat von 1949“, Regal mit Ratsprotokollen, Pinsel und Ledeiw (AfD), Ausgang · Nicht mehr anklickbar: Genosse Chris (SPD), Archivtür, Tür zum Treppenhaus_
 
 **9. Figur wechseln (jetzt Chani)**
 
@@ -125,10 +127,8 @@ _Regie: Inventar weg: SPD-Antrag „Tag der offenen Tür“ · Hintergrund wechs
 **11. Chani: Benutze → Regal mit Ratsprotokollen**
 
 > In Protokoll 47 steckt ein Siegel: ein aufgeschlagenes Buch. Das erste Siegel!
->
-> Da poltert es an der Tür: Zwei Gestalten in zu engen Anzügen. „Der Gral gehört uns! Wir sind das Original!“
 
-_Regie: Inventar neu: Siegel der Beschlüsse · Erscheint (nach dem Text): Pinsel, Ledeiw · Neu anklickbar: Pinsel und Ledeiw (AfD)_
+_Regie: Inventar neu: Siegel der Beschlüsse_
 
 **12. Figur wechseln (jetzt Joe)**
 
@@ -140,7 +140,7 @@ _Regie: Inventar neu: Siegel der Beschlüsse · Erscheint (nach dem Text): Pinse
 >
 > Pinsel tritt vor und klebt fest. Ledeiw will ihn retten und klebt auch. „Elastisch, überstreichbar, 24 Stunden Haftung“, sagt Joe.
 >
-> Chris schiebt die beiden samt loser Parkettdiele an die Rückwand. „Ordnung muss sein.“ Der Ausgang ist frei.
+> Beim Versuch, sich loszureißen, rutschen beide samt loser Parkettdiele bis an die Rückwand. Der Ausgang ist frei.
 >
 > (Neuer Ort auf der Karte: Emsdeich)
 
@@ -517,7 +517,7 @@ Gegenstände, die nirgends passen, ergeben: „<Gegenstand> und <Ziel> – das p
 - _Joe: Verkaufsgespräch:_ Joe bietet Chris einen Rahmenvertrag über Fugendichtstoff an. Chris will das erst im Ortsverein beraten.
 - _Rede mit:_ Chris: „Ins Archiv? Ausgerechnet ihr? Da könnte ja jeder kommen.“ ⏎ Chani: „Aber Chris, wir hatten doch etwas miteinander abgestimmt …“ ⏎ Chris: „Abgestimmt? Mit der CDU? Daran würde ich mich erinnern.“ Er stellt sich breitbeinig vor die Tür. ⏎ Chani: „Vielleicht hilft ihm sein eigener Antrag auf die Sprünge.“
 - _Chani: Live-Story:_ Chani startet eine Live-Story. Chris winkt und fragt, ob man das auch ausdrucken kann.
-- _Chani: SPD-Antrag „Tag der offenen Tür“ geben/benutzen:_ Chani überreicht Chris den Antrag seiner eigenen Fraktion. ⏎ Chris liest halblaut: „Tag-der-offenen-Tür-Ordnung für öffentliche Gebäude … vorab abgestimmt mit der CDU-Fraktion … Gruß, Chris.“ Er wird rot. ⏎ Chris: „Ach, DER Antrag! Ja, natürlich. Ein Archiv ist ein öffentliches Gebäude. Da muss die Tür selbstverständlich offen sein.“ ⏎ Chris schließt die Archivtür auf und tritt zur Seite.
+- _Chani: SPD-Antrag „Tag der offenen Tür“ geben/benutzen:_ Chani überreicht Chris den Antrag seiner eigenen Fraktion. ⏎ Chris liest halblaut: „Tag-der-offenen-Tür-Ordnung für öffentliche Gebäude … vorab abgestimmt mit der CDU-Fraktion … Gruß, Chris.“ Er wird rot. ⏎ Chris: „Ach, DER Antrag! Ja, natürlich. Ein Archiv ist ein öffentliches Gebäude. Da muss die Tür selbstverständlich offen sein.“ ⏎ Chris schließt die Archivtür auf: „So. Ich muss zum Ortsverein, der Gewerkschaftsbus wartet.“ Er geht. ⏎ Kaum ist er weg, poltert es an der Tür: Zwei Gestalten in zu engen Anzügen. „Der Gral gehört uns! Wir sind das Original!“
 
 **Archivtür**
 

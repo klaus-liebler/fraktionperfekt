@@ -165,11 +165,12 @@
         archiv: {
             titel: 'Rathausarchiv',
             stimmung: 'archiv',
-            einstieg: 'Staub, Neonlicht, Regale bis zur Decke. Vor der Archivtür steht Genosse Chris von der SPD, ehrenamtlicher Archivpfleger, und verschränkt die Arme.',
+            einstieg: (z) => (z.flags.archivOffen ? 'Staub, Neonlicht, Regale bis zur Decke. Die Archivtür steht offen.' : 'Staub, Neonlicht, Regale bis zur Decke. Vor der Archivtür steht Genosse Chris von der SPD, ehrenamtlicher Archivpfleger, und verschränkt die Arme.'),
             hotspots: [
                 {
                     id: 'chris', name: 'Genosse Chris (SPD)', x: 53.9, y: 48.6, b: 9.4, h: 45.8, form: 'person', farbe: '#c0392b',
-                    lage: (z) => (z.flags.archivOffen ? { x: 86, y: 48.6, b: 9.4, h: 45.8 } : null),
+                    // Nach dem Aufschließen geht Chris (erst wenn sein Text gelesen ist); gleich danach kommen Pinsel und Ledeiw
+                    sichtbar: (z) => !z.flags.archivOffen,
                     ansehen: () => antwort('Chris. Strickjacke, Thermoskanne, Schlüsselbund. Hält Ordnung für eine Tugend und sein Gedächtnis für unfehlbar.'),
                     reden: (z) => {
                         if (z.flags.archivOffen) { return antwort('Chris: „Wenn ihr Hilfe braucht: Der Gewerkschaftsbus steht bereit. Solidarität hat einen Diesel.“'); }
@@ -180,11 +181,12 @@
                     },
                     gegenstand: {
                         spd_antrag: (z) => {
-                            nehmen(z, 'spd_antrag'); z.flags.antragUebergeben = true; z.flags.archivOffen = true; punkte(z, 'antrag');
+                            nehmen(z, 'spd_antrag'); z.flags.antragUebergeben = true; z.flags.archivOffen = true; z.flags.gegnerArchiv = true; punkte(z, 'antrag');
                             return antwort([`${name(z)} überreicht Chris den Antrag seiner eigenen Fraktion.`,
                                 'Chris liest halblaut: „Tag-der-offenen-Tür-Ordnung für öffentliche Gebäude … vorab abgestimmt mit der CDU-Fraktion … Gruß, Chris.“ Er wird rot.',
                                 'Chris: „Ach, DER Antrag! Ja, natürlich. Ein Archiv ist ein öffentliches Gebäude. Da muss die Tür selbstverständlich offen sein.“',
-                                'Chris schließt die Archivtür auf und tritt zur Seite.']);
+                                'Chris schließt die Archivtür auf: „So. Ich muss zum Ortsverein, der Gewerkschaftsbus wartet.“ Er geht.',
+                                'Kaum ist er weg, poltert es an der Tür: Zwei Gestalten in zu engen Anzügen. „Der Gral gehört uns! Wir sind das Original!“'], { erscheinen: ['gegner'] });
                         }
                     },
                     f2: (z) => antwort(istJoe(z)
@@ -215,7 +217,7 @@
                         if (hat(z, 'siegel_legislative')) { return antwort('Protokoll 47 ist jetzt eine sehr gründliche Lektüre ohne Siegel.'); }
                         if (!z.flags.hinweisProtokoll) { return antwort('Hunderte Protokolle. Ohne Hinweis sucht ihr bis zur nächsten Kommunalwahl.'); }
                         geben(z, 'siegel_legislative'); z.flags.gegnerArchiv = true; punkte(z, 'siegel1', 20);
-                        return antwort(['In Protokoll 47 steckt ein Siegel: ein aufgeschlagenes Buch. Das erste Siegel!', 'Da poltert es an der Tür: Zwei Gestalten in zu engen Anzügen. „Der Gral gehört uns! Wir sind das Original!“']);
+                        return antwort('In Protokoll 47 steckt ein Siegel: ein aufgeschlagenes Buch. Das erste Siegel!');
                     }
                 },
                 {
@@ -236,7 +238,7 @@
                             return antwort('Chani deutet die Körpersprache: breitbeinig, Arme verschränkt, Blick auf das Handy – sie warten auf eine Sprachnachricht vom Bundesvorstand.');
                         }
                         z.flags.gegnerArchivFest = true; ortFrei(z, 'ems'); punkte(z, 'kartusche1');
-                        return antwort(['Joe zieht die Kartusche wie einen Revolver. Zwei saubere Raupen Dichtstoff auf das Parkett – genau vor ihre Schuhspitzen.', 'Pinsel tritt vor und klebt fest. Ledeiw will ihn retten und klebt auch. „Elastisch, überstreichbar, 24 Stunden Haftung“, sagt Joe.', 'Chris schiebt die beiden samt loser Parkettdiele an die Rückwand. „Ordnung muss sein.“ Der Ausgang ist frei.', '(Neuer Ort auf der Karte: Emsdeich)']);
+                        return antwort(['Joe zieht die Kartusche wie einen Revolver. Zwei saubere Raupen Dichtstoff auf das Parkett – genau vor ihre Schuhspitzen.', 'Pinsel tritt vor und klebt fest. Ledeiw will ihn retten und klebt auch. „Elastisch, überstreichbar, 24 Stunden Haftung“, sagt Joe.', 'Beim Versuch, sich loszureißen, rutschen beide samt loser Parkettdiele bis an die Rückwand. Der Ausgang ist frei.', '(Neuer Ort auf der Karte: Emsdeich)']);
                     },
                     f2: (z) => antwort(z.flags.gegnerArchivFest
                         ? (istJoe(z) ? 'Joe bietet Lösungsmittel an. Zum Listenpreis. Sie lehnen ab – „aus Prinzip“.' : 'Chani geht live. Die beiden winken von der Rückwand. Mehr Bewegung ist gerade nicht drin.')

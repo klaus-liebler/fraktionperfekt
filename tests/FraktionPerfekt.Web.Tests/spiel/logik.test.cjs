@@ -229,6 +229,12 @@ test('Archiv: Chris blockiert die Tür, bis er den SPD-Antrag aus dem Briefkaste
     assert.match(e.text.join(' '), /Tag-der-offenen-Tür/);
     assert.equal(z.flags.archivOffen, true);
     assert.equal(z.inventar.includes('spd_antrag'), false);
+    // Chris geht, Pinsel und Ledeiw kommen – beides erst, wenn der Text gelesen ist
+    assert.deepEqual(e.erscheinen, ['gegner']);
+    const sichtbar = S.sichtbareHotspots(z).map((h) => h.id);
+    assert.ok(!sichtbar.includes('chris'));
+    assert.ok(sichtbar.includes('gegner'));
+    assert.match(S.aktion(z, 'benutzen', 'ausgang').text.join(' '), /Pinsel und Ledeiw/);
 });
 
 test('Ältere Spielstände: Mustertagesordnung wird zum SPD-Antrag, der gegründete Arbeitskreis zum übergebenen Antrag', () => {
