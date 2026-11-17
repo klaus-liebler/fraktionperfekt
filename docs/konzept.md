@@ -260,7 +260,7 @@ Diese Punkte entscheiden über Technik und Reihenfolge; ohne Antwort gelten die 
 1. ~~Wie groß ist die Fraktion, mit sachkundigen Bürger:innen und Helfer:innen?~~ **Beantwortet:** 18 Ratsmitglieder und 32 sachkundige Bürger:innen, dazu Geschäftsführung und Kampagnenteam.
 2. Welche Werkzeuge laufen heute schon, etwa Nextcloud, Messenger-Gruppen, ein Partei-Tool? (Annahme: keine Nextcloud vorhanden)
 3. Ist die OParl-Schnittstelle des Grevener SD.NET-RIS freigeschaltet? **Teilweise beantwortet:** Adresse des RIS ist `greven.ratsinfomanagement.net`. Offen: ob OParl aktiv ist und ob die Server-IP am Bot-Schutz freigegeben wird.
-4. Wann ist die nächste Kommunalwahl? **Teilweise beantwortet:** Der Wahltag ist je Kampagne einstellbar; die Demo-Kampagne nimmt den **16.05.2027** an – **bitte von Klaus bestätigen oder korrigieren.**
+4. ~~Wann ist die nächste Kommunalwahl?~~ **Beantwortet:** Die letzte Kommunalwahl in NRW war am 14.09.2025, die nächste ist 2030 (Herbst, genauer Termin noch nicht festgelegt). Der Wahltag ist je Kampagne einstellbar; die Demo-Kampagne „Kommunalwahl 2030“ nimmt den 15.09.2030 an. Die aktive Demo-Kampagne ist eine Themenkampagne zu den Haushaltsberatungen.
 5. ~~Wo soll gehostet werden?~~ **Beantwortet (Testsystem):** eigener Server von Klaus (`liebler.iui.hs-osnabrueck.de`), Betrieb durch Klaus. Offen: Hosting für den Echtbetrieb.
 6. ~~Wo finde ich VibeVHS?~~ **Beantwortet:** lokal unter `C:\repos\vibevhs` (nur lesend genutzt).
 7. ~~Soll das System später auch anderen Fraktionen angeboten werden?~~ **Beantwortet:** Mandantenfähigkeit ist vorbereitet (je Mandant eigene Datenbank, Auswahl über den Hostnamen); Open Source offen.

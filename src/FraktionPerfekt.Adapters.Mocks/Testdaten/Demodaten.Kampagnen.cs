@@ -17,10 +17,14 @@ internal static class KampagnenDemodaten
     {
         Guid P(string k) => personen[k].Id;
 
-        // Kampagne 1: Wahlkampf mit Wahltag (Abhängliste danach); Kampagne 2: kleine Haustüraktion in Planung
-        var wahl = new Kampagne("Kommunalwahl 2027 (Demo)", "Plakate, Infostände und Haustürbesuche in allen Ortsteilen. **Ziel:** jede Straße einmal besucht.",
-            heute.AddDays(-30), new DateOnly(2027, 5, 16), new DateOnly(2027, 5, 16), P("kalbers"), jetzt.AddDays(-30));
+        // Kampagne 1 (aktiv, Daten relativ zu heute in ganzen Wochen): Themenkampagne zu den Haushaltsberatungen mit Plakaten, Infoständen,
+        // Gebieten und Tickets. Kampagne 2: kleine Haustüraktion in Planung. Kampagne 3: die nächste Kommunalwahl in NRW (2030; Wahltag
+        // 15.09.2030 nur angenommen, Termin noch nicht festgelegt) – noch ohne Inhalte. Keine erfundene Wahl vor 2030.
+        var wahl = new Kampagne("Infostände Haushalt 2027 (Demo)", "Themenplakate, Infostände und Haustürbesuche zu den Haushaltsberatungen. **Ziel:** in jedem Ortsteil einmal präsent.",
+            heute.AddDays(-28), heute.AddDays(56), null, P("kalbers"), jetzt.AddDays(-28));
         wahl.StatusSetzen(Kampagnenstatus.Aktiv);
+        daten.Hinzufuegen(new Kampagne("Kommunalwahl 2030 (Demo)", "Kommunalwahl NRW 2030. Wahltag angenommen (15.09.2030), der Termin ist noch nicht festgelegt.",
+            new DateOnly(2030, 6, 1), new DateOnly(2030, 9, 15), new DateOnly(2030, 9, 15), P("kalbers"), jetzt.AddDays(-7)));
         var schulen = new Kampagne("Haustüraktion Grundschulen (Demo)", "Gespräche mit Eltern zur Grundschulplanung, Flyer in den Schulbezirken.",
             heute.AddDays(30), heute.AddDays(75), null, P("kalbers"), jetzt.AddDays(-5));
         daten.Hinzufuegen(wahl);
@@ -41,7 +45,7 @@ internal static class KampagnenDemodaten
         Plakat? kaputt = null;
         foreach (var x in plakate)
         {
-            var p = new Plakat(wahl.Id, x.B, x.L, x.Ort, x.Art, x.Status, P(x.Von), jetzt.AddDays(-10 + i++), "Kommunalwahl (Demo)");
+            var p = new Plakat(wahl.Id, x.B, x.L, x.Ort, x.Art, x.Status, P(x.Von), jetzt.AddDays(-10 + i++), "Haushalt 2027 (Demo)");
             if (x.Status is Plakatstatus.Haengt or Plakatstatus.Beschaedigt && i % 2 == 1)
             {
                 var schluessel = $"Kampagnen/Plakate/{p.Id:N}-demo.png";

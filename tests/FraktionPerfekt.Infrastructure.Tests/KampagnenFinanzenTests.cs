@@ -22,7 +22,7 @@ public sealed class KampagnenFinanzenTests
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
         KampagnenDienst W(IServiceProvider d) => d.GetRequiredService<KampagnenDienst>();
         await u.AnmeldenAsync("fbaeumer");
-        var wahl = (await u.InAsync(d => W(d).KampagnenAsync())).Single(z => z.Kampagne.Name.StartsWith("Kommunalwahl", StringComparison.Ordinal)).Kampagne;
+        var wahl = (await u.InAsync(d => W(d).KampagnenAsync())).Single(z => z.Kampagne.Name.StartsWith("Infostände", StringComparison.Ordinal)).Kampagne;
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).PlakatErfassenAsync(null, 52.1, 7.6, "x", Plakatart.Hohlkammer, Plakatstatus.Haengt, null,
             new MemoryStream([1]), "virus.exe")))).Message.ShouldContain("Foto");
         var neu = await u.InAsync(d => W(d).PlakatErfassenAsync(null, 52.0918, 7.6085, "Marktplatz Nord", Plakatart.Hohlkammer, Plakatstatus.Haengt, null, new MemoryStream(Png), "IMG_1.jpg"));
@@ -84,7 +84,7 @@ public sealed class KampagnenFinanzenTests
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
         KampagnenDienst W(IServiceProvider d) => d.GetRequiredService<KampagnenDienst>();
         await u.AnmeldenAsync("kalbers", Rolle.Administration);
-        var wahl = (await u.InAsync(d => W(d).KampagnenAsync())).Single(z => z.Kampagne.Name.StartsWith("Kommunalwahl", StringComparison.Ordinal)).Kampagne;
+        var wahl = (await u.InAsync(d => W(d).KampagnenAsync())).Single(z => z.Kampagne.Name.StartsWith("Infostände", StringComparison.Ordinal)).Kampagne;
 
         // Wahl war am 10.11.: Aufgabe „Plakate abhängen“ für den Vorstand, nur einmal.
         await u.InAsync(d => W(d).KampagneAendernAsync(wahl.Id, wahl.Name, wahl.Beschreibung, wahl.Beginn, null, new DateOnly(2026, 11, 10), Kampagnenstatus.Aktiv));

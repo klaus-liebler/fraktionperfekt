@@ -137,7 +137,7 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   **Betrieb → Impressum** (Markdown, Vorlage nach § 5 DDG, solange leer ein markierter Platzhalter).
 - **Dokumentation** `/dokumentation` für Administration und Vorstand: Doku aus `docs/` und README mit **Kommentaren je
   Abschnitt** (Antworten, offen/erledigt, Übersicht, Export `/dokumentation/kommentare.md`); Rechte im
-  `DokumentationDienst`. Das Konzept (`docs/konzept.md`, führend) steht dort mit Kommentarfunktion.
+  `DokumentationDienst`. Das Konzept erscheint dort, sobald es als `docs/spezifikation/konzept.md` im Repo liegt.
 - **Abnahme- und Schulungsmodus** (`Abnahmemodus:Aktiv`, nur Entwicklung): acht geführte Touren nach dem Gesamt-Drehbuch
   mit Kontowechsel (`wwwroot/tour.js`, `wwwroot/touren/abnahme.json`); `node tests/Touren/tourpruefung.mjs
   http://localhost:5290` spielt sie durch.
@@ -255,19 +255,21 @@ der Leerzeichen-Fix bei „Rolle“ (hier schon über `column-gap` gelöst). Auf
 
 ## Iteration 7: Wahlkampf und Finanzen
 
-- **Wahlkampf** (`/wahlkampf`, Modul 17; Helfer:innen arbeiten voll mit):
+- **Kampagnen** (`/kampagnen`, früher „Wahlkampf“; das Kampagnenteam arbeitet voll mit; Details in `docs/kampagnen.md`):
+  - Beliebig viele Kampagnen mit Zeitraum, Status und optionalem **Wahltag**; je Kampagne Plakate, Gebiete, Termine, Tickets.
   - **Plakatkarte** mit Leaflet 1.9.4 (lokal unter `wwwroot/lib/leaflet`, BSD-2) und OpenStreetMap-Kacheln (CSP
     erlaubt nur `tile.openstreetmap.org` zusätzlich); Farbe je Status (geplant, hängt, beschädigt, abgehängt), Foto im
-    Popup.
+    Popup; „beschädigt“ legt ein Ticket an.
   - **Handy-Erfassung** (`/handy/plakat`, ohne SignalR): „Standort übernehmen“ (GPS), Ort, Art, Status, Foto direkt
-    mit der Kamera (`capture`). Status ändern mit einem Tipp.
+    mit der Kamera (`capture`); das Plakat landet in der laufenden Kampagne.
   - **Abhängliste** (`/handy/plakat?abhaengen=1`): alle noch hängenden Plakate, sortiert nach Entfernung vom eigenen
-    Standort, mit Link zur Karte; Frist = Wahltag + `Fraktion:AbhaengenTage` (Standard 14). Nach der Wahl legt die
+    Standort; Frist = Wahltag der Kampagne + `Fraktion:AbhaengenTage` (Standard 14). Nach der Wahl legt die
     Fristenprüfung einmal die Aufgabe „Plakate abhängen“ für den Vorstand an.
   - **Gebiete** (Plakatieren, Haustür, Flyer) zuteilen (Vorstand/Geschäftsführung, Push) und abhaken (zugeteilte Person).
-  - **Infostand-Schichten** mit Plätzen; Eintragen/Austragen mit einem Klick.
-  - **Löschfrist:** abgehängte Plakate (mit Fotos) und Schichteinträge nach einem halben Jahr.
-  - Wahltag: `Fraktion:Wahltag` (Demo: 16.05.2027, angenommen).
+  - **Termine** sind Kalendertermine mit Kampagnenbezug und Plätzen; Einbuchen = Zusage; ToDo-Liste je Termin, ToDo-Vorlagen.
+  - **Löschfrist:** abgehängte Plakate (mit Fotos) und Zusagen vergangener Kampagnentermine nach einem halben Jahr.
+  - Demo: „Kommunalwahl 2030“ (Kommunalwahl NRW, Wahltag 15.09.2030 nur angenommen – Termin noch nicht festgelegt) und
+    eine nahe Kampagne „Infostände Haushalt 2027“, damit Termine und ToDos in den nächsten Wochen liegen.
 - **Finanzen** (`/finanzen`, Modul 18; sichtbar für Kassier, Vorstand, Geschäftsführung):
   - Zwei Kassen: **Fraktion** (Zuwendungen der Stadt) und **Wahlkampf**. Budget je Posten mit Ist und Balken,
     Kassenbuch, Kassenstand.
