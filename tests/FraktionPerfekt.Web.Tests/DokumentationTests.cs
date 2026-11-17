@@ -17,10 +17,10 @@ public sealed class DokumentationTests
     }
 
     [Fact]
-    public void Jedes_Dokument_ausser_dem_noch_nicht_uebernommenen_Konzept_wird_mit_ausgeliefert()
+    public void Jedes_Dokument_einschliesslich_Konzept_wird_mit_ausgeliefert()
     {
         var katalog = new Dokumentkatalog();
-        foreach (var d in Dokumentkatalog.Alle.Where(d => d.Schluessel != "spezifikation/konzept"))
+        foreach (var d in Dokumentkatalog.Alle)
         {
             katalog.Vorhanden(d).ShouldBeTrue($"{d.Datei} fehlt unter Dokumentation/ (csproj: docs/**/*.md, README.md)");
             katalog.Laden(d, Rolle.Administration).ShouldNotBeNull().ShouldNotBeEmpty();

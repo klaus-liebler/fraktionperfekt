@@ -27,8 +27,8 @@ public sealed class Dokumentkatalog
     public static readonly IReadOnlyList<Dokument> Alle =
     [
         new(Hilfe, "Hilfe zur Bedienung", "Hilfe", "hilfe.md", "Grundprinzipien und Abläufe Schritt für Schritt", FuerAlle: true),
-        // Erscheint, sobald das Konzept als Markdown im Repo liegt (docs/spezifikation/konzept.md); bis dahin nur der Archivlink.
-        new("spezifikation/konzept", "Konzept für ein Fraktionssystem", GruppeKonzept, "spezifikation/konzept.md",
+        // Führende Fassung im Repo (docs/konzept.md); das Claude-Dokument ist nur noch Archiv.
+        new("spezifikation/konzept", "Konzept für ein Fraktionssystem", GruppeKonzept, "konzept.md",
             "Ziel und Rollen, Module, Bedienung, Datenmodell, Architektur, Datenschutz, Ausbaustufen", "https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb"),
         new("doku/ueberblick", "Überblick und Iterationen", GruppeTechnik, "README.md", "Starten, Testkonten, Aufbau, Leitlinien, was je Iteration umgesetzt ist"),
         new("doku/schnittstellen", "Schnittstellen nach außen", GruppeTechnik, "schnittstellen.md", "RIS, Mail, Push, Kalender, KI, Dateien – mit Stand"),
