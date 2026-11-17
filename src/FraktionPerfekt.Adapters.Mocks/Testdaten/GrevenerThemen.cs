@@ -65,7 +65,7 @@ public static class GrevenerThemen
         ("Informationsabend Badsanierung", Terminart.Oeffentlich, "Ballenlager", "Stadtwerke stellen die eigenständige Umsetzung der Badsanierung vor."),
         ("Elternabend Ganztag ab 2026", Terminart.Oeffentlich, "Bürgerhaus Reckenfeld", "Wie geht es mit den Ganztagsplätzen für Grundschulkinder weiter?"),
         ("Jubiläum eines Heimatvereins (fiktiv)", Terminart.Oeffentlich, null, "Einladung liegt im Fraktionsbüro."),
-        ("Infostand Marktplatz: Schulen und Ganztag", Terminart.Wahlkampf, "Marktplatz Greven", "Flyer zur Grundschulplanung im Fraktionsbüro abholen."),
-        ("Infostand Wochenmarkt Reckenfeld", Terminart.Wahlkampf, "Bürgerhaus Reckenfeld", "Material im Fraktionsbüro abholen."),
+        ("Infostand Marktplatz: Schulen und Ganztag", Terminart.Kampagne, "Marktplatz Greven", "Flyer zur Grundschulplanung im Fraktionsbüro abholen."),
+        ("Infostand Wochenmarkt Reckenfeld", Terminart.Kampagne, "Bürgerhaus Reckenfeld", "Material im Fraktionsbüro abholen."),
     ];
 }

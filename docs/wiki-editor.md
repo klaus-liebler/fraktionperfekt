@@ -30,7 +30,7 @@ wird überall mit derselben bereinigten Markdig-Darstellung.
 
 **Besitzer und Rechte:** Ein Bild gehört zu einem oder mehreren Besitzern (Wiki-Seite, Antrag, Sitzung, Anfrage, Pressemitteilung,
 Bürgeranliegen). Abrufen darf es, wer mindestens einen davon sehen darf (Rechte des jeweiligen Moduls; vertrauliche Wiki-Seiten,
-Bürgeranliegen nur für Zuständige und Leitung, Anträge nicht für Helfer:innen). In Formularen für Neues hängt ein Bild zuerst an
+Bürgeranliegen nur für Zuständige und Leitung, Anträge nicht für das Kampagnenteam; Kampagnen und Tickets auch für das Kampagnenteam). In Formularen für Neues hängt ein Bild zuerst an
 einem „Entwurf“ (nur für die hochladende Person sichtbar); beim Speichern ordnet der Dienst alle Bilder im Text dem neuen Besitzer zu.
 Das gilt auch, wenn ein Bild aus einem anderen Text kopiert wird.
 

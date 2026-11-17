@@ -1,0 +1,9 @@
+@page "/wahlkampf"
+@inject NavigationManager Navigation
+
+@* Frühere Adresse des Moduls „Wahlkampf“ (Lesezeichen, alte Links): weiter zu den Kampagnen. *@
+<p>Weiter zu den <a href="kampagnen">Kampagnen</a> …</p>
+
+@code {
+    protected override void OnInitialized() => Navigation.NavigateTo("kampagnen", replace: true);
+}

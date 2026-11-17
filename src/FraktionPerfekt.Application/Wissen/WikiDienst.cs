@@ -65,7 +65,7 @@ public sealed class WikiDienst(
             seiten.Where(s => s.Id != seite.Id && WikiSeite.Verweise(texte.GetValueOrDefault(s.Id, "")).Contains(seite.Titel, StringComparer.CurrentCultureIgnoreCase)).ToList(),
             WikiSeite.Verweise(versionen[^1].Text).Where(v => !titel.Contains(v)).ToList(),
             await daten.ListeAsync(daten.Menge<WikiVorschlag>().Where(v => v.SeiteId == seite.Id && v.Status == Wikivorschlagsstatus.Offen).OrderBy(v => v.Am).ThenBy(v => v.Id), abbruch),
-            wer.Rolle is Rolle.Helferin ? Freigabe.Nein("Helfer:innen lesen das Wiki, bearbeiten aber nicht.") : Freigabe.Ja);
+            wer.Rolle is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam liest das Wiki, bearbeitet es aber nicht.") : Freigabe.Ja);
     }
 
     public async Task<WikiSeite> AnlegenAsync(string bereich, string titel, string vorlage, bool vertraulich, Guid? gremiumId, CancellationToken abbruch = default)
@@ -73,7 +73,7 @@ public sealed class WikiDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            throw new InvalidOperationException("Helfer:innen legen keine Wiki-Seiten an.");
+            throw new InvalidOperationException("Das Kampagnenteam legt keine Wiki-Seiten an.");
         }
 
         if ((await daten.ListeAsync(daten.Menge<WikiSeite>().Select(s => s.Titel), abbruch)).Any(t => WikiSeite.Normalisiert(t) == WikiSeite.Normalisiert(titel)))

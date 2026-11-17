@@ -61,7 +61,7 @@ public sealed class AntragDienst(
     {
         if ((await benutzer.ErmittelnAsync(abbruch)).Rolle is Rolle.Helferin)
         {
-            return []; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+            return []; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
 
         var antraege = await daten.ListeAsync(daten.Menge<Antrag>().OrderByDescending(a => a.GeaendertAm).ThenBy(a => a.Id), abbruch);
@@ -78,7 +78,7 @@ public sealed class AntragDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            return null; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+            return null; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
         if (await daten.FindenAsync<Antrag>(id, abbruch) is not { } a)
         {
@@ -95,7 +95,7 @@ public sealed class AntragDienst(
         var sitzung = a.SitzungTerminId is { } t ? await termine.TerminAsync(t, abbruch) : null;
         var istAutorOderVorstand = wer.PersonId == a.AutorPersonId || Rechte.SitzungenSteuern(wer.Rolle).Erlaubt;
         var textFrei = !a.Status.TextAenderbar() ? Freigabe.Nein($"Im Status „{a.Status.Anzeigename()}“ ist der Text festgeschrieben. Änderungen nur über einen neuen Entwurf.")
-            : wer.Rolle is Rolle.Helferin ? Freigabe.Nein("Helfer:innen schreiben nicht an Anträgen mit.") : Freigabe.Ja;
+            : wer.Rolle is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam schreibt nicht an Anträgen mit.") : Freigabe.Ja;
         var vorschlagEntscheiden = !a.Status.TextAenderbar() ? Freigabe.Nein("Der Text ist festgeschrieben.")
             : istAutorOderVorstand ? Freigabe.Ja : Freigabe.Nein("Über Änderungsvorschläge entscheidet die Autorin/der Autor oder der Vorstand.");
         return new AntragDetail(a, namen.GetValueOrDefault(a.AutorPersonId, "?"), gremium?.Name, sitzung, fassungen,
@@ -141,7 +141,7 @@ public sealed class AntragDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            throw new InvalidOperationException("Helfer:innen schreiben nicht an Anträgen mit.");
+            throw new InvalidOperationException("Das Kampagnenteam schreibt nicht an Anträgen mit.");
         }
 
         var jetzt = uhr.GetUtcNow();

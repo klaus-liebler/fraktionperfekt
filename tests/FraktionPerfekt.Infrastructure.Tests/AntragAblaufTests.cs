@@ -107,7 +107,7 @@ public sealed class AntragAblaufTests
         await u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbstimmenAsync(umfrage.Id, [o[1].Id]));
         await u.AnmeldenAsync("fbaeumer");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbstimmenAsync(umfrage.Id, [o[1].Id]))))
-            .Message.ShouldContain("Helfer");
+            .Message.ShouldContain("Kampagnenteam");
 
         await u.AnmeldenAsync("lkuehlert");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => d.GetRequiredService<UmfrageDienst>().AbschliessenAsync(umfrage.Id)))).Message.ShouldContain("Vorstand");

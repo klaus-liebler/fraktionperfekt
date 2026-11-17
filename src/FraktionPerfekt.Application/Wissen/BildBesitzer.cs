@@ -62,6 +62,14 @@ public sealed record BildBesitzer(
             async (sp, id, t) => await sp.GetRequiredService<Termine.KalenderDienst>().TerminAsync(id, t) is not null,
             async (d, t) => (await d.ListeAsync(d.Menge<Domain.Termine.Termin>().Select(x => x.Beschreibung), t)).OfType<string>()),
 
+        new("Kampagne",
+            async (sp, id, t) => await sp.GetRequiredService<Kampagnen.KampagnenDienst>().KampagneAsync(id, t) is not null,
+            async (d, t) => (await d.ListeAsync(d.Menge<Domain.Kampagnen.Kampagne>().Select(x => x.Beschreibung), t)).OfType<string>()),
+
+        new("Ticket",
+            async (sp, id, t) => await sp.GetRequiredService<Kampagnen.KampagnenDienst>().TicketAsync(id, t) is not null,
+            async (d, t) => (await d.ListeAsync(d.Menge<Domain.Kampagnen.Ticket>().Select(x => x.Beschreibung), t)).OfType<string>()),
+
         new(Entwurf, (_, _, _) => Task.FromResult(false), (_, _) => Task.FromResult(Enumerable.Empty<string>())),
     ];
 }

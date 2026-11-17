@@ -262,6 +262,7 @@ public static class Spalteneinstufung
                 ["Beschreibung"] = (Spaltenart.Stammdatum, null),
                 ["Breite"] = (Spaltenart.Stammdatum, null),
                 ["ErledigtAm"] = (Spaltenart.Stammdatum, null),
+                ["KampagneId"] = (Spaltenart.Stammdatum, null),
                 ["Laenge"] = (Spaltenart.Stammdatum, null),
                 ["Name"] = (Spaltenart.Stammdatum, "Name des Plakatier-/Verteilgebiets"),
                 ["Status"] = (Spaltenart.Stammdatum, null),
@@ -291,6 +292,18 @@ public static class Spalteneinstufung
                 ["TokenHash"] = (Spaltenart.Stammdatum, null),
                 ["WiderrufenAm"] = (Spaltenart.Stammdatum, null),
                 ["ZuletztAbgerufenAm"] = (Spaltenart.Stammdatum, null),
+            },
+            ["Kampagnen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["AngelegtAm"] = (Spaltenart.Vorgang, null),
+                ["AngelegtVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["Beginn"] = (Spaltenart.Vorgang, null),
+                ["Beschreibung"] = (Spaltenart.Vorgang, null),
+                ["Ende"] = (Spaltenart.Vorgang, null),
+                ["Name"] = (Spaltenart.Vorgang, "Name der Kampagne"),
+                ["Status"] = (Spaltenart.Vorgang, null),
+                ["Wahltag"] = (Spaltenart.Vorgang, null),
             },
             ["Kassenbuchungen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
@@ -448,6 +461,7 @@ public static class Spalteneinstufung
                 ["FotoTyp"] = (Spaltenart.Vorgang, null),
                 ["GeaendertAm"] = (Spaltenart.Vorgang, null),
                 ["GeaendertVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["KampagneId"] = (Spaltenart.Vorgang, null),
                 ["Laenge"] = (Spaltenart.Vorgang, null),
                 ["Motiv"] = (Spaltenart.Vorgang, null),
                 ["Standort"] = (Spaltenart.Vorgang, null),
@@ -533,22 +547,6 @@ public static class Spalteneinstufung
                 ["FreigabeNoetig"] = (Spaltenart.Stammdatum, null),
                 ["Name"] = (Spaltenart.Stammdatum, "Name der Ressource"),
             },
-            ["Schichteintraege"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
-            {
-                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
-                ["Am"] = (Spaltenart.Vorgang, null),
-                ["PersonId"] = (Spaltenart.Vorgang, null),
-                ["SchichtId"] = (Spaltenart.Vorgang, null),
-            },
-            ["Schichten"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
-            {
-                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
-                ["Bis"] = (Spaltenart.Vorgang, null),
-                ["Ort"] = (Spaltenart.Vorgang, null),
-                ["Plaetze"] = (Spaltenart.Vorgang, null),
-                ["TerminId"] = (Spaltenart.Vorgang, null),
-                ["Von"] = (Spaltenart.Vorgang, null),
-            },
             ["Sitzungen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
@@ -609,6 +607,16 @@ public static class Spalteneinstufung
                 ["PersonId"] = (Spaltenart.Vorgang, null),
                 ["TerminId"] = (Spaltenart.Vorgang, null),
             },
+            ["TerminTodos"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["ErledigtAm"] = (Spaltenart.Vorgang, null),
+                ["ErledigtVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["Position"] = (Spaltenart.Vorgang, null),
+                ["TerminId"] = (Spaltenart.Vorgang, null),
+                ["Text"] = (Spaltenart.Vorgang, null),
+                ["ZustaendigPersonId"] = (Spaltenart.Vorgang, null),
+            },
             ["Termine"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["AngelegtVonPersonId"] = (Spaltenart.Vorgang, "wer angelegt hat; leer = RIS-Abgleich bzw. Automatik"),
@@ -620,7 +628,9 @@ public static class Spalteneinstufung
                 ["Beschreibung"] = (Spaltenart.Vorgang, null),
                 ["Ende"] = (Spaltenart.Vorgang, null),
                 ["GremiumId"] = (Spaltenart.Vorgang, null),
+                ["KampagneId"] = (Spaltenart.Vorgang, null),
                 ["Ort"] = (Spaltenart.Vorgang, null),
+                ["Plaetze"] = (Spaltenart.Vorgang, null),
                 ["RisId"] = (Spaltenart.Vorgang, null),
                 ["Titel"] = (Spaltenart.Vorgang, null),
             },
@@ -630,6 +640,44 @@ public static class Spalteneinstufung
                 ["PersonId"] = (Spaltenart.Stammdatum, null),
                 ["Politikfeld"] = (Spaltenart.Stammdatum, null),
                 ["VertretungPersonId"] = (Spaltenart.Stammdatum, null),
+            },
+            ["TicketKommentare"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["Am"] = (Spaltenart.Vorgang, null),
+                ["PersonId"] = (Spaltenart.Vorgang, null),
+                ["Text"] = (Spaltenart.Vorgang, null),
+                ["TicketId"] = (Spaltenart.Vorgang, null),
+            },
+            ["Tickets"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["Beschreibung"] = (Spaltenart.Vorgang, null),
+                ["ErstelltAm"] = (Spaltenart.Vorgang, null),
+                ["ErstelltVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["Faellig"] = (Spaltenart.Vorgang, null),
+                ["GeaendertAm"] = (Spaltenart.Vorgang, null),
+                ["GebietId"] = (Spaltenart.Vorgang, null),
+                ["KampagneId"] = (Spaltenart.Vorgang, null),
+                ["Nummer"] = (Spaltenart.Vorgang, null),
+                ["PlakatId"] = (Spaltenart.Vorgang, null),
+                ["Prioritaet"] = (Spaltenart.Vorgang, null),
+                ["Status"] = (Spaltenart.Vorgang, null),
+                ["TerminId"] = (Spaltenart.Vorgang, null),
+                ["Titel"] = (Spaltenart.Vorgang, null),
+                ["ZustaendigPersonId"] = (Spaltenart.Vorgang, null),
+            },
+            ["TodoVorlagen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Stammdatum, "Schlüssel (Zeilen-Id)"),
+                ["Name"] = (Spaltenart.Stammdatum, "Name der Vorlage"),
+            },
+            ["TodoVorlagenPunkte"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Stammdatum, "Schlüssel (Zeilen-Id)"),
+                ["Position"] = (Spaltenart.Stammdatum, null),
+                ["Text"] = (Spaltenart.Stammdatum, "Eintrag der Kopiervorlage (erzeugte ToDos sind eigenständig, keine Kopie im Sinne der Regeln)"),
+                ["VorlageId"] = (Spaltenart.Stammdatum, null),
             },
             ["Tops"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {

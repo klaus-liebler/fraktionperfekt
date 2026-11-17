@@ -62,7 +62,7 @@ public sealed class RessourcenDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin && !(await daten.FindenAsync<Ressource>(ressourceId, abbruch) is { Art: Ressourcenart.Material or Ressourcenart.Technik }))
         {
-            throw new InvalidOperationException("Helfer:innen buchen nur Wahlkampfmaterial und Technik (z. B. Infostand, Pavillon).");
+            throw new InvalidOperationException("Das Kampagnenteam bucht nur Kampagnenmaterial und Technik (z. B. Infostand, Pavillon).");
         }
 
         var r = await daten.LadenAsync<Ressource>(ressourceId, "Ressource", abbruch);

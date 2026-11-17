@@ -13,7 +13,7 @@
         <h1>Abstimmungen, Umfragen, Terminfindung</h1>
         <p class="fp-sub">Schnelle Meinungsbilder, Umfragen und Terminfindung in der Fraktion. Antragsabstimmungen starten am Antrag.</p>
     </div>
-    <BegruendeterButton Text="Neu" Icon="add" Freigabe="@(benutzer?.Rolle is Rolle.Helferin ? Freigabe.Nein("Helfer:innen starten keine Fraktionsabstimmungen.") : Freigabe.Ja)" Click="@(() => formular = true)" />
+    <BegruendeterButton Text="Neu" Icon="add" Freigabe="@(benutzer?.Rolle is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam startet keine Fraktionsabstimmungen.") : Freigabe.Ja)" Click="@(() => formular = true)" />
 </div>
 
 @if (meldung is not null)

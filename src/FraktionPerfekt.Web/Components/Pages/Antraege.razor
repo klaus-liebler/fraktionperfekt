@@ -12,7 +12,7 @@
         <h1>Anträge</h1>
         <p class="fp-sub">Idee → Entwurf → Fraktionsabstimmung → beschlossen → eingereicht → im Gremium beraten → erledigt.</p>
     </div>
-    <BegruendeterButton Text="Antrag starten" Icon="add" Freigabe="@(benutzer?.Rolle is Rolle.Helferin ? Freigabe.Nein("Helfer:innen schreiben nicht an Anträgen mit.") : Freigabe.Ja)"
+    <BegruendeterButton Text="Antrag starten" Icon="add" Freigabe="@(benutzer?.Rolle is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam schreibt nicht an Anträgen mit.") : Freigabe.Ja)"
                         Click="@(() => formular = true)" />
 </div>
 

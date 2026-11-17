@@ -146,7 +146,7 @@ app.MapGet("/kalender/abo/{token}.ics", async (string token, KalenderDienst kale
 FraktionPerfekt.Web.Handy.HandyEndpunkte.MapHandy(app);
 FraktionPerfekt.Web.Dokumente.DokumentEndpunkte.MapDokumente(app);
 FraktionPerfekt.Web.Wissen.WissenEndpunkte.MapWissen(app);
-FraktionPerfekt.Web.Wahlkampf.WahlkampfEndpunkte.MapWahlkampf(app);
+FraktionPerfekt.Web.Kampagnen.KampagnenEndpunkte.MapKampagnen(app);
 FraktionPerfekt.Web.Spiel.SpielEndpunkte.MapSpiel(app);
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 

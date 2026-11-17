@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FraktionPerfekt.Infrastructure.Datenbank.Migrationen;
 
 /// <inheritdoc />
-public partial class _20261116222517_Initial : Migration
+public partial class _20261117075645_Initial : Migration
 {
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
@@ -343,26 +343,6 @@ public partial class _20261116222517_Initial : Migration
             });
 
         migrationBuilder.CreateTable(
-            name: "Gebiete",
-            columns: table => new
-            {
-                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
-                Name = table.Column<string>(type: "TEXT", nullable: false),
-                Art = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
-                Beschreibung = table.Column<string>(type: "TEXT", nullable: true),
-                Breite = table.Column<double>(type: "REAL", nullable: true),
-                Laenge = table.Column<double>(type: "REAL", nullable: true),
-                Status = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
-                ZugeteiltPersonId = table.Column<byte[]>(type: "BLOB", nullable: true),
-                ErledigtAm = table.Column<long>(type: "INTEGER", nullable: true),
-                Vermerk = table.Column<string>(type: "TEXT", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_Gebiete", x => x.Id);
-            });
-
-        migrationBuilder.CreateTable(
             name: "Gremien",
             columns: table => new
             {
@@ -389,6 +369,25 @@ public partial class _20261116222517_Initial : Migration
             constraints: table =>
             {
                 table.PrimaryKey("PK_Haushaltsposten", x => x.Id);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "Kampagnen",
+            columns: table => new
+            {
+                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
+                Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                Beschreibung = table.Column<string>(type: "TEXT", nullable: true),
+                Beginn = table.Column<int>(type: "INTEGER", nullable: true),
+                Ende = table.Column<int>(type: "INTEGER", nullable: true),
+                Wahltag = table.Column<int>(type: "INTEGER", nullable: true),
+                Status = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
+                AngelegtVonPersonId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                AngelegtAm = table.Column<long>(type: "INTEGER", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_Kampagnen", x => x.Id);
             });
 
         migrationBuilder.CreateTable(
@@ -445,29 +444,6 @@ public partial class _20261116222517_Initial : Migration
             constraints: table =>
             {
                 table.PrimaryKey("PK_Personen", x => x.Id);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "Plakate",
-            columns: table => new
-            {
-                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
-                Breite = table.Column<double>(type: "REAL", nullable: false),
-                Laenge = table.Column<double>(type: "REAL", nullable: false),
-                Standort = table.Column<string>(type: "TEXT", nullable: false),
-                Art = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
-                Motiv = table.Column<string>(type: "TEXT", nullable: true),
-                Status = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
-                FotoSchluessel = table.Column<string>(type: "TEXT", nullable: true),
-                FotoTyp = table.Column<string>(type: "TEXT", nullable: true),
-                ErfasstVonPersonId = table.Column<byte[]>(type: "BLOB", nullable: false),
-                ErfasstAm = table.Column<long>(type: "INTEGER", nullable: false),
-                GeaendertVonPersonId = table.Column<byte[]>(type: "BLOB", nullable: false),
-                GeaendertAm = table.Column<long>(type: "INTEGER", nullable: false)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_Plakate", x => x.Id);
             });
 
         migrationBuilder.CreateTable(
@@ -593,36 +569,6 @@ public partial class _20261116222517_Initial : Migration
             });
 
         migrationBuilder.CreateTable(
-            name: "Schichteintraege",
-            columns: table => new
-            {
-                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
-                SchichtId = table.Column<byte[]>(type: "BLOB", nullable: false),
-                PersonId = table.Column<byte[]>(type: "BLOB", nullable: false),
-                Am = table.Column<long>(type: "INTEGER", nullable: false)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_Schichteintraege", x => x.Id);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "Schichten",
-            columns: table => new
-            {
-                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
-                Ort = table.Column<string>(type: "TEXT", nullable: false),
-                Von = table.Column<long>(type: "INTEGER", nullable: false),
-                Bis = table.Column<long>(type: "INTEGER", nullable: false),
-                Plaetze = table.Column<int>(type: "INTEGER", nullable: false),
-                TerminId = table.Column<byte[]>(type: "BLOB", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_Schichten", x => x.Id);
-            });
-
-        migrationBuilder.CreateTable(
             name: "Sitzungen",
             columns: table => new
             {
@@ -720,6 +666,18 @@ public partial class _20261116222517_Initial : Migration
             constraints: table =>
             {
                 table.PrimaryKey("PK_Themenpaten", x => x.Id);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "TodoVorlagen",
+            columns: table => new
+            {
+                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
+                Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_TodoVorlagen", x => x.Id);
             });
 
         migrationBuilder.CreateTable(
@@ -875,6 +833,63 @@ public partial class _20261116222517_Initial : Migration
             });
 
         migrationBuilder.CreateTable(
+            name: "Gebiete",
+            columns: table => new
+            {
+                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
+                KampagneId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                Name = table.Column<string>(type: "TEXT", nullable: false),
+                Art = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
+                Beschreibung = table.Column<string>(type: "TEXT", nullable: true),
+                Breite = table.Column<double>(type: "REAL", nullable: true),
+                Laenge = table.Column<double>(type: "REAL", nullable: true),
+                Status = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
+                ZugeteiltPersonId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                ErledigtAm = table.Column<long>(type: "INTEGER", nullable: true),
+                Vermerk = table.Column<string>(type: "TEXT", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_Gebiete", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_Gebiete_Kampagnen_KampagneId",
+                    column: x => x.KampagneId,
+                    principalTable: "Kampagnen",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "Plakate",
+            columns: table => new
+            {
+                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
+                KampagneId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                Breite = table.Column<double>(type: "REAL", nullable: false),
+                Laenge = table.Column<double>(type: "REAL", nullable: false),
+                Standort = table.Column<string>(type: "TEXT", nullable: false),
+                Art = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
+                Motiv = table.Column<string>(type: "TEXT", nullable: true),
+                Status = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
+                FotoSchluessel = table.Column<string>(type: "TEXT", nullable: true),
+                FotoTyp = table.Column<string>(type: "TEXT", nullable: true),
+                ErfasstVonPersonId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                ErfasstAm = table.Column<long>(type: "INTEGER", nullable: false),
+                GeaendertVonPersonId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                GeaendertAm = table.Column<long>(type: "INTEGER", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_Plakate", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_Plakate_Kampagnen_KampagneId",
+                    column: x => x.KampagneId,
+                    principalTable: "Kampagnen",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+            });
+
+        migrationBuilder.CreateTable(
             name: "Termine",
             columns: table => new
             {
@@ -887,6 +902,8 @@ public partial class _20261116222517_Initial : Migration
                 Beschreibung = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
                 GremiumId = table.Column<byte[]>(type: "BLOB", nullable: true),
                 RisId = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                KampagneId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                Plaetze = table.Column<int>(type: "INTEGER", nullable: true),
                 Abgesagt = table.Column<bool>(type: "INTEGER", nullable: false),
                 AngelegtVonPersonId = table.Column<byte[]>(type: "BLOB", nullable: true),
                 AngelegtAm = table.Column<long>(type: "INTEGER", nullable: false)
@@ -898,6 +915,12 @@ public partial class _20261116222517_Initial : Migration
                     name: "FK_Termine_Gremien_GremiumId",
                     column: x => x.GremiumId,
                     principalTable: "Gremien",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+                table.ForeignKey(
+                    name: "FK_Termine_Kampagnen_KampagneId",
+                    column: x => x.KampagneId,
+                    principalTable: "Kampagnen",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Restrict);
             });
@@ -1197,6 +1220,26 @@ public partial class _20261116222517_Initial : Migration
             });
 
         migrationBuilder.CreateTable(
+            name: "TodoVorlagenPunkte",
+            columns: table => new
+            {
+                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
+                VorlageId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                Position = table.Column<int>(type: "INTEGER", nullable: false),
+                Text = table.Column<string>(type: "TEXT", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_TodoVorlagenPunkte", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_TodoVorlagenPunkte_TodoVorlagen_VorlageId",
+                    column: x => x.VorlageId,
+                    principalTable: "TodoVorlagen",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
             name: "Teilnahmen",
             columns: table => new
             {
@@ -1218,6 +1261,78 @@ public partial class _20261116222517_Initial : Migration
                     onDelete: ReferentialAction.Restrict);
                 table.ForeignKey(
                     name: "FK_Teilnahmen_Termine_TerminId",
+                    column: x => x.TerminId,
+                    principalTable: "Termine",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "TerminTodos",
+            columns: table => new
+            {
+                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
+                TerminId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                Position = table.Column<int>(type: "INTEGER", nullable: false),
+                Text = table.Column<string>(type: "TEXT", nullable: false),
+                ZustaendigPersonId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                ErledigtVonPersonId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                ErledigtAm = table.Column<long>(type: "INTEGER", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_TerminTodos", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_TerminTodos_Termine_TerminId",
+                    column: x => x.TerminId,
+                    principalTable: "Termine",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "Tickets",
+            columns: table => new
+            {
+                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
+                KampagneId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                Nummer = table.Column<int>(type: "INTEGER", nullable: false),
+                Titel = table.Column<string>(type: "TEXT", nullable: false),
+                Beschreibung = table.Column<string>(type: "TEXT", nullable: true),
+                Status = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
+                Prioritaet = table.Column<string>(type: "TEXT", maxLength: 40, nullable: false),
+                ZustaendigPersonId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                Faellig = table.Column<int>(type: "INTEGER", nullable: true),
+                GebietId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                PlakatId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                TerminId = table.Column<byte[]>(type: "BLOB", nullable: true),
+                ErstelltVonPersonId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                ErstelltAm = table.Column<long>(type: "INTEGER", nullable: false),
+                GeaendertAm = table.Column<long>(type: "INTEGER", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_Tickets", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_Tickets_Gebiete_GebietId",
+                    column: x => x.GebietId,
+                    principalTable: "Gebiete",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+                table.ForeignKey(
+                    name: "FK_Tickets_Kampagnen_KampagneId",
+                    column: x => x.KampagneId,
+                    principalTable: "Kampagnen",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+                table.ForeignKey(
+                    name: "FK_Tickets_Plakate_PlakatId",
+                    column: x => x.PlakatId,
+                    principalTable: "Plakate",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+                table.ForeignKey(
+                    name: "FK_Tickets_Termine_TerminId",
                     column: x => x.TerminId,
                     principalTable: "Termine",
                     principalColumn: "Id",
@@ -1279,6 +1394,27 @@ public partial class _20261116222517_Initial : Migration
                     principalTable: "Mitgliedschaften",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Restrict);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "TicketKommentare",
+            columns: table => new
+            {
+                Id = table.Column<byte[]>(type: "BLOB", nullable: false),
+                TicketId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                PersonId = table.Column<byte[]>(type: "BLOB", nullable: false),
+                Text = table.Column<string>(type: "TEXT", nullable: false),
+                Am = table.Column<long>(type: "INTEGER", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_TicketKommentare", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_TicketKommentare_Tickets_TicketId",
+                    column: x => x.TicketId,
+                    principalTable: "Tickets",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
             });
 
         migrationBuilder.CreateTable(
@@ -1451,6 +1587,11 @@ public partial class _20261116222517_Initial : Migration
             column: "Ordner");
 
         migrationBuilder.CreateIndex(
+            name: "IX_Gebiete_KampagneId",
+            table: "Gebiete",
+            column: "KampagneId");
+
+        migrationBuilder.CreateIndex(
             name: "IX_Gremien_RisId",
             table: "Gremien",
             column: "RisId",
@@ -1481,6 +1622,11 @@ public partial class _20261116222517_Initial : Migration
             table: "KalenderAbos",
             column: "TokenHash",
             unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Kampagnen_Status",
+            table: "Kampagnen",
+            column: "Status");
 
         migrationBuilder.CreateIndex(
             name: "IX_Kassenbuchungen_Kasse_Datum",
@@ -1621,9 +1767,9 @@ public partial class _20261116222517_Initial : Migration
             column: "VorgangId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_Plakate_Status",
+            name: "IX_Plakate_KampagneId_Status",
             table: "Plakate",
-            column: "Status");
+            columns: new[] { "KampagneId", "Status" });
 
         migrationBuilder.CreateIndex(
             name: "IX_Postausgang_Status_ErstelltAm",
@@ -1660,17 +1806,6 @@ public partial class _20261116222517_Initial : Migration
             name: "IX_PushAbos_PersonId",
             table: "PushAbos",
             column: "PersonId");
-
-        migrationBuilder.CreateIndex(
-            name: "IX_Schichteintraege_SchichtId_PersonId",
-            table: "Schichteintraege",
-            columns: new[] { "SchichtId", "PersonId" },
-            unique: true);
-
-        migrationBuilder.CreateIndex(
-            name: "IX_Schichten_Von",
-            table: "Schichten",
-            column: "Von");
 
         migrationBuilder.CreateIndex(
             name: "IX_Sitzungen_TerminId",
@@ -1711,6 +1846,11 @@ public partial class _20261116222517_Initial : Migration
             column: "GremiumId");
 
         migrationBuilder.CreateIndex(
+            name: "IX_Termine_KampagneId",
+            table: "Termine",
+            column: "KampagneId");
+
+        migrationBuilder.CreateIndex(
             name: "IX_Termine_RisId",
             table: "Termine",
             column: "RisId",
@@ -1721,6 +1861,47 @@ public partial class _20261116222517_Initial : Migration
             table: "TerminErinnerungen",
             columns: new[] { "TerminId", "PersonId" },
             unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_TerminTodos_TerminId_Position",
+            table: "TerminTodos",
+            columns: new[] { "TerminId", "Position" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_TicketKommentare_TicketId",
+            table: "TicketKommentare",
+            column: "TicketId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Tickets_GebietId",
+            table: "Tickets",
+            column: "GebietId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Tickets_KampagneId_Nummer",
+            table: "Tickets",
+            columns: new[] { "KampagneId", "Nummer" },
+            unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Tickets_PlakatId",
+            table: "Tickets",
+            column: "PlakatId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Tickets_TerminId",
+            table: "Tickets",
+            column: "TerminId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Tickets_ZustaendigPersonId",
+            table: "Tickets",
+            column: "ZustaendigPersonId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_TodoVorlagenPunkte_VorlageId_Position",
+            table: "TodoVorlagenPunkte",
+            columns: new[] { "VorlageId", "Position" });
 
         migrationBuilder.CreateIndex(
             name: "IX_Tops_SitzungId_Position",
@@ -1800,7 +1981,7 @@ public partial class _20261116222517_Initial : Migration
         migrationBuilder.Sql("DROP VIEW IF EXISTS v_PersonMerkmale; CREATE VIEW v_PersonMerkmale AS SELECT CASE WHEN m.PersonId IS NULL THEN NULL ELSE lower(substr(hex(m.PersonId),1,8)||'-'||substr(hex(m.PersonId),9,4)||'-'||substr(hex(m.PersonId),13,4)||'-'||substr(hex(m.PersonId),17,4)||'-'||substr(hex(m.PersonId),21)) END AS PersonId, m.Art AS Merkmal, m.Inhalt, CASE WHEN m.GueltigVon IS NULL THEN NULL WHEN m.GueltigVon = 99991231 THEN 'offen' ELSE printf('%04d-%02d-%02d', m.GueltigVon / 10000, m.GueltigVon / 100 % 100, m.GueltigVon % 100) END AS GueltigVon, CASE WHEN m.GueltigBis IS NULL THEN NULL WHEN m.GueltigBis = 99991231 THEN 'offen' ELSE printf('%04d-%02d-%02d', m.GueltigBis / 10000, m.GueltigBis / 100 % 100, m.GueltigBis % 100) END AS GueltigBis, CASE WHEN v.Am IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', v.Am / 1000, 'unixepoch') || ' UTC' END AS ErfasstAm, CASE WHEN m.ErsetztAm IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', m.ErsetztAm / 1000, 'unixepoch') || ' UTC' END AS ErsetztAm, v.Art, v.Von, v.Grund FROM PersonMerkmale m JOIN Aenderungsvorgaenge v ON v.Id = m.VorgangId;");
         migrationBuilder.Sql("DROP VIEW IF EXISTS v_PersonRollen; CREATE VIEW v_PersonRollen AS SELECT CASE WHEN r.PersonId IS NULL THEN NULL ELSE lower(substr(hex(r.PersonId),1,8)||'-'||substr(hex(r.PersonId),9,4)||'-'||substr(hex(r.PersonId),13,4)||'-'||substr(hex(r.PersonId),17,4)||'-'||substr(hex(r.PersonId),21)) END AS PersonId, r.Rolle, CASE WHEN r.GueltigVon IS NULL THEN NULL WHEN r.GueltigVon = 99991231 THEN 'offen' ELSE printf('%04d-%02d-%02d', r.GueltigVon / 10000, r.GueltigVon / 100 % 100, r.GueltigVon % 100) END AS GueltigVon, CASE WHEN r.GueltigBis IS NULL THEN NULL WHEN r.GueltigBis = 99991231 THEN 'offen' ELSE printf('%04d-%02d-%02d', r.GueltigBis / 10000, r.GueltigBis / 100 % 100, r.GueltigBis % 100) END AS GueltigBis, CASE WHEN v.Am IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', v.Am / 1000, 'unixepoch') || ' UTC' END AS ErfasstAm, CASE WHEN r.ErsetztAm IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', r.ErsetztAm / 1000, 'unixepoch') || ' UTC' END AS ErsetztAm, v.Art, v.Von, v.Grund FROM PersonRollen r JOIN Aenderungsvorgaenge v ON v.Id = r.VorgangId;");
         migrationBuilder.Sql("DROP VIEW IF EXISTS v_Mitgliedschaften; CREATE VIEW v_Mitgliedschaften AS SELECT CASE WHEN m.Id IS NULL THEN NULL ELSE lower(substr(hex(m.Id),1,8)||'-'||substr(hex(m.Id),9,4)||'-'||substr(hex(m.Id),13,4)||'-'||substr(hex(m.Id),17,4)||'-'||substr(hex(m.Id),21)) END AS MitgliedschaftId, CASE WHEN m.PersonId IS NULL THEN NULL ELSE lower(substr(hex(m.PersonId),1,8)||'-'||substr(hex(m.PersonId),9,4)||'-'||substr(hex(m.PersonId),13,4)||'-'||substr(hex(m.PersonId),17,4)||'-'||substr(hex(m.PersonId),21)) END AS PersonId, CASE WHEN m.GremiumId IS NULL THEN NULL ELSE lower(substr(hex(m.GremiumId),1,8)||'-'||substr(hex(m.GremiumId),9,4)||'-'||substr(hex(m.GremiumId),13,4)||'-'||substr(hex(m.GremiumId),17,4)||'-'||substr(hex(m.GremiumId),21)) END AS GremiumId, mv.Funktion, mv.Rang, mv.Amt, mv.FunktionText, CASE WHEN mv.GueltigVon IS NULL THEN NULL WHEN mv.GueltigVon = 99991231 THEN 'offen' ELSE printf('%04d-%02d-%02d', mv.GueltigVon / 10000, mv.GueltigVon / 100 % 100, mv.GueltigVon % 100) END AS GueltigVon, CASE WHEN mv.GueltigBis IS NULL THEN NULL WHEN mv.GueltigBis = 99991231 THEN 'offen' ELSE printf('%04d-%02d-%02d', mv.GueltigBis / 10000, mv.GueltigBis / 100 % 100, mv.GueltigBis % 100) END AS GueltigBis, CASE WHEN v.Am IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', v.Am / 1000, 'unixepoch') || ' UTC' END AS ErfasstAm, CASE WHEN mv.ErsetztAm IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', mv.ErsetztAm / 1000, 'unixepoch') || ' UTC' END AS ErsetztAm, v.Art FROM Mitgliedschaften m JOIN MitgliedschaftsVersionen mv ON mv.MitgliedschaftId = m.Id JOIN Aenderungsvorgaenge v ON v.Id = mv.VorgangId;");
-        migrationBuilder.Sql("DROP VIEW IF EXISTS v_Termine; CREATE VIEW v_Termine AS SELECT CASE WHEN Id IS NULL THEN NULL ELSE lower(substr(hex(Id),1,8)||'-'||substr(hex(Id),9,4)||'-'||substr(hex(Id),13,4)||'-'||substr(hex(Id),17,4)||'-'||substr(hex(Id),21)) END AS Id, Titel, Art, CASE WHEN Beginn IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', Beginn / 1000, 'unixepoch') || ' UTC' END AS Beginn, CASE WHEN Ende IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', Ende / 1000, 'unixepoch') || ' UTC' END AS Ende, Ort, CASE WHEN GremiumId IS NULL THEN NULL ELSE lower(substr(hex(GremiumId),1,8)||'-'||substr(hex(GremiumId),9,4)||'-'||substr(hex(GremiumId),13,4)||'-'||substr(hex(GremiumId),17,4)||'-'||substr(hex(GremiumId),21)) END AS GremiumId, Abgesagt, RisId FROM Termine;");
+        migrationBuilder.Sql("DROP VIEW IF EXISTS v_Termine; CREATE VIEW v_Termine AS SELECT CASE WHEN Id IS NULL THEN NULL ELSE lower(substr(hex(Id),1,8)||'-'||substr(hex(Id),9,4)||'-'||substr(hex(Id),13,4)||'-'||substr(hex(Id),17,4)||'-'||substr(hex(Id),21)) END AS Id, Titel, Art, CASE WHEN Beginn IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', Beginn / 1000, 'unixepoch') || ' UTC' END AS Beginn, CASE WHEN Ende IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', Ende / 1000, 'unixepoch') || ' UTC' END AS Ende, Ort, CASE WHEN GremiumId IS NULL THEN NULL ELSE lower(substr(hex(GremiumId),1,8)||'-'||substr(hex(GremiumId),9,4)||'-'||substr(hex(GremiumId),13,4)||'-'||substr(hex(GremiumId),17,4)||'-'||substr(hex(GremiumId),21)) END AS GremiumId, Abgesagt, RisId, CASE WHEN KampagneId IS NULL THEN NULL ELSE lower(substr(hex(KampagneId),1,8)||'-'||substr(hex(KampagneId),9,4)||'-'||substr(hex(KampagneId),13,4)||'-'||substr(hex(KampagneId),17,4)||'-'||substr(hex(KampagneId),21)) END AS KampagneId, Plaetze FROM Termine;");
         migrationBuilder.Sql("DROP VIEW IF EXISTS v_Protokoll; CREATE VIEW v_Protokoll AS SELECT CASE WHEN Id IS NULL THEN NULL ELSE lower(substr(hex(Id),1,8)||'-'||substr(hex(Id),9,4)||'-'||substr(hex(Id),13,4)||'-'||substr(hex(Id),17,4)||'-'||substr(hex(Id),21)) END AS Id, CASE WHEN Zeitpunkt IS NULL THEN NULL ELSE strftime('%Y-%m-%d %H:%M:%S', Zeitpunkt / 1000, 'unixepoch') || ' UTC' END AS Zeitpunkt, Benutzer, Rolle, Aktion, Beschreibung, ObjektTyp, CASE WHEN ObjektId IS NULL THEN NULL ELSE lower(substr(hex(ObjektId),1,8)||'-'||substr(hex(ObjektId),9,4)||'-'||substr(hex(ObjektId),13,4)||'-'||substr(hex(ObjektId),17,4)||'-'||substr(hex(ObjektId),21)) END AS ObjektId, Erfolgreich FROM Protokoll;");
     }
 
@@ -1865,9 +2046,6 @@ public partial class _20261116222517_Initial : Migration
             name: "Dateien");
 
         migrationBuilder.DropTable(
-            name: "Gebiete");
-
-        migrationBuilder.DropTable(
             name: "GremiumVersionen");
 
         migrationBuilder.DropTable(
@@ -1907,9 +2085,6 @@ public partial class _20261116222517_Initial : Migration
             name: "PersonRufnummern");
 
         migrationBuilder.DropTable(
-            name: "Plakate");
-
-        migrationBuilder.DropTable(
             name: "Postausgang");
 
         migrationBuilder.DropTable(
@@ -1926,12 +2101,6 @@ public partial class _20261116222517_Initial : Migration
 
         migrationBuilder.DropTable(
             name: "Ressourcen");
-
-        migrationBuilder.DropTable(
-            name: "Schichteintraege");
-
-        migrationBuilder.DropTable(
-            name: "Schichten");
 
         migrationBuilder.DropTable(
             name: "Sitzungen");
@@ -1952,7 +2121,16 @@ public partial class _20261116222517_Initial : Migration
             name: "TerminErinnerungen");
 
         migrationBuilder.DropTable(
+            name: "TerminTodos");
+
+        migrationBuilder.DropTable(
             name: "Themenpaten");
+
+        migrationBuilder.DropTable(
+            name: "TicketKommentare");
+
+        migrationBuilder.DropTable(
+            name: "TodoVorlagenPunkte");
 
         migrationBuilder.DropTable(
             name: "Tops");
@@ -1985,15 +2163,30 @@ public partial class _20261116222517_Initial : Migration
             name: "Aenderungsvorgaenge");
 
         migrationBuilder.DropTable(
+            name: "Tickets");
+
+        migrationBuilder.DropTable(
+            name: "TodoVorlagen");
+
+        migrationBuilder.DropTable(
             name: "Vertretungsfaelle");
 
         migrationBuilder.DropTable(
             name: "Personen");
 
         migrationBuilder.DropTable(
+            name: "Gebiete");
+
+        migrationBuilder.DropTable(
+            name: "Plakate");
+
+        migrationBuilder.DropTable(
             name: "Termine");
 
         migrationBuilder.DropTable(
             name: "Gremien");
+
+        migrationBuilder.DropTable(
+            name: "Kampagnen");
     }
 }

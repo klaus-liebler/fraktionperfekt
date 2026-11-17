@@ -29,18 +29,18 @@ public static class Rechte
     /// <summary>Buchen, Spenden erfassen, auszahlen: nur der Kassier.</summary>
     public static Freigabe FinanzenBuchen(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Kassier);
 
-    /// <summary>Wahlkampf steuern (Gebiete zuteilen, Schichten anlegen): Vorstand und Geschäftsführung.</summary>
-    public static Freigabe WahlkampfSteuern(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Vorstand, Rolle.Administration);
+    /// <summary>Kampagnen steuern (anlegen, Gebiete zuteilen, Termine und Vorlagen anlegen): Vorstand und Geschäftsführung.</summary>
+    public static Freigabe KampagnenSteuern(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Vorstand, Rolle.Administration);
 
     public static Freigabe VerwaltungEinsehen(Rolle? rolle) => Freigabe.NurFuer(rolle, Rolle.Administration, Rolle.Vorstand);
 
     /// <summary>Abwesenheit melden: alle mit Gremiensitzen oder Fraktionsterminen.</summary>
     public static Freigabe AbwesenheitMelden(Rolle? rolle)
         => rolle is Rolle.Helferin
-            ? Freigabe.Nein("Helfer:innen haben keine Gremiensitze; Abwesenheiten betreffen nur Mitglieder und sachkundige Bürger:innen.")
+            ? Freigabe.Nein("Das Kampagnenteam hat keine Gremiensitze; Abwesenheiten betreffen nur Mitglieder und sachkundige Bürger:innen.")
             : Freigabe.Ja;
 
-    /// <summary>Helfer:innen sehen nur öffentliche Termine und Wahlkampftermine.</summary>
+    /// <summary>Das Kampagnenteam sieht nur öffentliche Termine und Kampagnentermine.</summary>
     public static bool SiehtTermin(Rolle? rolle, Terminart art) => rolle is not Rolle.Helferin || art.IstOeffentlich();
 
     /// <summary>Der Abwesenheitsgrund kann Gesundheitsdaten enthalten: nur die Person selbst und die Administration.</summary>

@@ -1,0 +1,693 @@
+@page "/kampagnen/{Id:guid}"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Kampagnen
+@using FraktionPerfekt.Domain.Kampagnen
+@inject Vorgang Vorgang
+@inject IJSRuntime JS
+
+<PageTitle>@(kampagne?.Name ?? "Kampagne") · FraktionPerfekt</PageTitle>
+
+@if (kampagne is null)
+{
+    <p class="fp-leer">@(geladen ? "Kampagne nicht gefunden." : "Lädt …")</p>
+    <a href="kampagnen">Zu den Kampagnen</a>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <p class="fp-small"><a href="kampagnen">Kampagnen</a></p>
+            <h1>@kampagne.Name <StatusPille Stil="@Kampagnen.StatusStil(kampagne.Status)">@Kampagnen.StatusText(kampagne.Status)</StatusPille></h1>
+            <p class="fp-sub">@Kampagnen.Zeitraum(kampagne)@(kampagne.Wahltag is { } w ? $" · Wahltag {w:dd.MM.yyyy}" : "")</p>
+        </div>
+        <BegruendeterButton Text="Bearbeiten" Icon="edit" ButtonStyle="ButtonStyle.Light" Freigabe="@steuern" Click="KampagneBearbeiten" />
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+    }
+
+    <div class="fp-chips" role="tablist">
+        @foreach (var (wert, text) in Reiter)
+        {
+            <button class="fp-chip @(ansicht == wert ? "on" : null)" role="tab" aria-selected="@(ansicht == wert)" @onclick="@(() => WechselnAsync(wert))">@text</button>
+        }
+    </div>
+
+    @if (ansicht == "uebersicht")
+    {
+        <div class="fp-kpis">
+            <div class="fp-kpi"><div class="fp-kpi-lbl">Plakate hängen</div><div class="fp-kpi-val">@plakate.Count(p => p.Plakat.HaengtNoch)</div></div>
+            <div class="fp-kpi"><div class="fp-kpi-lbl">Gebiete erledigt</div><div class="fp-kpi-val">@gebiete.Count(g => g.Gebiet.Status == Gebietsstatus.Erledigt) / @gebiete.Count</div></div>
+            <div class="fp-kpi"><div class="fp-kpi-lbl">Kommende Termine</div><div class="fp-kpi-val">@termine.Count(t => t.Termin.Beginn >= DateTime.Today)</div></div>
+            <div class="fp-kpi"><div class="fp-kpi-lbl">Tickets offen</div><div class="fp-kpi-val">@tickets.Count(t => t.Ticket.Offen)</div></div>
+        </div>
+        <div class="fp-split">
+            <section class="fp-card">
+                <h2>Worum es geht</h2>
+                @if (kampagne.Beschreibung is null)
+                {
+                    <p class="fp-leer">Keine Beschreibung.</p>
+                }
+                else
+                {
+                    <Markdown Text="@kampagne.Beschreibung" />
+                }
+            </section>
+            <NaechsteSchritte Schritte="@schritte" />
+        </div>
+    }
+    else if (ansicht == "plakate")
+    {
+        <div class="fp-kpis">
+            @foreach (var s in Enum.GetValues<Plakatstatus>())
+            {
+                <div class="fp-kpi"><div class="fp-kpi-lbl"><span class="fp-punkt" style="background:@Farbe(s)"></span> @StatusText(s)</div><div class="fp-kpi-val">@plakate.Count(p => p.Plakat.Status == s)</div></div>
+            }
+        </div>
+        <section class="fp-card">
+            <div id="plakatkarte" class="fp-karte" role="img" aria-label="Karte der Plakatstandorte"></div>
+            <p class="fp-small fp-muted">Kartendaten © OpenStreetMap-Mitwirkende. Klick auf einen Punkt zeigt Standort und Foto. „Beschädigt“ legt automatisch ein Ticket an.</p>
+        </section>
+        <section class="fp-card">
+            <h2>Plakate <span class="fp-zahl">@plakate.Count</span></h2>
+            <div class="fp-tbl">
+                <table>
+                    <thead><tr><th>Standort</th><th>Art</th><th>Status</th><th>Zuletzt</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var z in plakate)
+                        {
+                            <tr>
+                                <td>@z.Plakat.Standort@if (z.Plakat.Motiv is not null) { <span class="fp-small fp-muted"> · @z.Plakat.Motiv</span> }
+                                    @if (z.Plakat.FotoSchluessel is not null) { <text> · </text><a href="kampagnen/plakat/@z.Plakat.Id/foto" target="_blank">Foto</a> }</td>
+                                <td>@z.Plakat.Art</td>
+                                <td><span class="fp-punkt" style="background:@Farbe(z.Plakat.Status)"></span> @StatusText(z.Plakat.Status)</td>
+                                <td class="fp-small">@Ortszeit.AlsOrtszeit(z.Plakat.GeaendertAm).ToString("dd.MM. HH:mm")</td>
+                                <td>
+                                    <RadzenDropDown TValue="Plakatstatus" Value="@z.Plakat.Status" Data="@(Enum.GetValues<Plakatstatus>())" Style="width:140px" aria-label="Status ändern"
+                                                    Change="@(v => AusfuehrenAsync(s => s.StatusSetzenAsync(z.Plakat.Id, (Plakatstatus)v), "Status geändert."))" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+    else if (ansicht == "abhaengen" && abhaengliste is not null)
+    {
+        <section class="fp-card @(abhaengliste.NachDerWahl ? "fp-hervor" : null)">
+            <h2>Abhängliste <span class="fp-zahl">@abhaengliste.Plakate.Count</span></h2>
+            <p>
+                @if (abhaengliste.Wahltag is { } wt)
+                {
+                    <text>Wahltag @wt.ToString("dd.MM.yyyy"); alle Plakate müssen bis <b>@abhaengliste.FristBis?.ToString("dd.MM.yyyy")</b> weg sein.</text>
+                }
+                else
+                {
+                    <text>Diese Kampagne hat keinen Wahltag.</text>
+                }
+                Am Handy sortiert die Liste nach Entfernung: <a href="handy/plakat?abhaengen=1">Handy-Abhängliste</a>.
+            </p>
+            <ul class="fp-kompakt">
+                @foreach (var z in abhaengliste.Plakate)
+                {
+                    <li>@z.Plakat.Standort · @z.Plakat.Art · @StatusText(z.Plakat.Status)
+                        <button class="fp-linkbutton fp-small" @onclick="@(() => AusfuehrenAsync(s => s.StatusSetzenAsync(z.Plakat.Id, Plakatstatus.Abgehaengt), "Abgehängt."))">abgehängt</button></li>
+                }
+            </ul>
+        </section>
+    }
+    else if (ansicht == "gebiete")
+    {
+        <section class="fp-card">
+            <div class="fp-row" style="justify-content:space-between"><h2>Gebiete</h2>
+                <BegruendeterButton Text="Gebiet anlegen" Icon="add" Size="ButtonSize.Small" Freigabe="@steuern" Click="@(() => gebietOffen = true)" /></div>
+            <div class="fp-tbl">
+                <table>
+                    <thead><tr><th>Gebiet</th><th>Art</th><th>Zugeteilt</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var z in gebiete)
+                        {
+                            var g = z.Gebiet;
+                            <tr>
+                                <td><b>@g.Name</b>@if (g.Beschreibung is not null) { <br /><span class="fp-small">@g.Beschreibung</span> }</td>
+                                <td>@g.Art</td>
+                                <td>
+                                    @if (z.Zuteilen.Erlaubt)
+                                    {
+                                        <RadzenDropDown TValue="Guid?" Value="@g.ZugeteiltPersonId" Data="@personen" TextProperty="Anzeigename" ValueProperty="Id" AllowClear="true" Style="width:190px"
+                                                        aria-label="Zuteilen" Change="@(v => AusfuehrenAsync(s => s.ZuteilenAsync(g.Id, (Guid?)v), "Zugeteilt."))" />
+                                    }
+                                    else
+                                    {
+                                        @(z.Zugeteilt ?? "–")
+                                    }
+                                </td>
+                                <td><StatusPille Stil="@(g.Status == Gebietsstatus.Erledigt ? "gut" : g.Status == Gebietsstatus.Zugeteilt ? "info" : "neutral")">@g.Status</StatusPille></td>
+                                <td><BegruendeterButton Text="Erledigt" Size="ButtonSize.ExtraSmall" Freigabe="@z.Erledigen" Click="@(() => AusfuehrenAsync(s => s.GebietErledigenAsync(g.Id, null), "Abgehakt."))" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+    else if (ansicht == "termine")
+    {
+        <div class="fp-row" style="justify-content:space-between">
+            <p class="fp-small fp-muted">Kampagnentermine stehen im Kalender (und im Kalender-Abo aller Eingebuchten). Einbuchen = Zusage.</p>
+            <BegruendeterButton Text="Termin anlegen" Icon="add" Freigabe="@steuern" Click="TerminNeu" />
+        </div>
+        @if (termine.Count == 0)
+        {
+            <p class="fp-leer">Keine kommenden Termine.</p>
+        }
+        @foreach (var z in termine)
+        {
+            var t = z.Termin;
+            <section class="fp-card @(z.Ich ? "fp-hervor" : null)">
+                <div class="fp-row" style="justify-content:space-between">
+                    <div>
+                        <h2 style="margin:0">@t.Titel</h2>
+                        <p class="fp-small">@t.Beginn.ToString("ddd dd.MM.yyyy, HH:mm")–@t.Ende.ToString("HH:mm")@(t.Ort is null ? "" : $" · {t.Ort}") ·
+                            @(z.Frei is null ? "Plätze unbegrenzt" : z.Frei > 0 ? $"{z.Frei} von {t.Plaetze} frei" : "voll")
+                            @if (z.Namen.Count > 0) { <span class="fp-muted"> · @string.Join(", ", z.Namen)</span> } · <a href="termine/@t.Id">im Kalender</a></p>
+                    </div>
+                    <BegruendeterButton Text="@(z.Ich ? "Austragen" : "Einbuchen")" Size="ButtonSize.Small" ButtonStyle="@(z.Ich ? ButtonStyle.Light : ButtonStyle.Primary)"
+                                        Freigabe="@(z.Ich ? Freigabe.Ja : z.Einbuchen)" Click="@(() => AusfuehrenAsync(s => s.EinbuchenAsync(t.Id), z.Ich ? "Ausgetragen." : "Eingebucht."))" />
+                </div>
+                @if (t.Beschreibung is not null)
+                {
+                    <Markdown Text="@t.Beschreibung" />
+                }
+                <details class="fp-einschub" open="@(offeneTodos.Contains(t.Id))" @ontoggle="@(() => TodosUmschaltenAsync(t.Id))">
+                    <summary>ToDos <span class="fp-zahl">@(z.TodosGesamt - z.TodosOffen)/@z.TodosGesamt</span></summary>
+                    @if (todos.TryGetValue(t.Id, out var liste))
+                    {
+                        <ul class="fp-todos">
+                            @foreach (var td in liste)
+                            {
+                                var todo = td.Todo;
+                                <li class="@(todo.Erledigt ? "fp-erledigt" : null)">
+                                    <label><input type="checkbox" checked="@todo.Erledigt" @onchange="@(() => TodoAsync(t.Id, s => s.TodoUmschaltenAsync(todo.Id)))" /> @todo.Text</label>
+                                    @if (todo.Erledigt)
+                                    {
+                                        <span class="fp-small fp-muted">erledigt von @td.ErledigtVon, @Ortszeit.AlsOrtszeit(todo.ErledigtAm!.Value).ToString("dd.MM. HH:mm")</span>
+                                    }
+                                    <RadzenDropDown TValue="Guid?" Value="@todo.ZustaendigPersonId" Data="@personen" TextProperty="Anzeigename" ValueProperty="Id" AllowClear="true"
+                                                    Placeholder="zuständig" Style="width:170px" aria-label="Zuständig" Change="@(v => TodoAsync(t.Id, s => s.TodoZuweisenAsync(todo.Id, (Guid?)v)))" />
+                                    <button class="fp-linkbutton fp-small" title="ToDo löschen" @onclick="@(() => TodoAsync(t.Id, s => s.TodoLoeschenAsync(todo.Id)))">entfernen</button>
+                                </li>
+                            }
+                        </ul>
+                        <div class="fp-row">
+                            <RadzenTextBox @bind-Value="neuesTodo" Immediate="true" Placeholder="Neues ToDo …" Style="min-width:240px" aria-label="Neues ToDo" />
+                            <RadzenButton Text="Hinzufügen" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(neuesTodo)"
+                                          Click="@(() => TodoAsync(t.Id, async s => { await s.TodoHinzufuegenAsync(t.Id, neuesTodo!, null); neuesTodo = null; }))" />
+                            <span class="fp-small fp-muted">oder</span>
+                            <RadzenDropDown TValue="Guid?" @bind-Value="vorlageFuerTermin" Data="@vorlagen" TextProperty="Name" ValueProperty="Id" Placeholder="Vorlage wählen" Style="width:180px" aria-label="Vorlage" />
+                            <RadzenButton Text="ToDos aus Vorlage erzeugen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Disabled="@(vorlageFuerTermin is null)"
+                                          Click="@(() => TodoAsync(t.Id, s => s.TodosAusVorlageAsync(t.Id, vorlageFuerTermin!.Value)))" />
+                        </div>
+                    }
+                </details>
+            </section>
+        }
+    }
+    else if (ansicht == "tickets")
+    {
+        <div class="fp-row" style="justify-content:space-between">
+            <div class="fp-filter">
+                <button class="fp-chip @(!nurMeine ? "on" : null)" @onclick="@(() => MeineAsync(false))">alle</button>
+                <button class="fp-chip @(nurMeine ? "on" : null)" @onclick="@(() => MeineAsync(true))">meine</button>
+                <span class="fp-filter-lbl">Ansicht</span>
+                <button class="fp-chip @(!kanban ? "on" : null)" @onclick="@(() => kanban = false)">Liste</button>
+                <button class="fp-chip @(kanban ? "on" : null)" @onclick="@(() => kanban = true)">Kanban</button>
+            </div>
+            <RadzenButton Text="Neues Ticket" Icon="add" Click="TicketNeu" />
+        </div>
+        @if (kanban)
+        {
+            <div class="fp-kanban">
+                @foreach (var s in Enum.GetValues<Ticketstatus>())
+                {
+                    <section class="fp-card">
+                        <h2>@TicketStatusText(s) <span class="fp-zahl">@tickets.Count(t => t.Ticket.Status == s)</span></h2>
+                        @foreach (var z in tickets.Where(t => t.Ticket.Status == s))
+                        {
+                            <button class="fp-ticket" @onclick="@(() => TicketOeffnenAsync(z.Ticket.Id))">
+                                <b>#@z.Ticket.Nummer @z.Ticket.Titel</b>
+                                <span class="fp-small"><StatusPille Stil="@PrioStil(z.Ticket.Prioritaet)">@z.Ticket.Prioritaet</StatusPille> @(z.Zustaendig ?? "niemand")@(z.Ticket.Faellig is { } f ? $" · bis {f:dd.MM.}" : "")</span>
+                            </button>
+                        }
+                    </section>
+                }
+            </div>
+        }
+        else
+        {
+            <section class="fp-card">
+                @if (tickets.Count == 0)
+                {
+                    <p class="fp-leer">Keine Tickets.</p>
+                }
+                else
+                {
+                    <div class="fp-tbl">
+                        <table>
+                            <thead><tr><th>#</th><th>Ticket</th><th>Status</th><th>Priorität</th><th>Zuständig</th><th>Fällig</th></tr></thead>
+                            <tbody>
+                                @foreach (var z in tickets)
+                                {
+                                    <tr class="@(z.Ticket.Offen ? null : "fp-blass")">
+                                        <td>@z.Ticket.Nummer</td>
+                                        <td><button class="fp-linkbutton" @onclick="@(() => TicketOeffnenAsync(z.Ticket.Id))">@z.Ticket.Titel</button>
+                                            @if (z.Bezug is not null) { <br /><span class="fp-small fp-muted">@z.Bezug</span> }
+                                            @if (z.Kommentare > 0) { <span class="fp-small fp-muted"> · @z.Kommentare Kommentar(e)</span> }</td>
+                                        <td>@TicketStatusText(z.Ticket.Status)</td>
+                                        <td><StatusPille Stil="@PrioStil(z.Ticket.Prioritaet)">@z.Ticket.Prioritaet</StatusPille></td>
+                                        <td>@(z.Zustaendig ?? "–")</td>
+                                        <td>@(z.Ticket.Faellig?.ToString("dd.MM.yyyy") ?? "–")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        }
+    }
+
+    <GrosserDialog @bind-Offen="kampagneOffen" Titel="Kampagne bearbeiten" Geaendert="@kampagneGeaendert">
+        <ChildContent>
+            <div class="fp-form">
+                <div class="fp-field fp-grow"><label class="fp-lbl" for="k-name">Name</label><RadzenTextBox id="k-name" @bind-Value="kName" Immediate="true" Change="@(_ => kampagneGeaendert = true)" /></div>
+                <div class="fp-field"><label class="fp-lbl">Status</label><RadzenDropDown TValue="Kampagnenstatus" @bind-Value="kStatus" Data="@(Enum.GetValues<Kampagnenstatus>())" Change="@(_ => kampagneGeaendert = true)" /></div>
+                <div class="fp-field"><label class="fp-lbl">Beginn</label><RadzenDatePicker TValue="DateTime?" @bind-Value="kBeginn" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+                <div class="fp-field"><label class="fp-lbl">Ende</label><RadzenDatePicker TValue="DateTime?" @bind-Value="kEnde" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+                <div class="fp-field"><label class="fp-lbl">Wahltag</label><RadzenDatePicker TValue="DateTime?" @bind-Value="kWahltag" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+            </div>
+            <MarkdownEditor @ref="kEditor" @bind-Text="kBeschreibung" BezugArt="Kampagne" BezugId="@Id" Bezeichnung="Beschreibung der Kampagne" Hoehe="100%" />
+        </ChildContent>
+        <Knoepfe><RadzenButton Text="Speichern" Icon="save" Disabled="@string.IsNullOrWhiteSpace(kName)" Click="KampagneSpeichernAsync" /></Knoepfe>
+    </GrosserDialog>
+
+    <GrosserDialog @bind-Offen="gebietOffen" Titel="Gebiet anlegen" Klein="true" Geaendert="@(!string.IsNullOrWhiteSpace(gebietName))">
+        <ChildContent>
+            <div class="fp-field"><label class="fp-lbl" for="g-name">Name</label><RadzenTextBox id="g-name" @bind-Value="gebietName" Immediate="true" /></div>
+            <div class="fp-field"><label class="fp-lbl">Art</label><RadzenDropDown TValue="Gebietsart" @bind-Value="gebietArt" Data="@(Enum.GetValues<Gebietsart>())" /></div>
+            <div class="fp-field"><label class="fp-lbl" for="g-beschr">Straßen / Beschreibung</label><RadzenTextBox id="g-beschr" @bind-Value="gebietBeschreibung" /></div>
+        </ChildContent>
+        <Knoepfe><RadzenButton Text="Anlegen" Icon="save" Disabled="@string.IsNullOrWhiteSpace(gebietName)" Click="GebietAnlegenAsync" /></Knoepfe>
+    </GrosserDialog>
+
+    <GrosserDialog @bind-Offen="terminOffen" Titel="Termin anlegen" Geaendert="@(!string.IsNullOrWhiteSpace(terminTitel) || !string.IsNullOrWhiteSpace(terminText))">
+        <ChildContent>
+            <div class="fp-form">
+                <div class="fp-field fp-grow"><label class="fp-lbl" for="t-titel">Titel</label><RadzenTextBox id="t-titel" @bind-Value="terminTitel" Immediate="true" Placeholder="z. B. Infostand Marktplatz" /></div>
+                <div class="fp-field fp-grow"><label class="fp-lbl" for="t-ort">Ort</label><RadzenTextBox id="t-ort" @bind-Value="terminOrt" /></div>
+                <div class="fp-field"><label class="fp-lbl">Beginn</label><RadzenDatePicker TValue="DateTime" @bind-Value="terminVon" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+                <div class="fp-field"><label class="fp-lbl">Ende</label><RadzenDatePicker TValue="DateTime" @bind-Value="terminBis" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+                <div class="fp-field"><label class="fp-lbl">Plätze (leer = unbegrenzt)</label><RadzenNumeric TValue="int?" @bind-Value="terminPlaetze" Min="1" Max="100" Style="width:110px" /></div>
+                <div class="fp-field"><label class="fp-lbl">ToDos für diesen Termin automatisch aus dieser Vorlage erstellen</label>
+                    <RadzenDropDown TValue="Guid?" @bind-Value="terminVorlage" Data="@vorlagen" TextProperty="Name" ValueProperty="Id" AllowClear="true" Placeholder="keine Vorlage" /></div>
+            </div>
+            <span class="fp-lbl">Beschreibung</span>
+            <MarkdownEditor @ref="tEditor" @bind-Text="terminText" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Beschreibung des Termins" Hoehe="100%" />
+        </ChildContent>
+        <Knoepfe><RadzenButton Text="Anlegen" Icon="save" Disabled="@string.IsNullOrWhiteSpace(terminTitel)" Click="TerminAnlegenAsync" /></Knoepfe>
+    </GrosserDialog>
+
+    <GrosserDialog @bind-Offen="ticketOffen" Titel="@(ticket is null ? "Neues Ticket" : $"Ticket #{ticket.Zeile.Ticket.Nummer}")" Geaendert="@TicketGeaendert">
+        <ChildContent>
+            <div class="fp-form">
+                <div class="fp-field fp-grow"><label class="fp-lbl" for="ti-titel">Titel</label><RadzenTextBox id="ti-titel" @bind-Value="tTitel" Immediate="true" /></div>
+                <div class="fp-field"><label class="fp-lbl">Priorität</label><RadzenDropDown TValue="Ticketprioritaet" @bind-Value="tPrio" Data="@(Enum.GetValues<Ticketprioritaet>())" /></div>
+                <div class="fp-field"><label class="fp-lbl">Fällig</label><RadzenDatePicker TValue="DateTime?" @bind-Value="tFaellig" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+                @if (ticket is null)
+                {
+                    <div class="fp-field"><label class="fp-lbl">Zuständig</label><RadzenDropDown TValue="Guid?" @bind-Value="tZustaendig" Data="@personen" TextProperty="Anzeigename" ValueProperty="Id" AllowClear="true" /></div>
+                    <div class="fp-field"><label class="fp-lbl">Bezug (optional)</label><RadzenDropDown TValue="string" @bind-Value="tBezug" Data="@Bezuege" TextProperty="Text" ValueProperty="Wert" AllowClear="true" Style="min-width:240px" /></div>
+                }
+                else
+                {
+                    var z = ticket.Zeile;
+                    <div class="fp-field"><label class="fp-lbl">Status</label><RadzenDropDown TValue="Ticketstatus" Value="@z.Ticket.Status" Data="@(Enum.GetValues<Ticketstatus>())"
+                                                                                             Change="@(v => TicketAktionAsync(s => s.TicketStatusAsync(z.Ticket.Id, (Ticketstatus)v), "Status geändert."))" /></div>
+                    <div class="fp-field"><label class="fp-lbl">Zuständig</label><RadzenDropDown TValue="Guid?" Value="@z.Ticket.ZustaendigPersonId" Data="@personen" TextProperty="Anzeigename" ValueProperty="Id" AllowClear="true"
+                                                                                                Change="@(v => TicketAktionAsync(s => s.TicketZuweisenAsync(z.Ticket.Id, (Guid?)v), "Zugewiesen – Benachrichtigung ist unterwegs."))" /></div>
+                }
+            </div>
+            @if (ticket is not null)
+            {
+                <p class="fp-small fp-muted">angelegt von @ticket.Zeile.ErstelltVon am @Ortszeit.AlsOrtszeit(ticket.Zeile.Ticket.ErstelltAm).ToString("dd.MM.yyyy HH:mm")@(ticket.Zeile.Bezug is { } b ? $" · {b}" : "")</p>
+            }
+            <MarkdownEditor @key="@(ticket?.Zeile.Ticket.Id ?? entwurfId)" @ref="tiEditor" @bind-Text="tText" BezugArt="@(ticket is null ? FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf : "Ticket")"
+                            BezugId="@(ticket?.Zeile.Ticket.Id ?? entwurfId)" Bezeichnung="Beschreibung des Tickets" Hoehe="100%" />
+            @if (ticket is not null)
+            {
+                <h3>Kommentare</h3>
+                @foreach (var k in ticket.Kommentare)
+                {
+                    <div class="fp-kommentar"><b>@k.Name</b> <span class="fp-small fp-muted">@Ortszeit.AlsOrtszeit(k.Kommentar.Am).ToString("dd.MM. HH:mm")</span><Markdown Text="@k.Kommentar.Text" /></div>
+                }
+                <div class="fp-row">
+                    <RadzenTextBox @bind-Value="kommentar" Immediate="true" Placeholder="Kommentar …" Style="flex:1;min-width:240px" aria-label="Kommentar" />
+                    <RadzenButton Text="Kommentieren" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(kommentar)"
+                                  Click="@(() => TicketAktionAsync(async s => { await s.KommentierenAsync(ticket.Zeile.Ticket.Id, kommentar!); kommentar = null; }, "Kommentiert."))" />
+                </div>
+            }
+        </ChildContent>
+        <Knoepfe><RadzenButton Text="@(ticket is null ? "Anlegen" : "Speichern")" Icon="save" Disabled="@string.IsNullOrWhiteSpace(tTitel)" Click="TicketSpeichernAsync" /></Knoepfe>
+    </GrosserDialog>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromQuery(Name = "ansicht")]
+    private string? AnsichtParameter { get; set; }
+
+    [SupplyParameterFromQuery(Name = "meine")]
+    private int? MeineParameter { get; set; }
+
+    [SupplyParameterFromQuery(Name = "ticket")]
+    private Guid? TicketParameter { get; set; }
+
+    private static readonly (string Wert, string Text)[] Reiter =
+        [("uebersicht", "Übersicht"), ("plakate", "Plakate"), ("abhaengen", "Abhängliste"), ("gebiete", "Gebiete"), ("termine", "Termine"), ("tickets", "Tickets")];
+
+    private sealed record BezugWahl(string Wert, string Text);
+
+    private Kampagne? kampagne;
+    private bool geladen;
+    private string ansicht = "uebersicht";
+    private IReadOnlyList<NaechsterSchritt> schritte = [];
+    private IReadOnlyList<PlakatZeile> plakate = [];
+    private Abhaengliste? abhaengliste;
+    private IReadOnlyList<GebietZeile> gebiete = [];
+    private IReadOnlyList<KampagnenTerminZeile> termine = [];
+    private IReadOnlyList<TicketZeile> tickets = [];
+    private IReadOnlyList<TodoVorlage> vorlagen = [];
+    private IReadOnlyList<Person> personen = [];
+    private readonly Dictionary<Guid, IReadOnlyList<TodoZeile>> todos = [];
+    private readonly HashSet<Guid> offeneTodos = [];
+    private Freigabe steuern = Freigabe.Nein("Nur Vorstand oder Geschäftsführung.");
+    private bool karteNeu, nurMeine, kanban;
+    private string? meldung;
+    private bool fehler;
+    private Guid entwurfId = Guid.NewGuid();
+
+    // Kampagne bearbeiten
+    private bool kampagneOffen, kampagneGeaendert;
+    private string? kName, kBeschreibung;
+    private Kampagnenstatus kStatus;
+    private DateTime? kBeginn, kEnde, kWahltag;
+    private MarkdownEditor? kEditor;
+
+    // Gebiet
+    private bool gebietOffen;
+    private string? gebietName, gebietBeschreibung;
+    private Gebietsart gebietArt = Gebietsart.Plakatieren;
+
+    // Termin, ToDos
+    private bool terminOffen;
+    private string? terminTitel, terminOrt, terminText, neuesTodo;
+    private DateTime terminVon, terminBis;
+    private int? terminPlaetze = 3;
+    private Guid? terminVorlage, vorlageFuerTermin;
+    private MarkdownEditor? tEditor;
+
+    // Ticket
+    private bool ticketOffen;
+    private TicketDetail? ticket;
+    private string? tTitel, tText, tBezug, kommentar;
+    private Ticketprioritaet tPrio = Ticketprioritaet.Normal;
+    private DateTime? tFaellig;
+    private Guid? tZustaendig;
+    private MarkdownEditor? tiEditor;
+
+    private bool TicketGeaendert => ticket is null
+        ? !string.IsNullOrWhiteSpace(tTitel) || !string.IsNullOrWhiteSpace(tText)
+        : tTitel != ticket.Zeile.Ticket.Titel || (tText ?? "").Trim() != (ticket.Zeile.Ticket.Beschreibung ?? "").Trim() || !string.IsNullOrWhiteSpace(kommentar);
+
+    private IEnumerable<BezugWahl> Bezuege =>
+        gebiete.Select(g => new BezugWahl($"g:{g.Gebiet.Id}", $"Gebiet: {g.Gebiet.Name}"))
+            .Concat(termine.Select(t => new BezugWahl($"t:{t.Termin.Id}", $"Termin: {t.Termin.Titel} ({t.Termin.Beginn:dd.MM.})")))
+            .Concat(plakate.Select(p => new BezugWahl($"p:{p.Plakat.Id}", $"Plakat: {p.Plakat.Standort}")));
+
+    private static string Farbe(Plakatstatus s) => s switch
+    {
+        Plakatstatus.Geplant => "#9aa5b1",
+        Plakatstatus.Haengt => "#2e8540",
+        Plakatstatus.Beschaedigt => "#e8a317",
+        _ => "#c0392b",
+    };
+
+    private static string StatusText(Plakatstatus s) => s switch
+    {
+        Plakatstatus.Geplant => "geplant",
+        Plakatstatus.Haengt => "hängt",
+        Plakatstatus.Beschaedigt => "beschädigt",
+        _ => "abgehängt",
+    };
+
+    private static string TicketStatusText(Ticketstatus s) => s switch
+    {
+        Ticketstatus.InArbeit => "in Arbeit",
+        Ticketstatus.Wartet => "wartet",
+        Ticketstatus.Erledigt => "erledigt",
+        _ => "neu",
+    };
+
+    private static string PrioStil(Ticketprioritaet p) => p switch
+    {
+        Ticketprioritaet.Dringend => "krit",
+        Ticketprioritaet.Hoch => "warn",
+        Ticketprioritaet.Niedrig => "neutral",
+        _ => "info",
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ansicht = Reiter.Any(r => r.Wert == AnsichtParameter) ? AnsichtParameter! : "uebersicht";
+        nurMeine = MeineParameter == 1;
+        steuern = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KampagnenDienst>().SteuernAsync());
+        personen = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonenAsync())).Where(p => p.Aktiv).OrderBy(p => p.Nachname).ToList();
+        await LadenAsync();
+        if (TicketParameter is { } t)
+        {
+            await TicketOeffnenAsync(t);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (ansicht == "plakate" && karteNeu && RendererInfo.IsInteractive)
+        {
+            karteNeu = false;
+            var daten = new
+            {
+                mitte = new[] { 52.0917, 7.6083 },
+                zoom = 14,
+                punkte = plakate.Select(z => new
+                {
+                    breite = z.Plakat.Breite,
+                    laenge = z.Plakat.Laenge,
+                    farbe = Farbe(z.Plakat.Status),
+                    titel = $"{z.Plakat.Standort} – {StatusText(z.Plakat.Status)} ({z.Plakat.Art})",
+                    link = z.Plakat.FotoSchluessel is null ? null : $"kampagnen/plakat/{z.Plakat.Id}/foto",
+                }),
+            };
+            try
+            {
+                await JS.InvokeVoidAsync("fpKarte.zeigen", "plakatkarte", daten);
+            }
+            catch (JSException)
+            {
+                // Karte ist Zusatz: Ohne Leaflet bleibt die Liste nutzbar.
+            }
+            catch (JSDisconnectedException)
+            {
+                // Verbindung beendet.
+            }
+        }
+    }
+
+    private async Task WechselnAsync(string wert)
+    {
+        ansicht = wert;
+        await LadenAsync();
+    }
+
+    private async Task MeineAsync(bool meine)
+    {
+        nurMeine = meine;
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        KampagnenDienst K(IServiceProvider d) => d.GetRequiredService<KampagnenDienst>();
+        kampagne = await Vorgang.AusfuehrenAsync(d => K(d).KampagneAsync(Id));
+        geladen = true;
+        if (kampagne is null)
+        {
+            return;
+        }
+
+        schritte = await Vorgang.AusfuehrenAsync(d => K(d).NaechsteSchritteAsync(Id));
+        plakate = await Vorgang.AusfuehrenAsync(d => K(d).PlakateAsync(Id));
+        abhaengliste = await Vorgang.AusfuehrenAsync(d => K(d).AbhaenglisteAsync(Id));
+        gebiete = await Vorgang.AusfuehrenAsync(d => K(d).GebieteAsync(Id));
+        termine = await Vorgang.AusfuehrenAsync(d => K(d).TermineAsync(Id));
+        tickets = await Vorgang.AusfuehrenAsync(d => K(d).TicketsAsync(Id, nurMeine));
+        vorlagen = (await Vorgang.AusfuehrenAsync(d => K(d).VorlagenAsync())).Select(v => v.Vorlage).ToList();
+        foreach (var t in offeneTodos)
+        {
+            todos[t] = await Vorgang.AusfuehrenAsync(d => K(d).TodosAsync(t));
+        }
+
+        karteNeu = true;
+    }
+
+    private async Task AusfuehrenAsync(Func<KampagnenDienst, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => aktion(d.GetRequiredService<KampagnenDienst>()));
+            (meldung, fehler) = (erfolg, false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private static DateOnly? Tag(DateTime? d) => d is { } x ? DateOnly.FromDateTime(x) : null;
+
+    private static DateTime? Datum(DateOnly? d) => d?.ToDateTime(TimeOnly.MinValue);
+
+    // ---- Kampagne ----
+    private void KampagneBearbeiten()
+    {
+        (kName, kBeschreibung, kStatus, kBeginn, kEnde, kWahltag) = (kampagne!.Name, kampagne.Beschreibung, kampagne.Status, Datum(kampagne.Beginn), Datum(kampagne.Ende), Datum(kampagne.Wahltag));
+        kampagneGeaendert = false;
+        kampagneOffen = true;
+    }
+
+    private async Task KampagneSpeichernAsync()
+    {
+        if (kEditor is not null)
+        {
+            kBeschreibung = await kEditor.AktuellerTextAsync();
+        }
+
+        await AusfuehrenAsync(s => s.KampagneAendernAsync(Id, kName!, kBeschreibung, Tag(kBeginn), Tag(kEnde), Tag(kWahltag), kStatus), "Kampagne gespeichert.");
+        kampagneOffen = fehler;
+    }
+
+    // ---- Gebiet ----
+    private async Task GebietAnlegenAsync()
+    {
+        await AusfuehrenAsync(s => s.GebietAnlegenAsync(Id, gebietName!, gebietArt, gebietBeschreibung, null, null), "Gebiet angelegt.");
+        if (!fehler)
+        {
+            (gebietOffen, gebietName, gebietBeschreibung) = (false, null, null);
+        }
+    }
+
+    // ---- Termin, ToDos ----
+    private void TerminNeu()
+    {
+        var tag = DateTime.Today.AddDays(2);
+        (terminTitel, terminOrt, terminText, terminVon, terminBis, terminPlaetze, entwurfId) = (null, null, null, tag.AddHours(10), tag.AddHours(12), 3, Guid.NewGuid());
+        terminVorlage = vorlagen.FirstOrDefault(v => v.Name == "Infostand")?.Id;
+        terminOffen = true;
+    }
+
+    private async Task TerminAnlegenAsync()
+    {
+        if (tEditor is not null)
+        {
+            terminText = await tEditor.AktuellerTextAsync();
+        }
+
+        await AusfuehrenAsync(s => s.TerminAnlegenAsync(Id, terminTitel!, terminOrt, terminVon, terminBis, terminPlaetze, terminText, terminVorlage),
+            terminVorlage is null ? "Termin angelegt." : "Termin mit ToDos aus der Vorlage angelegt.");
+        terminOffen = fehler;
+    }
+
+    private async Task TodosUmschaltenAsync(Guid terminId)
+    {
+        if (!offeneTodos.Add(terminId))
+        {
+            offeneTodos.Remove(terminId);
+            return;
+        }
+
+        todos[terminId] = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KampagnenDienst>().TodosAsync(terminId));
+    }
+
+    private async Task TodoAsync(Guid terminId, Func<KampagnenDienst, Task> aktion)
+    {
+        offeneTodos.Add(terminId);
+        await AusfuehrenAsync(aktion, "Gespeichert.");
+        meldung = fehler ? meldung : null;
+    }
+
+    // ---- Tickets ----
+    private void TicketNeu()
+    {
+        ticket = null;
+        (tTitel, tText, tBezug, tPrio, tFaellig, tZustaendig, entwurfId) = (null, null, null, Ticketprioritaet.Normal, null, null, Guid.NewGuid());
+        ticketOffen = true;
+    }
+
+    private async Task TicketOeffnenAsync(Guid id)
+    {
+        ticket = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KampagnenDienst>().TicketAsync(id));
+        if (ticket is null)
+        {
+            return;
+        }
+
+        var t = ticket.Zeile.Ticket;
+        (tTitel, tText, tPrio, tFaellig, kommentar) = (t.Titel, t.Beschreibung, t.Prioritaet, Datum(t.Faellig), null);
+        ticketOffen = true;
+    }
+
+    private async Task TicketAktionAsync(Func<KampagnenDienst, Task> aktion, string erfolg)
+    {
+        var id = ticket!.Zeile.Ticket.Id;
+        await AusfuehrenAsync(aktion, erfolg);
+        ticket = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KampagnenDienst>().TicketAsync(id));
+    }
+
+    private async Task TicketSpeichernAsync()
+    {
+        if (tiEditor is not null)
+        {
+            tText = await tiEditor.AktuellerTextAsync();
+        }
+
+        if (ticket is null)
+        {
+            Guid? Bezug(char art) => tBezug is { Length: > 2 } b && b[0] == art ? Guid.Parse(b[2..]) : null;
+            var neu = new NeuesTicket(tTitel!, tText, tPrio, tZustaendig, Tag(tFaellig), Bezug('g'), Bezug('p'), Bezug('t'));
+            await AusfuehrenAsync(s => s.TicketAnlegenAsync(Id, neu), "Ticket angelegt.");
+        }
+        else
+        {
+            var id = ticket.Zeile.Ticket.Id;
+            await AusfuehrenAsync(s => s.TicketBearbeitenAsync(id, tTitel!, tText, tPrio, Tag(tFaellig)), "Ticket gespeichert.");
+        }
+
+        ticketOffen = fehler;
+    }
+}

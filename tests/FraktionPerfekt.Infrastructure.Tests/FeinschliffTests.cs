@@ -8,7 +8,7 @@ using FraktionPerfekt.Application.Postausgang;
 using FraktionPerfekt.Application.Suche;
 using FraktionPerfekt.Application.Termine;
 using FraktionPerfekt.Application.Vertretung;
-using FraktionPerfekt.Application.Wahlkampf;
+using FraktionPerfekt.Application.Kampagnen;
 using FraktionPerfekt.Domain.Personen;
 using FraktionPerfekt.Domain.Termine;
 using FraktionPerfekt.Domain.Vertretung;
@@ -130,22 +130,22 @@ public sealed class FeinschliffTests
         ansicht.Schnellaktionen.Select(s => s.Titel).ShouldContain("Plakat erfassen");
         ansicht.Schnellaktionen.Select(s => s.Titel).ShouldContain("Anfrage schreiben");
 
-        // Helfer: Suche nur Termine/Wiki/Dateien „Wahlkampf“; Hinweis auf eigene Schicht und eigenes Gebiet; Schicht im Kalender-Abo
+        // Kampagnenteam: Suche nur Termine/Wiki/Dateien „Kampagnen“; Hinweis auf eigenen Kampagnentermin und eigenes Gebiet; Termin im Kalender-Abo
         await u.AnmeldenAsync("fbaeumer");
         (await u.InAsync(d => d.GetRequiredService<SucheDienst>().SuchenAsync("Grundschul"))).ShouldNotContain(t => t.Bereich == "Anträge");
         var hinweise = await u.InAsync(d => d.GetRequiredService<HinweisDienst>().LadenAsync());
-        hinweise.ShouldContain(h => h.Bereich == "Wahlkampf" && h.Titel.StartsWith("Schicht", StringComparison.Ordinal));
+        hinweise.ShouldContain(h => h.Bereich == "Kampagnen" && h.Titel.StartsWith("Infostand", StringComparison.Ordinal));
         hinweise.ShouldContain(h => h.Titel.Contains("Greven-Innenstadt", StringComparison.Ordinal));
         (await u.InAsync(d => d.GetRequiredService<HeuteDienst>().LadenAsync())).Schnellaktionen.Single(s => s.Titel == "Anfrage schreiben").Freigabe.Erlaubt.ShouldBeFalse();
 
         var link = await u.InAsync(d => d.GetRequiredService<KalenderDienst>().AboAnlegenAsync());
         var token = link.Https.Segments[^1].Replace(".ics", string.Empty, StringComparison.Ordinal);
-        (await u.InAsync(d => d.GetRequiredService<KalenderDienst>().AboKalenderAsync(token)))!.ShouldContain("Wahlkampf: Infostand Marktplatz");
+        (await u.InAsync(d => d.GetRequiredService<KalenderDienst>().AboKalenderAsync(token)))!.ShouldContain("Infostand Marktplatz (Vormittag)");
 
         // Einzeltermin als ICS (jede sichtbare Terminart)
         var termin = (await u.InAsync(d => d.GetRequiredService<KalenderDienst>().TermineAsync(new DateOnly(2026, 11, 15), new DateOnly(2027, 1, 31)))).First().Termin;
         (await u.InAsync(d => d.GetRequiredService<KalenderDienst>().TerminKalenderAsync(termin.Id)))!.ShouldContain("BEGIN:VEVENT");
         _ = u.Dienste.GetRequiredService<IServiceScopeFactory>();
-        _ = typeof(WahlkampfDienst);
+        _ = typeof(KampagnenDienst);
     }
 }

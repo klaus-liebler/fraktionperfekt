@@ -48,9 +48,9 @@ public sealed partial class BildDienst(
     {
         ArgumentNullException.ThrowIfNull(inhalt);
         var wer = await benutzer.ErmittelnAsync(abbruch);
-        if (wer.Rolle is Rolle.Helferin)
+        if (wer.Rolle is Rolle.Helferin && bezugArt is not ("Kampagne" or "Ticket" or BildBesitzer.Entwurf))
         {
-            throw new InvalidOperationException("Helfer:innen fügen keine Bilder ein.");
+            throw new InvalidOperationException("Das Kampagnenteam fügt Bilder nur in Kampagnen und Tickets ein.");
         }
 
         if (Besitzer(bezugArt) is not { } b || (b.Art != BildBesitzer.Entwurf && !await b.Sichtbar(dienste, bezugId, abbruch)))

@@ -2,9 +2,9 @@
 @attribute [ExcludeFromInteractiveRouting]
 @layout HandyLayout
 @using System.Globalization
-@using FraktionPerfekt.Application.Wahlkampf
-@using FraktionPerfekt.Domain.Wahlkampf
-@inject WahlkampfDienst Wahlkampf
+@using FraktionPerfekt.Application.Kampagnen
+@using FraktionPerfekt.Domain.Kampagnen
+@inject KampagnenDienst Kampagnen
 
 <PageTitle>Plakate · FraktionPerfekt</PageTitle>
 
@@ -109,12 +109,12 @@ else
     {
         if (Abhaengen == 1)
         {
-            abhaeng = await Wahlkampf.AbhaenglisteAsync(Breite, Laenge);
+            abhaeng = await Kampagnen.AbhaenglisteAsync(null, Breite, Laenge);
             liste = abhaeng.Plakate;
         }
         else
         {
-            liste = await Wahlkampf.PlakateAsync();
+            liste = await Kampagnen.PlakateAsync();
         }
     }
 

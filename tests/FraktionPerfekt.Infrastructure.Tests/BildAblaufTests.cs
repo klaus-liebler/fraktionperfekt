@@ -110,7 +110,7 @@ public sealed class BildAblaufTests
         (await u.InAsync(d => B(d).BilderAsync(BildDienst.Wiki, vertraulich.Id, null))).ShouldBeEmpty();
         await u.AnmeldenAsync("fbaeumer");
         (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => B(d).HochladenAsync(BildDienst.Wiki, seite.Id, "x.png", new MemoryStream(Png1x1)))))
-            .Message.ShouldContain("Helfer");
+            .Message.ShouldContain("Kampagnenteam");
 
         // Aufräumen: nach der Frist verschwinden Bilder, die in keinem Seitentext stehen; benutzte bleiben.
         await u.AnmeldenAsync("lkuehlert");

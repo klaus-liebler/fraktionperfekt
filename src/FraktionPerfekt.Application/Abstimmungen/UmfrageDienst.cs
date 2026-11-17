@@ -38,7 +38,7 @@ public sealed class UmfrageDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            return []; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+            return []; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
         var umfragen = await daten.ListeAsync(daten.Menge<Umfrage>().OrderByDescending(u => u.ErstelltAm).ThenBy(u => u.Id), abbruch);
         var stimmen = await daten.ListeAsync(daten.Menge<Stimme>().OrderBy(s => s.Id), abbruch);
@@ -59,7 +59,7 @@ public sealed class UmfrageDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            return null; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+            return null; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
         if (await daten.FindenAsync<Umfrage>(id, abbruch) is not { } u)
         {
@@ -74,7 +74,7 @@ public sealed class UmfrageDienst(
         var abstimmen = !u.Offen(jetzt) ? Freigabe.Nein(u.Status == Umfragestatus.Abgeschlossen ? "Die Abstimmung ist abgeschlossen." : "Die Frist ist abgelaufen.")
             : !Stimmberechtigt(u.Art, wer.Rollen) ? Freigabe.Nein(u.Art == Umfrageart.Antragsabstimmung
                 ? "Über Anträge stimmen die Ratsmitglieder der Fraktion ab (Rolle Mitglied)."
-                : "Helfer:innen nehmen an Fraktionsabstimmungen nicht teil.")
+                : "Das Kampagnenteam nimmt an Fraktionsabstimmungen nicht teil.")
             : Freigabe.Ja;
         var abschliessen = u.Status == Umfragestatus.Abgeschlossen ? Freigabe.Nein("Bereits abgeschlossen.")
             : wer.PersonId == u.ErstelltVonPersonId || Rechte.SitzungenSteuern(wer.Rolle).Erlaubt ? Freigabe.Ja
@@ -90,7 +90,7 @@ public sealed class UmfrageDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            throw new InvalidOperationException("Helfer:innen starten keine Fraktionsabstimmungen.");
+            throw new InvalidOperationException("Das Kampagnenteam startet keine Fraktionsabstimmungen.");
         }
 
         var berechtigt = await BerechtigteAsync(neu.Art, abbruch);
@@ -138,7 +138,7 @@ public sealed class UmfrageDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            throw new InvalidOperationException("Helfer:innen nehmen an Fraktionsabstimmungen nicht teil.");
+            throw new InvalidOperationException("Das Kampagnenteam nimmt an Fraktionsabstimmungen nicht teil.");
         }
 
         var detail = await DetailAsync(umfrageId, abbruch) ?? throw new InvalidOperationException("Abstimmung nicht gefunden.");

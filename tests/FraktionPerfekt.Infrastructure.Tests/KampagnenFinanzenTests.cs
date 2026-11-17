@@ -1,84 +1,108 @@
 using FraktionPerfekt.Application.Aufgaben;
 using FraktionPerfekt.Application.Finanzen;
 using FraktionPerfekt.Application.Gemeinsam;
-using FraktionPerfekt.Application.Wahlkampf;
+using FraktionPerfekt.Application.Kampagnen;
+using FraktionPerfekt.Application.Termine;
 using FraktionPerfekt.Domain.Finanzen;
 using FraktionPerfekt.Domain.Personen;
-using FraktionPerfekt.Domain.Wahlkampf;
+using FraktionPerfekt.Domain.Kampagnen;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SBenutzer = FraktionPerfekt.Application.Sicherheit.Benutzer;
 
 namespace FraktionPerfekt.Infrastructure.Tests;
 
-public sealed class WahlkampfFinanzenTests
+public sealed class KampagnenFinanzenTests
 {
     private static readonly byte[] Png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
 
     [Fact]
-    public async Task Plakat_am_Handy_mit_Foto_Abhaengliste_nach_Entfernung_Gebiete_und_Schichten()
+    public async Task Kampagne_Plakat_am_Handy_Abhaengliste_Gebiete_Termin_mit_Vorlage_ToDos_Einbuchen_und_Tickets()
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
-        WahlkampfDienst W(IServiceProvider d) => d.GetRequiredService<WahlkampfDienst>();
+        KampagnenDienst W(IServiceProvider d) => d.GetRequiredService<KampagnenDienst>();
         await u.AnmeldenAsync("fbaeumer");
-        (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).PlakatErfassenAsync(52.1, 7.6, "x", Plakatart.Hohlkammer, Plakatstatus.Haengt, null,
+        var wahl = (await u.InAsync(d => W(d).KampagnenAsync())).Single(z => z.Kampagne.Name.StartsWith("Kommunalwahl", StringComparison.Ordinal)).Kampagne;
+        (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).PlakatErfassenAsync(null, 52.1, 7.6, "x", Plakatart.Hohlkammer, Plakatstatus.Haengt, null,
             new MemoryStream([1]), "virus.exe")))).Message.ShouldContain("Foto");
-        var neu = await u.InAsync(d => W(d).PlakatErfassenAsync(52.0918, 7.6085, "Marktplatz Nord", Plakatart.Hohlkammer, Plakatstatus.Haengt, null, new MemoryStream(Png), "IMG_1.jpg"));
+        var neu = await u.InAsync(d => W(d).PlakatErfassenAsync(null, 52.0918, 7.6085, "Marktplatz Nord", Plakatart.Hohlkammer, Plakatstatus.Haengt, null, new MemoryStream(Png), "IMG_1.jpg"));
+        neu.KampagneId.ShouldBe(wahl.Id); // Handy: laufende Kampagne
         (await u.InAsync(d => W(d).FotoAsync(neu.Id))).ShouldNotBeNull();
 
         // Abhängliste vom Bahnhof aus: das Bahnhofsplakat zuerst, Reckenfeld (5 km) zuletzt, abgehängte fehlen.
-        var liste = await u.InAsync(d => W(d).AbhaenglisteAsync(52.0965, 7.6159));
+        var liste = await u.InAsync(d => W(d).AbhaenglisteAsync(wahl.Id, 52.0965, 7.6159));
         liste.Plakate[0].Plakat.Standort.ShouldStartWith("Bahnhof");
         liste.Plakate[^1].Plakat.Standort.ShouldStartWith("Reckenfeld");
         liste.Plakate.ShouldAllBe(z => z.Plakat.HaengtNoch);
         await u.InAsync(d => W(d).StatusSetzenAsync(liste.Plakate[0].Plakat.Id, Plakatstatus.Abgehaengt));
-        (await u.InAsync(d => W(d).AbhaenglisteAsync(52.0965, 7.6159))).Plakate.Count.ShouldBe(liste.Plakate.Count - 1);
+        (await u.InAsync(d => W(d).AbhaenglisteAsync(wahl.Id, 52.0965, 7.6159))).Plakate.Count.ShouldBe(liste.Plakate.Count - 1);
+
+        // Beschädigt → Ticket mit Plakatbezug
+        await u.InAsync(d => W(d).StatusSetzenAsync(neu.Id, Plakatstatus.Beschaedigt));
+        (await u.InAsync(d => W(d).TicketsAsync(wahl.Id))).ShouldContain(t => t.Ticket.PlakatId == neu.Id && t.Ticket.Prioritaet == Ticketprioritaet.Hoch);
 
         // Gebiete: zuteilen nur Vorstand/Geschäftsführung, abhaken die zugeteilte Person.
-        var gimbte = (await u.InAsync(d => W(d).GebieteAsync())).Single(z => z.Gebiet.Name == "Gimbte");
+        var gimbte = (await u.InAsync(d => W(d).GebieteAsync(wahl.Id))).Single(z => z.Gebiet.Name == "Gimbte");
         gimbte.Zuteilen.Erlaubt.ShouldBeFalse();
         await u.AnmeldenAsync("ebrinkhaus", Rolle.Vorstand);
         await u.InAsync(d => W(d).ZuteilenAsync(gimbte.Gebiet.Id, u.Benutzer.Aktuell.PersonId));
-        var baeumer = await u.AnmeldenAsync("fbaeumer");
-        (await u.InAsync(d => W(d).GebieteAsync())).Single(z => z.Gebiet.Name == "Gimbte").Erledigen.Begruendung!.ShouldContain("zugeteilt");
-        await u.InAsync(async d => await W(d).GebietErledigenAsync((await W(d).GebieteAsync()).Single(z => z.Gebiet.Name == "Greven-Innenstadt").Gebiet.Id, "alle hängen"));
 
-        // Schichten: eintragen bis voll, austragen.
-        var schicht = (await u.InAsync(d => W(d).SchichtenAsync())).First(z => z.Frei == 1);
-        schicht.Ich.ShouldBeTrue(); // Felix Bäumer steht in den Demodaten schon drin
-        (await u.InAsync(d => W(d).EintragenAsync(schicht.Schicht.Id))).ShouldBeFalse(); // erneuter Klick trägt aus
-        _ = baeumer;
+        // Termin mit Vorlage-ToDos, 1 Platz
+        var vorlage = (await u.InAsync(d => W(d).VorlagenAsync())).Single(v => v.Vorlage.Name == "Infostand");
+        var termin = await u.InAsync(d => W(d).TerminAnlegenAsync(wahl.Id, "Infostand Bahnhof", "Bahnhof", new DateTime(2026, 11, 20, 16, 0, 0), new DateTime(2026, 11, 20, 18, 0, 0), 1,
+            null, vorlage.Vorlage.Id));
+        var todos = await u.InAsync(d => W(d).TodosAsync(termin.Id));
+        todos.Select(t => t.Todo.Text).ShouldBe(vorlage.Punkte.Select(p => p.Text));
+        await u.InAsync(d => W(d).TodoUmschaltenAsync(todos[0].Todo.Id));
+        (await u.InAsync(d => W(d).TodosAsync(termin.Id)))[0].ErledigtVon.ShouldNotBeNull();
+
+        var baeumer = await u.AnmeldenAsync("fbaeumer");
+        (await u.InAsync(d => W(d).GebieteAsync(wahl.Id))).Single(z => z.Gebiet.Name == "Gimbte").Erledigen.Begruendung!.ShouldContain("zugeteilt");
+        (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).TerminAnlegenAsync(wahl.Id, "x", null, DateTime.Today.AddDays(1), DateTime.Today.AddDays(1).AddHours(1), null, null, null))))
+            .Message.ShouldContain("Vorstand");
+        (await u.InAsync(d => W(d).EinbuchenAsync(termin.Id))).ShouldBeTrue();
+        (await u.InAsync(d => d.GetRequiredService<KalenderDienst>().TermineAsync(new DateOnly(2026, 11, 20), new DateOnly(2026, 11, 20), new Kalenderfilter(PersonId: baeumer.Id))))
+            .ShouldContain(z => z.Termin.Id == termin.Id); // im eigenen Kalender
+        await u.AnmeldenAsync("nfeldhaus");
+        var voll = (await u.InAsync(d => W(d).TermineAsync(wahl.Id))).Single(z => z.Termin.Id == termin.Id);
+        voll.Einbuchen.Begruendung!.ShouldContain("vergeben");
+        await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).EinbuchenAsync(termin.Id)));
+        await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => d.GetRequiredService<KalenderDienst>().AntwortenAsync(termin.Id, true)));
+
+        // Ticket an Felix: Benachrichtigung, Kommentar, „meine“
+        var ticket = await u.InAsync(d => W(d).TicketAnlegenAsync(wahl.Id, new NeuesTicket("Kabelbinder fehlen", "Bitte **200** Stück.", Ticketprioritaet.Normal, baeumer.Id, null, TerminId: termin.Id)));
+        await u.InAsync(d => W(d).KommentierenAsync(ticket.Id, "Bringe ich mit."));
+        await u.AnmeldenAsync("fbaeumer");
+        (await u.InAsync(d => W(d).TicketsAsync(wahl.Id, nurMeine: true))).ShouldContain(t => t.Ticket.Id == ticket.Id && t.Kommentare == 1 && t.Bezug!.StartsWith("Termin", StringComparison.Ordinal));
+        await u.InAsync(d => W(d).TicketStatusAsync(ticket.Id, Ticketstatus.Erledigt));
+        (await u.InAsync(d => W(d).TicketAsync(ticket.Id)))!.Zeile.Ticket.Offen.ShouldBeFalse();
     }
 
     [Fact]
-    public async Task Schicht_voll_und_Fristen_nach_der_Wahl_mit_Loeschfrist()
+    public async Task Fristen_nach_dem_Wahltag_der_Kampagne_mit_Loeschfrist()
     {
         await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
-        WahlkampfDienst W(IServiceProvider d) => d.GetRequiredService<WahlkampfDienst>();
+        KampagnenDienst W(IServiceProvider d) => d.GetRequiredService<KampagnenDienst>();
         await u.AnmeldenAsync("kalbers", Rolle.Administration);
-        var s = await u.InAsync(d => W(d).SchichtAnlegenAsync("Infostand Bahnhof", new DateTime(2026, 11, 20, 16, 0, 0), new DateTime(2026, 11, 20, 18, 0, 0), 1, null));
-        await u.AnmeldenAsync("nfeldhaus");
-        (await u.InAsync(d => W(d).EintragenAsync(s.Id))).ShouldBeTrue();
-        await u.AnmeldenAsync("fbaeumer");
-        (await u.InAsync(d => W(d).SchichtenAsync())).Single(z => z.Schicht.Id == s.Id).Eintragen.Begruendung!.ShouldContain("voll");
-        await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).EintragenAsync(s.Id)));
+        var wahl = (await u.InAsync(d => W(d).KampagnenAsync())).Single(z => z.Kampagne.Name.StartsWith("Kommunalwahl", StringComparison.Ordinal)).Kampagne;
 
         // Wahl war am 10.11.: Aufgabe „Plakate abhängen“ für den Vorstand, nur einmal.
-        u.Dienste.GetRequiredService<IOptions<FraktionOptionen>>().Value.Wahltag = new DateOnly(2026, 11, 10);
+        await u.InAsync(d => W(d).KampagneAendernAsync(wahl.Id, wahl.Name, wahl.Beschreibung, wahl.Beginn, null, new DateOnly(2026, 11, 10), Kampagnenstatus.Aktiv));
         u.Benutzer.Aktuell = SBenutzer.Automatik;
         (await u.InAsync(d => W(d).FristenPruefenAsync())).ShouldBe(1);
         (await u.InAsync(d => W(d).FristenPruefenAsync())).ShouldBe(0);
         await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
-        (await u.InAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync())).ShouldContain(a => a.Anlass == WahlkampfDienst.AbhaengAnlass);
-        (await u.InAsync(d => W(d).AbhaenglisteAsync())).NachDerWahl.ShouldBeTrue();
+        (await u.InAsync(d => d.GetRequiredService<AufgabenDienst>().KorbAsync())).ShouldContain(a => a.Anlass == KampagnenDienst.AbhaengAnlass);
+        (await u.InAsync(d => W(d).AbhaenglisteAsync(wahl.Id))).NachDerWahl.ShouldBeTrue();
+        (await u.InAsync(d => W(d).NaechsteSchritteAsync(wahl.Id)))[0].Titel.ShouldContain("abhängen");
 
-        // Ein halbes Jahr später: abgehängte Plakate und alte Schichteinträge sind gelöscht.
-        var vorher = (await u.InAsync(d => W(d).PlakateAsync())).Count;
+        // Ein halbes Jahr später: abgehängte Plakate sind gelöscht.
+        var vorher = (await u.InAsync(d => W(d).PlakateAsync(wahl.Id))).Count;
         u.Uhr.Advance(TimeSpan.FromDays(200));
         u.Benutzer.Aktuell = SBenutzer.Automatik;
         (await u.InAsync(d => W(d).FristenPruefenAsync())).ShouldBeGreaterThan(1);
         await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
-        var danach = await u.InAsync(d => W(d).PlakateAsync());
+        var danach = await u.InAsync(d => W(d).PlakateAsync(wahl.Id));
         danach.Count.ShouldBe(vorher - 1);
         danach.ShouldNotContain(z => z.Plakat.Status == Plakatstatus.Abgehaengt);
     }

@@ -231,7 +231,7 @@ public sealed class KalenderUndRisTests
         await u.AnmeldenAsync("fbaeumer");
         var helfer = await u.InAsync(d => d.GetRequiredService<KalenderDienst>().TermineAsync(von, bis));
         helfer.ShouldNotBeEmpty();
-        helfer.ShouldAllBe(z => z.Termin.Art == Terminart.Oeffentlich || z.Termin.Art == Terminart.Wahlkampf);
+        helfer.ShouldAllBe(z => z.Termin.Art == Terminart.Oeffentlich || z.Termin.Art == Terminart.Kampagne);
 
         var anna = await u.AnmeldenAsync("lkuehlert");
         var asb = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().GremienAsync())).Single(g => g.Kurzname == "SchulA");

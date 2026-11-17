@@ -66,7 +66,7 @@ public sealed class SitzungDienst(
     {
         if ((await benutzer.ErmittelnAsync(abbruch)).Rolle is Rolle.Helferin)
         {
-            return []; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+            return []; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
 
         var sitzungen = await daten.ListeAsync(daten.Menge<Sitzung>().OrderBy(s => s.AngelegtAm).ThenBy(s => s.Id), abbruch);
@@ -180,7 +180,7 @@ public sealed class SitzungDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            return null; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+            return null; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
         if (await daten.FindenAsync<Sitzung>(sitzungId, abbruch) is not { } s || await termine.TerminAsync(s.TerminId, abbruch) is not { } termin)
         {
@@ -242,7 +242,7 @@ public sealed class SitzungDienst(
     {
         if (wer.Rolle is Rolle.Helferin)
         {
-            return Freigabe.Nein("Helfer:innen melden keine Tagesordnungspunkte an.");
+            return Freigabe.Nein("Das Kampagnenteam meldet keine Tagesordnungspunkte an.");
         }
 
         if (!s.TagesordnungAenderbar)

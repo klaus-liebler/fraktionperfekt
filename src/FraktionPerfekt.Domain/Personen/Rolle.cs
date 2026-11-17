@@ -21,7 +21,7 @@ public enum Rolle
     /// <summary>Mitglied in Ausschüssen ohne Ratsmandat.</summary>
     SachkundigeBuergerin,
 
-    /// <summary>Wahlkampfteam, Ortsverband: nur öffentliche und Wahlkampftermine.</summary>
+    /// <summary>Kampagnenteam (Ortsverband, Unterstützer:innen): nur Kampagnen und öffentliche Termine. Technischer Name bleibt „Helferin“.</summary>
     Helferin,
 }
 
@@ -34,7 +34,7 @@ public static class RollenExtensions
         Rolle.Kassier => "Schatzmeister/Kassier",
         Rolle.Mitglied => "Mitglied",
         Rolle.SachkundigeBuergerin => "Sachkundige Bürger:innen",
-        Rolle.Helferin => "Helfer:innen",
+        Rolle.Helferin => "Kampagnenteam",
         _ => rolle.ToString(),
     };
 
@@ -50,6 +50,7 @@ public static class RollenExtensions
         foreach (var r in Enum.GetValues<Rolle>())
         {
             if (string.Equals(r.Anzeigename(), text.Trim(), StringComparison.OrdinalIgnoreCase)
+                || (r == Rolle.Helferin && string.Equals("Helfer:innen", text.Trim(), StringComparison.OrdinalIgnoreCase))
                 || string.Equals(r.ToString(), text.Trim(), StringComparison.OrdinalIgnoreCase))
             {
                 rolle = r;

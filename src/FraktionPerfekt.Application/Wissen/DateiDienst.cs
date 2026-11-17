@@ -48,14 +48,14 @@ public sealed class DateiDienst(
 
     public static bool Erlaubt(string dateiname) => Typen.ContainsKey(Path.GetExtension(dateiname));
 
-    /// <summary>Ordnerbaum: Fraktion, je Gremium, Anträge, Protokolle, Wahlkampf – nur Ordner, die die Person sehen darf.</summary>
+    /// <summary>Ordnerbaum: Fraktion, je Gremium, Anträge, Protokolle, Kampagnen – nur Ordner, die die Person sehen darf.</summary>
     public async Task<IReadOnlyList<Ordner>> OrdnerAsync(CancellationToken abbruch = default)
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
         var gremien = await stammdaten.GremienAsync(abbruch);
         var sichtbar = await SichtbarAsync(wer, abbruch);
         var anzahl = (await daten.ListeAsync(daten.Menge<Datei>().Where(d => d.GeloeschtAm == null).Select(d => new { d.Ordner, d.GremiumId, d.Vertraulich }), abbruch))
-            .Where(d => sichtbar(d.GremiumId, d.Vertraulich) && (wer.Rolle is not Rolle.Helferin || d.Ordner == "Wahlkampf")).GroupBy(d => d.Ordner).ToDictionary(g => g.Key, g => g.Count());
+            .Where(d => sichtbar(d.GremiumId, d.Vertraulich) && (wer.Rolle is not Rolle.Helferin || d.Ordner == "Kampagnen")).GroupBy(d => d.Ordner).ToDictionary(g => g.Key, g => g.Count());
         var liste = new List<Ordner>();
         void Hinzu(string pfad, string anzeige, Guid? gremium)
         {
@@ -76,7 +76,7 @@ public sealed class DateiDienst(
             }
         }
 
-        liste.Add(new Ordner("Wahlkampf", "Wahlkampf", null, anzahl.GetValueOrDefault("Wahlkampf")));
+        liste.Add(new Ordner("Kampagnen", "Kampagnen", null, anzahl.GetValueOrDefault("Kampagnen")));
         foreach (var weitere in anzahl.Keys.Where(k => liste.All(o => o.Pfad != k)).Order())
         {
             liste.Add(new Ordner(weitere, weitere, null, anzahl[weitere]));
@@ -93,7 +93,7 @@ public sealed class DateiDienst(
         abfrage = bezugId is { } b ? abfrage.Where(d => d.BezugArt == bezugArt && d.BezugId == b) : abfrage.Where(d => d.Ordner == ordner);
         var namen = (await stammdaten.PersonenAsync(abbruch)).ToDictionary(p => p.Id, p => p.Anzeigename);
         return (await daten.ListeAsync(abfrage.OrderByDescending(d => d.Am).ThenBy(d => d.Id), abbruch))
-            .Where(d => sichtbar(d.GremiumId, d.Vertraulich) && (wer.Rolle is not Rolle.Helferin || d.Ordner == "Wahlkampf"))
+            .Where(d => sichtbar(d.GremiumId, d.Vertraulich) && (wer.Rolle is not Rolle.Helferin || d.Ordner == "Kampagnen"))
             .Select(d => new DateiZeile(d, namen.GetValueOrDefault(d.HochgeladenVonPersonId, "?"),
                 d.HochgeladenVonPersonId == wer.PersonId || wer.Rolle is Rolle.Administration ? Freigabe.Ja
                     : Freigabe.Nein("Löschen kann, wer hochgeladen hat, oder die Geschäftsführung.")))
@@ -106,7 +106,7 @@ public sealed class DateiDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         var sichtbar = await SichtbarAsync(wer, abbruch);
         return (await daten.ListeAsync(daten.Menge<Datei>().Where(d => d.GeloeschtAm == null).OrderByDescending(d => d.Am).ThenBy(d => d.Id), abbruch))
-            .Where(d => sichtbar(d.GremiumId, d.Vertraulich) && (wer.Rolle is not Rolle.Helferin || d.Ordner == "Wahlkampf")
+            .Where(d => sichtbar(d.GremiumId, d.Vertraulich) && (wer.Rolle is not Rolle.Helferin || d.Ordner == "Kampagnen")
                         && woerter.All(w => d.Name.Contains(w, StringComparison.CurrentCultureIgnoreCase) || d.Ordner.Contains(w, StringComparison.CurrentCultureIgnoreCase)))
             .Select(d => new DateiZeile(d, string.Empty, Freigabe.Nein("In der Ordneransicht löschen.")))
             .ToList();
@@ -123,9 +123,9 @@ public sealed class DateiDienst(
             throw new InvalidOperationException($"Dateityp {Path.GetExtension(name)} ist nicht erlaubt (PDF, Office, Text, Bilder).");
         }
 
-        if (wer.Rolle is Rolle.Helferin && ordner != "Wahlkampf")
+        if (wer.Rolle is Rolle.Helferin && ordner != "Kampagnen")
         {
-            throw new InvalidOperationException("Helfer:innen laden nur in den Ordner „Wahlkampf“ hoch.");
+            throw new InvalidOperationException("Das Kampagnenteam lädt nur in den Ordner „Kampagnen“ hoch.");
         }
 
         if (gremiumId is null && (ordner.StartsWith("Gremien/", StringComparison.Ordinal) || ordner.StartsWith("Arbeitskreise/", StringComparison.Ordinal)))
@@ -157,7 +157,7 @@ public sealed class DateiDienst(
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (await daten.FindenAsync<Datei>(id, abbruch) is not { GeloeschtAm: null } d || !(await SichtbarAsync(wer, abbruch))(d.GremiumId, d.Vertraulich)
-            || (wer.Rolle is Rolle.Helferin && d.Ordner != "Wahlkampf"))
+            || (wer.Rolle is Rolle.Helferin && d.Ordner != "Kampagnen"))
         {
             return null;
         }

@@ -15,7 +15,7 @@ public sealed class RechteTests
     [Fact]
     public void Helferinnen_sehen_nur_oeffentliche_Termine_und_melden_keine_Abwesenheit_mit_Begruendung()
     {
-        Rechte.SiehtTermin(Rolle.Helferin, Terminart.Wahlkampf).ShouldBeTrue();
+        Rechte.SiehtTermin(Rolle.Helferin, Terminart.Kampagne).ShouldBeTrue();
         Rechte.SiehtTermin(Rolle.Helferin, Terminart.Fraktionssitzung).ShouldBeFalse();
         Rechte.SiehtTermin(Rolle.Mitglied, Terminart.Fraktionssitzung).ShouldBeTrue();
         var freigabe = Rechte.AbwesenheitMelden(Rolle.Helferin);

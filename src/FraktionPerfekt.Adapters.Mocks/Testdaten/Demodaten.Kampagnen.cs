@@ -1,13 +1,13 @@
 using FraktionPerfekt.Application;
 using FraktionPerfekt.Application.Wissen;
 using FraktionPerfekt.Domain.Finanzen;
-using FraktionPerfekt.Domain.Wahlkampf;
+using FraktionPerfekt.Domain.Kampagnen;
 using Person = FraktionPerfekt.Domain.Personen.Person;
 
 namespace FraktionPerfekt.Adapters.Mocks.Testdaten;
 
-/// <summary>Plakate in Greven (Standorte an öffentlichen Straßen, ungefähre Koordinaten), Gebiete in den Ortsteilen, Schichten, Kassen.</summary>
-internal static class WahlkampfDemodaten
+/// <summary>Zwei Kampagnen: Plakate in Greven (öffentliche Straßen, ungefähre Koordinaten), Gebiete, Termine mit ToDos, Vorlagen, Tickets; dazu die Kassen.</summary>
+internal static class KampagnenDemodaten
 {
     /// <summary>Kleinstes gültiges PNG (1×1 Pixel) als Platzhalter für Fotos und Belege.</summary>
     private static readonly byte[] Png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
@@ -16,6 +16,15 @@ internal static class WahlkampfDemodaten
         CancellationToken abbruch)
     {
         Guid P(string k) => personen[k].Id;
+
+        // Kampagne 1: Wahlkampf mit Wahltag (Abhängliste danach); Kampagne 2: kleine Haustüraktion in Planung
+        var wahl = new Kampagne("Kommunalwahl 2027 (Demo)", "Plakate, Infostände und Haustürbesuche in allen Ortsteilen. **Ziel:** jede Straße einmal besucht.",
+            heute.AddDays(-30), new DateOnly(2027, 5, 16), new DateOnly(2027, 5, 16), P("kalbers"), jetzt.AddDays(-30));
+        wahl.StatusSetzen(Kampagnenstatus.Aktiv);
+        var schulen = new Kampagne("Haustüraktion Grundschulen (Demo)", "Gespräche mit Eltern zur Grundschulplanung, Flyer in den Schulbezirken.",
+            heute.AddDays(30), heute.AddDays(75), null, P("kalbers"), jetzt.AddDays(-5));
+        daten.Hinzufuegen(wahl);
+        daten.Hinzufuegen(schulen);
 
         var plakate = new (double B, double L, string Ort, Plakatart Art, Plakatstatus Status, string Von)[]
         {
@@ -29,47 +38,108 @@ internal static class WahlkampfDemodaten
             (52.13940, 7.62960, "Reckenfeld, Wittlerdamm", Plakatart.Hohlkammer, Plakatstatus.Haengt, "nfeldhaus"),
         };
         var i = 0;
+        Plakat? kaputt = null;
         foreach (var x in plakate)
         {
-            var p = new Plakat(x.B, x.L, x.Ort, x.Art, x.Status, P(x.Von), jetzt.AddDays(-10 + i++), "Landtagswahl (Demo)");
+            var p = new Plakat(wahl.Id, x.B, x.L, x.Ort, x.Art, x.Status, P(x.Von), jetzt.AddDays(-10 + i++), "Kommunalwahl (Demo)");
             if (x.Status is Plakatstatus.Haengt or Plakatstatus.Beschaedigt && i % 2 == 1)
             {
-                var schluessel = $"Wahlkampf/Plakate/{p.Id:N}-demo.png";
+                var schluessel = $"Kampagnen/Plakate/{p.Id:N}-demo.png";
                 using var strom = new MemoryStream(Png);
                 await ablage.SpeichernAsync(schluessel, strom, abbruch);
                 p.FotoSetzen(schluessel, "image/png");
             }
 
+            kaputt ??= x.Status == Plakatstatus.Beschaedigt ? p : null;
             daten.Hinzufuegen(p);
         }
 
-        var innenstadt = new Gebiet("Greven-Innenstadt", Gebietsart.Plakatieren, "Marktplatz, Rathausstraße, Bahnhofstraße", 52.0919, 7.6086);
+        var innenstadt = new Gebiet(wahl.Id, "Greven-Innenstadt", Gebietsart.Plakatieren, "Marktplatz, Rathausstraße, Bahnhofstraße", 52.0919, 7.6086);
         innenstadt.Zuteilen(P("fbaeumer"));
-        var reckenfeld = new Gebiet("Reckenfeld", Gebietsart.Plakatieren, "Wittlerdamm, Grevener Landstraße", 52.1394, 7.6296);
+        var reckenfeld = new Gebiet(wahl.Id, "Reckenfeld", Gebietsart.Plakatieren, "Wittlerdamm, Grevener Landstraße", 52.1394, 7.6296);
         reckenfeld.Zuteilen(P("nfeldhaus"));
         reckenfeld.Erledigen(jetzt.AddDays(-2), "12 Plakate hängen");
-        var gimbte = new Gebiet("Gimbte", Gebietsart.Flyer, "Dorfkern, ca. 300 Haushalte", null, null);
-        var schmedehausen = new Gebiet("Schmedehausen", Gebietsart.Haustuer, "Haustürbesuche mit Ratsmitglied", null, null);
+        var gimbte = new Gebiet(wahl.Id, "Gimbte", Gebietsart.Flyer, "Dorfkern, ca. 300 Haushalte", null, null);
+        var schmedehausen = new Gebiet(wahl.Id, "Schmedehausen", Gebietsart.Haustuer, "Haustürbesuche mit Ratsmitglied", null, null);
         schmedehausen.Zuteilen(P("mgries"));
-        foreach (var g in new[] { innenstadt, reckenfeld, gimbte, schmedehausen })
+        var marien = new Gebiet(schulen.Id, "Schulbezirk Marienschule", Gebietsart.Haustuer, "Eltern im Schulbezirk, Flyer und Gespräche", null, null);
+        foreach (var g in new[] { innenstadt, reckenfeld, gimbte, schmedehausen, marien })
         {
             daten.Hinzufuegen(g);
         }
 
+        // ToDo-Vorlagen (Kopiervorlagen)
+        var infostand = new TodoVorlage("Infostand");
+        var haustuer = new TodoVorlage("Haustürrunde");
+        daten.Hinzufuegen(infostand);
+        daten.Hinzufuegen(haustuer);
+        var infostandPunkte = new[] { "Genehmigung (Sondernutzung) prüfen", "Pavillon und Tisch im Fraktionsbüro abholen", "Flyer und Giveaways einpacken", "Kaffee und Becher mitbringen", "Rückbau und Müll mitnehmen" };
+        for (var n = 0; n < infostandPunkte.Length; n++)
+        {
+            daten.Hinzufuegen(new TodoVorlagenPunkt(infostand.Id, n, infostandPunkte[n]));
+        }
+
+        var haustuerPunkte = new[] { "Straßenliste ausdrucken", "Flyer einpacken (ca. 100)", "Gesprächsnotizen ins Ticket übertragen" };
+        for (var n = 0; n < haustuerPunkte.Length; n++)
+        {
+            daten.Hinzufuegen(new TodoVorlagenPunkt(haustuer.Id, n, haustuerPunkte[n]));
+        }
+
+        // Kampagnentermine: normale Kalendertermine mit Kampagnenbezug und Plätzen; Einbuchen = Zusage
+        Domain.Termine.Termin? ersterInfostand = null;
         for (var w = 0; w < 3; w++)
         {
             var samstag = heute.AddDays(((int)DayOfWeek.Saturday - (int)heute.DayOfWeek + 7) % 7 + 7 * w);
-            var vormittag = new Schicht("Infostand Marktplatz", samstag.ToDateTime(new TimeOnly(9, 0)), samstag.ToDateTime(new TimeOnly(11, 0)), 3, null);
-            var mittag = new Schicht("Infostand Marktplatz", samstag.ToDateTime(new TimeOnly(11, 0)), samstag.ToDateTime(new TimeOnly(13, 0)), 3, null);
+            var vormittag = new Domain.Termine.Termin("Infostand Marktplatz (Vormittag)", Domain.Termine.Terminart.Kampagne, samstag.ToDateTime(new TimeOnly(9, 0)),
+                samstag.ToDateTime(new TimeOnly(11, 0)), "Marktplatz Greven", null, P("kalbers"), jetzt, "Pavillon steht vor dem Rathaus.", kampagneId: wahl.Id, plaetze: 3);
+            var mittag = new Domain.Termine.Termin("Infostand Marktplatz (Mittag)", Domain.Termine.Terminart.Kampagne, samstag.ToDateTime(new TimeOnly(11, 0)),
+                samstag.ToDateTime(new TimeOnly(13, 0)), "Marktplatz Greven", null, P("kalbers"), jetzt, null, kampagneId: wahl.Id, plaetze: 3);
             daten.Hinzufuegen(vormittag);
             daten.Hinzufuegen(mittag);
             if (w == 0)
             {
-                daten.Hinzufuegen(new Schichteintrag(vormittag.Id, P("fbaeumer"), jetzt));
-                daten.Hinzufuegen(new Schichteintrag(vormittag.Id, P("jwilp"), jetzt));
-                daten.Hinzufuegen(new Schichteintrag(mittag.Id, P("nfeldhaus"), jetzt));
+                ersterInfostand = vormittag;
+                daten.Hinzufuegen(new Domain.Termine.Teilnahme(vormittag.Id, P("fbaeumer"), Domain.Termine.Teilnahmestatus.Zugesagt, jetzt));
+                daten.Hinzufuegen(new Domain.Termine.Teilnahme(vormittag.Id, P("jwilp"), Domain.Termine.Teilnahmestatus.Zugesagt, jetzt));
+                daten.Hinzufuegen(new Domain.Termine.Teilnahme(mittag.Id, P("nfeldhaus"), Domain.Termine.Teilnahmestatus.Zugesagt, jetzt));
+                for (var n = 0; n < infostandPunkte.Length; n++)
+                {
+                    var todo = new TerminTodo(vormittag.Id, n, infostandPunkte[n], n == 1 ? P("fbaeumer") : null);
+                    if (n == 0)
+                    {
+                        todo.Umschalten(P("kalbers"), jetzt.AddDays(-1));
+                    }
+
+                    daten.Hinzufuegen(todo);
+                }
             }
         }
+
+        // Tickets
+        var nr = 0;
+        Ticket NeuesTicket(Kampagne k, string titel, string text, Ticketprioritaet prio, string von, string? zustaendig, int faelligTage)
+        {
+            var t = new Ticket(k.Id, ++nr, titel, text, prio, P(von), jetzt.AddDays(-3));
+            t.Bearbeiten(titel, text, prio, heute.AddDays(faelligTage), jetzt.AddDays(-3));
+            if (zustaendig is not null)
+            {
+                t.Zuweisen(P(zustaendig), jetzt.AddDays(-2));
+            }
+
+            daten.Hinzufuegen(t);
+            return t;
+        }
+
+        var t1 = NeuesTicket(wahl, "Plakat beschädigt: Emsbrücke", "Plakat ist eingerissen, bitte ersetzen.", Ticketprioritaet.Hoch, "nfeldhaus", "fbaeumer", 2);
+        t1.Beziehen(null, kaputt?.Id, null);
+        t1.StatusSetzen(Ticketstatus.InArbeit, jetzt.AddDays(-1));
+        daten.Hinzufuegen(new TicketKommentar(t1.Id, P("fbaeumer"), "Neues Plakat liegt im Büro, hänge ich Samstag auf.", jetzt.AddDays(-1)));
+        var t2 = NeuesTicket(wahl, "Flyer für Reckenfeld nachdrucken", "Es fehlen etwa 200 Flyer.", Ticketprioritaet.Normal, "fbaeumer", "kalbers", 7);
+        t2.Beziehen(reckenfeld.Id, null, null);
+        var t3 = NeuesTicket(wahl, "Zweiter Pavillon für den Infostand", "Bei Regen reicht einer nicht.", Ticketprioritaet.Niedrig, "jwilp", null, 10);
+        t3.Beziehen(null, null, ersterInfostand?.Id);
+        nr = 0;
+        NeuesTicket(schulen, "Flyertext mit den Schulleitungen abstimmen", "Entwurf liegt im Wiki.", Ticketprioritaet.Normal, "kalbers", null, 20);
 
         // Finanzen: Fraktionskasse (Zuwendung der Stadt) und Wahlkampfkasse, Beträge fiktiv
         var jahr = heute.Year;

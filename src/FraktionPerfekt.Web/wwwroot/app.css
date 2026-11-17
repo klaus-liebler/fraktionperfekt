@@ -443,3 +443,21 @@ body:has(.fp-dialog-hintergrund) { overflow: hidden; }
 @media (max-width: 700px) {
     .fp-dialog, .fp-dialog.fp-dialog-klein { width: 100vw; height: 100dvh; max-height: none; border-radius: 0; }
 }
+
+/* Kampagnen */
+.fp-kampagnen { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); margin-bottom: 16px; }
+a.fp-kampagne { color: inherit; text-decoration: none; display: block; }
+a.fp-kampagne:hover { box-shadow: 0 2px 10px rgba(0, 0, 0, .12); }
+a.fp-kampagne h2 { margin: 0; }
+.fp-blass { opacity: .6; }
+.fp-textarea { width: 100%; font: inherit; padding: 6px 8px; border: 1px solid var(--rz-base-400, #c4c9d0); border-radius: 4px; box-sizing: border-box; }
+.fp-todos { list-style: none; padding: 0; margin: 6px 0; }
+.fp-todos li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--rz-base-200, #eef0f3); }
+.fp-todos li label { flex: 1; min-width: 200px; }
+.fp-todos li.fp-erledigt label { text-decoration: line-through; opacity: .65; }
+.fp-kanban { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .fp-kanban { grid-template-columns: minmax(0, 1fr); } }
+.fp-ticket { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; font: inherit; color: inherit; background: var(--rz-base-background-color, #fff);
+    border: 1px solid var(--rz-base-300, #e5e7eb); border-radius: 6px; padding: 8px; margin-bottom: 8px; cursor: pointer; }
+.fp-ticket:hover { border-color: var(--rz-primary, #1f5fa8); }
+.fp-kommentar { border-left: 3px solid var(--rz-base-300, #e5e7eb); padding: 2px 0 2px 10px; margin: 8px 0; }

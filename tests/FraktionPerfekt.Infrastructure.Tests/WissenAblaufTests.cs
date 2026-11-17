@@ -23,9 +23,9 @@ public sealed class WissenAblaufTests
         hfa.Select(z => z.Datei.Name).ShouldContain("Haushalt 2026 – Eckdaten.csv");
         hfa.Select(z => z.Datei.Name).ShouldNotContain("Stellungnahme Stadtwerke Bad.txt");
 
-        // Helfer:innen sehen nur den Wahlkampf-Ordner.
+        // Das Kampagnenteam sieht nur die Kampagnen-Ordner.
         await u.AnmeldenAsync("fbaeumer");
-        (await u.InAsync(d => D(d).OrdnerAsync())).Select(o => o.Pfad).ShouldBe(["Wahlkampf"]);
+        (await u.InAsync(d => D(d).OrdnerAsync())).Select(o => o.Pfad).ShouldBe(["Kampagnen"]);
         (await u.InAsync(d => D(d).ListeAsync("Fraktion"))).ShouldBeEmpty();
 
         // Hochladen: Typprüfung, Anhang an einem Bezug, Download liefert den Inhalt, Löschen nur durch Hochladende.

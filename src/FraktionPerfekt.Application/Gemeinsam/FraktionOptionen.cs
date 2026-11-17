@@ -25,8 +25,6 @@ public sealed class FraktionOptionen
     /// <summary>Wie weit „Sitzungen mit offener Vertretung“ und die Startseite vorausschauen.</summary>
     public int VorschauTage { get; set; } = 42;
 
-    /// <summary>Nächster Wahltag (Wahlkampf: Abhängliste, Löschfristen). Leer = keine Wahl geplant.</summary>
-    public DateOnly? Wahltag { get; set; }
 
     /// <summary>So viele Tage nach der Wahl müssen die Plakate hängen-weg sein (Sondernutzungserlaubnis).</summary>
     public int AbhaengenTage { get; set; } = 14;

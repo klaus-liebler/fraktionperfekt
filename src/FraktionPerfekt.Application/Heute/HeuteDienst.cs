@@ -80,7 +80,7 @@ public sealed class HeuteDienst(
                 new("Termin anlegen", "kalender?neu=1", "event", Rechte.TermineAnlegen(wer.Rolle)),
                 new("Raum buchen", "ressourcen?neu=1", "meeting_room", Freigabe.Ja),
                 new("Antrag starten", "antraege?neu=1", "description",
-                    wer.Rolle is Domain.Personen.Rolle.Helferin ? Freigabe.Nein("Helfer:innen schreiben nicht an Anträgen mit.") : Freigabe.Ja),
+                    wer.Rolle is Domain.Personen.Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam schreibt nicht an Anträgen mit.") : Freigabe.Ja),
                 new("Fraktionssitzung einladen", "sitzungen", "groups", Rechte.SitzungenSteuern(wer.Rolle)),
                 new("Anfrage schreiben", "anfragen", "help", politik),
                 new("Bürgeranliegen erfassen", "anliegen", "support_agent", politik),

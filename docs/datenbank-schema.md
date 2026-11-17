@@ -111,11 +111,12 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Buchungen](#buchungen) – 11 Spalten
 - [Buergeranliegen](#buergeranliegen) – 13 Spalten
 - [Dateien](#dateien) – 14 Spalten
-- [Gebiete](#gebiete) – 10 Spalten
+- [Gebiete](#gebiete) – 11 Spalten
 - [Gremien](#gremien) – 4 Spalten
 - [GremiumVersionen](#gremiumversionen) – 9 Spalten
 - [Haushaltsposten](#haushaltsposten) – 5 Spalten
 - [KalenderAbos](#kalenderabos) – 6 Spalten
+- [Kampagnen](#kampagnen) – 9 Spalten
 - [Kassenbuchungen](#kassenbuchungen) – 11 Spalten
 - [Kontakte](#kontakte) – 11 Spalten
 - [Mitgliedschaften](#mitgliedschaften) – 4 Spalten
@@ -128,23 +129,26 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [PersonRollen](#personrollen) – 7 Spalten
 - [PersonRufnummern](#personrufnummern) – 12 Spalten
 - [Personen](#personen) – 4 Spalten
-- [Plakate](#plakate) – 13 Spalten
+- [Plakate](#plakate) – 14 Spalten
 - [Postausgang](#postausgang) – 16 Spalten
 - [Presseartikel](#presseartikel) – 10 Spalten
 - [Pressemitteilungen](#pressemitteilungen) – 12 Spalten
 - [Protokoll](#protokoll) – 10 Spalten
 - [PushAbos](#pushabos) – 8 Spalten
 - [Ressourcen](#ressourcen) – 6 Spalten
-- [Schichteintraege](#schichteintraege) – 4 Spalten
-- [Schichten](#schichten) – 6 Spalten
 - [Sitzungen](#sitzungen) – 14 Spalten
 - [Sitzungsanwesenheiten](#sitzungsanwesenheiten) – 4 Spalten
 - [Spenden](#spenden) – 9 Spalten
 - [Stimmen](#stimmen) – 5 Spalten
 - [Teilnahmen](#teilnahmen) – 6 Spalten
 - [TerminErinnerungen](#terminerinnerungen) – 4 Spalten
-- [Termine](#termine) – 12 Spalten
+- [TerminTodos](#termintodos) – 7 Spalten
+- [Termine](#termine) – 14 Spalten
 - [Themenpaten](#themenpaten) – 4 Spalten
+- [TicketKommentare](#ticketkommentare) – 5 Spalten
+- [Tickets](#tickets) – 15 Spalten
+- [TodoVorlagen](#todovorlagen) – 2 Spalten
+- [TodoVorlagenPunkte](#todovorlagenpunkte) – 4 Spalten
 - [Tops](#tops) – 14 Spalten
 - [UmfrageOptionen](#umfrageoptionen) – 5 Spalten
 - [Umfragen](#umfragen) – 15 Spalten
@@ -489,7 +493,7 @@ Indizes: (Ordner); (BezugArt, BezugId)
 
 ## Gebiete
 
-Klasse: `FraktionPerfekt.Domain.Wahlkampf.Gebiet`
+Klasse: `FraktionPerfekt.Domain.Kampagnen.Gebiet`
 
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
@@ -498,11 +502,14 @@ Klasse: `FraktionPerfekt.Domain.Wahlkampf.Gebiet`
 | Beschreibung | TEXT |  |  | S |  |
 | Breite | REAL |  |  | S |  |
 | ErledigtAm | INTEGER |  |  | S |  |
+| KampagneId | BLOB | ja | → Kampagnen, Index | S |  |
 | Laenge | REAL |  |  | S |  |
 | Name | TEXT | ja |  | S | Name des Plakatier-/Verteilgebiets |
 | Status | TEXT(40) | ja |  | S |  |
 | Vermerk | TEXT |  |  | S |  |
 | ZugeteiltPersonId | BLOB |  |  | S |  |
+
+Indizes: (KampagneId)
 
 ## Gremien
 
@@ -563,6 +570,24 @@ Klasse: `FraktionPerfekt.Domain.Termine.KalenderAbo`
 | ZuletztAbgerufenAm | INTEGER |  |  | S |  |
 
 Indizes: (PersonId); (TokenHash) eindeutig
+
+## Kampagnen
+
+Klasse: `FraktionPerfekt.Domain.Kampagnen.Kampagne`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| AngelegtAm | INTEGER | ja |  | G |  |
+| AngelegtVonPersonId | BLOB |  |  | G |  |
+| Beginn | INTEGER |  |  | G |  |
+| Beschreibung | TEXT |  |  | G |  |
+| Ende | INTEGER |  |  | G |  |
+| Name | TEXT(200) | ja |  | G | Name der Kampagne |
+| Status | TEXT(40) | ja | Index | G |  |
+| Wahltag | INTEGER |  |  | G |  |
+
+Indizes: (Status)
 
 ## Kassenbuchungen
 
@@ -783,7 +808,7 @@ Indizes: (Benutzerkennung) eindeutig; (RisId) eindeutig
 
 ## Plakate
 
-Klasse: `FraktionPerfekt.Domain.Wahlkampf.Plakat`
+Klasse: `FraktionPerfekt.Domain.Kampagnen.Plakat`
 
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
@@ -796,12 +821,13 @@ Klasse: `FraktionPerfekt.Domain.Wahlkampf.Plakat`
 | FotoTyp | TEXT |  |  | G |  |
 | GeaendertAm | INTEGER | ja |  | G |  |
 | GeaendertVonPersonId | BLOB | ja |  | G |  |
+| KampagneId | BLOB | ja | → Kampagnen, Index | G |  |
 | Laenge | REAL | ja |  | G |  |
 | Motiv | TEXT |  |  | G |  |
 | Standort | TEXT | ja |  | G |  |
 | Status | TEXT(40) | ja | Index | G |  |
 
-Indizes: (Status)
+Indizes: (KampagneId, Status)
 
 ## Postausgang
 
@@ -917,34 +943,6 @@ Klasse: `FraktionPerfekt.Domain.Ressourcen.Ressource`
 | FreigabeNoetig | INTEGER | ja |  | S |  |
 | Name | TEXT | ja |  | S | Name der Ressource |
 
-## Schichteintraege
-
-Klasse: `FraktionPerfekt.Domain.Wahlkampf.Schichteintrag`
-
-| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
-|---|---|---|---|---|---|
-| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
-| Am | INTEGER | ja |  | G |  |
-| PersonId | BLOB | ja | eindeutig | G |  |
-| SchichtId | BLOB | ja | eindeutig | G |  |
-
-Indizes: (SchichtId, PersonId) eindeutig
-
-## Schichten
-
-Klasse: `FraktionPerfekt.Domain.Wahlkampf.Schicht`
-
-| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
-|---|---|---|---|---|---|
-| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
-| Bis | INTEGER | ja |  | G |  |
-| Ort | TEXT | ja |  | G |  |
-| Plaetze | INTEGER | ja |  | G |  |
-| TerminId | BLOB |  |  | G |  |
-| Von | INTEGER | ja | Index | G |  |
-
-Indizes: (Von)
-
 ## Sitzungen
 
 Klasse: `FraktionPerfekt.Domain.Sitzungen.Sitzung`
@@ -1039,6 +1037,22 @@ Klasse: `FraktionPerfekt.Domain.Termine.TerminErinnerung`
 
 Indizes: (TerminId, PersonId) eindeutig
 
+## TerminTodos
+
+Klasse: `FraktionPerfekt.Domain.Kampagnen.TerminTodo`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| ErledigtAm | INTEGER |  |  | G |  |
+| ErledigtVonPersonId | BLOB |  |  | G |  |
+| Position | INTEGER | ja | Index | G |  |
+| TerminId | BLOB | ja | → Termine, Index | G |  |
+| Text | TEXT | ja |  | G |  |
+| ZustaendigPersonId | BLOB |  |  | G |  |
+
+Indizes: (TerminId, Position)
+
 ## Termine
 
 Klasse: `FraktionPerfekt.Domain.Termine.Termin`
@@ -1054,11 +1068,13 @@ Klasse: `FraktionPerfekt.Domain.Termine.Termin`
 | Beschreibung | TEXT(4000) |  |  | G |  |
 | Ende | INTEGER | ja |  | G |  |
 | GremiumId | BLOB |  | → Gremien, Index | G |  |
+| KampagneId | BLOB |  | → Kampagnen, Index | G |  |
 | Ort | TEXT(300) |  |  | G |  |
+| Plaetze | INTEGER |  |  | G |  |
 | RisId | TEXT(200) |  | eindeutig | G |  |
 | Titel | TEXT(300) | ja |  | G |  |
 
-Indizes: (Beginn); (GremiumId); (RisId) eindeutig
+Indizes: (Beginn); (GremiumId); (KampagneId); (RisId) eindeutig
 
 ## Themenpaten
 
@@ -1070,6 +1086,66 @@ Klasse: `FraktionPerfekt.Domain.Aufgaben.Themenpate`
 | PersonId | BLOB | ja |  | S |  |
 | Politikfeld | TEXT | ja |  | S |  |
 | VertretungPersonId | BLOB |  |  | S |  |
+
+## TicketKommentare
+
+Klasse: `FraktionPerfekt.Domain.Kampagnen.TicketKommentar`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| Am | INTEGER | ja |  | G |  |
+| PersonId | BLOB | ja |  | G |  |
+| Text | TEXT | ja |  | G |  |
+| TicketId | BLOB | ja | → Tickets, Index | G |  |
+
+Indizes: (TicketId)
+
+## Tickets
+
+Klasse: `FraktionPerfekt.Domain.Kampagnen.Ticket`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| Beschreibung | TEXT |  |  | G |  |
+| ErstelltAm | INTEGER | ja |  | G |  |
+| ErstelltVonPersonId | BLOB | ja |  | G |  |
+| Faellig | INTEGER |  |  | G |  |
+| GeaendertAm | INTEGER | ja |  | G |  |
+| GebietId | BLOB |  | → Gebiete, Index | G |  |
+| KampagneId | BLOB | ja | → Kampagnen, eindeutig | G |  |
+| Nummer | INTEGER | ja | eindeutig | G |  |
+| PlakatId | BLOB |  | → Plakate, Index | G |  |
+| Prioritaet | TEXT(40) | ja |  | G |  |
+| Status | TEXT(40) | ja |  | G |  |
+| TerminId | BLOB |  | → Termine, Index | G |  |
+| Titel | TEXT | ja |  | G |  |
+| ZustaendigPersonId | BLOB |  | Index | G |  |
+
+Indizes: (GebietId); (PlakatId); (TerminId); (ZustaendigPersonId); (KampagneId, Nummer) eindeutig
+
+## TodoVorlagen
+
+Klasse: `FraktionPerfekt.Domain.Kampagnen.TodoVorlage`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | S | Schlüssel (Zeilen-Id) |
+| Name | TEXT(200) | ja |  | S | Name der Vorlage |
+
+## TodoVorlagenPunkte
+
+Klasse: `FraktionPerfekt.Domain.Kampagnen.TodoVorlagenPunkt`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | S | Schlüssel (Zeilen-Id) |
+| Position | INTEGER | ja | Index | S |  |
+| Text | TEXT | ja |  | S | Eintrag der Kopiervorlage (erzeugte ToDos sind eigenständig, keine Kopie im Sinne der Regeln) |
+| VorlageId | BLOB | ja | → TodoVorlagen, Index | S |  |
+
+Indizes: (VorlageId, Position)
 
 ## Tops
 

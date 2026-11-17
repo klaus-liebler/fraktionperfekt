@@ -74,7 +74,7 @@ internal static class WissenDemodaten
             ("Gremien/HFWA", "Haushalt 2026 – Eckdaten.csv", "Bereich;Ansatz 2026 (Mio. Euro)\nSchulen;48\nStraßen;22\nBäder;15\n", "djoud", "HFWA", false),
             ("Gremien/HFWA", "Stellungnahme Stadtwerke Bad.txt", "Fiktive Stellungnahme zur Badsanierung durch die Stadtwerke (nichtöffentlich).", "jwilp", "HFWA", true),
             ("Arbeitskreise/AK Schule", "Schulwege-Übersicht.txt", "Fiktive Übersicht der Schulwege bei Schließung zweier Grundschulstandorte.", "lkuehlert", "AK Schule", false),
-            ("Wahlkampf", "Plakatstandorte-Hinweise.txt", "Plakate nicht an Ampeln und Kreuzungen; Abstand zu Schulen beachten.", "fbaeumer", null, false),
+            ("Kampagnen", "Plakatstandorte-Hinweise.txt", "Plakate nicht an Ampeln und Kreuzungen; Abstand zu Schulen beachten.", "fbaeumer", null, false),
         };
         foreach (var d in dateien)
         {

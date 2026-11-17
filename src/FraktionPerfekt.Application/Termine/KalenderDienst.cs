@@ -73,7 +73,6 @@ public sealed class KalenderDienst(
     IAktuellerBenutzer benutzer,
     IOptions<FraktionOptionen> optionen,
     TimeProvider uhr,
-    IDaten daten,
     IServiceProvider dienste)
 {
     /// <summary>Termine im Zeitraum [von, bis] (Tage einschließlich) aus Sicht der angemeldeten Person.</summary>
@@ -142,6 +141,12 @@ public sealed class KalenderDienst(
 
         var status = zusage ? Teilnahmestatus.Zugesagt : Teilnahmestatus.Abgesagt;
         var teilnahme = await termine.TeilnahmeAsync(terminId, personId, abbruch);
+        if (zusage && termin.Plaetze is { } plaetze && teilnahme?.Status != Teilnahmestatus.Zugesagt
+            && (await termine.TeilnahmenAsync([terminId], abbruch)).Count(x => x.Status == Teilnahmestatus.Zugesagt) >= plaetze)
+        {
+            throw new InvalidOperationException($"Alle {plaetze} Plätze sind vergeben.");
+        }
+
         if (teilnahme is null)
         {
             termine.Hinzufuegen(new Teilnahme(terminId, personId, status, uhr.GetUtcNow()));
@@ -264,7 +269,6 @@ public sealed class KalenderDienst(
         var heute = Ortszeit.Heute(uhr);
         var rolle = person.RollenAm(heute, jetzt) is { Count: > 0 } rollen && rollen.All(r => r == Rolle.Helferin) ? Rolle.Helferin : (Rolle?)null;
         var zeilen = await ZeilenAsync(person.Id, rolle, heute.AddDays(-60), heute.AddDays(365), new Kalenderfilter(PersonId: person.Id), abbruch);
-        var schichten = await SchichtenAsync(person.Id, heute.AddDays(-60), abbruch);
         abo.AbrufVermerken(jetzt);
         await termine.SpeichernAsync(abbruch);
         return Kalenderdatei.Erzeugen($"{optionen.Value.Name} – {person.Vorname}",
@@ -272,7 +276,7 @@ public sealed class KalenderDienst(
                 z.GremiumKurz is { } k && !z.Termin.Titel.Contains(k, StringComparison.Ordinal) ? $"{z.Termin.Titel} ({k})" : z.Termin.Titel,
                 z.Termin.Beginn, z.Termin.Ende, z.Termin.Ort,
                 (z.Beteiligung == Beteiligung.Vertritt ? "Vertretung in dieser Sitzung.\n" : string.Empty) + optionen.Value.Link($"termine/{z.Termin.Id}"),
-                z.Termin.Abgesagt)).Concat(schichten),
+                z.Termin.Abgesagt)),
             jetzt);
     }
 
@@ -287,16 +291,6 @@ public sealed class KalenderDienst(
         var t = d.Zeile.Termin;
         return Kalenderdatei.Erzeugen(optionen.Value.Name, [new Kalendereintrag(t.Id, t.Titel, t.Beginn, t.Ende, t.Ort,
             (t.Beschreibung is null ? "" : t.Beschreibung + "\n\n") + optionen.Value.Link($"termine/{t.Id}"), t.Abgesagt)], uhr.GetUtcNow());
-    }
-
-    /// <summary>Infostand-Schichten, in die sich die Person eingetragen hat (auch Helfer:innen ohne Gremium).</summary>
-    private async Task<IReadOnlyList<Kalendereintrag>> SchichtenAsync(Guid personId, DateOnly ab, CancellationToken abbruch)
-    {
-        var start = ab.ToDateTime(TimeOnly.MinValue);
-        var ids = await daten.ListeAsync(daten.Menge<Domain.Wahlkampf.Schichteintrag>().Where(e => e.PersonId == personId).Select(e => e.SchichtId), abbruch);
-        return (await daten.ListeAsync(daten.Menge<Domain.Wahlkampf.Schicht>().Where(x => ids.Contains(x.Id) && x.Bis >= start).OrderBy(x => x.Von).ThenBy(x => x.Id), abbruch))
-            .Select(x => new Kalendereintrag(x.Id, $"Wahlkampf: {x.Ort}", x.Von, x.Bis, x.Ort, optionen.Value.Link("wahlkampf?ansicht=schichten").ToString(), false))
-            .ToList();
     }
 
     internal async Task<IReadOnlyList<TerminZeile>> ZeilenAsync(Guid? personId, Rolle? rolle, DateOnly von, DateOnly bis, Kalenderfilter filter,

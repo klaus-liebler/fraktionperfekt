@@ -200,7 +200,9 @@ public sealed partial class FraktionDbContext(DbContextOptions<FraktionDbContext
             b.HasIndex(t => t.Beginn);
             b.HasIndex(t => t.RisId).IsUnique();
             b.HasIndex(t => t.GremiumId);
+            b.HasIndex(t => t.KampagneId);
             b.HasOne<Gremium>().WithMany().HasForeignKey(t => t.GremiumId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Domain.Kampagnen.Kampagne>().WithMany().HasForeignKey(t => t.KampagneId).OnDelete(DeleteBehavior.Restrict);
             b.Ignore(t => t.Tag);
         });
 

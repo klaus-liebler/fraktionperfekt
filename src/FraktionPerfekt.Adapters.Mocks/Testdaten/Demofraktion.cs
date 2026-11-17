@@ -19,7 +19,7 @@ public sealed record Demogremium(string RisId, string Name, string Kurzname, str
 
 /// <summary>
 /// Demobesetzung der CDU-Fraktion Greven: die echten Mitglieder aus <see cref="FraktionGreven"/>, dazu fiktive Mitarbeitende
-/// (Geschäftsführung, Wahlkampfteam). Gremien, Sitze, Termine und alle Vorgänge sind erfunden (Demo).
+/// (Geschäftsführung, Kampagnenteam). Gremien, Sitze, Termine und alle Vorgänge sind erfunden (Demo).
 /// </summary>
 public static class Demofraktion
 {
@@ -31,7 +31,7 @@ public static class Demofraktion
     public static IReadOnlyList<Demoperson> Mitarbeitende { get; } =
     [
         new("Katrin", "Albers", "kalbers", null, "Fraktionsgeschäftsführerin (fiktiv, Demo)", [Rolle.Administration], "Frau"),
-        new("Felix", "Bäumer", "fbaeumer", null, "Wahlkampfteam (fiktiv, Demo)", [Rolle.Helferin], "Herr"),
+        new("Felix", "Bäumer", "fbaeumer", null, "Kampagnenteam (fiktiv, Demo)", [Rolle.Helferin], "Herr"),
         new("Nora", "Feldhaus", "nfeldhaus", null, "Ortsverband (fiktiv, Demo)", [Rolle.Helferin], "Frau"),
     ];
 

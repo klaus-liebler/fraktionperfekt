@@ -31,7 +31,7 @@ internal static class RessourcenDemodaten
             daten.Hinzufuegen(new Buchung(raum.Id, P("kalbers"), t.Beginn.AddMinutes(-30), t.Ende.AddMinutes(30), "Fraktionssitzung", t.Id, false, jetzt));
         }
 
-        if (kommende.FirstOrDefault(t => t.Art == Terminart.Wahlkampf) is { } infostandTermin)
+        if (kommende.FirstOrDefault(t => t.Art == Terminart.Kampagne) is { } infostandTermin)
         {
             daten.Hinzufuegen(new Buchung(infostand.Id, P("fbaeumer"), infostandTermin.Beginn.AddHours(-1), infostandTermin.Ende.AddHours(1), infostandTermin.Titel,
                 infostandTermin.Id, false, jetzt));

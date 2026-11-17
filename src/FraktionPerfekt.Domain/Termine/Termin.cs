@@ -11,7 +11,7 @@ public enum Terminart
 
     /// <summary>Öffentlicher Termin (Vereinsjubiläum, Bürgerversammlung …).</summary>
     Oeffentlich,
-    Wahlkampf,
+    Kampagne,
     Sonstiges,
 }
 
@@ -24,7 +24,7 @@ public static class TerminartExtensions
         Terminart.Ausschusssitzung => "Ausschusssitzung",
         Terminart.Arbeitskreis => "Arbeitskreis",
         Terminart.Oeffentlich => "Öffentlicher Termin",
-        Terminart.Wahlkampf => "Wahlkampf",
+        Terminart.Kampagne => "Kampagne",
         Terminart.Sonstiges => "Sonstiges",
         _ => art.ToString(),
     };
@@ -32,8 +32,8 @@ public static class TerminartExtensions
     /// <summary>Gremiensitzungen haben eine feste Besetzung (ordentliche Mitglieder) und brauchen bei Abwesenheit Vertretung.</summary>
     public static bool IstGremiensitzung(this Terminart art) => art is Terminart.Ratssitzung or Terminart.Ausschusssitzung;
 
-    /// <summary>Für Helfer:innen sichtbar.</summary>
-    public static bool IstOeffentlich(this Terminart art) => art is Terminart.Oeffentlich or Terminart.Wahlkampf;
+    /// <summary>Für das Kampagnenteam sichtbar.</summary>
+    public static bool IstOeffentlich(this Terminart art) => art is Terminart.Oeffentlich or Terminart.Kampagne;
 }
 
 /// <summary>
@@ -48,7 +48,7 @@ public sealed class Termin
     }
 
     public Termin(string titel, Terminart art, DateTime beginn, DateTime ende, string? ort, Guid? gremiumId, Guid? angelegtVonPersonId,
-        DateTimeOffset angelegtAm, string? beschreibung = null, string? risId = null, Guid? id = null)
+        DateTimeOffset angelegtAm, string? beschreibung = null, string? risId = null, Guid? id = null, Guid? kampagneId = null, int? plaetze = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(titel);
         if (ende <= beginn)
@@ -65,6 +65,8 @@ public sealed class Termin
         GremiumId = gremiumId;
         Beschreibung = string.IsNullOrWhiteSpace(beschreibung) ? null : beschreibung.Trim();
         RisId = risId;
+        KampagneId = kampagneId;
+        PlaetzeSetzen(plaetze);
         AngelegtVonPersonId = angelegtVonPersonId;
         AngelegtAm = angelegtAm;
     }
@@ -86,6 +88,12 @@ public sealed class Termin
     public Guid? GremiumId { get; private set; }
 
     public string? RisId { get; private set; }
+
+    /// <summary>Termin einer Kampagne (Infostand, Haustüraktion, Plakatieren …).</summary>
+    public Guid? KampagneId { get; private set; }
+
+    /// <summary>Plätze zum Einbuchen (leer = unbegrenzt).</summary>
+    public int? Plaetze { get; private set; }
 
     public bool Abgesagt { get; private set; }
 
@@ -109,6 +117,16 @@ public sealed class Termin
     }
 
     public void Absagen() => Abgesagt = true;
+
+    public void PlaetzeSetzen(int? plaetze)
+    {
+        if (plaetze is < 1 or > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(plaetze), "1 bis 100 Plätze.");
+        }
+
+        Plaetze = plaetze;
+    }
 }
 
 public enum Teilnahmestatus

@@ -8,7 +8,7 @@ Abwesenheitsgründe können Gesundheitsdaten sein.
 
 | Thema | Stand | Umsetzung / offener Punkt |
 |---|---|---|
-| A01 Zugriffskontrolle | ✅ | Rollen werden je Aktion im Anwendungsdienst geprüft (`Rechte`), nicht nur in der Oberfläche. Gesperrte Knöpfe und Menüpunkte erklären den Grund. Helfer:innen sehen nur öffentliche und Wahlkampftermine. Den Abwesenheitsgrund sehen nur die Person selbst und die Administration. Vertretungsanfragen beantwortet nur die gefragte Person. Endpunkte verlangen eine Anmeldung, außer der Anmeldeseite und dem Kalender-Abo. |
+| A01 Zugriffskontrolle | ✅ | Rollen werden je Aktion im Anwendungsdienst geprüft (`Rechte`), nicht nur in der Oberfläche. Gesperrte Knöpfe und Menüpunkte erklären den Grund. Das Kampagnenteam sieht nur öffentliche und Kampagnentermine. Den Abwesenheitsgrund sehen nur die Person selbst und die Administration. Vertretungsanfragen beantwortet nur die gefragte Person. Endpunkte verlangen eine Anmeldung, außer der Anmeldeseite und dem Kalender-Abo. |
 | A02 Kryptografie | ✅/⚠️ | Abo-Tokens: 256 Bit Zufall, gespeichert nur als SHA-256. Sicherungen mit SHA-256. HSTS außerhalb der Entwicklung. ⚠️ Verschlüsselung der Datenbank im Ruhezustand über die Laufwerksverschlüsselung des Servers; Backups verschlüsselt ablegen (Konzept). |
 | A03 Injection | ✅ | EF Core mit Parametern, keine zusammengesetzten SQL-Texte aus Benutzereingaben. ICS-Ausgabe maskiert `;`, `,`, `\` und Zeilenumbrüche. |
 | A04 Unsicheres Design | ✅ | Nichts wird überschrieben (bitemporal), Protokoll nur zum Anfügen, Postausgang statt Direktversand, Eskalation statt stillem Scheitern. |

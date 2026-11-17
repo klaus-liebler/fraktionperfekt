@@ -1,19 +1,19 @@
 using System.Globalization;
 using FraktionPerfekt.Application.Dokumente;
 using FraktionPerfekt.Application.Finanzen;
-using FraktionPerfekt.Application.Wahlkampf;
+using FraktionPerfekt.Application.Kampagnen;
 using FraktionPerfekt.Domain.Finanzen;
-using FraktionPerfekt.Domain.Wahlkampf;
+using FraktionPerfekt.Domain.Kampagnen;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FraktionPerfekt.Web.Wahlkampf;
+namespace FraktionPerfekt.Web.Kampagnen;
 
 /// <summary>Fotos, Belege, Kassenbericht und die Formularziele der Handy-Seiten „Plakate“ und „Auslage“.</summary>
-internal static class WahlkampfEndpunkte
+internal static class KampagnenEndpunkte
 {
-    public static void MapWahlkampf(this IEndpointRouteBuilder app)
+    public static void MapKampagnen(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/wahlkampf/plakat/{id:guid}/foto", async (Guid id, WahlkampfDienst w) =>
+        app.MapGet("/kampagnen/plakat/{id:guid}/foto", async (Guid id, KampagnenDienst w) =>
             await w.FotoAsync(id) is { } f ? Results.File(f.Inhalt, f.Typ) : Results.NotFound()).RequireAuthorization();
 
         app.MapGet("/finanzen/beleg/{id:guid}", async (Guid id, FinanzDienst f) =>
@@ -35,7 +35,7 @@ internal static class WahlkampfEndpunkte
 
         var handy = app.MapGroup("/handy-aktion").RequireAuthorization();
         handy.MapPost("/plakat", async ([FromForm] string? breite, [FromForm] string? laenge, [FromForm] string? standort, [FromForm] Plakatart art,
-            [FromForm] Plakatstatus status, IFormFile? foto, WahlkampfDienst w) =>
+            [FromForm] Plakatstatus status, IFormFile? foto, KampagnenDienst w) =>
         {
             if (!Zahl(breite, out var b) || !Zahl(laenge, out var l))
             {
@@ -45,7 +45,7 @@ internal static class WahlkampfEndpunkte
             try
             {
                 await using var strom = foto?.OpenReadStream();
-                await w.PlakatErfassenAsync(b, l, standort, art, status, null, strom, foto?.FileName);
+                await w.PlakatErfassenAsync(null, b, l, standort, art, status, null, strom, foto?.FileName);
                 return Zurueck("handy/plakat", "Plakat gespeichert.");
             }
             catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
@@ -54,7 +54,7 @@ internal static class WahlkampfEndpunkte
             }
         });
 
-        handy.MapPost("/plakat/{id:guid}/status", async (Guid id, [FromForm] Plakatstatus status, [FromForm] string? zurueck, WahlkampfDienst w) =>
+        handy.MapPost("/plakat/{id:guid}/status", async (Guid id, [FromForm] Plakatstatus status, [FromForm] string? zurueck, KampagnenDienst w) =>
         {
             var ziel = zurueck is "handy/plakat?abhaengen=1" ? zurueck : "handy/plakat";
             try

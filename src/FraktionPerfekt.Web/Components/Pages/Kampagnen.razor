@@ -1,0 +1,183 @@
+@page "/kampagnen"
+@using FraktionPerfekt.Application.Kampagnen
+@using FraktionPerfekt.Domain.Kampagnen
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+
+<PageTitle>Kampagnen · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Kampagnen</h1>
+        <p class="fp-sub">Wahlkämpfe, Haustüraktionen, Themenkampagnen – je Kampagne Plakate, Gebiete, Termine mit ToDo-Listen und Tickets. Plakate erfasst man am besten am Handy: <a href="handy/plakat">Handy-Ansicht „Plakate“</a>.</p>
+    </div>
+    <BegruendeterButton Text="Neue Kampagne" Icon="add" Freigabe="@steuern" Click="@(() => neuOffen = true)" />
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+@if (zeilen.Count == 0)
+{
+    <p class="fp-leer">Noch keine Kampagne.</p>
+}
+<div class="fp-kampagnen">
+    @foreach (var z in zeilen)
+    {
+        var k = z.Kampagne;
+        <a class="fp-card fp-kampagne @(k.Status == Kampagnenstatus.Abgeschlossen ? "fp-blass" : null)" href="kampagnen/@k.Id">
+            <div class="fp-row" style="justify-content:space-between">
+                <h2>@k.Name</h2>
+                <StatusPille Stil="@StatusStil(k.Status)">@StatusText(k.Status)</StatusPille>
+            </div>
+            <p class="fp-small fp-muted">@Zeitraum(k)@(k.Wahltag is { } w ? $" · Wahltag {w:dd.MM.yyyy}" : "")</p>
+            <div class="fp-kpis">
+                <div class="fp-kpi"><div class="fp-kpi-lbl">Plakate hängen</div><div class="fp-kpi-val">@z.PlakateHaengen</div></div>
+                <div class="fp-kpi"><div class="fp-kpi-lbl">Gebiete offen</div><div class="fp-kpi-val">@z.GebieteOffen</div></div>
+                <div class="fp-kpi"><div class="fp-kpi-lbl">Termine</div><div class="fp-kpi-val">@z.TermineKommend</div></div>
+                <div class="fp-kpi"><div class="fp-kpi-lbl">Tickets offen</div><div class="fp-kpi-val">@z.TicketsOffen</div></div>
+            </div>
+        </a>
+    }
+</div>
+
+<section class="fp-card">
+    <h2>ToDo-Vorlagen</h2>
+    <p class="fp-small fp-muted">Kopiervorlagen für die ToDo-Liste eines Termins (z. B. „Infostand“). Erzeugte ToDos sind eigenständig: Änderungen an der Vorlage ändern sie nicht.</p>
+    @foreach (var v in vorlagen)
+    {
+        <details class="fp-einschub">
+            <summary><b>@v.Vorlage.Name</b> <span class="fp-small fp-muted">· @v.Punkte.Count Einträge</span></summary>
+            <ol class="fp-kompakt">@foreach (var p in v.Punkte) { <li>@p.Text</li> }</ol>
+            @if (steuern.Erlaubt)
+            {
+                <div class="fp-row">
+                    <RadzenButton Text="Bearbeiten" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => VorlageBearbeiten(v))" />
+                    <RadzenButton Text="Löschen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => AusfuehrenAsync(s => s.VorlageLoeschenAsync(v.Vorlage.Id), "Vorlage gelöscht."))" />
+                </div>
+            }
+        </details>
+    }
+    <BegruendeterButton Text="Neue Vorlage" Size="ButtonSize.Small" Icon="playlist_add" Freigabe="@steuern" Click="@(() => VorlageBearbeiten(null))" />
+</section>
+
+<GrosserDialog @bind-Offen="neuOffen" Titel="Neue Kampagne" Geaendert="@(!string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(beschreibung))">
+    <ChildContent>
+        <div class="fp-form">
+            <div class="fp-field fp-grow"><label class="fp-lbl" for="k-name">Name</label><RadzenTextBox id="k-name" @bind-Value="name" Immediate="true" Placeholder="z. B. Kommunalwahl 2030" /></div>
+            <div class="fp-field"><label class="fp-lbl">Beginn</label><RadzenDatePicker TValue="DateTime?" @bind-Value="beginn" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+            <div class="fp-field"><label class="fp-lbl">Ende</label><RadzenDatePicker TValue="DateTime?" @bind-Value="ende" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+            <div class="fp-field"><label class="fp-lbl">Wahltag (optional)</label><RadzenDatePicker TValue="DateTime?" @bind-Value="wahltag" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+        </div>
+        <span class="fp-lbl">Beschreibung, Ziele</span>
+        <MarkdownEditor @ref="editor" @bind-Text="beschreibung" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Beschreibung der Kampagne" Hoehe="100%" />
+    </ChildContent>
+    <Knoepfe><RadzenButton Text="Anlegen" Icon="save" Disabled="@string.IsNullOrWhiteSpace(name)" Click="AnlegenAsync" /></Knoepfe>
+</GrosserDialog>
+
+<GrosserDialog @bind-Offen="vorlageOffen" Titel="@(vorlageId is null ? "Neue ToDo-Vorlage" : "ToDo-Vorlage bearbeiten")" Klein="true" Geaendert="@(!string.IsNullOrWhiteSpace(vorlageName))">
+    <ChildContent>
+        <div class="fp-field"><label class="fp-lbl" for="v-name">Name</label><RadzenTextBox id="v-name" @bind-Value="vorlageName" Immediate="true" Placeholder="z. B. Infostand" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="v-punkte">Einträge (eine Zeile je ToDo)</label>
+            <textarea id="v-punkte" class="fp-textarea" rows="8" @bind="vorlagePunkte" @bind:event="oninput"></textarea></div>
+    </ChildContent>
+    <Knoepfe><RadzenButton Text="Speichern" Icon="save" Disabled="@string.IsNullOrWhiteSpace(vorlageName)" Click="VorlageSpeichernAsync" /></Knoepfe>
+</GrosserDialog>
+
+@code {
+    private IReadOnlyList<KampagnenZeile> zeilen = [];
+    private IReadOnlyList<VorlageZeile> vorlagen = [];
+    private Freigabe steuern = Freigabe.Nein("Kampagnen anlegen: Vorstand oder Geschäftsführung.");
+    private bool neuOffen, vorlageOffen;
+    private string? name, beschreibung, vorlageName, vorlagePunkte;
+    private Guid? vorlageId;
+    private DateTime? beginn, ende, wahltag;
+    private MarkdownEditor? editor;
+    private Guid entwurfId = Guid.NewGuid();
+    private string? meldung;
+    private bool fehler;
+
+    internal static string StatusText(Kampagnenstatus s) => s switch
+    {
+        Kampagnenstatus.Aktiv => "aktiv",
+        Kampagnenstatus.Abgeschlossen => "abgeschlossen",
+        _ => "in Planung",
+    };
+
+    internal static string StatusStil(Kampagnenstatus s) => s switch
+    {
+        Kampagnenstatus.Aktiv => "gut",
+        Kampagnenstatus.Abgeschlossen => "neutral",
+        _ => "info",
+    };
+
+    internal static string Zeitraum(Kampagne k) => (k.Beginn, k.Ende) switch
+    {
+        ({ } b, { } e) => $"{b:dd.MM.yyyy} – {e:dd.MM.yyyy}",
+        ({ } b, null) => $"ab {b:dd.MM.yyyy}",
+        (null, { } e) => $"bis {e:dd.MM.yyyy}",
+        _ => "ohne Zeitraum",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        steuern = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KampagnenDienst>().SteuernAsync());
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        zeilen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KampagnenDienst>().KampagnenAsync());
+        vorlagen = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KampagnenDienst>().VorlagenAsync());
+    }
+
+    private static DateOnly? Tag(DateTime? d) => d is { } x ? DateOnly.FromDateTime(x) : null;
+
+    private async Task AnlegenAsync()
+    {
+        if (editor is not null)
+        {
+            beschreibung = await editor.AktuellerTextAsync();
+        }
+
+        try
+        {
+            var (k, _) = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KampagnenDienst>().KampagneAnlegenAsync(name!, beschreibung, Tag(beginn), Tag(ende), Tag(wahltag)));
+            neuOffen = false;
+            Navigation.NavigateTo($"kampagnen/{k.Id}");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+    }
+
+    private void VorlageBearbeiten(VorlageZeile? v)
+    {
+        (vorlageId, vorlageName, vorlagePunkte) = (v?.Vorlage.Id, v?.Vorlage.Name, v is null ? null : string.Join("\n", v.Punkte.Select(p => p.Text)));
+        vorlageOffen = true;
+    }
+
+    private async Task VorlageSpeichernAsync()
+    {
+        await AusfuehrenAsync(s => s.VorlageSpeichernAsync(vorlageId, vorlageName!, (vorlagePunkte ?? "").Split('\n')), "Vorlage gespeichert.");
+        vorlageOffen = fehler;
+    }
+
+    private async Task AusfuehrenAsync(Func<KampagnenDienst, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => aktion(d.GetRequiredService<KampagnenDienst>()));
+            (meldung, fehler) = (erfolg, false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

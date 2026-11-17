@@ -46,7 +46,7 @@ public sealed class BesetzungDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            return []; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+            return []; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
         var anfragen = await daten.ListeAsync(daten.Menge<Besetzungsanfrage>().OrderBy(a => a.Frist).ThenBy(a => a.Id), abbruch);
         var meldungen = await daten.ListeAsync(daten.Menge<Besetzungsmeldung>().OrderBy(m => m.Am).ThenBy(m => m.Id), abbruch);
@@ -84,7 +84,7 @@ public sealed class BesetzungDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         if (wer.Rolle is Rolle.Helferin)
         {
-            return null; // Wie im Menü: Helfer:innen sehen nur den Wahlkampf (auch nicht über die direkte Adresse).
+            return null; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
         if (await daten.FindenAsync<Besetzungsanfrage>(id, abbruch) is not { } a || await termine.TerminAsync(a.TerminId, abbruch) is not { } t)
         {

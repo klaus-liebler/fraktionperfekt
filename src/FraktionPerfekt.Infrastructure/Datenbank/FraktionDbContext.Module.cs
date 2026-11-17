@@ -78,10 +78,48 @@ public sealed partial class FraktionDbContext
 
     private static void Iteration7(ModelBuilder modelBuilder)
     {
-        Einfach<Domain.Wahlkampf.Plakat>(modelBuilder, "Plakate", b => b.HasIndex(x => x.Status));
-        Einfach<Domain.Wahlkampf.Gebiet>(modelBuilder, "Gebiete");
-        Einfach<Domain.Wahlkampf.Schicht>(modelBuilder, "Schichten", b => b.HasIndex(x => x.Von));
-        Einfach<Domain.Wahlkampf.Schichteintrag>(modelBuilder, "Schichteintraege", b => b.HasIndex(x => new { x.SchichtId, x.PersonId }).IsUnique());
+        Einfach<Domain.Kampagnen.Kampagne>(modelBuilder, "Kampagnen", b =>
+        {
+            b.Property(x => x.Name).HasMaxLength(200);
+            b.HasIndex(x => x.Status);
+        });
+        Einfach<Domain.Kampagnen.Plakat>(modelBuilder, "Plakate", b =>
+        {
+            b.HasIndex(x => new { x.KampagneId, x.Status });
+            b.HasOne<Domain.Kampagnen.Kampagne>().WithMany().HasForeignKey(x => x.KampagneId).OnDelete(DeleteBehavior.Restrict);
+        });
+        Einfach<Domain.Kampagnen.Gebiet>(modelBuilder, "Gebiete", b =>
+        {
+            b.HasIndex(x => x.KampagneId);
+            b.HasOne<Domain.Kampagnen.Kampagne>().WithMany().HasForeignKey(x => x.KampagneId).OnDelete(DeleteBehavior.Restrict);
+        });
+        Einfach<Domain.Kampagnen.TodoVorlage>(modelBuilder, "TodoVorlagen", b => b.Property(x => x.Name).HasMaxLength(200));
+        Einfach<Domain.Kampagnen.TodoVorlagenPunkt>(modelBuilder, "TodoVorlagenPunkte", b =>
+        {
+            b.HasIndex(x => new { x.VorlageId, x.Position });
+            b.HasOne<Domain.Kampagnen.TodoVorlage>().WithMany().HasForeignKey(x => x.VorlageId).OnDelete(DeleteBehavior.Cascade);
+        });
+        Einfach<Domain.Kampagnen.TerminTodo>(modelBuilder, "TerminTodos", b =>
+        {
+            b.HasIndex(x => new { x.TerminId, x.Position });
+            b.HasOne<Domain.Termine.Termin>().WithMany().HasForeignKey(x => x.TerminId).OnDelete(DeleteBehavior.Cascade);
+            b.Ignore(x => x.Erledigt);
+        });
+        Einfach<Domain.Kampagnen.Ticket>(modelBuilder, "Tickets", b =>
+        {
+            b.HasIndex(x => new { x.KampagneId, x.Nummer }).IsUnique();
+            b.HasIndex(x => x.ZustaendigPersonId);
+            b.HasOne<Domain.Kampagnen.Kampagne>().WithMany().HasForeignKey(x => x.KampagneId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Domain.Kampagnen.Gebiet>().WithMany().HasForeignKey(x => x.GebietId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Domain.Kampagnen.Plakat>().WithMany().HasForeignKey(x => x.PlakatId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Domain.Termine.Termin>().WithMany().HasForeignKey(x => x.TerminId).OnDelete(DeleteBehavior.Restrict);
+            b.Ignore(x => x.Offen);
+        });
+        Einfach<Domain.Kampagnen.TicketKommentar>(modelBuilder, "TicketKommentare", b =>
+        {
+            b.HasIndex(x => x.TicketId);
+            b.HasOne<Domain.Kampagnen.Ticket>().WithMany().HasForeignKey(x => x.TicketId).OnDelete(DeleteBehavior.Cascade);
+        });
         Einfach<Domain.Finanzen.Haushaltsposten>(modelBuilder, "Haushaltsposten", b => b.HasIndex(x => new { x.Kasse, x.Jahr }));
         Einfach<Domain.Finanzen.Kassenbuchung>(modelBuilder, "Kassenbuchungen", b =>
         {

@@ -14,7 +14,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261116222517_Initial";
+    public override string LastMigrationId => "20261117075645_Initial";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -873,6 +873,320 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("MitgliedschaftId", "GueltigVon");
 
                 b.ToTable("MitgliedschaftsVersionen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.Gebiet", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Art")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Beschreibung")
+                    .HasColumnType("TEXT");
+
+                b.Property<double?>("Breite")
+                    .HasColumnType("REAL");
+
+                b.Property<long?>("ErledigtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("KampagneId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<double?>("Laenge")
+                    .HasColumnType("REAL");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Vermerk")
+                    .HasColumnType("TEXT");
+
+                b.Property<byte[]>("ZugeteiltPersonId")
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("KampagneId");
+
+                b.ToTable("Gebiete");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.Kampagne", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<long>("AngelegtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("AngelegtVonPersonId")
+                    .HasColumnType("BLOB");
+
+                b.Property<int?>("Beginn")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Beschreibung")
+                    .HasColumnType("TEXT");
+
+                b.Property<int?>("Ende")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<int?>("Wahltag")
+                    .HasColumnType("INTEGER");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Status");
+
+                b.ToTable("Kampagnen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.Plakat", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Art")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<double>("Breite")
+                    .HasColumnType("REAL");
+
+                b.Property<long>("ErfasstAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("ErfasstVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("FotoSchluessel")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("FotoTyp")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("GeaendertAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("GeaendertVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("KampagneId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<double>("Laenge")
+                    .HasColumnType("REAL");
+
+                b.Property<string>("Motiv")
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Standort")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("KampagneId", "Status");
+
+                b.ToTable("Plakate");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.TerminTodo", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<long?>("ErledigtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("ErledigtVonPersonId")
+                    .HasColumnType("BLOB");
+
+                b.Property<int>("Position")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("TerminId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<byte[]>("ZustaendigPersonId")
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("TerminId", "Position");
+
+                b.ToTable("TerminTodos");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.Ticket", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Beschreibung")
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("ErstelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("ErstelltVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<int?>("Faellig")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long>("GeaendertAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("GebietId")
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("KampagneId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<int>("Nummer")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("PlakatId")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Prioritaet")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<byte[]>("TerminId")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<byte[]>("ZustaendigPersonId")
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("GebietId");
+
+                b.HasIndex("PlakatId");
+
+                b.HasIndex("TerminId");
+
+                b.HasIndex("ZustaendigPersonId");
+
+                b.HasIndex("KampagneId", "Nummer")
+                    .IsUnique();
+
+                b.ToTable("Tickets");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.TicketKommentar", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<byte[]>("TicketId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("TicketId");
+
+                b.ToTable("TicketKommentare");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.TodoVorlage", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.ToTable("TodoVorlagen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.TodoVorlagenPunkt", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<int>("Position")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
+
+                b.Property<byte[]>("VorlageId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("VorlageId", "Position");
+
+                b.ToTable("TodoVorlagenPunkte");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.EMailAdresse", b =>
@@ -1989,9 +2303,15 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<byte[]>("GremiumId")
                     .HasColumnType("BLOB");
 
+                b.Property<byte[]>("KampagneId")
+                    .HasColumnType("BLOB");
+
                 b.Property<string>("Ort")
                     .HasMaxLength(300)
                     .HasColumnType("TEXT");
+
+                b.Property<int?>("Plaetze")
+                    .HasColumnType("INTEGER");
 
                 b.Property<string>("RisId")
                     .HasMaxLength(200)
@@ -2007,6 +2327,8 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("Beginn");
 
                 b.HasIndex("GremiumId");
+
+                b.HasIndex("KampagneId");
 
                 b.HasIndex("RisId")
                     .IsUnique();
@@ -2180,155 +2502,6 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("Vertretungskandidaten");
-            });
-
-        modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Gebiet", b =>
-            {
-                b.Property<byte[]>("Id")
-                    .HasColumnType("BLOB");
-
-                b.Property<string>("Art")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Beschreibung")
-                    .HasColumnType("TEXT");
-
-                b.Property<double?>("Breite")
-                    .HasColumnType("REAL");
-
-                b.Property<long?>("ErledigtAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<double?>("Laenge")
-                    .HasColumnType("REAL");
-
-                b.Property<string>("Name")
-                    .IsRequired()
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Status")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Vermerk")
-                    .HasColumnType("TEXT");
-
-                b.Property<byte[]>("ZugeteiltPersonId")
-                    .HasColumnType("BLOB");
-
-                b.HasKey("Id");
-
-                b.ToTable("Gebiete");
-            });
-
-        modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Plakat", b =>
-            {
-                b.Property<byte[]>("Id")
-                    .HasColumnType("BLOB");
-
-                b.Property<string>("Art")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
-                b.Property<double>("Breite")
-                    .HasColumnType("REAL");
-
-                b.Property<long>("ErfasstAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<byte[]>("ErfasstVonPersonId")
-                    .IsRequired()
-                    .HasColumnType("BLOB");
-
-                b.Property<string>("FotoSchluessel")
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("FotoTyp")
-                    .HasColumnType("TEXT");
-
-                b.Property<long>("GeaendertAm")
-                    .HasColumnType("INTEGER");
-
-                b.Property<byte[]>("GeaendertVonPersonId")
-                    .IsRequired()
-                    .HasColumnType("BLOB");
-
-                b.Property<double>("Laenge")
-                    .HasColumnType("REAL");
-
-                b.Property<string>("Motiv")
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Standort")
-                    .IsRequired()
-                    .HasColumnType("TEXT");
-
-                b.Property<string>("Status")
-                    .IsRequired()
-                    .HasMaxLength(40)
-                    .HasColumnType("TEXT");
-
-                b.HasKey("Id");
-
-                b.HasIndex("Status");
-
-                b.ToTable("Plakate");
-            });
-
-        modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Schicht", b =>
-            {
-                b.Property<byte[]>("Id")
-                    .HasColumnType("BLOB");
-
-                b.Property<long>("Bis")
-                    .HasColumnType("INTEGER");
-
-                b.Property<string>("Ort")
-                    .IsRequired()
-                    .HasColumnType("TEXT");
-
-                b.Property<int>("Plaetze")
-                    .HasColumnType("INTEGER");
-
-                b.Property<byte[]>("TerminId")
-                    .HasColumnType("BLOB");
-
-                b.Property<long>("Von")
-                    .HasColumnType("INTEGER");
-
-                b.HasKey("Id");
-
-                b.HasIndex("Von");
-
-                b.ToTable("Schichten");
-            });
-
-        modelBuilder.Entity("FraktionPerfekt.Domain.Wahlkampf.Schichteintrag", b =>
-            {
-                b.Property<byte[]>("Id")
-                    .HasColumnType("BLOB");
-
-                b.Property<long>("Am")
-                    .HasColumnType("INTEGER");
-
-                b.Property<byte[]>("PersonId")
-                    .IsRequired()
-                    .HasColumnType("BLOB");
-
-                b.Property<byte[]>("SchichtId")
-                    .IsRequired()
-                    .HasColumnType("BLOB");
-
-                b.HasKey("Id");
-
-                b.HasIndex("SchichtId", "PersonId")
-                    .IsUnique();
-
-                b.ToTable("Schichteintraege");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Wissen.Bild", b =>
@@ -2638,6 +2811,75 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Navigation("Vorgang");
             });
 
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.Gebiet", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Kampagnen.Kampagne", null)
+                    .WithMany()
+                    .HasForeignKey("KampagneId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.Plakat", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Kampagnen.Kampagne", null)
+                    .WithMany()
+                    .HasForeignKey("KampagneId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.TerminTodo", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Termine.Termin", null)
+                    .WithMany()
+                    .HasForeignKey("TerminId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.Ticket", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Kampagnen.Gebiet", null)
+                    .WithMany()
+                    .HasForeignKey("GebietId")
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne("FraktionPerfekt.Domain.Kampagnen.Kampagne", null)
+                    .WithMany()
+                    .HasForeignKey("KampagneId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+
+                b.HasOne("FraktionPerfekt.Domain.Kampagnen.Plakat", null)
+                    .WithMany()
+                    .HasForeignKey("PlakatId")
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne("FraktionPerfekt.Domain.Termine.Termin", null)
+                    .WithMany()
+                    .HasForeignKey("TerminId")
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.TicketKommentar", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Kampagnen.Ticket", null)
+                    .WithMany()
+                    .HasForeignKey("TicketId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Kampagnen.TodoVorlagenPunkt", b =>
+            {
+                b.HasOne("FraktionPerfekt.Domain.Kampagnen.TodoVorlage", null)
+                    .WithMany()
+                    .HasForeignKey("VorlageId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
         modelBuilder.Entity("FraktionPerfekt.Domain.Personen.EMailAdresse", b =>
             {
                 b.HasOne("FraktionPerfekt.Domain.Personen.Person", null)
@@ -2786,6 +3028,11 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasOne("FraktionPerfekt.Domain.Gremien.Gremium", null)
                     .WithMany()
                     .HasForeignKey("GremiumId")
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne("FraktionPerfekt.Domain.Kampagnen.Kampagne", null)
+                    .WithMany()
+                    .HasForeignKey("KampagneId")
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
