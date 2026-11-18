@@ -57,6 +57,23 @@ internal static partial class SpielEndpunkte
             http.Response.Headers.CacheControl = "no-cache";
             return Results.File(pfad, "image/png");
         }).RequireAuthorization();
+
+        // Hymne „Greven an der Ems“ für den Player im Impressum: öffentlich wie das Impressum selbst.
+        // Quelle ist assets/ im Repository; beim Veröffentlichen landet sie in Spiel/musik (siehe csproj).
+        var musik = Directory.Exists(Path.Combine(ordner, "musik"))
+            ? Path.Combine(ordner, "musik")
+            : Path.GetFullPath(Path.Combine(inhalt, "..", "..", "assets"));
+        app.MapGet("/hymne.mp3", (HttpContext http) =>
+        {
+            var pfad = Path.Combine(musik, "greven_an_der_ems.mp3");
+            if (!File.Exists(pfad))
+            {
+                return Results.NotFound();
+            }
+
+            http.Response.Headers.CacheControl = "public, max-age=86400";
+            return Results.File(pfad, "audio/mpeg", enableRangeProcessing: true); // Range: Spulen im Player
+        }).AllowAnonymous();
     }
 
     [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.png$")]

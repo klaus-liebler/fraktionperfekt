@@ -137,7 +137,7 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
   **Betrieb → Impressum** (Markdown, Vorlage nach § 5 DDG, solange leer ein markierter Platzhalter).
 - **Dokumentation** `/dokumentation` für Administration und Vorstand: Doku aus `docs/` und README mit **Kommentaren je
   Abschnitt** (Antworten, offen/erledigt, Übersicht, Export `/dokumentation/kommentare.md`); Rechte im
-  `DokumentationDienst`. Das Konzept erscheint dort, sobald es als `docs/spezifikation/konzept.md` im Repo liegt.
+  `DokumentationDienst`. Das Konzept (`docs/konzept.md`, führend) steht dort mit Kommentarfunktion.
 - **Geführte Touren** auf der Hilfeseite (`Abnahmemodus:Aktiv`, Standard an): acht Touren nach dem Gesamt-Drehbuch
   mit Kontowechsel (`wwwroot/tour.js`, `wwwroot/touren/abnahme.json`); `node tests/Touren/tourpruefung.mjs
   http://localhost:5290` spielt sie durch.

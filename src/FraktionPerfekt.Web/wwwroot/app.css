@@ -504,6 +504,9 @@ a.fp-kampagne h2 { margin: 0; }
 .fp-doku-kommentar-antwort { margin-left: 16px; padding-left: 10px; border-left: 2px solid var(--fp-line); }
 .fp-doku-kommentar-neu { display: flex; flex-direction: column; gap: 6px; }
 .fp-impressum .fp-doku-text { border: 0; padding: 0; }
+.fp-impressum-extra { margin-top: 18px; }
+.fp-impressum-extra h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.fp-impressum-extra audio { width: 100%; }
 @media (max-width: 920px) {
     .fp-doku { grid-template-columns: minmax(0, 1fr); }
     .fp-doku-toc { position: static; max-height: 260px; }

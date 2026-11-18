@@ -105,7 +105,13 @@ public sealed partial class AppStartTests : IAsyncLifetime
         (await http.GetAsync("sw.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetAsync("offline.html", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetStringAsync("spiel/", abbruch)).ShouldContain("Testanmeldung"); // Easteregg nur angemeldet
-        (await http.GetStringAsync("impressum", abbruch)).ShouldContain("Impressum"); // öffentlich, ohne Anmeldung
+        var impressum = await http.GetStringAsync("impressum", abbruch); // öffentlich, ohne Anmeldung
+        impressum.ShouldContain("Impressum");
+        impressum.ShouldContain("src=\"hymne.mp3\""); // Player für die Hymne
+        impressum.ShouldContain("href=\"spiel/\""); // Link zum Spiel
+        var hymne = await http.GetAsync("hymne.mp3", HttpCompletionOption.ResponseHeadersRead, abbruch); // öffentlich wie das Impressum
+        hymne.StatusCode.ShouldBe(HttpStatusCode.OK);
+        hymne.Content.Headers.ContentType!.MediaType.ShouldBe("audio/mpeg");
 
         // Sicherheitsheader (CSP mit Hash der Import-Map, kein Framing) und no-store auf dem Kalender-Abo.
         var kopf = await http.GetAsync("anmelden", abbruch);

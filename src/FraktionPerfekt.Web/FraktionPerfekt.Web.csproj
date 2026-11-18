@@ -35,6 +35,8 @@
     <Content Include="Spiel\**" Exclude="Spiel\**\*.cs" CopyToPublishDirectory="PreserveNewest" />
     <!-- Spielgrafiken: einzige Quelle ist assets/ (erzeugt mit tools/Grafik/erzeuge.mjs) -->
     <Content Include="..\..\assets\*.png" Link="Spiel\grafik\%(Filename)%(Extension)" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Hymne „Greven an der Ems“ für den Player im Impressum (öffentlich, siehe SpielEndpunkte.MapHymne) -->
+    <Content Include="..\..\assets\*.mp3" Link="Spiel\musik\%(Filename)%(Extension)" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
