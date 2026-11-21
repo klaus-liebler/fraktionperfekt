@@ -2,6 +2,7 @@
 // Koordinaten: x nach rechts, z zur Kamera, y nach oben; Boden bei y = 0. Die Vorderwand fehlt (Puppenstuben-Schnitt).
 import * as THREE from './three_min.js';
 import { RoomEnvironment } from './roomenv.js';
+import { meterMaterial } from './texturen3d.js';
 
 let seed = 99;
 const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -38,12 +39,17 @@ function raum(renderer, o) {
     scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .35;
     const { x0, x1, z0, z1, hoehe } = o;
     const B = x1 - x0, T = z1 - z0;
-    const boden = plane(B, T + 5.5, std({ map: o.boden, roughness: o.bodenRau || .7 }), o.bodenKachel || 1);
+    // Fläche: gemalte Textur (Kachel bodenKachel bzw. 1,5 m) oder Fototextur { foto, farbe } in echtem Maßstab
+    const flaeche = (spec, rau, kachel) => (spec && spec.foto
+        ? [meterMaterial(spec.foto, { roughness: rau, ...(spec.farbe !== undefined ? { color: spec.farbe } : {}) }), 1]
+        : [std({ map: spec, roughness: rau }), kachel]);
+    const [bodenMat, bodenKachel] = flaeche(o.boden, o.bodenRau || .7, o.bodenKachel || 1);
+    const boden = plane(B, T + 5.5, bodenMat, bodenKachel);
     boden.rotation.x = -Math.PI / 2; boden.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2 + 2.75); boden.name = 'boden'; scene.add(boden);
-    const wand = std({ map: o.wand, roughness: .92 });
-    const rueck = plane(B, hoehe, wand, 1.5); rueck.position.set((x0 + x1) / 2, hoehe / 2, z0); scene.add(rueck);
-    const links = plane(T + 5.5, hoehe, wand, 1.5); links.rotation.y = Math.PI / 2; links.position.set(x0, hoehe / 2, (z0 + z1) / 2 + 2.75); scene.add(links);
-    const rechts = plane(T + 5.5, hoehe, wand, 1.5); rechts.rotation.y = -Math.PI / 2; rechts.position.set(x1, hoehe / 2, (z0 + z1) / 2 + 2.75); scene.add(rechts);
+    const [wand, wandKachel] = flaeche(o.wand, .92, 1.5);
+    const rueck = plane(B, hoehe, wand, wandKachel); rueck.position.set((x0 + x1) / 2, hoehe / 2, z0); scene.add(rueck);
+    const links = plane(T + 5.5, hoehe, wand, wandKachel); links.rotation.y = Math.PI / 2; links.position.set(x0, hoehe / 2, (z0 + z1) / 2 + 2.75); scene.add(links);
+    const rechts = plane(T + 5.5, hoehe, wand, wandKachel); rechts.rotation.y = -Math.PI / 2; rechts.position.set(x1, hoehe / 2, (z0 + z1) / 2 + 2.75); scene.add(rechts);
     const decke = plane(B, T + 5.5, std({ color: o.decke || 0xe8e4dc })); decke.rotation.x = Math.PI / 2; decke.position.set((x0 + x1) / 2, hoehe, (z0 + z1) / 2 + 2.75); scene.add(decke);
     // Fußleisten
     const leiste = std({ color: o.leiste || 0x6a5a4a });
@@ -67,26 +73,10 @@ function freiImRaum(grenzen, hindernisse) {
 }
 
 // ---------- Texturen ----------
-const dielen = () => canvasTex(512, 512, (g, w, h) => {
-    for (let i = 0; i < 8; i++) {
-        const y = i * 64; g.fillStyle = `rgb(${150 + rnd() * 30},${104 + rnd() * 20},${66 + rnd() * 14})`; g.fillRect(0, y, w, 64);
-        g.fillStyle = 'rgba(60,35,20,.5)'; g.fillRect(0, y, w, 2); const s = Math.floor(rnd() * w); g.fillRect(s, y, 2, 64);
-        for (let k = 0; k < 30; k++) { g.fillStyle = `rgba(80,50,30,${rnd() * .12})`; g.fillRect(rnd() * w, y + rnd() * 60, 40 + rnd() * 80, 1); }
-    }
-});
-const putz = (farbe) => canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = farbe; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 1800; i++) { g.fillStyle = `rgba(90,80,60,${rnd() * .04})`; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
-});
 const linoleum = () => canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = '#8f8a7c'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 3000; i++) { g.fillStyle = `rgba(${rnd() < .5 ? '255,255,255' : '0,0,0'},${rnd() * .07})`; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
     g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, 0, w, 2); g.fillRect(0, 0, 2, h);
-});
-const beton = () => canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#9c978c'; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 2500; i++) { g.fillStyle = `rgba(0,0,0,${rnd() * .08})`; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
-    g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, w, 3); g.fillRect(0, 0, 3, h);
 });
 function schrift(w, h, hg, farbe, text, font, zeilen) {
     return canvasTex(w, h, (g) => {
@@ -127,7 +117,7 @@ function lampe(scene, x, y, z, staerke = 6, farbe = 0xffd9a0) {
 export function buero(renderer) {
     seed = 1949;
     const x0 = -4.2, x1 = 4.2, z0 = -3, z1 = 3;
-    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 3.2, boden: dielen(), bodenKachel: 2, wand: putz('#efebe2'), hell: .9, sonne: .9 });
+    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 3.2, boden: { foto: 'dielen' }, wand: { foto: 'putz', farbe: 0xefebe2 }, hell: .9, sonne: .9 });
     const holz = std({ color: 0x8a5a36, roughness: .6 }), weiss = std({ color: 0xf2f0ea, roughness: .5 }), dunkel = std({ color: 0x2a2c30, roughness: .6 }), metall = std({ color: 0x9a9d9e, roughness: .35, metalness: .7 });
     // blaues Band der Zukunftsschmiede an der Rückwand
     at(plane(8.4, .28, std({ color: 0x1597bb })), 0, 2.55, z0 + .01, scene);
@@ -144,7 +134,7 @@ export function buero(renderer) {
     const aussicht = plane(5.6, 2.9, new THREE.MeshBasicMaterial({ map: strasse })); aussicht.rotation.y = Math.PI / 2; aussicht.position.set(x0 - .6, 1.6, -.4); scene.add(aussicht);
     // Wandöffnung: Brüstung, Sturz, Pfosten, Glas
     const glas = std({ color: 0xbfd6e2, roughness: .05, metalness: .1, transparent: true, opacity: .18 });
-    const wandStk = std({ map: putz('#efebe2') });
+    const wandStk = meterMaterial('putz', { color: 0xefebe2 });
     // Die Wand bekommt ein echtes Fenster: Wandstück entfernen, indem wir die Seitenwand neu aufbauen
     scene.children.filter((c) => c.isMesh && Math.abs(c.position.x - x0) < .001 && c.geometry.type === 'PlaneGeometry').forEach((c) => scene.remove(c));
     const teile = [[z0, -2.6, 0, 3.2], [1.0, 1.25, 0, 3.2], [2.35, z1 + 5.5, 0, 3.2], [-2.6, 1.0, 0, .5], [-2.6, 1.0, 2.8, 3.2], [1.25, 2.35, 2.45, 3.2]];
@@ -243,7 +233,7 @@ export function buero(renderer) {
 export function flur(renderer) {
     seed = 1956;
     const x0 = -7.5, x1 = 7.5, z0 = -1.8, z1 = 1.8;
-    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 3.0, boden: linoleum(), bodenKachel: .6, wand: putz('#e6e1d3'), hell: 1.0, sonne: .8, leiste: 0x4a4a48 });
+    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 3.0, boden: linoleum(), bodenKachel: .6, wand: { foto: 'putz', farbe: 0xe6e1d3 }, hell: 1.0, sonne: .8, leiste: 0x4a4a48 });
     const dunkel = std({ color: 0x3a3c40, roughness: .6 }), holz = std({ color: 0x9a7048, roughness: .6 }), metall = std({ color: 0x9a9d9e, roughness: .35, metalness: .7 }), gruen = std({ color: 0x5a7a62 });
     // Sockelstreifen
     at(plane(15, .9, std({ color: 0xb8c2b0 })), 0, .45, z0 + .005, scene);
@@ -318,7 +308,7 @@ export function flur(renderer) {
 export function archiv(renderer) {
     seed = 1946;
     const x0 = -5, x1 = 5, z0 = -3.5, z1 = 3.2;
-    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 2.9, boden: beton(), bodenKachel: 1.2, wand: putz('#d8d2c0'), hell: .7, sonne: .55, himmel: 0xe6f0ff, leiste: 0x3a3a3a });
+    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 2.9, boden: { foto: 'beton' }, wand: { foto: 'putz', farbe: 0xd8d2c0 }, hell: .7, sonne: .55, himmel: 0xe6f0ff, leiste: 0x3a3a3a });
     const stahl = std({ color: 0x7a8288, roughness: .45, metalness: .6 }), dunkel = std({ color: 0x2a2c30 }), holz = std({ color: 0x7a5236, roughness: .6 });
     // raumfüllendes Regal an der Rückwand: Ratsprotokolle 1946 ff.
     const reg = new THREE.Group(); reg.name = 'protokolle';
@@ -394,20 +384,6 @@ export function archiv(renderer) {
 // ======================================================================
 // Akt 4–5: Schulflur, Krypta, Tempel des Grundgesetzes (frei erfunden)
 // ======================================================================
-const backstein = () => canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#5a3a2a'; g.fillRect(0, 0, w, h);
-    for (let r = 0; r < 16; r++) { for (let c = -1; c < 5; c++) {
-        const x = c * 64 + (r % 2) * 32, y = r * 16;
-        g.fillStyle = `rgb(${120 + rnd() * 40},${62 + rnd() * 20},${42 + rnd() * 14})`; g.fillRect(x + 2, y + 2, 60, 12);
-    } }
-});
-const sandstein = () => canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#c9a874'; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 2500; i++) { g.fillStyle = `rgba(${rnd() < .5 ? '90,60,30' : '255,240,210'},${rnd() * .08})`; g.fillRect(rnd() * w, rnd() * h, 3, 2); }
-    g.strokeStyle = 'rgba(80,55,30,.35)'; g.lineWidth = 2;
-    for (let y = 0; y <= h; y += 64) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
-    for (let y = 0; y < h; y += 64) { for (let x = (y / 64) % 2 ? 64 : 0; x < w; x += 128) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 64); g.stroke(); } }
-});
 function fackel(scene, x, y, z, roh) {
     const g = new THREE.Group();
     at(new THREE.Mesh(new THREE.CylinderGeometry(.05, .03, .5, 8), std({ color: 0x3a2a1a })), 0, 0, 0, g);
@@ -421,7 +397,7 @@ const flackern = (f, t) => { const k = .8 + .2 * Math.sin(t * 13 + f.seed) * Mat
 export function schulflur(renderer) {
     seed = 1949 * 2;
     const x0 = -8, x1 = 8, z0 = -1.8, z1 = 1.8;
-    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 3.0, boden: linoleum(), bodenKachel: .5, wand: putz('#f2ecd8'), hell: 1.0, sonne: .8, leiste: 0x3a6a9a });
+    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 3.0, boden: linoleum(), bodenKachel: .5, wand: { foto: 'putz', farbe: 0xf2ecd8 }, hell: 1.0, sonne: .8, leiste: 0x3a6a9a });
     const holz = std({ color: 0xb07a40, roughness: .6 }), dunkel = std({ color: 0x3a3c40 }), metall = std({ color: 0x9a9d9e, roughness: .35, metalness: .7 });
     at(plane(16, 1.0, std({ color: 0x8fc0e8 })), 0, .5, z0 + .005, scene);
     const tuer = (x, schild, farbe) => {
@@ -472,10 +448,9 @@ export function schulflur(renderer) {
 export function krypta(renderer) {
     seed = 1517;
     const x0 = -5.5, x1 = 5.5, z0 = -3.5, z1 = 3.0;
-    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 3.4, boden: beton(), bodenKachel: 1.2, wand: backstein(), hell: .25, sonne: .15, himmel: 0x8090c0, hintergrund: 0x050302, leiste: 0x2a1a10 });
+    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 3.4, boden: { foto: 'beton', farbe: 0x8a8478 }, wand: { foto: 'altziegel' }, hell: .25, sonne: .15, himmel: 0x8090c0, hintergrund: 0x050302, leiste: 0x2a1a10 });
     // Tonnengewölbe
-    const gew = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 5.5, 12, 32, 1, true, -Math.PI / 2, Math.PI), std({ map: backstein(), side: THREE.BackSide }));
-    gew.material.map.repeat.set(6, 4); gew.rotation.z = Math.PI / 2; gew.scale.set(.25, 1, 1); gew.position.set(0, 3.4, 0); scene.add(gew);
+    const gew = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 5.5, 12, 32, 1, true, -Math.PI / 2, Math.PI), meterMaterial('altziegel', { side: THREE.BackSide }, [6, 4])); gew.rotation.z = Math.PI / 2; gew.scale.set(.25, 1, 1); gew.position.set(0, 3.4, 0); scene.add(gew);
     const stein = std({ color: 0x8a8070, roughness: .95 }), bronze = std({ color: 0x9a7a3a, metalness: .8, roughness: .35 });
     // Fresko (unten Urne, Mitte Buch, oben Waage)
     const freskoTex = canvasTex(256, 384, (g, w, h) => {
@@ -537,8 +512,8 @@ export function krypta(renderer) {
 export function tempelHalle(renderer) {
     seed = 1949 * 3;
     const x0 = -6.5, x1 = 6.5, z0 = -24, z1 = 4;
-    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 7, boden: sandstein(), bodenKachel: 2, wand: sandstein(), hell: .35, sonne: .25, himmel: 0xffe0b0, hintergrund: 0x0a0604, leiste: 0x7a5a3a });
-    const sst = std({ map: sandstein(), roughness: .9 }), dunkel = std({ color: 0x2a2018 }), eisen = std({ color: 0x3a3a3e, metalness: .7, roughness: .5 });
+    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 7, boden: { foto: 'sandstein' }, wand: { foto: 'sandstein' }, hell: .35, sonne: .25, himmel: 0xffe0b0, hintergrund: 0x0a0604, leiste: 0x7a5a3a });
+    const sst = meterMaterial('sandstein', { roughness: .9 }), dunkel = std({ color: 0x2a2018 }), eisen = std({ color: 0x3a3a3e, metalness: .7, roughness: .5 });
     // Säulen
     for (const z of [2, -3, -9, -20]) { for (const x of [-5.6, 5.6]) { at(new THREE.Mesh(new THREE.CylinderGeometry(.45, .5, 7, 16), sst), x, 3.5, z, scene); } }
     // Querwand mit Durchgang und Fallgitter bei z = -6.5
@@ -627,8 +602,8 @@ export function tempelHalle(renderer) {
 export function tempelFinale(renderer) {
     seed = 23;
     const x0 = -6, x1 = 6, z0 = -5, z1 = 4;
-    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 6, boden: sandstein(), bodenKachel: 2, wand: sandstein(), hell: .45, sonne: .3, himmel: 0xffe0b0, hintergrund: 0x0a0604, leiste: 0x7a5a3a });
-    const sst = std({ map: sandstein(), roughness: .9 });
+    const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 6, boden: { foto: 'sandstein' }, wand: { foto: 'sandstein' }, hell: .45, sonne: .3, himmel: 0xffe0b0, hintergrund: 0x0a0604, leiste: 0x7a5a3a });
+    const sst = meterMaterial('sandstein', { roughness: .9 });
     const schacht = new THREE.SpotLight(0xfff0d0, 60, 14, .35, .5, 1.2); schacht.position.set(1.8, 6, -2); schacht.target.position.set(1.8, 0, -2); scene.add(schacht, schacht.target);
     const strahl = new THREE.Mesh(new THREE.CylinderGeometry(.6, 1.2, 6, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff0d0, transparent: true, opacity: .08, depthWrite: false })); strahl.position.set(1.8, 3, -2); scene.add(strahl);
     const gold = std({ color: 0xe6b422, metalness: 1, roughness: .2 });

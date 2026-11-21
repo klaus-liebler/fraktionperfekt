@@ -71,7 +71,7 @@ function schrittName(z, s) {
 
 const out = [];
 const p = (t = '') => out.push(t);
-p('# Lösungsweg: „Joe & Chani und der Gral der Demokratie“');
+p('# Lösungsweg: „Joe & Chani und Grevens Gral der Demokratie“');
 p();
 p('Kompletter Lösungsweg mit allen Texten und Regieanweisungen. Die Datei wird mit `node tools/Grafik/loesungsweg.mjs` aus dem Spiel erzeugt;');
 p('Änderungswünsche einfach direkt hineinschreiben (Texte ändern, Regie ergänzen, Kommentare als „**Klaus:** …“) – sie werden dann ins Spiel übernommen');

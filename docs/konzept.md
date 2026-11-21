@@ -126,7 +126,7 @@ Für Kontakte und Bürgeranliegen gelten eigene Datenschutzhinweise und Löschfr
 
 ### Außerhalb des Plans: Easteregg-Spiel ✅
 
-Ein kleines Point-and-Click-Spiel („Joe & Chani und der Gral der Demokratie“) unter `/spiel`, ohne Bezug zu Fachdaten; dazu eine 3D-Fassung mit realen Greven-Schauplätzen (LoD2) unter `/spiel3d` und ein Spickzettel mit Direkteinstiegen unter `/cheatsheet`. Details: `docs/spiel.md`.
+Ein kleines Point-and-Click-Spiel („Joe & Chani und Grevens Gral der Demokratie“) unter `/spiel`, ohne Bezug zu Fachdaten; dazu eine 3D-Fassung mit realen Greven-Schauplätzen (LoD2) unter `/spiel3d` und ein Spickzettel mit Direkteinstiegen unter `/cheatsheet`. Details: `docs/spiel.md`.
 
 ## Bedienung und Integration ins Handy und den Rechner
 
@@ -248,7 +248,7 @@ Das MVP deckt die Abläufe ab, die jede Woche anfallen: Sitzungen, Termine und V
 | 2 – Zusammenarbeit | Anträge mit Fassungen und Abstimmung, Umfragen und Terminfindung, Terminbesetzung, Räume und Ressourcen, Dateien und Wiki mit Volltextsuche und KI-Schnittstelle | I3–I5 | ✅ (KI echt, Nextcloud ⏳) |
 | 3 – Außenwirkung | Anfragen, Beschlusslage, Bürgeranliegen, Pressearbeit, Kontakte, Kampagnen (früher Wahlkampf) und Finanzen | I6–I7 | ✅ (Kampagnen am 17.11.2026 ausgebaut) |
 | Feinschliff | Heute mit Hinweisen und Schnellaktionen, globale Suche, PWA, Web Push, Erinnerungen, Löschfristen; danach Datenbank-Regeln aus VibeVHS, große Editor-Dialoge, Betrieb auf dem Server | I8 und folgende | ✅ |
-| Easteregg | Spiel „Joe & Chani und der Gral der Demokratie“ | I9 | ✅ |
+| Easteregg | Spiel „Joe & Chani und Grevens Gral der Demokratie“ | I9 | ✅ |
 | Vor dem Echtbetrieb | Passkeys/echte Anmeldung, SMTP, produktive Web-Push-Schlüssel, echte KI, echte OParl- und Nextcloud-Anbindung, Capacitor-Hülle, Mandanten-Rest, Datenschutzdokumente, geführte Touren ausschalten (`Abnahmemodus__Aktiv=false`, Standard ist an) oder überarbeiten: ohne Kontowechsel und ohne Demodaten-Annahmen (heute wechseln sie per Testanmeldung das Konto und lösen echte Aktionen aus) | – | ⏳ |
 
 Die Reihenfolge von Stufe 2 und 3 sollte vom nächsten Wahltermin abhängen; umgesetzt sind inzwischen alle drei Stufen. Die Zusatzmodule 10 bis 20 sind in ihrer Tabelle einer Stufe zugeordnet.

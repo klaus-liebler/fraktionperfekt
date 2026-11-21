@@ -2,6 +2,7 @@
 import * as THREE from './three_min.js';
 import { mergeGeometries } from './buffergeometry.js';
 import { RoomEnvironment } from './roomenv.js';
+import { fotoMaterial, textur } from './texturen3d.js';
 
 export function baue(renderer, DATEN) {
   let __bl = [];
@@ -250,7 +251,8 @@ export function baue(renderer, DATEN) {
     for (let i = 0; i < 1500; i++) { g.fillStyle = `rgba(0,0,0,${rnd() * .12})`; g.fillRect(rnd() * w, rnd() * h, 1, 1); }
     g.fillStyle = '#f2f2f2'; for (let y = 0; y < h; y += 16) g.fillRect(0, y, w, 1);
   });
-  const ground = terrainMesh(new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1 }), 3);
+  // Fototexturen (Poly Haven, CC0), siehe texturen3d.js
+  const ground = terrainMesh(fotoMaterial('rasen'), textur('rasen').meter);
   function flatPoly(pts, mat, y, tile, name = 'ground') {
     // grid of 1.5 m cells clipped to the polygon, laid onto the terrain
     const inside = (e, n) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > n) !== (yj > n) && e < (xj - xi) * (n - yi) / (yj - yi) + xi) c = !c; } return c; };
@@ -263,7 +265,7 @@ export function baue(renderer, DATEN) {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
     const m = new THREE.Mesh(g, mat); m.receiveShadow = true; m.name = name; scene.add(m); return m;
   }
-  const paveMat = new THREE.MeshStandardMaterial({ map: greyPaveTex, roughness: .95 });
+  const paveMat = fotoMaterial('pflaster');   // graues Fischgrätpflaster
   flatPoly([[-30, -10.5], [-18.6, -8.0], [-16.6, -15], [-12, -26], [-24, -36], [-36, -30]], paveMat, .01, 2);   // forecourt at the entrance
   flatPoly([[-12, 26], [20, 33], [19, 36], [-13, 29]], paveMat, .012, 2);            // path along the lawn side
   flatPoly([[18, 44], [22, 44], [44, 90], [40, 90]], paveMat, .012, 2);          // path to the north-east
@@ -283,17 +285,19 @@ export function baue(renderer, DATEN) {
   function wallMaterial(kind) {   // 0 brick houses, 1 Hallenbad (white base, glass band, yellow panels)
     const m = new THREE.MeshStandardMaterial({ map: brickTex, roughness: .85, side: THREE.DoubleSide });
     m.onBeforeCompile = sh => {
+      sh.uniforms.uBackstein = { value: textur('backstein').map }; sh.uniforms.uKachelB = { value: textur('backstein').meter };
       sh.uniforms.uKind = { value: kind };
       sh.uniforms.uNight = wallUniforms.uNight;
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', '#include <common>\nattribute vec3 wattr;\nattribute float bofs;\nvarying vec3 vW;\nvarying float vH;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvW = wattr; vH = position.y - bofs;');
       sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform sampler2D uBackstein; uniform float uKachelB;')
         .replace('#include <common>', '#include <common>\nuniform float uKind; uniform float uNight; varying vec3 vW; varying float vH;')
         .replace('#include <map_fragment>', `
   vec4 col; float topH = vH + vW.y; bool glow = false;
   if (uKind < .5) {
-    col = texture2D(map, vec2(vW.x, vH / .6));
+    col = texture2D(uBackstein, vec2(vW.x, vH) / uKachelB);
     if (vW.z > 3.5 && topH > 2.6) {
       float per = 2.7, sh = mod(vW.z, per) * .5, lx = mod(vW.x - sh, per) / per, ly = mod(vH - .9, 2.8), wh = 1.45;
       bool fits = vH > .9 && vW.x > sh && vW.x < vW.z - sh && vW.y > (wh - ly) + .25;

@@ -2,6 +2,7 @@
 import * as THREE from './three_min.js';
 import { mergeGeometries } from './buffergeometry.js';
 import { RoomEnvironment } from './roomenv.js';
+import { fotoMaterial, textur } from './texturen3d.js';
 
 export function baue(renderer, DATEN) {
   let __bl = [];
@@ -255,8 +256,9 @@ export function baue(renderer, DATEN) {
     g.fillStyle = '#55575b'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 4000; i++) { const v = 70 + rnd() * 40; g.fillStyle = `rgb(${v},${v},${v + 3})`; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
   });
-  const ground = terrainMesh(new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1 }), 3);
-  const gravelMat = new THREE.MeshStandardMaterial({ map: gravelTex, roughness: 1 });
+  // Fototexturen (Poly Haven, CC0), siehe texturen3d.js
+  const ground = terrainMesh(fotoMaterial('rasen'), textur('rasen').meter);
+  const gravelMat = fotoMaterial('kies');
   // dike-top paths on both sides, following the river
   for (const side of [-1, 1]) {
     const pos = [], uv = [];
@@ -305,7 +307,7 @@ export function baue(renderer, DATEN) {
       edge.push(e, y0 - 1.35, 1.3, e + 1, y1 - 1.35, 1.3, e + 1, y1 - 1.35, -1.3, e, y0 - 1.35, 1.3, e + 1, y1 - 1.35, -1.3, e, y0 - 1.35, -1.3);
     }
     const mk = (p, u) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); if (u) g.setAttribute('uv', new THREE.Float32BufferAttribute(u, 2)); g.computeVertexNormals(); return g; };
-    const deck = new THREE.Mesh(mk(pos, uv), new THREE.MeshStandardMaterial({ map: asphaltTex, roughness: .95, side: THREE.DoubleSide }));
+    const deck = new THREE.Mesh(mk(pos, uv), fotoMaterial('asphalt', { side: THREE.DoubleSide }));
     deck.receiveShadow = true; deck.name = 'ground'; bridge.add(deck);
     bridge.add(new THREE.Mesh(mk(line), new THREE.MeshStandardMaterial({ color: 0xbdbab2, roughness: .8 })));
     const em = new THREE.Mesh(mk(edge), new THREE.MeshStandardMaterial({ color: 0xb9b6ae, roughness: .9, side: THREE.DoubleSide })); em.castShadow = true; em.receiveShadow = true; bridge.add(em);

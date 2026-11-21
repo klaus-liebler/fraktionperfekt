@@ -1,5 +1,6 @@
 // Joe & Chani 3D – Figuren aus einfachen Körpern (Gelenk-Rig: Hüfte, Rumpf, Hals, Kopf, Arme, Beine) mit Posen.
 import * as THREE from './three_min.js';
+import { GLTFLoader } from './gltfloader.js';
 
 const mat = (c, r = .7, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
 function mesh(geo, material, parent, x = 0, y = 0, z = 0) { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; }
@@ -88,13 +89,15 @@ export function joe() {
         headExtras(h, s) {
             const grey = mat(0xb9b6b0, .9);
             const r = mesh(new THREE.SphereGeometry(.112 * s, 28, 14, Math.PI * .82, Math.PI * 1.36, Math.PI * .4, Math.PI * .24), grey, h, 0, .115 * s, -.004 * s); r.scale.set(1.03, 1.08, 1.08);
-            const m = new THREE.CapsuleGeometry(.009 * s, .05 * s, 4, 10); m.rotateZ(Math.PI / 2); mesh(m, mat(0x8a8178, .9), h, 0, .081 * s, .112 * s).scale.set(1, 1.1, .8);
+            // Brille und Schnauzer als Gruppe (ziehen bei der realistischen Figur mit an deren Kopf um)
+            const gesicht = new THREE.Group(); h.add(gesicht); h.userData.gesicht = gesicht;
+            const m = new THREE.CapsuleGeometry(.009 * s, .05 * s, 4, 10); m.rotateZ(Math.PI / 2); mesh(m, mat(0x8a8178, .9), gesicht, 0, .081 * s, .112 * s).scale.set(1, 1.1, .8);
             const lens = new THREE.MeshStandardMaterial({ color: 0xe8f2f8, roughness: .05, metalness: .1, transparent: true, opacity: .25 });
             const metal = mat(0x6b6e72, .3, .8);
             for (const x of [-.037, .037]) {
-                mesh(new THREE.BoxGeometry(.05 * s, .028 * s, .003 * s), lens, h, x * s, .124 * s, .118 * s).castShadow = false;
-                mesh(new THREE.BoxGeometry(.05 * s, .003 * s, .004 * s), metal, h, x * s, .139 * s, .118 * s);
-                mesh(new THREE.BoxGeometry(.003 * s, .003 * s, .11 * s), metal, h, Math.sign(x) * .108 * s, .136 * s, .065 * s);
+                mesh(new THREE.BoxGeometry(.05 * s, .028 * s, .003 * s), lens, gesicht, x * s, .124 * s, .118 * s).castShadow = false;
+                mesh(new THREE.BoxGeometry(.05 * s, .003 * s, .004 * s), metal, gesicht, x * s, .139 * s, .118 * s);
+                mesh(new THREE.BoxGeometry(.003 * s, .003 * s, .11 * s), metal, gesicht, Math.sign(x) * .108 * s, .136 * s, .065 * s);
             }
             // Fedora: Krempe, Krone mit Kniff, Hutband
             const hut = new THREE.Group(); hut.position.set(0, .2 * s, -.005 * s); hut.rotation.x = -.08; h.add(hut);
@@ -107,6 +110,7 @@ export function joe() {
         }
     });
     c.userData.hut = c.userData.head.userData.hut;
+    c.userData.gesicht = c.userData.head.userData.gesicht;
     // Ohne Jacke: Hemdsärmel (hellblaues Hemd); die Lederjacke hängt dann an der Garderobe
     const [cloth, leder] = c.userData.spine.userData.leder;
     c.userData.jacke = (an) => { cloth.color.set(an ? 0x5b3a22 : 0x9fb8cc); cloth.roughness = an ? .45 : .75; leder.color.set(an ? 0x4a2e1a : 0x8aa6bc); };
@@ -193,6 +197,7 @@ export function ledeiw() {
  * Pose je Bild: art = stehen | gehen | reden | benutzen | erschrocken | kleben; t = Zeit in Sekunden.
  */
 export function pose(c, t, art) {
+    if (c.userData.rb) { poseRb(c, t, art); return; }
     const u = c.userData, s = u.s, ph0 = u.phase;
     const w = art === 'gehen' || art === 'rennen' ? 1 : 0, ph = t * (art === 'rennen' ? 13 : 8) + ph0;
     const sw = Math.sin(ph) * .55 * w;
@@ -329,4 +334,178 @@ export function lastenrad() {
     const akku = mesh(new THREE.BoxGeometry(.3, .12, .1), mat(0x333333, .4), g, -.1, .65, 0);
     g.userData.raeder = raeder;
     return g;
+}
+
+// ======================================================================
+// Realistische Figuren für Joe und Chani: Microsoft Rocketbox (MIT), umgewandelt mit tools/Figuren/baue.mjs.
+// Das glb-Modell kommt in die vorhandene Wurzel; die einfachen Körper werden ausgeblendet. Hut, Brille/Schnauzer und
+// Bauhelm hängen an einem Kopfanker, der denselben Rahmen hat wie der Kopf der einfachen Figur.
+
+/** tempo: Geschwindigkeit der Gehanimation (m/s); helm: Maßstab s für helmAuf() am Kopfanker (Meter). */
+const RB = {
+    joe: { tempo: 2.0, helm: .94 },
+    chani: { tempo: 1.92, helm: .9 }
+};
+const RB_ERSATZ = { kleben: 'erschrocken', rudern: 'sitzen', zielen: 'sitzen', radeln: 'sitzen' };
+const LAUFTEMPO = 2.3;   // wie laufen() in darstellung3d.js
+
+/** Lädt figur_<name>.glb und setzt das Modell in die Figur c. Bei Fehlern bleibt die einfache Figur. */
+export async function realistisch(c, name) {
+    const cfg = RB[name];
+    // Eingebettete Texturen per <img> laden: Der Standardweg (ImageBitmapLoader) holt blob:-Adressen per fetch(), das die
+    // CSP der App nicht erlaubt (connect-src ohne blob:); img-src erlaubt blob: (Sicherheitsheader.cs).
+    const lader = new GLTFLoader().register((parser) => {
+        parser.textureLoader = new THREE.TextureLoader(parser.options.manager);
+        return { name: 'fp_texturen_per_img' };
+    });
+    const gltf = await lader.loadAsync(new URL(`figur_${name}.glb`, import.meta.url).href);
+    const modell = gltf.scene, u = c.userData;
+    modell.scale.setScalar(.01);   // Rocketbox: Zentimeter
+    modell.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } });
+    for (const o of [...c.children]) { o.visible = false; }
+    c.add(modell);
+    c.updateMatrixWorld(true);
+    // Kopfanker in Ruhehaltung ausrichten: Ursprung am Kopfknochen, Achsen wie die Wurzel (y oben, z vorn), Meter
+    const kopf = modell.getObjectByName('Bip01_Head');
+    const ort = c.worldToLocal(kopf.getWorldPosition(new THREE.Vector3()));
+    const soll = new THREE.Matrix4().compose(ort, new THREE.Quaternion(), new THREE.Vector3(1, 1, 1)).premultiply(c.matrixWorld);
+    const anker = new THREE.Group(); anker.name = 'kopfanker';
+    new THREE.Matrix4().copy(kopf.matrixWorld).invert().multiply(soll).decompose(anker.position, anker.quaternion, anker.scale);
+    kopf.add(anker);
+    // Zubehör neu in Kopfgröße (Maße aus den Gesichtsknochen, siehe tools/Figuren/masse.mjs)
+    for (const k of ['hut', 'gesicht', 'helm']) { if (u[k]) { u[k].removeFromParent(); u[k] = null; } }
+    if (name === 'joe') { u.hut = hutRb(anker); u.gesicht = brilleRb(anker); }
+    u.head = anker; u.s = cfg.helm;
+    // Animationen je Pose
+    const mixer = new THREE.AnimationMixer(modell), aktionen = {};
+    for (const clip of gltf.animations) { aktionen[clip.name] = mixer.clipAction(clip); }
+    if (aktionen.gehen) { aktionen.gehen.timeScale = LAUFTEMPO / cfg.tempo; }
+    const kiefer = modell.getObjectByName('Bip01_MJaw');
+    u.rb = { mixer, aktionen, aktiv: null, name: null, t: null, kiefer, kieferRuhe: kiefer ? kiefer.quaternion.clone() : null };
+    if (u.jacke) { u.jacke = jackeRb(modell); u.jackeAn = undefined; }
+}
+
+/** Fedora für Joe (Meter, Kopfanker): Krempe gut 4 cm über den Brauen, Krone über dem Scheitel. */
+function hutRb(a) {
+    const hut = new THREE.Group(); hut.position.set(0, .158, .005); hut.rotation.x = -.1; a.add(hut);
+    const filz = mat(0x5e4630, .85), band = mat(0x2a1d14, .7);
+    mesh(new THREE.CylinderGeometry(.165, .165, .008, 40), filz, hut).scale.z = 1.08;
+    const krone = mesh(new THREE.CylinderGeometry(.082, .098, .11, 32), filz, hut, 0, .055, 0); krone.scale.z = 1.12;
+    mesh(new THREE.CylinderGeometry(.099, .1, .022, 32), band, hut, 0, .015, 0).scale.z = 1.12;
+    mesh(new THREE.BoxGeometry(.016, .018, .15), mat(0x4e3a28, .85), hut, 0, .108, 0);
+    return hut;
+}
+
+/** Randlose Brille und grauer Schnauzer für Joe (Augen ±3,2 cm, 9,9 cm über dem Kopfknochen, Oberlippe bei 3,2 cm). */
+function brilleRb(a) {
+    const g = new THREE.Group(); a.add(g);
+    const lens = new THREE.MeshStandardMaterial({ color: 0xe8f2f8, roughness: .05, metalness: .1, transparent: true, opacity: .22 });
+    const metal = mat(0x8a8d92, .3, .8);
+    for (const x of [-1, 1]) {
+        mesh(new THREE.BoxGeometry(.044, .028, .002), lens, g, x * .032, .099, .113).castShadow = false;
+        mesh(new THREE.BoxGeometry(.044, .0025, .003), metal, g, x * .032, .1135, .113);
+        mesh(new THREE.BoxGeometry(.0025, .0025, .1), metal, g, x * .066, .108, .064).rotation.y = -x * .2;
+    }
+    mesh(new THREE.BoxGeometry(.02, .0025, .003), metal, g, 0, .106, .116);
+    // Schnauzer: zwei leicht hängende Hälften
+    const bart = mat(0xa29b92, .95);
+    for (const x of [-1, 1]) {
+        const m = new THREE.CapsuleGeometry(.0058, .02, 4, 10); m.rotateZ(Math.PI / 2);
+        const h = mesh(m, bart, g, x * .0125, .045, .127); h.rotation.z = x * .28; h.rotation.y = -x * .25; h.scale.set(1, .8, .65);
+    }
+    return g;
+}
+
+/** Joe: Lederjacke an = das karierte Sakko wird zu braunem Leder umgefärbt (Hose, Hemd, Haut bleiben). */
+function jackeRb(modell) {
+    let koerper = null;
+    modell.traverse((o) => { if (o.isMesh && o.material.name === 'body') { koerper = o.material; } });
+    if (!koerper || !koerper.map || !koerper.map.image) { return () => { }; }
+    const sakko = koerper.map, img = sakko.image;
+    const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+    const g = cv.getContext('2d'); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, cv.width, cv.height), p = d.data;
+    for (let i = 0; i < p.length; i += 4) {
+        const r = p[i], gg = p[i + 1], b = p[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+        const lum = .3 * r + .59 * gg + .11 * b, sat = mx ? (mx - mn) / mx : 0;
+        // Tweed: wenig gesättigt, mittlere Helligkeit (Hose ist fast schwarz, Hemd kräftig rot)
+        const w = Math.max(0, Math.min(1, (.3 - sat) / .08)) * Math.max(0, Math.min(1, (lum - 48) / 14)) * Math.max(0, Math.min(1, (215 - lum) / 20));
+        if (w <= 0) { continue; }
+        const k = .82 + (lum / 110 - 1) * .3;   // Falten behalten, Karomuster abschwächen
+        p[i] = r + (92 * k - r) * w; p[i + 1] = gg + (56 * k - gg) * w; p[i + 2] = b + (32 * k - b) * w;
+    }
+    g.putImageData(d, 0, 0);
+    const leder = new THREE.CanvasTexture(cv);
+    leder.flipY = sakko.flipY; leder.colorSpace = sakko.colorSpace; leder.wrapS = sakko.wrapS; leder.wrapT = sakko.wrapT; leder.anisotropy = 4;
+    return (an) => { koerper.map = an ? leder : sakko; };
+}
+
+function poseRb(c, t, art) {
+    const r = c.userData.rb;
+    const dt = r.t === null ? 0 : Math.min(.1, Math.max(0, t - r.t)); r.t = t;
+    const name = r.aktionen[art] ? art : (r.aktionen[RB_ERSATZ[art]] ? RB_ERSATZ[art] : 'stehen');
+    if (name !== r.name) {
+        const neu = r.aktionen[name];
+        neu.reset().setEffectiveWeight(1).play();
+        if (r.aktiv) { neu.crossFadeFrom(r.aktiv, .25, false); }
+        r.aktiv = neu; r.name = name;
+    }
+    r.mixer.update(dt);
+    if (r.kiefer) {
+        r.kiefer.quaternion.copy(r.kieferRuhe);
+        const auf = art === 'reden' ? Math.abs(Math.sin(t * 11 + c.userData.phase)) * .14 : art === 'erschrocken' ? .2 : 0;
+        if (auf) { r.kiefer.rotateZ(auf); }   // positive Drehung um z öffnet den Mund (Rocketbox-Kiefer)
+    }
+}
+
+/** Professor Relbeil (nur am Telefon, für sein Porträt): weißes Haar, Vollbart, Brille, Tweedjacke, Fliege. */
+export function relbeil() {
+    return character({
+        scale: 1.0, skin: 0xeab896, top: 0x7a6a4e, shirt: 0xf2efe6, legs: 0x4a4038, shoes: 0x3a2c22, eyes: 0x4a6a8a, brows: 0xe8e4dc, lips: 0xa86a5a,
+        headW: 1.0, headH: 1.1, torsoDepth: .74,
+        torsoProfile: [[.17, -.05], [.2, .06], [.205, .2], [.21, .36], [.205, .44], [.155, .5], [.06, .54], [0, .545]],
+        dressFront(sp, s, shirt, cloth) {
+            blazer(cloth, shirt, s, sp, null);
+            for (const x of [-1, 1]) { const f = mesh(new THREE.ConeGeometry(.025 * s, .05 * s, 4), mat(0x8a1c2a, .6), sp, x * .024 * s, .49 * s, .16 * s); f.rotation.z = -x * Math.PI / 2; }
+        },
+        headExtras(h, s) {
+            const weiss = mat(0xece8e0, .9);
+            mesh(new THREE.SphereGeometry(.113 * s, 24, 14, Math.PI * .75, Math.PI * 1.5, Math.PI * .28, Math.PI * .3), weiss, h, 0, .118 * s, -.006 * s).scale.set(1.08, 1.1, 1.1);
+            const bart = mesh(new THREE.SphereGeometry(.1 * s, 20, 12, Math.PI * .1, Math.PI * .8, Math.PI * .5, Math.PI * .4), weiss, h, 0, .1 * s, 0); bart.scale.set(1.05, 1.2, 1.12);
+            for (const x of [-.037, .037]) { mesh(new THREE.TorusGeometry(.02 * s, .003 * s, 6, 16), mat(0x6a5030, .4, .3), h, x * s, .125 * s, .116 * s); }
+        }
+    });
+}
+
+/**
+ * Gesichtsausdruck für ein Porträt setzen (neutral | lacht | erschrocken); gibt eine Funktion zurück, die alles zurücksetzt.
+ * Realistische Figuren: Gesichtsknochen leicht verschieben (Mundwinkel, Wangen, Brauen) und den Kiefer öffnen.
+ */
+export function gesicht(c, ausdruck) {
+    const u = c.userData, zurueck = [];
+    if (u.rb) {
+        const m = c.children.find((o) => o.visible && o.getObjectByName('Bip01_Head'));
+        if (!m) { return () => { }; }
+        c.updateMatrixWorld(true);
+        const drehung = c.getWorldQuaternion(new THREE.Quaternion());
+        const schieben = (name, dx, dy, dz) => {
+            const b = m.getObjectByName(name);
+            if (!b) { return; }
+            const alt = b.position.clone(); zurueck.push(() => b.position.copy(alt));
+            const ziel = b.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(dx, dy, dz).applyQuaternion(drehung));
+            b.position.copy(b.parent.worldToLocal(ziel)); b.updateMatrixWorld(true);
+        };
+        if (ausdruck === 'lacht') {
+            schieben('Bip01_LMouthCorner', .005, .005, -.002); schieben('Bip01_RMouthCorner', -.005, .005, -.002);
+            schieben('Bip01_LCheek', 0, .003, 0); schieben('Bip01_RCheek', 0, .003, 0);
+        } else if (ausdruck === 'erschrocken') {
+            for (const n of ['Bip01_LInnerEyebrow', 'Bip01_RInnerEyebrow', 'Bip01_LOuterEyebrow', 'Bip01_ROuterEyebrow', 'Bip01_MMiddleEyebrow']) { schieben(n, 0, .006, 0); }
+            const k = u.rb.kiefer;
+            if (k) { const q = k.quaternion.clone(); zurueck.push(() => k.quaternion.copy(q)); k.rotateZ(.22); }
+        }
+    } else if (u.mouth) {
+        const s = u.mouth.scale.clone(); zurueck.push(() => u.mouth.scale.copy(s));
+        if (ausdruck === 'lacht') { u.mouth.scale.set(1.25, 1.3, 1); } else if (ausdruck === 'erschrocken') { u.mouth.scale.set(1, 2.6, 1); }
+    }
+    return () => { for (const f of zurueck.reverse()) { f(); } };
 }

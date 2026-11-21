@@ -1,0 +1,14 @@
+{
+  "name": "fraktionperfekt-figuren",
+  "private": true,
+  "type": "module",
+  "description": "Wandelt Rocketbox-Figuren (MIT) für Joe & Chani 3D in glb um",
+  "dependencies": {
+    "three": "0.170.0",
+    "@gltf-transform/core": "4.1.1",
+    "@gltf-transform/extensions": "4.1.1",
+    "@gltf-transform/functions": "4.1.1",
+    "pngjs": "7.0.0",
+    "jpeg-js": "0.4.4"
+  }
+}

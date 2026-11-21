@@ -4,6 +4,8 @@
 import * as THREE from './three_min.js';
 import { bereich as bereichLaden, SZENE_ZU_BEREICHEN, startBereich } from './bereiche.js';
 import * as FIG from './figuren3d.js';
+import { baueKarte } from './karte3d.js';
+import { portraetMaler } from './portraets3d.js';
 
 const S = window.GralSpiel, G = window.Grafik;
 const $ = (id) => document.getElementById(id);
@@ -37,6 +39,7 @@ let mini = null, eingabeBoot = null, tippen = false;   // laufendes Minispiel (B
 const endeEl = $('ende');
 const hudEl = $('minihud');
 const figuren = { joe: FIG.joe(), chani: FIG.chani() };
+let karte3d = null, titelZeit = 0, portraets = null;   // portraets: Kopfbilder der 3D-Figuren (portraets3d.js)   // Reisekarte und Titelbild als Stadtmodell (karte3d.js); ohne sie die Pixelkarte
 const held = { joe: { ziel: null, weg: [], auftrag: null }, chani: { ziel: null, weg: [] } };
 let spur = [];                  // Fußspur der aktiven Figur (die andere folgt ihr)
 const npcCache = {};
@@ -293,7 +296,10 @@ const SPRECHER_HOTSPOT = { christian: 'chris', joanna: 'joanna', lore: 'lore', k
 const sprecherAus = (zeile) => { for (const [n, id] of SPRECHER) { if (zeile.startsWith(n + ':') || zeile.startsWith(n + ' ')) { return id; } } return null; };
 const ausdruck = (zeile) => (/(Kugel|rollt|heult|Knirschen|Hilfe|poltert|stürzen|klebt)/.test(zeile) ? 'erschrocken' : /(!|Geschafft|Danke|richtig|Solidarität|leicht)/.test(zeile) ? 'lacht' : 'neutral');
 const hutAuf = () => !!z && z.inventar.includes('taschenlampe');
-function portraetBild(n, a) { return G.ausschnitt(G.portraet(n === 'joe' && hutAuf() ? 'joe_hut' : n, a), 64, 64); }
+function portraetBild(n, a) {
+    const bild = portraets && portraets.bild(n, a, hutAuf());
+    return bild || G.ausschnitt(G.portraet(n === 'joe' && hutAuf() ? 'joe_hut' : n, a), 64, 64);
+}
 
 function zeigeText() {
     if (warteschlange.length === 0) {
@@ -591,8 +597,12 @@ const karteCtx = karteEl.getContext('2d');
 const KB = 256, KH = 144;
 const ortPunkt = (id) => ({ x: S.ORTE[id].x * KB / 100, y: S.ORTE[id].y * KH / 100 });
 let karteHover = null;
-function karteZeigen() { karteEl.hidden = false; ortTitelEl.textContent = 'Greven'; akt = null; }
+function karteZeigen() {
+    karteEl.hidden = false; ortTitelEl.textContent = 'Greven'; akt = null;
+    if (karte3d && figuren.joe.parent === karte3d.scene) { karte3d.scene.remove(figuren.joe, figuren.chani); }
+}
 function zeichneKarte() {
+    if (karte3d) { karte3d.bild(zeit, { orte: z.orte, hover: karteHover, reise }); renderer.render(karte3d.scene, karte3d.kamera); return; }
     karteCtx.imageSmoothingEnabled = false;
     const k = G.bild('karte_greven_256x144');
     if (k) { karteCtx.drawImage(k, 0, 0); }
@@ -614,6 +624,7 @@ function zeichneKarte() {
     }
 }
 function kartePunkt(ev) {
+    if (karte3d) { const r = karteEl.getBoundingClientRect(); return karte3d.treffer((ev.clientX - r.left) / r.width * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1, z.orte); }
     const r = karteEl.getBoundingClientRect(), x = (ev.clientX - r.left) * KB / r.width, y = (ev.clientY - r.top) * KH / r.height;
     const o = Object.entries(S.ORTE).find(([id, ort]) => z.orte.includes(id) && Math.abs(x - ort.x * KB / 100) < 8 && Math.abs(y - ort.y * KH / 100) < 8);
     return o ? o[0] : null;
@@ -773,6 +784,7 @@ function schleife() {
         if (mini && textbox.hidden && dialogEl.hidden) { if (mini.art === 'kugel') { kugelSchritt(dt); } else { bootSchritt(dt); } }
         else if (akt && !mini) { laufen(dt); plattenAbgleich(); }
     }
+    if (!z && karte3d && !titelEl.hidden) { titelBild(dt); }
     if (z && akt) {
         figuren.joe.userData.hut.visible = hutAuf();
         if (figuren.joe.userData.jackeAn !== hutAuf()) { figuren.joe.userData.jackeAn = hutAuf(); figuren.joe.userData.jacke(hutAuf()); }
@@ -808,6 +820,24 @@ function schleife() {
     requestAnimationFrame(schleife);
 }
 
+// ---------- Titelbild: Joe und Chani am Kartentisch über Greven ----------
+function titelBild(dt) {
+    titelZeit += dt;
+    const { joe, chani } = figuren;
+    if (joe.parent !== karte3d.scene) {
+        karte3d.scene.add(joe, chani);
+        const hinten = -(karte3d.tiefe / 2 + .62);
+        joe.position.set(-.5, 0, hinten); joe.rotation.y = .18;
+        chani.position.set(.55, 0, hinten); chani.rotation.y = -.22;
+    }
+    // Auf dem Titel mit Hut und Lederjacke (auch nachdem die realistische Figur fertig geladen ist)
+    if (joe.userData.hut) { joe.userData.hut.visible = true; }
+    if (joe.userData.jackeAn !== true) { joe.userData.jacke(true); joe.userData.jackeAn = true; }
+    FIG.pose(joe, titelZeit, 'stehen'); FIG.pose(chani, titelZeit, 'stehen');   // ruhig stehen, keine Gesten
+    karte3d.titelBild(titelZeit);
+    renderer.render(karte3d.scene, karte3d.kamera);
+}
+
 // ---------- Größe ----------
 function groesse() {
     const leiste = $('leiste').hidden ? 0 : $('leiste').offsetHeight;
@@ -815,7 +845,8 @@ function groesse() {
     buehne.style.width = `${b}px`; buehne.style.height = `${h}px`;
     renderer.setSize(b, h, false);
     const f = Math.min(b / 256, h / 144);
-    Object.assign(karteEl.style, { width: `${256 * f}px`, height: `${144 * f}px`, left: `${(b - 256 * f) / 2}px`, top: `${(h - 144 * f) / 2}px` });
+    if (karte3d) { karteEl.classList.add('drei'); Object.assign(karteEl.style, { width: `${b}px`, height: `${h}px`, left: '0px', top: '0px' }); karte3d.groesse(b / h); }
+    else { Object.assign(karteEl.style, { width: `${256 * f}px`, height: `${144 * f}px`, left: `${(b - 256 * f) / 2}px`, top: `${(h - 144 * f) / 2}px` }); }
     kamera.aspect = b / h; kamera.fov = b / h < 1.2 ? 62 : 48; kamera.updateProjectionMatrix();
 }
 window.addEventListener('resize', groesse);
@@ -873,11 +904,15 @@ function sprungZustand(name) {
 }
 const sprungName = (new URLSearchParams(window.location.search).get('start') || '').toLowerCase();
 
-G.laden('../spiel/grafik/').then(() => {
+// Realistische Figuren (Rocketbox) parallel zu den Grafiken laden; schlägt das fehl, bleiben die einfachen Figuren
+const realistisch = (n) => FIG.realistisch(figuren[n], n).catch((e) => console.warn(`Figur ${n}: einfache Fassung`, e));
+const kartenbau = baueKarte(renderer).then((k) => { karte3d = k; groesse(); }).catch((e) => console.warn('Reisekarte: Pixelfassung', e));
+Promise.all([G.laden('../spiel/grafik/'), realistisch('joe'), realistisch('chani'), kartenbau]).then(() => {
+    try { portraets = portraetMaler(figuren); } catch (e) { console.warn('Porträts: Pixelfassung', e); }
     geladen = true; $('neu').disabled = false; weiterKnopf.disabled = false;
     const sprung = sprungZustand(sprungName);
     if (sprung) { starten(sprung.zz, false, sprung.sp.bereich ? sprung.sp : { titel: sprung.sp.titel }); }
-    $('titelbilder').append(G.ausschnitt(G.portraet('joe_hut', 'lacht'), 64, 64), G.ausschnitt(G.portraet('chani', 'lacht'), 64, 64));
+    if (!karte3d && $('titelbilder')) { $('titelbilder').append(G.ausschnitt(G.portraet('joe_hut', 'lacht'), 64, 64), G.ausschnitt(G.portraet('chani', 'lacht'), 64, 64)); }
 }).catch((e) => { $('titelbilder').textContent = e.message; });
 
 // Für Browsertests: Spielstand lesen und klickbare Ziele mit Bildschirmposition (nur lesen)
@@ -885,5 +920,8 @@ window.GralSpielStand = () => ({ z, mini: mini ? { leben: mini.leben, status: mi
     beschaeftigt: !!(blende || reise || (mini && mini.status === 'laeuft') || held.joe.weg.length || held.chani.weg.length || held.joe.auftrag || held.chani.auftrag) || !ladenEl.hidden });
 window.GralSpiel3dZiele = () => ziele().map((zi) => ({ name: zi.name, id: zi.art === 'logik' ? zi.h.id : null, art: zi.art, ...bildschirm(zi.obj) }));
 window.GralSpiel3dTreffer = (x, y) => { const t = treffer({ clientX: x, clientY: y }); if (!t) { const r = leinwand.getBoundingClientRect(); ndc.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1); strahl.setFromCamera(ndc, kamera); const h = strahl.intersectObject(akt.scene, true).filter((q) => q.object.isMesh)[0]; return h ? 'blockiert: ' + (h.object.name || h.object.parent.name || h.object.geometry.type) : null; } return t.ziel ? t.ziel.name : 'boden'; };
-window.GralSpiel3dOrte = () => Object.keys(S.ORTE).filter((id) => z && z.orte.includes(id)).map((id) => { const r = karteEl.getBoundingClientRect(); return { id, x: r.left + S.ORTE[id].x / 100 * r.width, y: r.top + S.ORTE[id].y / 100 * r.height }; });
+window.GralSpiel3dOrte = () => Object.keys(S.ORTE).filter((id) => z && z.orte.includes(id)).map((id) => {
+    const r = karteEl.getBoundingClientRect(), p = karte3d ? karte3d.bildschirm(id) : { x: S.ORTE[id].x / 100, y: S.ORTE[id].y / 100 };
+    return { id, x: r.left + p.x * r.width, y: r.top + p.y * r.height };
+});
 requestAnimationFrame(schleife);

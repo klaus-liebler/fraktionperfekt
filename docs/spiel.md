@@ -1,4 +1,4 @@
-# Easteregg: „Joe & Chani und der Gral der Demokratie“
+# Easteregg: „Joe & Chani und Grevens Gral der Demokratie“
 
 Ein kleines Abenteuer im Stil der Pulp-Abenteuer der 30er-Jahre (Hut, Lederjacke, Karte mit roter Reiselinie, Tempel,
 Fallen, rollende Kugel), mit eigenen Figuren, Rätseln und Grafiken. Alle Personen sind erfunden; Parteien erscheinen nur
@@ -6,9 +6,11 @@ als Karikatur-Typen. Spielzeit etwa 20–40 Minuten.
 
 ## Einstieg
 
-- **Direkt:** <http://localhost:5290/spiel/> (nach der Anmeldung).
+- **Direkt:** <http://localhost:5290/spiel3d/> (3D-Fassung, Standard) bzw. <http://localhost:5290/spiel/> (Pixel-Fassung),
+  jeweils nach der Anmeldung.
 - **Versteckt:** auf einer beliebigen Seite (angemeldet) den Konami-Code tippen: ↑ ↑ ↓ ↓ ← → ← → B A – oder siebenmal
-  schnell auf das Logo oben links tippen (auch in der Handy-Ansicht).
+  schnell auf das Logo oben links tippen (auch in der Handy-Ansicht). Beides startet die 3D-Fassung; die Pixel-Fassung ist
+  vom Titelbild aus verlinkt.
 - Ohne Anmeldung leitet `/spiel/` zur Anmeldung um; die Dateien liegen nicht in `wwwroot`, sondern in
   `src/FraktionPerfekt.Web/Spiel/` und werden nur über den geschützten Endpunkt ausgeliefert.
 - Nach dem Aktualisieren des Codes die laufende Anwendung **neu starten**.
@@ -106,6 +108,26 @@ Inventar-Icons, Reisekarte), `musik.js` und `spiel.css` aus `/spiel/`. Speicherp
   Siegel) + Baustelle; `schule` = Schulhof (abends mit Fledermäusen); `schulflur`; `krypta`; `tempel` = Tempelhalle
   (Fallgitter, Plattformen, Tafel, Abgrund mit Hängebrücke, Gang) + Kammer des Grals.
   Gebäude aus 3D-Gebäudemodellen LoD2 (© Geobasis NRW, dl-de/zero-2-0) mit Gelände; Innenräume frei erfunden.
+- Joe und Chani: realistische Figuren aus **Microsoft Rocketbox** (MIT, Lizenztext in `tools/Figuren/LICENSE-Rocketbox.md`),
+  Joe = `Male_Adult_03`, Chani = `Female_Adult_07`, mit Rocketbox-Animationen je Pose (stehen, gehen, rennen, reden,
+  benutzen, erschrocken, sitzen, arme). `cd tools/Figuren && npm install && node baue.mjs` lädt die Quellen (FBX, TGA) in
+  `tools/Figuren/.cache/` und schreibt `Spiel3d/figur_joe.glb` und `figur_chani.glb` (je gut 2 MB: Texturen 1024 px,
+  Animationen ausgedünnt, Rotationen als 16 Bit). `figuren3d.js` setzt sie in die vorhandenen Figuren ein (`realistisch()`);
+  Hut, Brille, Schnauzer und Bauhelm hängen an einem Kopfanker (Maße aus den Gesichtsknochen: `node masse.mjs`).
+  „Lederjacke an“ färbt Joes karierte Sakkotextur zur Laufzeit braun. Schlägt das Laden fehl, bleiben die einfachen Figuren.
+  Die Nebenfiguren sind weiterhin aus einfachen Körpern gebaut.
+- Fototexturen (Poly Haven, CC0): `cd tools/Welten && npm install && node texturen.mjs` lädt Farb- und Normal-Maps,
+  verkleinert sie (`Spiel3d/tex_<name>_farbe.jpg`, `_normal.jpg`) und schreibt die Kachelmaße nach `texturen3d_daten.js`;
+  `texturen3d.js` liefert die Materialien (`fotoMaterial`, `meterMaterial`). Alle Welten: Backstein (Wände der LoD2-Gebäude),
+  Fischgrätpflaster, Kopfstein, Putz, Rasen (grün getönt), Kies, Asphalt, Beton; innen Dielen, Altziegel (Krypta),
+  Sandstein (Tempel). Eigene Muster (Rippenbeton am Rathaus, Hallenbadfassade, Linoleum, Fliesen, Schilder) bleiben gemalt.
+- Porträts in Sprechblasen und Figurenknöpfen: Kopfbilder der 3D-Figuren (`portraets3d.js`, eigener kleiner Renderer,
+  je Figur, Ausdruck und Hut einmal erzeugt); Ausdrücke über die Gesichtsknochen bzw. den Mund (`gesicht()` in
+  `figuren3d.js`). Professor Relbeil hat dafür eine eigene Figur. Ohne WebGL bleiben die Pixel-Porträts.
+- Startseite und Reisekarte: Greven als Stadtmodell 1:1000 auf einem Kartentisch (`Spiel3d/karte3d.js`, Daten
+  `karte3d.json` aus den OSM-Daten, erzeugt mit `node tools/Grafik/karte3d.mjs`): Karte auf Pergament in 2560 px, über
+  5000 Gebäude als Klötze, Stecknadeln je Station, die Reise als rote Punktspur mit Joes Hut. Auf der Startseite stehen
+  Joe und Chani am Tisch. Ohne WebGL-Karte bleibt die Pixelkarte (`karte_greven_256x144.png`).
 - Minispiele in 3D mit derselben Simulation wie die Pixel-Fassung: Bootsflucht auf der Ems (bewusst gutmütig: weniger
   Treibgut, langsame und seltene alternative Fakten) und Wahlkugel im Tempelgang – mit Lorettes Lastenrad, das Chani
   zusammengefaltet in der Tasche trägt.

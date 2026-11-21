@@ -17,3 +17,17 @@
 #ende .gross { font: bold 72px Georgia, serif; color: #ffd54f; margin: 0; text-shadow: 3px 3px 0 #000; }
 #ende p { margin: 0; max-width: 40em; }
 #ende button { margin-top: 12px; padding: 6px 16px; font-weight: bold; }
+
+/* Reisekarte als Stadtmodell (karte3d.js): Die Karte zeichnet WebGL, das Element nimmt nur Klicks entgegen */
+#karte.drei { background: transparent; box-shadow: none; }
+/* Titel über dem 3D-Kartentisch: Mitte frei für Joe, Chani und Greven, Text oben, Knöpfe unten */
+#titel { justify-content: space-between; padding: 14px 18px 10px;
+    background: linear-gradient(to bottom, rgba(10, 6, 3, .82) 0%, rgba(10, 6, 3, .35) 26%, rgba(10, 6, 3, 0) 42%, rgba(10, 6, 3, 0) 58%, rgba(10, 6, 3, .55) 72%, rgba(10, 6, 3, .9) 100%); }
+#titel .titeloben, #titel .titelunten { display: flex; flex-direction: column; align-items: center; }
+#titel .titeloben > p:last-child { margin: 2px 0 0; max-width: 46em; text-shadow: 1px 1px 2px #000; }
+#titel .titelunten .knoepfe { margin: 6px 0 10px; }
+#titel .klein { margin: 4px 0; text-shadow: 1px 1px 2px #000; }
+#titelbilder:empty { display: none; }
+/* Porträts aus den 3D-Figuren (portraets3d.js): weich skaliert statt Pixelraster */
+#portrait canvas { image-rendering: auto; border-color: #c9a227; }
+.figur .mini { image-rendering: auto; border-radius: 3px; }

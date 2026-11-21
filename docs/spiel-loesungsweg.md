@@ -1,4 +1,4 @@
-# Lösungsweg: „Joe & Chani und der Gral der Demokratie“
+# Lösungsweg: „Joe & Chani und Grevens Gral der Demokratie“
 
 Kompletter Lösungsweg mit allen Texten und Regieanweisungen. Die Datei wird mit `node tools/Grafik/loesungsweg.mjs` aus dem Spiel erzeugt;
 Änderungswünsche einfach direkt hineinschreiben (Texte ändern, Regie ergänzen, Kommentare als „**Klaus:** …“) – sie werden dann ins Spiel übernommen

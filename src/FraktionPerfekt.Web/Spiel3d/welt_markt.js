@@ -2,6 +2,7 @@
 import * as THREE from './three_min.js';
 import { mergeGeometries } from './buffergeometry.js';
 import { RoomEnvironment } from './roomenv.js';
+import { fotoMaterial, textur } from './texturen3d.js';
 
 export function baue(renderer, DATEN) {
   let __bl = [];
@@ -238,10 +239,12 @@ export function baue(renderer, DATEN) {
   const STROT = Math.atan2(-AX[1], AX[0]) + Math.PI / 2;
   
   // ---------- ground: pedestrian zone
-  const ground = terrainMesh(M.pave, 1.6);
+  // Fototexturen (Poly Haven, CC0): rötlich getöntes Fischgrätpflaster, Kopfsteinband in der Mitte
+  M.pave = fotoMaterial('pflaster', { color: 0xe0a088 }); M.cob = fotoMaterial('kopfstein');
+  const ground = terrainMesh(M.pave, textur('pflaster').meter);
   {
     const len = 120, sg = new THREE.PlaneGeometry(2.2, len, 1, 80); sg.rotateX(-Math.PI / 2);
-    const uv = sg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.2 / .8, uv.getY(i) * len / .8);
+    const uv = sg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.2 / textur('kopfstein').meter, uv.getY(i) * len / textur('kopfstein').meter);
     const st = new THREE.Mesh(sg, M.cob); st.receiveShadow = true; st.name = 'ground';
     const [e, n] = ST(0, 0); st.position.set(e, 0, -n); st.rotation.y = Math.atan2(-AX[0], AX[1]); scene.add(st); drape(st, .03);
   }
@@ -290,17 +293,22 @@ export function baue(renderer, DATEN) {
   const LOD2 = DATEN.lod2;
   const wallUniforms = { uNight: { value: 0 } };
   function wallMaterial(kind) {   // 0 brick, 1 plaster (shop house), 2 plaster (other houses)
-    const m = new THREE.MeshStandardMaterial({ map: kind ? plasterTex : brickTex, roughness: .9, side: THREE.DoubleSide });
+    const t = textur(kind ? 'putz' : 'backstein');
+    const m = new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, roughness: .9, side: THREE.DoubleSide });
     m.onBeforeCompile = sh => {
       sh.uniforms.uKind = { value: kind };
       sh.uniforms.uNight = wallUniforms.uNight;
+      sh.uniforms.uBrick = { value: textur('backstein').map };
+      sh.uniforms.uZuStein = { value: textur('putz').meter / textur('backstein').meter };
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', '#include <common>\nattribute vec3 wattr;\nattribute float bofs;\nvarying vec3 vW;\nvarying float vH;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvW = wattr; vH = position.y - bofs;');
       sh.fragmentShader = sh.fragmentShader
-        .replace('#include <common>', '#include <common>\nuniform float uKind; uniform float uNight; varying vec3 vW; varying float vH;')
+        .replace('#include <common>', '#include <common>\nuniform float uKind; uniform float uNight; uniform sampler2D uBrick; uniform float uZuStein; varying vec3 vW; varying float vH;')
         .replace('#include <map_fragment>', `
-  vec4 col = uKind < .5 ? texture2D(map, vec2(vW.x, vH / .6)) : texture2D(map, vec2(vW.x / 2.0, vH / 2.0));
+  vec4 col = texture2D(map, vMapUv);   // uv in Metern / Kachelmaß (siehe mk)
+  // shop house (Marktstraße 19): white plaster on the ground floor, brick above
+  if (uKind > .5 && uKind < 1.5 && vH > 3.8) col = texture2D(uBrick, vMapUv * uZuStein);
   vec3 tint = uKind > 1.5 ? vec3(.97, .93, .86) : vec3(1.0);
   col.rgb *= tint;
   float topH = vH + vW.y; bool glow = false;
@@ -334,16 +342,22 @@ export function baue(renderer, DATEN) {
   const footprints = [];
   {
     const walls = [[], [], []], roofs = [];
-    const mk = (pos, attr, o = 0) => {
+    const mk = (pos, attr, o = 0, kachel = 1) => {
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-      if (attr) { g.setAttribute('wattr', new THREE.Float32BufferAttribute(attr, 3)); g.setAttribute('bofs', new THREE.Float32BufferAttribute(new Float32Array(pos.length / 3).fill(o), 1)); }
+      if (attr) {
+        g.setAttribute('wattr', new THREE.Float32BufferAttribute(attr, 3)); g.setAttribute('bofs', new THREE.Float32BufferAttribute(new Float32Array(pos.length / 3).fill(o), 1));
+        // Texturkoordinaten in Metern (waagerecht entlang der Wand, senkrecht ab Gebäudefuß) geteilt durch das Kachelmaß
+        const uv = new Float32Array(pos.length / 3 * 2);
+        for (let i = 0; i < pos.length / 3; i++) { uv[i * 2] = attr[i * 3] / kachel; uv[i * 2 + 1] = (pos[i * 3 + 1] - o) / kachel; }
+        g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      }
       g.computeVertexNormals(); return g;
     };
     LOD2.forEach((b, bi) => {
       seed = 31 + bi * 7;
       const kind = b.s === 1 ? 1 : (rnd() < .3 ? 2 : 0);
-      if (b.w.length) walls[kind].push(mk(b.w, b.a, b.o));
+      if (b.w.length) walls[kind].push(mk(b.w, b.a, b.o, textur(kind ? 'putz' : 'backstein').meter));
       if (b.r.length) {
         const g = mk(b.r), p = g.attributes.position, cols = [];
         const tile = b.s === 3 ? [.3, .52, .45] : (rnd() < .5 ? [.36, .15, .1] : [.17, .17, .19]);
@@ -363,45 +377,96 @@ export function baue(renderer, DATEN) {
     const rm = new THREE.Mesh(mergeGeometries(roofs), roofMat); rm.castShadow = rm.receiveShadow = true; scene.add(rm);
   }
   
-  // ---------- Zukunftsschmiede shop front (Marktstraße 19), front wall (3.5,8.2) → (8.3,-3.6)
+  // ---------- shop front of Marktstraße 19, front wall (3.5,8.2) → (8.3,-3.6)
+  // Seen from the street: left half Zukunftsschmiede, recessed entrance in the middle, right half the LBS office.
+  // Local x runs from -FL/2 (viewer's left, t = 1 on F1→F2) to +FL/2 (viewer's right, t = 0).
   const F1 = [3.5, 8.2], F2 = [8.3, -3.6], FN = [.926, .377];
   const FL = Math.hypot(F2[0] - F1[0], F2[1] - F1[1]);
   const shop = new THREE.Group(); scene.add(shop);
   const pl = (w, h, mat, x, y, z = 0) => { const m = plane(w, h, mat); m.position.set(x, y, z); return m; };
+  const lbsStripTex = canvasTex(1024, 96, (g, w, h) => {
+    g.fillStyle = '#b9bdc1'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c8102e'; g.font = '44px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    [['Immobilien', .17], ['Finanzieren', .5], ['Bausparen', .83]].forEach(([t, x]) => g.fillText(t, w * x, h / 2 + 2));
+  });
+  const lbsSignTex = canvasTex(512, 192, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    g.strokeStyle = '#a8142a'; g.lineWidth = 14; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(70, 92); g.quadraticCurveTo(170, 18, 280, 70); g.quadraticCurveTo(360, 16, 440, 42); g.stroke();
+    g.fillStyle = '#c8102e'; g.font = 'bold 118px "Arial Black", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillText('LBS', w / 2, h - 12);
+  });
+  const lbsInteriorTex = canvasTex(1024, 384, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#c9cdcf'); gr.addColorStop(1, '#a9aeb0');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    // suspended property posters
+    const poster = (x, y, pw, ph, red) => {
+      g.fillStyle = '#f7f7f5'; g.fillRect(x, y, pw, ph);
+      g.fillStyle = red ? '#c8102e' : '#c8102e'; g.fillRect(x + 4, y + 4, pw * .3, 5);
+      g.fillStyle = red ? '#b5453a' : `rgb(${110 + rnd() * 60},${120 + rnd() * 50},${130 + rnd() * 40})`;
+      g.fillRect(x + 6, y + 14, pw - 12, ph * .45);
+      g.fillStyle = '#888'; for (let k = 0; k < 3; k++) g.fillRect(x + 6, y + ph * .65 + k * 8, pw - 16 - k * 10, 3);
+    };
+    g.strokeStyle = 'rgba(80,80,80,.5)'; g.lineWidth = 1;
+    for (const x of [60, 150, 240, 330, 600, 880]) { g.beginPath(); g.moveTo(x + 30, 0); g.lineTo(x + 30, h); g.stroke(); }
+    for (const x of [60, 150, 240, 330]) for (const y of [70, 180]) poster(x, y, 62, 88, false);
+    for (const y of [60, 150, 240]) poster(600, y, 54, 72, false);
+    poster(690, 60, 150, 190, true);
+    for (const y of [60, 175]) poster(880, y, 62, 88, false);
+    // red line across the glazing
+    g.fillStyle = '#c8102e'; g.fillRect(0, h - 70, w, 6);
+  });
   {
     const g = new THREE.Group();
-    const plaster = new THREE.MeshStandardMaterial({ map: plasterTex, roughness: .9 });
-    // white frame around the shop window
+    const plaster = fotoMaterial('putz', { color: 0xf4f1ea });
+    const glass = new THREE.MeshStandardMaterial({ color: 0x9fb4c2, roughness: .05, metalness: .2, transparent: true, opacity: .28 });
+    // layout along the front (local x)
+    const L0 = -FL / 2, R0 = FL / 2;
+    const zsA = L0 + .35, zsB = -1.6;          // Zukunftsschmiede shop window
+    const dA = -1.2, dB = .05;                 // recessed entrance
+    const lbA = .5, lbB = R0 - .4;             // LBS shop window
+    const zsW = zsB - zsA, zsX = (zsA + zsB) / 2, lbW = lbB - lbA, lbX = (lbA + lbB) / 2;
+    // white plinth, lintel band and pillars
     g.add(box(FL, .45, .25, plaster).translateY(.22));
     g.add(box(FL, .5, .25, plaster).translateY(3.55));
-    g.add(box(.6, 3.6, .25, plaster).translateX(-FL / 2 + .3).translateY(1.8));
-    g.add(box(.5, 3.6, .25, plaster).translateX(FL / 2 - .25).translateY(1.8));
-    // blue fascia with name
-    g.add(box(FL - 1.0, .72, .1, new THREE.MeshStandardMaterial({ color: 0x1597bb, roughness: .5 })).translateY(3.02).translateZ(.13));
-    const fascia = plane(FL - 1.0, .72, new THREE.MeshStandardMaterial({ map: fasciaTex, roughness: .5 }));
-    fascia.position.set(0, 3.02, .185); g.add(fascia);
-    // interior behind the glass (lit)
+    for (const [a, b] of [[L0, zsA], [zsB, dA], [dB, lbA], [lbB, R0]]) g.add(box(b - a, 3.6, .25, plaster).translateX((a + b) / 2).translateY(1.8));
+    g.add(box(dB - dA, .7, .25, plaster).translateX((dA + dB) / 2).translateY(2.95));   // wall above the entrance
+
+    // --- Zukunftsschmiede (left)
+    g.add(box(zsW, .72, .1, new THREE.MeshStandardMaterial({ color: 0x1597bb, roughness: .5 })).translateX(zsX).translateY(3.02).translateZ(.13));
+    const fascia = plane(zsW, .72, new THREE.MeshStandardMaterial({ map: fasciaTex, roughness: .5 }));
+    fascia.position.set(zsX, 3.02, .185); g.add(fascia);
     const intMat = new THREE.MeshStandardMaterial({ map: interiorTex, roughness: .9, emissive: 0xffffff, emissiveMap: interiorTex, emissiveIntensity: .08 });
-    const inner = pl(FL - 1.1, 2.3, intMat, -.6, 1.55, .04); inner.name = 'window'; g.add(inner);
-    // glass panes with a reflection sheen
-    const glass = new THREE.MeshStandardMaterial({ color: 0x9fb4c2, roughness: .05, metalness: .2, transparent: true, opacity: .28 });
-    g.add(pl(FL - 3.2, 2.3, glass, -1.1, 1.55, .07));
-    // mullion and the door on the right
-    g.add(box(.12, 2.3, .14, M.dark).translateX(FL / 2 - 2.25).translateY(1.55));
+    const inner = pl(zsW, 2.2, intMat, zsX, 1.55, .04); inner.name = 'window'; g.add(inner);
+    g.add(pl(zsW, 2.2, glass, zsX, 1.55, .07));
+    g.add(box(.12, 2.2, .14, M.dark).translateX(zsX).translateY(1.55));
+    g.add(pl(zsW - .2, .7, new THREE.MeshBasicMaterial({ map: swooshTex, transparent: true }), zsX, .9, .09));
+
+    // --- entrance door (shared by the Zukunftsschmiede and the flats upstairs)
     const door = new THREE.Group(); door.name = 'door';
-    add(box(1.3, 2.4, .08, new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: .5 })), 0, 1.2, 0, door);
-    add(plane(1.0, 2.05, new THREE.MeshStandardMaterial({ color: 0x2e3a42, roughness: .1, metalness: .4 })), 0, 1.2, .05, door);
-    add(box(.04, .5, .05, M.metal), .38, 1.1, .1, door);
-    door.position.set(FL / 2 - 1.4, 0, .06); g.add(door);
-    // blue swoosh decal across the lower window
-    const sw = pl(FL - 3.4, .75, new THREE.MeshBasicMaterial({ map: swooshTex, transparent: true }), -1.1, .9, .09); g.add(sw);
+    add(box(dB - dA, 2.6, .08, new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: .5 })), 0, 1.3, 0, door);
+    add(plane(.8, 2.05, new THREE.MeshStandardMaterial({ color: 0x2e3a42, roughness: .1, metalness: .4 })), -.1, 1.2, .05, door);
+    add(box(.04, .5, .05, M.metal), .3, 1.1, .1, door);
+    door.position.set((dA + dB) / 2, 0, -.02); g.add(door);
+
+    // --- LBS (right)
+    const lbs = new THREE.Group(); lbs.name = 'lbs';
+    lbs.add(pl(lbW, .5, new THREE.MeshStandardMaterial({ map: lbsStripTex, roughness: .6 }), lbX, 3.0, .04));
+    lbs.add(pl(lbW, 2.3, new THREE.MeshStandardMaterial({ map: lbsInteriorTex, roughness: .9 }), lbX, 1.6, .04));
+    lbs.add(pl(lbW, 2.3, glass, lbX, 1.6, .07));
+    lbs.add(box(.1, 2.3, .12, new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: .5 })).translateX(lbX - .3).translateY(1.6));
+    lbs.add(box(lbW, .06, .12, new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: .5 })).translateX(lbX).translateY(2.75));
+    const logo = pl(2.5, .94, new THREE.MeshStandardMaterial({ map: lbsSignTex, transparent: true, roughness: .4 }), lbX - .3, 3.74, .14);
+    logo.renderOrder = 1; lbs.add(logo);
+    g.add(lbs);
+
+    // house number on the right pillar
+    const numTex = canvasTex(128, 128, (c, w, h) => { c.fillStyle = '#1a4f8a'; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; c.font = 'bold 70px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('19', 64, 68); });
+    g.add(pl(.22, .22, new THREE.MeshStandardMaterial({ map: numTex }), (lbB + R0) / 2, 2.1, .13));
+
     onWall(g, F1, F2, .5, 0, FN, .02); shop.add(g);
   }
-  // upper-floor windows of the shop house are drawn by the facade shader; add a small sign with the house number
-  {
-    const numTex = canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#1a4f8a'; g.fillRect(0, 0, w, h); g.fillStyle = '#fff'; g.font = 'bold 70px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('19', 64, 68); });
-    shop.add(onWall(plane(.3, .3, new THREE.MeshStandardMaterial({ map: numTex })), F1, F2, .97, 2.6, FN, .2));
-  }
+  // upper floors of the shop house: brick with white windows, drawn by the facade shader
   
   // ---------- Eiscafé on the opposite side (west face of Marktstraße 42/44)
   const E1 = [16.0, 15.8], E2 = [20.6, 4.1], EN = [-.931, -.366];
@@ -492,12 +557,12 @@ export function baue(renderer, DATEN) {
     const P = (x, y) => new THREE.Vector3(x, y, 0);
     tube(P(-.52, .34), P(-.05, .72)); tube(P(-.05, .72), P(.4, .72)); tube(P(.4, .72), P(.52, .34)); tube(P(-.05, .72), P(.08, .34)); tube(P(-.52, .34), P(.08, .34)); tube(P(.4, .72), P(.36, .95)); tube(P(-.05, .72), P(-.1, .88));
     add(box(.22, .05, .1, M.dark), -.1, .9, 0, g); add(box(.04, .04, .5, M.metal), .36, .96, 0, g);
-    onWall(g, F1, F2, .32, 0, FN, .45); scene.add(g);
+    onWall(g, F1, F2, .9, 0, FN, .45); scene.add(g);
     g.traverse(o => { if (o.isMesh) o.castShadow = true; });
   }
   const GB = new THREE.Group(); scene.add(GB);
   const canLamp = new THREE.Mesh(new THREE.SphereGeometry(.01), new THREE.MeshBasicMaterial({ visible: false })); scene.add(canLamp);
-  const porchLight = new THREE.PointLight(0xffd9a8, 0, 10, 1.4); scene.add(onWall(porchLight, F1, F2, .45, 2.2, FN, 1.6));
+  const porchLight = new THREE.PointLight(0xffd9a8, 0, 10, 1.4); scene.add(onWall(porchLight, F1, F2, .55, 2.2, FN, 1.6));
   
   return { scene, H, W3, camVec, blockers, footprints, M, box, plane, add, canvasTex, onWall, F1, F2, FN, ST, E1, E2, EN, sun };
 }

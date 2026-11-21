@@ -2,6 +2,7 @@
 import * as THREE from './three_min.js';
 import { mergeGeometries } from './buffergeometry.js';
 import { RoomEnvironment } from './roomenv.js';
+import { fotoMaterial, textur } from './texturen3d.js';
 
 export function baue(renderer, DATEN) {
   let __bl = [];
@@ -264,13 +265,15 @@ export function baue(renderer, DATEN) {
     glass: new THREE.MeshStandardMaterial({ map: glassTex, roughness: .1, metalness: .55 }),
     roof: new THREE.MeshStandardMaterial({ color: 0x55585b, roughness: .8, side: THREE.DoubleSide }),
     soffit: new THREE.MeshStandardMaterial({ color: 0xc9c4b8, roughness: .9, side: THREE.DoubleSide }),
-    asphalt: new THREE.MeshStandardMaterial({ map: asphaltTex, roughness: .95 }),
-    grass: new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1 }),
+    asphalt: fotoMaterial('asphalt'),
+    grass: fotoMaterial('rasen'),
     white: new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: .6 }),
   };
   
   // ---------- ground: brick paving, street, sidewalk, lawn
-  const ground = terrainMesh(M.pave, 1.6);
+  // Fototexturen (Poly Haven, CC0), siehe texturen3d.js
+  M.pave = fotoMaterial('pflaster', { color: 0xe0a088 }); M.cob = fotoMaterial('kopfstein'); M.conc = fotoMaterial('beton');
+  const ground = terrainMesh(M.pave, textur('pflaster').meter);
   function strip(s0, s1, d0, d1, mat, y, tu = 1, tv = 1) {
     const L = s1 - s0, D = d1 - d0;
     const g = new THREE.PlaneGeometry(L, D, Math.ceil(L / 3), Math.max(1, Math.ceil(D / 3))); g.rotateX(-Math.PI / 2);
@@ -278,12 +281,12 @@ export function baue(renderer, DATEN) {
     const m = new THREE.Mesh(g, mat); m.receiveShadow = true;
     m.position.copy(SD3((s0 + s1) / 2, (d0 + d1) / 2, 0)); m.rotation.y = HALL_ROT; m.name = 'ground'; scene.add(m); drape(m, y + .02); return m;
   }
-  strip(-140, 200, -34, -26.5, RM.asphalt, .01, 3, 3);              // Rathausstraße
+  strip(-140, 200, -34, -26.5, RM.asphalt, .01, textur('asphalt').meter, textur('asphalt').meter);              // Rathausstraße
   for (let s = -138; s < 198; s += 6) strip(s, s + 3, -30.35, -30.15, RM.white, .02);   // centre line
   strip(-140, 200, -26.5, -26.3, M.conc, .03, 1, 1);                  // kerb
   strip(-140, 200, -34.2, -34, M.conc, .03, 1, 1);
-  strip(-34, -2, -22, -11, RM.grass, .015, 2, 2);                  // lawn west of the Ratssaal block
-  const cobLine = strip(-40, 80, -25.6, -24.8, M.cob, .02, .8, .8);    // paving seam along the street
+  strip(-34, -2, -22, -11, RM.grass, .015, textur('rasen').meter, textur('rasen').meter);                  // lawn west of the Ratssaal block
+  const cobLine = strip(-40, 80, -25.6, -24.8, M.cob, .02, 1, 1);    // paving seam along the street
   
   // ---------- neighbouring buildings from LoD2 (Geobasis NRW)
   const LOD2 = DATEN.lod2;
@@ -291,18 +294,20 @@ export function baue(renderer, DATEN) {
   function wallMaterial(kind) {   // kind 0 = houses (brick), 1 = Rathaus (ribbed concrete bands)
     const m = new THREE.MeshStandardMaterial({ map: kind ? ribTex : brickTex, roughness: .88, side: THREE.DoubleSide });
     m.onBeforeCompile = sh => {
+      sh.uniforms.uBackstein = { value: textur('backstein').map }; sh.uniforms.uKachelB = { value: textur('backstein').meter };
       sh.uniforms.uKind = { value: kind };
       sh.uniforms.uNight = wallUniforms.uNight;
       sh.vertexShader = sh.vertexShader
         .replace('#include <common>', '#include <common>\nattribute vec3 wattr;\nattribute float bofs;\nvarying vec3 vW;\nvarying float vH;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvW = wattr; vH = position.y - bofs;');
       sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform sampler2D uBackstein; uniform float uKachelB;')
         .replace('#include <common>', `#include <common>
   uniform float uKind; uniform float uNight; varying vec3 vW; varying float vH;`)
         .replace('#include <map_fragment>', `
   vec4 col; float topH = vH + vW.y; bool glow = false; bool isGlass = false;
   if (uKind < .5) {
-    col = texture2D(map, vec2(vW.x, vH / .6));
+    col = texture2D(uBackstein, vec2(vW.x, vH) / uKachelB);
     if (vW.z > 3.5 && topH > 2.6) {
       float per = 2.7, sh = mod(vW.z, per) * .5, lx = mod(vW.x - sh, per) / per, ly = mod(vH - .9, 2.8), wh = 1.45;
       float idx = floor((vW.x - sh) / per) + 31.0 * floor((vH - .9) / 2.8);

@@ -63,7 +63,7 @@ async function schmiedeAussen(renderer) {
     const { scene, F1, F2, FN, ST, E1, E2, EN, M, box } = w;
     const fw = (t, d) => [F1[0] + (F2[0] - F1[0]) * t + FN[0] * d, F1[1] + (F2[1] - F1[1]) * t + FN[1] * d];
     const FL = Math.hypot(F2[0] - F1[0], F2[1] - F1[1]);
-    // Briefkasten der Fraktion am rechten Pfeiler neben der Tür
+    // Briefkasten der Fraktion am Pfeiler links neben der Haustür (links die Zukunftsschmiede, rechts die LBS)
     const tuer = scene.getObjectByName('door');
     const front = tuer.parent;
     const kasten = new THREE.Group(); kasten.name = 'briefkasten';
@@ -71,7 +71,7 @@ async function schmiedeAussen(renderer) {
     const schlitz = box(.26, .025, .02, M.dark); schlitz.position.set(0, .13, .085); kasten.add(schlitz);
     const schild = new THREE.Mesh(new THREE.PlaneGeometry(.26, .08), new THREE.MeshStandardMaterial({ map: w.canvasTex(128, 40, (g, cw, ch) => { g.fillStyle = '#fff'; g.fillRect(0, 0, cw, ch); g.fillStyle = '#1a2a4a'; g.font = 'bold 22px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Fraktion', cw / 2, ch / 2); }) }));
     schild.position.set(0, -.05, .085); kasten.add(schild);
-    kasten.position.set(FL / 2 - .25, 1.15, .22); front.add(kasten);
+    kasten.position.set(-1.4, 1.15, .22); front.add(kasten);
     // Wegweiser zu den Orten (führt zur Reisekarte)
     const weg = new THREE.Group(); weg.name = 'wegweiser';
     weg.add(new THREE.Mesh(new THREE.CylinderGeometry(.05, .06, 3, 10), new THREE.MeshStandardMaterial({ color: 0x3a3d40, metalness: .5, roughness: .4 })));
@@ -82,7 +82,7 @@ async function schmiedeAussen(renderer) {
         p.position.set(.45, y, 0); const arm = new THREE.Group(); arm.add(p); arm.rotation.y = r; weg.add(arm);
     });
     const [we, wn] = ST(5.2, -3.4); weg.position.copy(w.W3(we, wn)); weg.traverse((o) => { if (o.isMesh) { o.castShadow = true; } }); scene.add(weg); greifbar(weg, 1.4, 3.0, .8);
-    const schaufenster = scene.getObjectByName('window');
+    const schaufenster = scene.getObjectByName('window'); const lbs = scene.getObjectByName('lbs');
     const eis = scene.getObjectByName('eis'), aufsteller = scene.getObjectByName('aboard'), rad = scene.getObjectByName('bike'), bank = scene.getObjectByName('bench');
     const P = (en) => zuXZ(en);
     return {
@@ -94,15 +94,16 @@ async function schmiedeAussen(renderer) {
             const [ae, an] = ST(-3.2 + a * .55, 5), [te, tn] = ST(-.6 + a * .6, -5.5);
             return { p: new THREE.Vector3(ae, w.H(ae, an) + 3.0, -an), t: new THREE.Vector3(te, w.H(te, tn) + 1.5, -tn) };
         },
-        spawn: { tuer: [...P(fw(.11, 1.5)), Math.atan2(FN[0], -FN[1])], karte: [...P(ST(-3, -.4)), Math.atan2(FN[0], -FN[1]) + Math.PI] },
+        spawn: { tuer: [...P(fw(.545, 1.5)), Math.atan2(FN[0], -FN[1])], karte: [...P(ST(-3, -.4)), Math.atan2(FN[0], -FN[1]) + Math.PI] },
         hotspots: [
-            { obj: kasten, stand: P(fw(.05, 1.2)), eintraege: [{ id: 'postfach' }] },
-            { obj: tuer, stand: P(fw(.11, 1.3)), eintraege: [{ tor: 'buero_innen', spawn: 'tuer', name: 'Ladentür der Zukunftsschmiede', ansehen: 'Die Ladentür. Drinnen brennt noch Licht.' }] },
+            { obj: kasten, stand: P(fw(.61, 1.2)), eintraege: [{ id: 'postfach' }] },
+            { obj: tuer, stand: P(fw(.545, 1.3)), eintraege: [{ tor: 'buero_innen', spawn: 'tuer', name: 'Ladentür der Zukunftsschmiede', ansehen: 'Die Ladentür. Drinnen brennt noch Licht.' }] },
             { obj: weg, stand: P(ST(4.4, -2.6)), eintraege: [{ id: 'tuer' }] },
-            { obj: schaufenster, stand: P(fw(.42, 1.6)), eintraege: [{ deko: 'Schaufenster', text: 'Drinnen die Tafel mit der Tagesordnung. TOP 1: Kekse – erledigt.' }] },
+            { obj: schaufenster, stand: P(fw(.8, 1.6)), eintraege: [{ deko: 'Schaufenster', text: 'Drinnen die Tafel mit der Tagesordnung. TOP 1: Kekse – erledigt.' }] },
+            { obj: lbs, stand: P(fw(.25, 1.6)), eintraege: [{ deko: 'LBS', text: 'Die LBS nebenan: Immobilien, Finanzieren, Bausparen. Im Schaufenster lauter Einfamilienhäuser – für die Haushaltsrede ein Traum.' }] },
             { obj: eis, stand: [15.3, -8.8], eintraege: [{ deko: 'Eiscafé', text: 'Das Eiscafé gegenüber. Von hier hat man die Zukunftsschmiede genau im Blick …' }] },
             { obj: aufsteller, stand: [11.6, -4.6], eintraege: [{ deko: 'Aufsteller', text: 'Ein blauer Aufsteller: „Komm rein – wir haben Kaffee!“ Die Kekse sind aber alle.' }] },
-            { obj: rad, stand: P(fw(.3, 1.8)), eintraege: [{ deko: 'Fahrrad', text: 'Ein altes Hollandrad. Nicht abgeschlossen – mutig.' }] },
+            { obj: rad, stand: P(fw(.9, 1.8)), eintraege: [{ deko: 'Fahrrad', text: 'Ein altes Hollandrad. Nicht abgeschlossen – mutig.' }] },
             { obj: bank, stand: P(ST(-10, -2)), eintraege: [{ deko: 'Bank', text: 'Eine Bank mitten in der Fußgängerzone. Hier wurden schon Koalitionen geschmiedet.' }] }
         ].filter((h) => h.obj),
         npcs: [],

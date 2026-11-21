@@ -81,6 +81,8 @@ internal static partial class SpielEndpunkte
                 "html" => "text/html; charset=utf-8",
                 "css" => "text/css; charset=utf-8",
                 "js" => "text/javascript; charset=utf-8",
+                "glb" => "model/gltf-binary",
+                "jpg" => "image/jpeg",
                 _ => "application/json; charset=utf-8",
             };
             http.Response.Headers.CacheControl = "no-cache";
@@ -111,6 +113,6 @@ internal static partial class SpielEndpunkte
     [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.png$")]
     private static partial System.Text.RegularExpressions.Regex GrafikName();
 
-    [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.(html|css|js|json)$")]
+    [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.(html|css|js|json|glb|jpg)$")]
     private static partial System.Text.RegularExpressions.Regex Datei3dName();
 }

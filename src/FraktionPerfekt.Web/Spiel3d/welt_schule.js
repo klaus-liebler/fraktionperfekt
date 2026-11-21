@@ -2,6 +2,7 @@
 import * as THREE from './three_min.js';
 import { mergeGeometries } from './buffergeometry.js';
 import { RoomEnvironment } from './roomenv.js';
+import { fotoMaterial, textur } from './texturen3d.js';
 
 export function baue(renderer, DATEN) {
   let __bl = [];
@@ -235,12 +236,14 @@ export function baue(renderer, DATEN) {
   }
   
   // ---------- ground
-  const ground = terrainMesh(M.pave, 1.6);
+  // Fototexturen (Poly Haven, CC0), siehe texturen3d.js
+  M.pave = fotoMaterial('pflaster', { color: 0xe0a088 }); M.cob = fotoMaterial('kopfstein'); M.conc = fotoMaterial('beton');
+  const ground = terrainMesh(M.pave, textur('pflaster').meter);
   const stripeA = [8, 15.5], stripeB = [23, 31];
   {
     const len = Math.hypot(stripeB[0] - stripeA[0], stripeB[1] - stripeA[1]);
     const sg = new THREE.PlaneGeometry(1.5, len, 1, Math.ceil(len / 1.5)); sg.rotateX(-Math.PI / 2);
-    { const uv = sg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 1.5 / .8, uv.getY(i) * len / .8); }
+    { const uv = sg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 1.5, uv.getY(i) * len); }
     const st = new THREE.Mesh(sg, M.cob); st.receiveShadow = true;
     st.rotation.y = Math.atan2(-(stripeB[0] - stripeA[0]), stripeB[1] - stripeA[1]);
     st.position.set((stripeA[0] + stripeB[0]) / 2, 0, -(stripeA[1] + stripeB[1]) / 2); st.name = 'ground'; scene.add(st); drape(st, .03);
@@ -256,6 +259,7 @@ export function baue(renderer, DATEN) {
   function wallMaterial(school) {
     const m = new THREE.MeshStandardMaterial({ map: brickTex, roughness: .88, side: THREE.DoubleSide });
     m.onBeforeCompile = sh => {
+      sh.uniforms.uBackstein = { value: textur('backstein').map }; sh.uniforms.uKachelB = { value: textur('backstein').meter };
       sh.uniforms.cladMap = { value: cladTex };
       sh.uniforms.uSchool = { value: school ? 1 : 0 };
       sh.uniforms.uNight = wallUniforms.uNight;
@@ -263,12 +267,13 @@ export function baue(renderer, DATEN) {
         .replace('#include <common>', '#include <common>\nattribute vec3 wattr;\nattribute float bofs;\nvarying vec3 vW;\nvarying float vH;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvW = wattr; vH = position.y - bofs;');
       sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform sampler2D uBackstein; uniform float uKachelB;')
         .replace('#include <common>', `#include <common>
   uniform sampler2D cladMap; uniform float uSchool; uniform float uNight;
   varying vec3 vW; varying float vH;
   float hsh(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }`)
         .replace('#include <map_fragment>', `
-  vec4 col = texture2D(map, vec2(vW.x / 1.0, vH / 0.6));
+  vec4 col = texture2D(uBackstein, vec2(vW.x, vH) / uKachelB);
   float topH = vH + vW.y;
   float band = uSchool > .5 ? (topH > 8.0 ? 2.2 : 1.3) : 0.0;
   if (vW.y < band) {

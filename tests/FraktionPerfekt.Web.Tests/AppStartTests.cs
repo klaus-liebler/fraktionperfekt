@@ -108,7 +108,7 @@ public sealed partial class AppStartTests : IAsyncLifetime
         var impressum = await http.GetStringAsync("impressum", abbruch); // öffentlich, ohne Anmeldung
         impressum.ShouldContain("Impressum");
         impressum.ShouldContain("src=\"hymne.mp3\""); // Player für die Hymne
-        impressum.ShouldContain("href=\"spiel/\""); // Link zum Spiel
+        impressum.ShouldContain("href=\"spiel3d/\""); // Link zum Spiel (Standard: 3D-Fassung)
         var hymne = await http.GetAsync("hymne.mp3", HttpCompletionOption.ResponseHeadersRead, abbruch); // öffentlich wie das Impressum
         hymne.StatusCode.ShouldBe(HttpStatusCode.OK);
         hymne.Content.Headers.ContentType!.MediaType.ShouldBe("audio/mpeg");
@@ -150,6 +150,8 @@ public sealed partial class AppStartTests : IAsyncLifetime
         (await http.GetAsync("spiel3d/darstellung3d.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetStringAsync("cheatsheet", abbruch)).ShouldContain("Spickzettel");
         (await http.GetAsync("spiel3d/welt_rathaus.json", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await http.GetAsync("spiel3d/figur_joe.glb", abbruch)).Content.Headers.ContentType!.MediaType.ShouldBe("model/gltf-binary");
+        (await http.GetAsync("spiel3d/tex_backstein_farbe.jpg", abbruch)).Content.Headers.ContentType!.MediaType.ShouldBe("image/jpeg");
         (await http.GetAsync("spiel3d/..%2Fspiel%2FSpielEndpunkte.cs", abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         // KI-Schnittstelle: nur mit Schlüssel, eigenes Konto ohne vertrauliche Seiten; MCP mit Werkzeugen.

@@ -1,0 +1,9 @@
+{
+  "name": "fraktionperfekt-welten",
+  "private": true,
+  "type": "module",
+  "description": "Lädt CC0-Texturen (Poly Haven) für Joe & Chani 3D und verkleinert sie",
+  "dependencies": {
+    "jpeg-js": "0.4.4"
+  }
+}
