@@ -634,7 +634,7 @@
         if (mini) {
             if (mini.art === 'boot' && (ev.key === 'ArrowUp' || ev.key === 'w')) { eingabeBoot = 'hoch'; ev.preventDefault(); }
             if (mini.art === 'boot' && (ev.key === 'ArrowDown' || ev.key === 's')) { eingabeBoot = 'runter'; ev.preventDefault(); }
-            if (mini.art === 'kugel' && (ev.key === ' ' || ev.key === 'ArrowRight' || ev.key === 'd')) { eingabeKugel = true; ev.preventDefault(); }
+            if (mini.art === 'kugel' && (ev.key === ' ' || ev.key === 'ArrowRight' || ev.key === 'd')) { if (!ev.repeat) { eingabeKugel = true; } ev.preventDefault(); }   // Festhalten zählt nicht
             return;
         }
         const n = Number(ev.key);

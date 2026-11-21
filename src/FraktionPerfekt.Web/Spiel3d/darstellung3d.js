@@ -6,6 +6,7 @@ import { bereich as bereichLaden, SZENE_ZU_BEREICHEN, startBereich } from './ber
 import * as FIG from './figuren3d.js';
 import { baueKarte } from './karte3d.js';
 import { portraetMaler } from './portraets3d.js';
+import { gegenstandMaler } from './gegenstaende3d.js';
 
 const S = window.GralSpiel, G = window.Grafik;
 const $ = (id) => document.getElementById(id);
@@ -39,7 +40,9 @@ let mini = null, eingabeBoot = null, tippen = false;   // laufendes Minispiel (B
 const endeEl = $('ende');
 const hudEl = $('minihud');
 const figuren = { joe: FIG.joe(), chani: FIG.chani() };
-let karte3d = null, titelZeit = 0, portraets = null;   // portraets: Kopfbilder der 3D-Figuren (portraets3d.js)   // Reisekarte und Titelbild als Stadtmodell (karte3d.js); ohne sie die Pixelkarte
+// karte3d: Reisekarte und Titelbild als Stadtmodell (karte3d.js), ohne sie die Pixelkarte; portraets: Kopfbilder der 3D-Figuren (portraets3d.js);
+// icons: Inventarbilder als 3D-Modelle (gegenstaende3d.js)
+let karte3d = null, titelZeit = 0, portraets = null, icons = null;
 const held = { joe: { ziel: null, weg: [], auftrag: null }, chani: { ziel: null, weg: [] } };
 let spur = [];                  // Fußspur der aktiven Figur (die andere folgt ihr)
 const npcCache = {};
@@ -244,9 +247,16 @@ function laufen(dt) {
     let ziel = null, laenge = 0;
     for (let i = spur.length - 1; i > 0; i--) { laenge += Math.hypot(spur[i][0] - spur[i - 1][0], spur[i][1] - spur[i - 1][1]); if (laenge > 1.15) { ziel = spur[i - 1]; break; } }
     if (fb.userData.aufPlatte) { ziel = null; }
-    if (ziel && Math.hypot(fb.position.x - fa.position.x, fb.position.z - fa.position.z) > 1.0) {
-        const rest = schritt(fb, ziel, 2.6); fb.userData.geht = rest > .02;
-    } else if (!fa.userData.geht && Math.hypot(fb.position.x - fa.position.x, fb.position.z - fa.position.z) < 2) {
+    // Weich anfahren und abbremsen: Die Begleitung beschleunigt in gut 0,3 s auf Tempo, statt sofort mit voller
+    // Geschwindigkeit loszugleiten, während die Beine noch stehen. Das Tempo richtet sich nach dem Rückstand.
+    const ub = fb.userData, abstand = Math.hypot(fb.position.x - fa.position.x, fb.position.z - fa.position.z);
+    const soll = ziel && abstand > 1.0 ? Math.min(2.6, Math.hypot(ziel[0] - fb.position.x, ziel[1] - fb.position.z) * 4) : 0;
+    ub.v = ub.v || 0; ub.v = soll > ub.v ? Math.min(soll, ub.v + 8 * dt) : Math.max(soll, ub.v - 10 * dt);
+    fa.userData.v = fa.userData.geht ? 2.3 : 0; fa.userData.tempoFaktor = 1;
+    if (ziel && ub.v > 1e-3) {
+        schritt(fb, ziel, ub.v);
+        ub.geht = ub.v > .35; ub.tempoFaktor = Math.max(.6, Math.min(1.15, ub.v / 2.3));
+    } else if (!fa.userData.geht && abstand < 2) {
         // stehen beide, schaut die Begleitung zur aktiven Figur
         fb.userData.blickZiel = Math.atan2(fa.position.x - fb.position.x, fa.position.z - fb.position.z);
     }
@@ -265,7 +275,7 @@ function aufstellen(spawnName) {
     const kandidaten = [[-Math.sin(r) * 1.0, -Math.cos(r) * 1.0], [Math.cos(r) * .9, -Math.sin(r) * .9], [-Math.cos(r) * .9, Math.sin(r) * .9], [Math.sin(r) * .9, Math.cos(r) * .9]];
     const k = kandidaten.find(([dx, dz]) => frei(s[0] + dx, s[1] + dz)) || kandidaten[0];
     fb.position.set(s[0] + k[0], akt.hoehe(s[0] + k[0], s[1] + k[1]), s[1] + k[1]); fb.rotation.y = r; fb.userData.blickZiel = r;
-    spur = [xz(fb), xz(fa)];
+    spur = [xz(fb), xz(fa)]; fa.userData.v = fb.userData.v = 0;
     held.joe.weg = []; held.chani.weg = []; held.joe.auftrag = held.chani.auftrag = null;
     const kz = akt.kamera(fa.position); kamera.position.copy(kz.p); kamZiel.copy(kz.t);
 }
@@ -480,7 +490,7 @@ function leisteAktualisieren() {
     inventarEl.replaceChildren();
     for (const gid of z.inventar) {
         const k = document.createElement('button'); k.type = 'button'; k.className = 'ding' + (objekt === gid ? ' aktiv' : ''); k.title = S.GEGENSTAENDE[gid].name; k.setAttribute('aria-label', S.GEGENSTAENDE[gid].name);
-        const bild = G.ausschnitt(G.icon(gid), 16, 16); bild.className = 'icon'; k.appendChild(bild);
+        const bild3d = icons && icons.bild(gid), bild = bild3d || G.ausschnitt(G.icon(gid), 16, 16); bild.className = bild3d ? 'icon icon3d' : 'icon'; k.appendChild(bild);
         k.addEventListener('click', () => {
             if (gid === 'handy' && (verb === 'benutze' || verb === 'gehe')) { if (!textbox.hidden) { lesehinweis(); return; } anrufen(); return; }
             if (verb === 'benutze' || verb === 'gib') { objekt = objekt === gid ? null : gid; klang('klick'); leisteAktualisieren(); return; }
@@ -566,7 +576,7 @@ document.addEventListener('keydown', (ev) => {
     if (pausiert) { return; }
     if (!textbox.hidden && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); zeigeText(); return; }
     if (mini) {
-        if (mini.art === 'kugel') { if (ev.key === ' ' || ev.key === 'ArrowRight' || ev.key === 'Enter') { tippen = true; ev.preventDefault(); } return; }
+        if (mini.art === 'kugel') { if (ev.key === ' ' || ev.key === 'ArrowRight' || ev.key === 'Enter') { if (!ev.repeat) { tippen = true; } ev.preventDefault(); } return; }   // Festhalten zählt nicht: nur echte Anschläge
         if (ev.key === 'ArrowUp' || ev.key === 'w') { eingabeBoot = 'hoch'; ev.preventDefault(); }
         if (ev.key === 'ArrowDown' || ev.key === 's') { eingabeBoot = 'runter'; ev.preventDefault(); }
         return;
@@ -720,12 +730,17 @@ function kugelSchritt(dt) {
 // ---------- Plattformen im Tempel: Wer auf seiner Plattform steht, bleibt dort ----------
 function plattenAbgleich() {
     if (!akt || !akt.plattformen) { return; }
+    let gesprungen = false;
     for (const n of ['joe', 'chani']) {
         const f = figuren[n], seite = z.platten.links === n ? 'links' : z.platten.rechts === n ? 'rechts' : null;
         if (z.flags.gitterOffen && f.userData.aufPlatte) {
-            // Gitter offen: beide springen herunter und gehen hindurch
-            f.userData.aufPlatte = null; f.position.set(n === 'joe' ? -.6 : .6, 0, -8.2); held[n].weg = [];
-            if (n === z.figur) { spur = [[0, -7.2], xz(f)]; }
+            // Gitter offen: Sobald es oben ist, springen beide neben ihrer Plattform herunter; die aktive Figur geht hindurch, die andere folgt
+            if (akt.gitterOben && !akt.gitterOben()) { continue; }
+            const pl = akt.plattformen[f.userData.aufPlatte], lx = pl.x - Math.sign(pl.x) * 1.3, lz = pl.z + .2;
+            f.userData.aufPlatte = null; f.position.set(lx, akt.hoehe(lx, lz), lz);
+            held[n].auftrag = held[n].blickAuf = null;
+            held[n].weg = n === z.figur ? wegSuchen([lx, lz], [n === 'joe' ? -.6 : .6, -8.2]) : [];
+            gesprungen = true;
             continue;
         }
         if (seite && !held[n].weg.length && !z.flags.gitterOffen) {
@@ -733,6 +748,7 @@ function plattenAbgleich() {
             f.userData.aufPlatte = seite; f.position.set(pl.x, pl.obj.userData.oben - .12, pl.z);
         } else if (!seite) { f.userData.aufPlatte = null; }
     }
+    if (gesprungen) { spur = [xz(figuren[z.figur === 'joe' ? 'chani' : 'joe']), xz(figuren[z.figur])]; }
 }
 
 // ---------- Menü ----------
@@ -909,6 +925,7 @@ const realistisch = (n) => FIG.realistisch(figuren[n], n).catch((e) => console.w
 const kartenbau = baueKarte(renderer).then((k) => { karte3d = k; groesse(); }).catch((e) => console.warn('Reisekarte: Pixelfassung', e));
 Promise.all([G.laden('../spiel/grafik/'), realistisch('joe'), realistisch('chani'), kartenbau]).then(() => {
     try { portraets = portraetMaler(figuren); } catch (e) { console.warn('Porträts: Pixelfassung', e); }
+    try { icons = gegenstandMaler(); } catch (e) { console.warn('Inventar: Pixel-Icons', e); }
     geladen = true; $('neu').disabled = false; weiterKnopf.disabled = false;
     const sprung = sprungZustand(sprungName);
     if (sprung) { starten(sprung.zz, false, sprung.sp.bereich ? sprung.sp : { titel: sprung.sp.titel }); }

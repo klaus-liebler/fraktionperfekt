@@ -382,7 +382,7 @@ export async function realistisch(c, name) {
     // Schrittfrequenz höchstens 1,3-fach: lieber etwas Rutschen als hektisches Trippeln
     if (aktionen.gehen) { aktionen.gehen.timeScale = Math.min(1.3, LAUFTEMPO / cfg.tempo); }
     const kiefer = modell.getObjectByName('Bip01_MJaw');
-    u.rb = { mixer, aktionen, name: null, wunsch: null, wunschSeit: null, t: null, kiefer, kieferRuhe: kiefer ? kiefer.quaternion.clone() : null };
+    u.rb = { mixer, aktionen, gehBasis: aktionen.gehen ? aktionen.gehen.timeScale : 1, name: null, wunsch: null, wunschSeit: null, t: null, kiefer, kieferRuhe: kiefer ? kiefer.quaternion.clone() : null };
     if (u.jacke) { u.jacke = jackeRb(modell); u.jackeAn = undefined; }
 }
 
@@ -449,14 +449,17 @@ function poseRb(c, t, art) {
     // bildweise zwischen Gehen und Stehen hin und her, und jede Überblendung lässt die Figur flackern.
     if (name === r.name) { r.wunschSeit = null; }
     else if (r.wunschSeit === null || r.wunsch !== name) { r.wunsch = name; r.wunschSeit = t; }
-    if (name !== r.name && (r.name === null || t - r.wunschSeit >= .15)) {
+    // Ins Gehen geht es sofort (sonst gleitet die Figur mit stehenden Beinen los), nur das Anhalten wartet.
+    if (name !== r.name && (r.name === null || name === 'gehen' || t - r.wunschSeit >= .15)) {
         const neu = r.aktionen[name];
         // Läuft die Animation noch (blendet gerade aus), an ihrer Stelle weiter statt von vorn
         if (!neu.isRunning()) { neu.reset(); neu.setEffectiveWeight(r.name === null ? 1 : 0); neu.play(); }
         r.name = name; r.wunschSeit = null;
     }
-    // Eigene, stetige Überblendung (0,25 s): Gewichte laufen gleichmäßig zum Ziel, ohne Sprung bei schnellem Hin und Her
-    const schritt = dt / .25;
+    // Schrittfrequenz folgt dem tatsächlichen Tempo (Begleitfigur beim Anfahren und Aufholen)
+    if (r.aktionen.gehen) { r.aktionen.gehen.timeScale = r.gehBasis * (c.userData.tempoFaktor || 1); }
+    // Eigene, stetige Überblendung (0,25 s, ins Gehen 0,15 s): Gewichte laufen gleichmäßig zum Ziel, ohne Sprung bei schnellem Hin und Her
+    const schritt = dt / (r.name === 'gehen' ? .15 : .25);
     for (const [n, a] of Object.entries(r.aktionen)) {
         if (!a.isRunning()) { continue; }
         const w = a.getEffectiveWeight(), ziel = n === r.name ? 1 : 0;

@@ -81,7 +81,11 @@ const linoleum = () => canvasTex(256, 256, (g, w, h) => {
 function schrift(w, h, hg, farbe, text, font, zeilen) {
     return canvasTex(w, h, (g) => {
         g.fillStyle = hg; g.fillRect(0, 0, w, h); g.fillStyle = farbe; g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle';
-        const z = zeilen || [text]; z.forEach((t, i) => g.fillText(t, w / 2, h / 2 + (i - (z.length - 1) / 2) * parseInt(font.match(/(\d+)px/)[1], 10) * 1.2));
+        const z = zeilen || [text], px = parseInt(font.match(/(\d+)px/)[1], 10);
+        // Zu breite Zeilen verkleinern, statt sie links und rechts abzuschneiden
+        const breit = Math.max(...z.map((t) => g.measureText(t).width));
+        if (breit > w * .92) { g.font = font.replace(/\d+px/, `${Math.floor(px * w * .92 / breit)}px`); }
+        z.forEach((t, i) => g.fillText(t, w / 2, h / 2 + (i - (z.length - 1) / 2) * px * 1.2));
     }, false);
 }
 
@@ -515,14 +519,15 @@ export function tempelHalle(renderer) {
     const { scene } = raum(renderer, { x0, x1, z0, z1, hoehe: 7, boden: { foto: 'sandstein' }, wand: { foto: 'sandstein' }, hell: .35, sonne: .25, himmel: 0xffe0b0, hintergrund: 0x0a0604, leiste: 0x7a5a3a });
     const sst = meterMaterial('sandstein', { roughness: .9 }), dunkel = std({ color: 0x2a2018 }), eisen = std({ color: 0x3a3a3e, metalness: .7, roughness: .5 });
     // Säulen
-    for (const z of [2, -3, -9, -20]) { for (const x of [-5.6, 5.6]) { at(new THREE.Mesh(new THREE.CylinderGeometry(.45, .5, 7, 16), sst), x, 3.5, z, scene); } }
+    const SAEULEN_Z = [2, -3, -9, -20];
+    for (const z of SAEULEN_Z) { for (const x of [-5.6, 5.6]) { at(new THREE.Mesh(new THREE.CylinderGeometry(.45, .5, 7, 16), sst), x, 3.5, z, scene); } }
     // Querwand mit Durchgang und Fallgitter bei z = -6.5
     at(box(4.5, 7, 1, sst), -4.25, 3.5, -6.5, scene); at(box(4.5, 7, 1, sst), 4.25, 3.5, -6.5, scene); at(box(4, 3, 1, sst), 0, 5.5, -6.5, scene);
     const gitter = new THREE.Group(); gitter.name = 'gitter';
     for (let x = -1.8; x <= 1.81; x += .3) { at(box(.06, 4, .06, eisen), x, 2, 0, gitter); }
     for (const y of [.8, 2, 3.2]) { at(box(3.8, .06, .06, eisen), 0, y, 0, gitter); }
     gitter.position.set(0, 0, -6.5); scene.add(gitter);
-    const inschrift = plane(3.6, .5, std({ map: schrift(512, 72, '#c9a874', '#4a2a10', 'FRAKTIONSZWANG', 'bold 54px Georgia') }));
+    const inschrift = plane(3.6, .5, std({ map: schrift(1024, 144, '#c9a874', '#4a2a10', 'FRAKTIONSZWANG', 'bold 96px Georgia') }));
     inschrift.position.set(0, 4.4, -5.99); inschrift.name = 'inschrift'; scene.add(inschrift);
     // Plattformen auf Drehzapfen
     const platte = (x, schmal, gravur) => {
@@ -541,7 +546,9 @@ export function tempelHalle(renderer) {
         g.font = '20px Georgia'; ['§ 1 …', '§ 2 …', '§ 3 …'].forEach((t, i) => g.fillText(t, w / 2, 140 + i * 50)); }, false);
     const tafel = new THREE.Group(); tafel.name = 'tafel';
     at(box(1.6, 2.0, .25, sst), 0, 1.6, 0, tafel); const tf = plane(1.4, 1.75, std({ map: tafelTex, emissive: 0x000000 })); tf.position.set(0, 1.6, .13); tafel.add(tf);
-    tafel.rotation.y = Math.PI / 2; tafel.position.set(x0 + .2, 0, -9.2); scene.add(tafel);
+    // Frei hinter dem Gitter, der Kamera zugewandt: Durch die Gitteröffnung zu sehen, nicht von der Querwand verdeckt
+    tafel.rotation.y = .25; tafel.position.set(-2.3, 0, -10.9); scene.add(tafel);
+    lampe(scene, -1.4, 2.8, -9.4, 4);
     // Abgrund (z −12 … −17) mit Hängebrücke
     const abgrund = new THREE.Group(); abgrund.name = 'abgrund';
     const schwarz = at(box(13, .1, 5, new THREE.MeshBasicMaterial({ color: 0x000000 })), 0, .01, -14.5, abgrund);
@@ -581,6 +588,8 @@ export function tempelHalle(renderer) {
         if (x < x0 + .5 || x > x1 - .5 || z > z1 - .2) { return false; }
         if (z < -21.3) { return false; }
         if (Math.hypot(x - -3.2, z + 4.2) < .75 || Math.hypot(x - 3.2, z + 4.2) < 1.1) { return false; }
+        for (const sz of SAEULEN_Z) { if (Math.hypot(Math.abs(x) - 5.6, z - sz) < .8) { return false; } }
+        if (Math.abs(x + 2.3) < 1.1 && z < -10.4 && z > -11.4) { return false; }   // Tafel
         if (z < -6.0 && z > -7.0 && (Math.abs(x) > 1.6 || !(zst && zst.flags.gitterOffen))) { return false; }
         if (z < -6.0 && !(zst && zst.flags.gitterOffen)) { return false; }
         if (z < -11.8 && z > -17.2 && !(zst && zst.flags.brueckeDa && Math.abs(x) < .7)) { return false; }
@@ -606,6 +615,7 @@ export function tempelFinale(renderer) {
     const sst = meterMaterial('sandstein', { roughness: .9 });
     const schacht = new THREE.SpotLight(0xfff0d0, 60, 14, .35, .5, 1.2); schacht.position.set(1.8, 6, -2); schacht.target.position.set(1.8, 0, -2); scene.add(schacht, schacht.target);
     const strahl = new THREE.Mesh(new THREE.CylinderGeometry(.6, 1.2, 6, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff0d0, transparent: true, opacity: .08, depthWrite: false })); strahl.position.set(1.8, 3, -2); scene.add(strahl);
+    strahl.userData.durchlaessig = true;   // Lichtkegel über der Urne: Klicks gehen hindurch auf die Kiste
     const gold = std({ color: 0xe6b422, metalness: 1, roughness: .2 });
     const pokal = new THREE.Group(); pokal.name = 'pokal';
     at(new THREE.Mesh(new THREE.CylinderGeometry(.5, .6, 1.1, 8), sst), 0, .55, 0, pokal);

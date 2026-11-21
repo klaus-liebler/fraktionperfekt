@@ -191,13 +191,15 @@ export function tempelHalleBereich(renderer) {
             { obj: o.links, stand: [-2.2, -3.0], eintraege: [{ id: 'platte_links' }] },
             { obj: o.rechts, stand: [2.0, -3.0], eintraege: [{ id: 'platte_rechts' }] },
             { obj: o.gitter, stand: [0, -5.3], eintraege: [{ id: 'gitter' }] },
-            { obj: o.tafel, stand: [-5.0, -9.2], eintraege: [{ id: 'tafel' }] },
+            { obj: o.tafel, stand: [-1.9, -9.6], eintraege: [{ id: 'tafel' }] },
             { obj: o.abgrund, stand: [0, -11.3], eintraege: [{ id: 'abgrund' }] },
             { obj: o.gangTor, stand: [0, -19.4], eintraege: [{ id: 'gang' }] }
         ],
         npcs: [],
         /** Plattformen: Wer auf seiner Plattform steht, bleibt dort, bis er woanders hingeht. */
         plattformen: { links: { obj: o.links, x: -3.2, z: -4.2 }, rechts: { obj: o.rechts, x: 3.2, z: -4.2 } },
+        /** Erst wenn das Fallgitter fast oben ist, springen die beiden herunter. */
+        gitterOben: () => gitterY > 3.6,
         aktualisieren(z) {
             zustandSetzen(z);
             o.gitter.userData.ziel = z.flags.gitterOffen ? 4.2 : 0;

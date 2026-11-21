@@ -31,3 +31,6 @@
 /* Porträts aus den 3D-Figuren (portraets3d.js): weich skaliert statt Pixelraster */
 #portrait canvas { image-rendering: auto; border-color: #c9a227; }
 .figur .mini { image-rendering: auto; border-radius: 3px; }
+
+/* Inventar-Icons als gerenderte 3D-Modelle: weich skalieren statt Pixelraster */
+.ding .icon.icon3d { image-rendering: auto; }
