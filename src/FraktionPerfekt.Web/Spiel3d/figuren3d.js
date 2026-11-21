@@ -344,7 +344,7 @@ export function lastenrad() {
 /** tempo: Geschwindigkeit der Gehanimation (m/s); helm: Maßstab s für helmAuf() am Kopfanker (Meter). */
 const RB = {
     joe: { tempo: 2.0, helm: .94 },
-    chani: { tempo: 1.92, helm: .9 }
+    chani: { tempo: 1.53, helm: .9 }
 };
 const RB_ERSATZ = { kleben: 'erschrocken', rudern: 'sitzen', zielen: 'sitzen', radeln: 'sitzen' };
 const LAUFTEMPO = 2.3;   // wie laufen() in darstellung3d.js
@@ -379,9 +379,10 @@ export async function realistisch(c, name) {
     // Animationen je Pose
     const mixer = new THREE.AnimationMixer(modell), aktionen = {};
     for (const clip of gltf.animations) { aktionen[clip.name] = mixer.clipAction(clip); }
-    if (aktionen.gehen) { aktionen.gehen.timeScale = LAUFTEMPO / cfg.tempo; }
+    // Schrittfrequenz höchstens 1,3-fach: lieber etwas Rutschen als hektisches Trippeln
+    if (aktionen.gehen) { aktionen.gehen.timeScale = Math.min(1.3, LAUFTEMPO / cfg.tempo); }
     const kiefer = modell.getObjectByName('Bip01_MJaw');
-    u.rb = { mixer, aktionen, aktiv: null, name: null, t: null, kiefer, kieferRuhe: kiefer ? kiefer.quaternion.clone() : null };
+    u.rb = { mixer, aktionen, name: null, wunsch: null, wunschSeit: null, t: null, kiefer, kieferRuhe: kiefer ? kiefer.quaternion.clone() : null };
     if (u.jacke) { u.jacke = jackeRb(modell); u.jackeAn = undefined; }
 }
 
@@ -444,11 +445,24 @@ function poseRb(c, t, art) {
     const r = c.userData.rb;
     const dt = r.t === null ? 0 : Math.min(.1, Math.max(0, t - r.t)); r.t = t;
     const name = r.aktionen[art] ? art : (r.aktionen[RB_ERSATZ[art]] ? RB_ERSATZ[art] : 'stehen');
-    if (name !== r.name) {
+    // Wechsel erst, wenn die neue Pose 0,15 s lang gewünscht bleibt: Die Begleitfigur schaltet beim Folgen sonst
+    // bildweise zwischen Gehen und Stehen hin und her, und jede Überblendung lässt die Figur flackern.
+    if (name === r.name) { r.wunschSeit = null; }
+    else if (r.wunschSeit === null || r.wunsch !== name) { r.wunsch = name; r.wunschSeit = t; }
+    if (name !== r.name && (r.name === null || t - r.wunschSeit >= .15)) {
         const neu = r.aktionen[name];
-        neu.reset().setEffectiveWeight(1).play();
-        if (r.aktiv) { neu.crossFadeFrom(r.aktiv, .25, false); }
-        r.aktiv = neu; r.name = name;
+        // Läuft die Animation noch (blendet gerade aus), an ihrer Stelle weiter statt von vorn
+        if (!neu.isRunning()) { neu.reset(); neu.setEffectiveWeight(r.name === null ? 1 : 0); neu.play(); }
+        r.name = name; r.wunschSeit = null;
+    }
+    // Eigene, stetige Überblendung (0,25 s): Gewichte laufen gleichmäßig zum Ziel, ohne Sprung bei schnellem Hin und Her
+    const schritt = dt / .25;
+    for (const [n, a] of Object.entries(r.aktionen)) {
+        if (!a.isRunning()) { continue; }
+        const w = a.getEffectiveWeight(), ziel = n === r.name ? 1 : 0;
+        const nw = ziel > w ? Math.min(ziel, w + schritt) : Math.max(ziel, w - schritt);
+        a.setEffectiveWeight(nw);
+        if (nw <= 0 && n !== r.name) { a.stop(); }
     }
     r.mixer.update(dt);
     if (r.kiefer) {

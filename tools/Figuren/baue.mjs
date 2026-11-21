@@ -23,7 +23,8 @@ const QUELLE = 'https://raw.githubusercontent.com/microsoft/Microsoft-Rocketbox/
 /** Figuren: Rocketbox-Avatar, Texturkürzel, Geschlecht (Präfix der Animationen). */
 const FIGUREN = {
     joe: { avatar: 'Adults/Male_Adult_03', tex: 'm004', g: 'm' },
-    chani: { avatar: 'Adults/Female_Adult_07', tex: 'f007', g: 'f' }
+    // Chani: walk_fast_02 wirkt steif und staksig; walk_fast_01 (1,5 m/s) hat einen natürlichen Armschwung
+    chani: { avatar: 'Adults/Female_Adult_07', tex: 'f007', g: 'f', clips: { gehen: ['xy', 'walk_fast_01'] } }
 };
 /** Pose im Spiel → Rocketbox-Animation (static = auf der Stelle, xy = Bewegung herausgerechnet). */
 const CLIPS = {
@@ -117,7 +118,8 @@ async function figur(name, f) {
         return n;
     });
     const animationen = [];
-    for (const [pose, [ord, anim]] of Object.entries(CLIPS)) {
+    for (const [pose, standard] of Object.entries(CLIPS)) {
+        const [ord, anim] = (f.clips && f.clips[pose]) || standard;
         const roh = fbx(await holen(`Animations/${ORDNER[ord]}/${f.g}_${anim}.max.fbx`, `${f.g}_${anim}_${ord}.fbx`)).animations[0];
         animationen.push(clip(roh, pose, knochen, ord));
     }
