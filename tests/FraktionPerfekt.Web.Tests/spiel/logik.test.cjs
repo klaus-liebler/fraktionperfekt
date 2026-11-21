@@ -357,6 +357,8 @@ test('Service Worker hält das Spiel nie im Cache (sonst laufen nach Änderungen
     const fs = require('node:fs');
     const sw = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'wwwroot', 'sw.js'), 'utf8');
     assert.match(sw, /startsWith\(BASIS \+ 'spiel\/'\)/); // Pfad-Basis (z. B. /fraktionperfekt/) aus dem Geltungsbereich
+    assert.match(sw, /startsWith\(BASIS \+ 'spiel3d\/'\)/); // 3D-Fassung ebenfalls nie aus dem Cache
+    assert.match(sw, /startsWith\(BASIS \+ 'cheatsheet'\)/);
     assert.doesNotMatch(sw, /fp-huelle-v1'/);
 });
 

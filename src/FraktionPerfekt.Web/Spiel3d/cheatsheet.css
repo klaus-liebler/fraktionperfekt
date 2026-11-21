@@ -1,4 +1,4 @@
-/* Spickzettel der 3D-Fassung */
+/* Spickzettel für 3D- und Pixel-Fassung */
 body { margin: 0; background: #120b06; color: #f2e6c8; font: 16px/1.5 Georgia, serif; }
 main { max-width: 52em; margin: 0 auto; padding: 24px 16px 48px; }
 h1 { color: #ffd54f; font-size: 28px; }
@@ -6,6 +6,9 @@ h2 { color: #c9a227; font-size: 20px; margin-top: 28px; border-bottom: 1px solid
 ul { list-style: none; padding: 0; }
 li { padding: 6px 0; border-bottom: 1px dotted #3a2a14; }
 a { color: #ffd54f; font-weight: bold; }
+li b { margin-right: 10px; }
+li a { display: inline-block; margin-right: 8px; padding: 1px 10px; border: 1px solid #c9a227; border-radius: 4px; text-decoration: none; }
+li a:hover { background: #2a1a0c; }
 li span { display: block; color: #c8b890; font-size: 14px; }
 code { background: #2a1a0c; padding: 1px 4px; }
 .fuss { margin-top: 32px; }

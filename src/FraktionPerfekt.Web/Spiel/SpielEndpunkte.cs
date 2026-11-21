@@ -58,7 +58,7 @@ internal static partial class SpielEndpunkte
             return Results.File(pfad, "image/png");
         }).RequireAuthorization();
 
-        // 3D-Fassung (three.js, Akt 1–2): eigene Dateien in Spiel3d/, nutzt logik.js, grafik.js, musik.js und spiel.css unter /spiel/.
+        // 3D-Fassung (three.js, alle fünf Akte): eigene Dateien in Spiel3d/, nutzt logik.js, grafik.js, musik.js und spiel.css unter /spiel/.
         // Nur flache Dateinamen; three.js liegt lokal bei (CSP: Skripte nur von 'self').
         var ordner3d = Path.Combine(inhalt, "Spiel3d");
         app.MapGet("/spiel3d/{datei?}", (string? datei, HttpContext http) =>
@@ -87,7 +87,7 @@ internal static partial class SpielEndpunkte
             return Results.File(pfad, typ);
         }).RequireAuthorization();
 
-        // Spickzettel mit Direkteinstiegen in die 3D-Fassung (kurze Adresse /cheatsheet)
+        // Spickzettel mit Direkteinstiegen (?start=…) in die 3D- und die Pixel-Fassung (kurze Adresse /cheatsheet)
         app.MapGet("/cheatsheet", () => Results.LocalRedirect("~/spiel3d/cheatsheet.html")).RequireAuthorization();
 
         // Hymne „Greven an der Ems“ für den Player im Impressum: öffentlich wie das Impressum selbst.

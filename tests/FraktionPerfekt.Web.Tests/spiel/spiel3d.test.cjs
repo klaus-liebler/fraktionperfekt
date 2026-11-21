@@ -53,16 +53,24 @@ test('Die Seite kommt ohne Inline-Skripte aus (CSP: script-src self) und bringt 
     }
 });
 
-test('Direkteinstiege (?start=…) führen zu den richtigen Szenen der Spiellogik', () => {
+test('Direkteinstiege (?start=…) führen in beiden Fassungen zu den richtigen Szenen der Spiellogik', () => {
     const quelle = fs.readFileSync(path.join(ordner, 'darstellung3d.js'), 'utf8');
-    const spruenge = [...quelle.matchAll(/^\s+(\w+): \{ schritte: (\d+)(?:, bereich: '(\w+)')?/gm)].map((m) => ({ name: m[1], n: Number(m[2]), bereich: m[3] }));
+    const spruenge = [...quelle.matchAll(/^\s+(\w+): \{ (?:bereich: '(\w+)')?/gm)].map((m) => ({ name: m[1], n: S.SPRUENGE[m[1]], bereich: m[2] }));
     assert.ok(spruenge.length >= 16);
+    assert.deepEqual(spruenge.map((sp) => sp.name).sort(), Object.keys(S.SPRUENGE).sort(), '3D-Tabelle und GralSpiel.SPRUENGE passen zusammen');
+    assert.equal(S.sprungZustand('gibtsnicht'), null);
+    assert.equal(S.sprungZustand('constructor'), null);
     const spick = fs.readFileSync(path.join(ordner, 'cheatsheet.html'), 'utf8');
-    for (const sp of spruenge) { assert.match(spick, new RegExp(`start=${sp.name}"`), `Spickzettel: ${sp.name}`); }
+    for (const sp of spruenge) {
+        assert.match(spick, new RegExp(`"index.html\\?start=${sp.name}"`), `Spickzettel 3D: ${sp.name}`);
+        assert.match(spick, new RegExp(`"\\.\\./spiel/\\?start=${sp.name}"`), `Spickzettel Pixel: ${sp.name}`);
+    }
+    const pixel = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'darstellung.js'), 'utf8');
+    assert.match(pixel, /S\.sprungZustand\(/, 'Pixel-Fassung kennt ?start=');
     const bereiche = fs.readFileSync(path.join(ordner, 'bereiche.js'), 'utf8');
     for (const sp of spruenge) {
-        const z = S.neuerZustand();
-        for (const s of S.KOMPLETTLOESUNG.slice(0, sp.n)) { S.schritt(z, s); }
+        const z = S.sprungZustand(sp.name);
+        assert.ok(S.SZENEN[z.szene] || z.szene === 'karte', sp.name);
         if (!sp.bereich) { assert.equal(z.szene, 'karte', sp.name); continue; }
         const szene = Object.entries({ buero: ['buero_innen', 'schmiede_aussen'], archiv: ['rathaus_aussen', 'rathaus_flur', 'archiv_innen'], ems: ['ems_deich'], baustelle: ['baustelle', 'radbruecke'], schule: ['schulhof'], schulflur: ['schulflur'], krypta: ['krypta'], tempel: ['tempel_halle', 'tempel_finale'] }).find(([, b]) => b.includes(sp.bereich))[0];
         assert.equal(z.szene, szene, sp.name);

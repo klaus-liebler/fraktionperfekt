@@ -111,7 +111,9 @@ Inventar-Icons, Reisekarte), `musik.js` und `spiel.css` aus `/spiel/`. Speicherp
   zusammengefaltet in der Tasche trägt.
 - Texte, die nur in 3D anders sind (`Spiel3d/anpassung3d.js`): Chris steht vor dem Rathaus – er wollte selbst
   Bürgermeister werden, gewählt wurde Dietrich Aden (CDU), jetzt lässt er niemanden hinein; „Rathaustür“, Wegweiser.
-- Direkteinstieg: `/cheatsheet` (Spickzettel) bzw. `/spiel3d/?start=…` spielt die Komplettlösung bis dorthin nach.
+- Direkteinstieg: `/cheatsheet` (Spickzettel für beide Fassungen) bzw. `/spiel3d/?start=…` und `/spiel/?start=…` spielt die
+  Komplettlösung bis dorthin nach (Schrittzahlen gemeinsam in `GralSpiel.SPRUENGE`, logik.js). Der Service Worker lässt
+  `/spiel/`, `/spiel3d/` und `/cheatsheet` aus dem Cache (sonst passen nach einem Update alte und neue Module nicht zusammen).
 - Tests: `tests/FraktionPerfekt.Web.Tests/spiel/spiel3d.test.cjs` (Komplettlösung mit den 3D-Texten, jeder Hotspot jeder
   Szene hat ein 3D-Gegenstück, Direkteinstiege und Spickzettel, keine Inline-Skripte, nur lokale Importe). Browsertests
   stumm mit `/spiel3d/?ton=aus`; mit Software-Rendering zusätzlich `&test` (große Zeitschritte, Minispiele mit Autopilot).

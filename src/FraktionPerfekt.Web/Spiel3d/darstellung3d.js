@@ -847,28 +847,27 @@ $('neu').disabled = true; weiterKnopf.disabled = true;
  * bis automatisch gespeichert wird).
  */
 const SPRUENGE = {
-    buero: { schritte: 0, bereich: 'buero_innen', spawn: 'start', titel: 'Zukunftsschmiede (Anfang)' },
-    marktstrasse: { schritte: 5, bereich: 'schmiede_aussen', spawn: 'tuer', titel: 'Vor der Zukunftsschmiede, alles aus dem Büro dabei' },
-    karte: { schritte: 6, titel: 'Reisekarte nach Akt 1' },
-    rathaus: { schritte: 7, bereich: 'rathaus_aussen', spawn: 'karte', titel: 'Vor dem Rathaus, Chris an der Tür' },
-    rathausflur: { schritte: 8, bereich: 'rathaus_flur', spawn: 'eingang', titel: 'Rathausflur, Rathaus offen' },
-    archiv: { schritte: 8, bereich: 'archiv_innen', spawn: 'tuer', titel: 'Rathausarchiv, Pinsel und Ledeiw an der Tür' },
-    ems: { schritte: 15, bereich: 'ems_deich', spawn: 'karte', titel: 'Emsdeich am Kanuverleih' },
-    boot: { schritte: 18, bereich: 'ems_deich', spawn: 'steg', titel: 'Am Steg, Paddel und Hinweis da – bereit zur Bootsflucht' },
-    radbruecke: { schritte: 20, bereich: 'radbruecke', spawn: 'boot', titel: 'Radbrücke beim Hallenbad, das Siegel steckt noch in der dritten Laterne' },
-    baustelle: { schritte: 21, bereich: 'baustelle', spawn: 'karte', titel: 'Baustelle am Hallenbad' },
-    schule: { schritte: 29, bereich: 'schulhof', spawn: 'karte', titel: 'Hof der Martin-Luther-Grundschule' },
-    schulflur: { schritte: 32, bereich: 'schulflur', spawn: 'von_schule', titel: 'Schulflur, Fledermäuse ausgeflogen, Lastenrad in Chanis Tasche' },
-    krypta: { schritte: 33, bereich: 'krypta', spawn: 'von_schulflur', titel: 'Krypta unter der Schule' },
-    tempel: { schritte: 39, bereich: 'tempel_halle', spawn: 'von_krypta', titel: 'Tempel des Grundgesetzes, vor dem Fallgitter' },
-    gang: { schritte: 48, bereich: 'tempel_halle', spawn: 'gang', titel: 'Vor dem Gang mit der Wahlkugel, Brücke steht' },
-    finale: { schritte: 50, bereich: 'tempel_finale', spawn: 'start', titel: 'Kammer des Grals' }
+    buero: { bereich: 'buero_innen', spawn: 'start', titel: 'Zukunftsschmiede (Anfang)' },
+    marktstrasse: { bereich: 'schmiede_aussen', spawn: 'tuer', titel: 'Vor der Zukunftsschmiede, alles aus dem Büro dabei' },
+    karte: { titel: 'Reisekarte nach Akt 1' },
+    rathaus: { bereich: 'rathaus_aussen', spawn: 'karte', titel: 'Vor dem Rathaus, Chris an der Tür' },
+    rathausflur: { bereich: 'rathaus_flur', spawn: 'eingang', titel: 'Rathausflur, Rathaus offen' },
+    archiv: { bereich: 'archiv_innen', spawn: 'tuer', titel: 'Rathausarchiv, Pinsel und Ledeiw an der Tür' },
+    ems: { bereich: 'ems_deich', spawn: 'karte', titel: 'Emsdeich am Kanuverleih' },
+    boot: { bereich: 'ems_deich', spawn: 'steg', titel: 'Am Steg, Paddel und Hinweis da – bereit zur Bootsflucht' },
+    radbruecke: { bereich: 'radbruecke', spawn: 'boot', titel: 'Radbrücke beim Hallenbad, das Siegel steckt noch in der dritten Laterne' },
+    baustelle: { bereich: 'baustelle', spawn: 'karte', titel: 'Baustelle am Hallenbad' },
+    schule: { bereich: 'schulhof', spawn: 'karte', titel: 'Hof der Martin-Luther-Grundschule' },
+    schulflur: { bereich: 'schulflur', spawn: 'von_schule', titel: 'Schulflur, Fledermäuse ausgeflogen, Lastenrad in Chanis Tasche' },
+    krypta: { bereich: 'krypta', spawn: 'von_schulflur', titel: 'Krypta unter der Schule' },
+    tempel: { bereich: 'tempel_halle', spawn: 'von_krypta', titel: 'Tempel des Grundgesetzes, vor dem Fallgitter' },
+    gang: { bereich: 'tempel_halle', spawn: 'gang', titel: 'Vor dem Gang mit der Wahlkugel, Brücke steht' },
+    finale: { bereich: 'tempel_finale', spawn: 'start', titel: 'Kammer des Grals' }
 };
 function sprungZustand(name) {
-    const sp = SPRUENGE[name];
-    if (!sp) { return null; }
-    const zz = S.neuerZustand();
-    for (const schritt of S.KOMPLETTLOESUNG.slice(0, sp.schritte)) { S.schritt(zz, schritt); }
+    const sp = Object.prototype.hasOwnProperty.call(SPRUENGE, name) ? SPRUENGE[name] : null;
+    const zz = sp ? S.sprungZustand(name) : null;   // Schrittzahlen: GralSpiel.SPRUENGE (gemeinsam mit der Pixel-Fassung)
+    if (!zz) { return null; }
     if (['baustelle', 'ems_deich', 'radbruecke'].includes(sp.bereich)) { zz.figur = 'joe'; }
     return { zz, sp };
 }

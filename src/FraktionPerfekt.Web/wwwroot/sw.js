@@ -2,7 +2,7 @@
 // (Netz zuerst, ohne Netz die Offline-Seite), Web-Push-Mitteilungen anzeigen und beim Antippen die passende Seite öffnen.
 // Pfad-Basis der Anwendung (z. B. „/fraktionperfekt/“ hinter nginx): aus dem Geltungsbereich des Service Workers
 const BASIS = new URL(self.registration.scope).pathname;
-const HUELLE = 'fp-huelle-v3';   // neue Version löscht alte Caches (v1 hielt auch Spieldateien, v3: Pfad-Basis)
+const HUELLE = 'fp-huelle-v4';   // neue Version löscht alte Caches (v1 hielt auch Spieldateien, v3: Pfad-Basis, v4: 3D-Spiel)
 const DATEIEN = ['offline.html', 'app.css', 'verhalten.js', 'karte.js', 'manifest.webmanifest', 'marke/logo.png', 'marke/favicon.png',
     'marke/icon-192.png', 'marke/icon-512.png', 'lib/leaflet/leaflet.css', 'lib/leaflet/leaflet.js'];
 
@@ -18,8 +18,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
     const anfrage = e.request;
     const url = new URL(anfrage.url);
-    // Das Spiel (/spiel/) nie aus dem Cache: nach einer Änderung sonst alte Logik und Grafiken (z. B. fehlende Figuren)
-    if (anfrage.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith(BASIS + '_blazor') || url.pathname.startsWith(BASIS + 'spiel/')) {
+    // Das Spiel (/spiel/, /spiel3d/, /cheatsheet) nie aus dem Cache: nach einer Änderung sonst alte Logik und Grafiken
+    // (z. B. fehlende Figuren); bei der 3D-Fassung passen alte und neue Module sonst nicht zusammen.
+    if (anfrage.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith(BASIS + '_blazor') || url.pathname.startsWith(BASIS + 'spiel/')
+        || url.pathname.startsWith(BASIS + 'spiel3d/') || url.pathname.startsWith(BASIS + 'cheatsheet')) {
         return;
     }
 

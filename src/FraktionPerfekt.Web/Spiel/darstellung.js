@@ -670,7 +670,7 @@
     }
     function hinweis(t) { const p = document.createElement('p'); p.className = 'hinweis'; p.textContent = t; menueEl.appendChild(p); }
 
-    function starten(zustand, neu) {
+    function starten(zustand, neu, hinweis) {
         z = zustand; mini = null; reise = null; blende = null; pausiert = false; laufAuftrag = null;
         menueEl.hidden = true; titelEl.hidden = true; dialogEl.hidden = true; kontextEl.hidden = true;
         warteschlange = []; danach = null; verb = 'gehe'; objekt = null; gehalten = null; gitterGehalten = false;
@@ -680,6 +680,8 @@
         leisteAktualisieren();
         if (neu) {
             ergebnis({ text: [...S.VORSTELLUNG, ...S.EINLEITUNG] });
+        } else if (hinweis) {
+            ergebnis({ text: [hinweis] });
         } else {
             ergebnis({ text: [z.szene === 'karte' ? 'Weiter geht’s – auf der Karte.' : `Weiter geht’s: ${S.SZENEN[z.szene].titel}.`] });
         }
@@ -709,6 +711,12 @@
     G.laden('grafik/').then(() => {
         geladen = true; $('neu').disabled = false; weiterKnopf.disabled = false;
         $('titelbilder').append(G.ausschnitt(G.portraet('joe_hut', 'lacht'), 64, 64), G.ausschnitt(G.portraet('chani', 'lacht'), 64, 64));
+        // Direkteinstieg (Spickzettel /cheatsheet), z. B. /spiel/?start=archiv: Komplettlösung bis dorthin nachspielen
+        const sprung = S.sprungZustand((new URLSearchParams(window.location.search).get('start') || '').toLowerCase());
+        if (sprung) {
+            const ort = sprung.szene === 'karte' ? 'Reisekarte' : S.SZENEN[sprung.szene].titel;
+            starten(sprung, false, `Direkteinstieg: ${ort}. Im Gepäck: ${sprung.inventar.map((g) => S.GEGENSTAENDE[g].name).join(', ')}.`);
+        }
     }).catch((e) => { $('titelbilder').textContent = e.message; });
 
     // Ganzzahlige Skalierung, wenn möglich

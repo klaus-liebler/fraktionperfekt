@@ -1110,10 +1110,25 @@
         }
     }
 
+    /**
+     * Direkteinstiege (Spickzettel /cheatsheet, Adresse ?start=<name>) für Pixel- und 3D-Fassung: wie viele Schritte der
+     * Komplettlösung bis dorthin nachgespielt werden, damit alle nötigen Gegenstände und Merkmale da sind.
+     */
+    const SPRUENGE = {
+        buero: 0, marktstrasse: 5, karte: 6, rathaus: 7, rathausflur: 8, archiv: 8, ems: 15, boot: 18, radbruecke: 20, baustelle: 21,
+        schule: 29, schulflur: 32, krypta: 33, tempel: 39, gang: 48, finale: 50
+    };
+    function sprungZustand(name) {
+        if (!Object.prototype.hasOwnProperty.call(SPRUENGE, name)) { return null; }
+        const z = neuerZustand();
+        for (const s of KOMPLETTLOESUNG.slice(0, SPRUENGE[name])) { schritt(z, s); }
+        return z;
+    }
+
     const api = {
         VERSION, FIGUREN, VORSTELLUNG, EINLEITUNG, GEGENSTAENDE, ORTE, SZENEN, SIEGEL, QUIZ, KOMPLETTLOESUNG, RICHTIGE_KOMBINATION,
         ALTERNATIVE_FAKTEN, BOOT_X, PLATZ, neuerZustand, sichtbareHotspots, aktion, reisen, einstieg, platteVerlassen, figurWechseln, dialogInhalt, dialogWahl, minispielEnde, anrufen, naechsterSchritt,
-        bootNeu, bootSchritt, bootAutopilot, kugelNeu, kugelSchritt, speichern, laden, speicherplaetze, schritt,
+        bootNeu, bootSchritt, bootAutopilot, kugelNeu, kugelSchritt, speichern, laden, speicherplaetze, schritt, SPRUENGE, sprungZustand,
         BRUECKE, PLAUDEREI, STANDARD
     };
     wurzel.GralSpiel = api;
