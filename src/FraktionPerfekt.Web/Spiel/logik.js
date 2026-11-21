@@ -306,7 +306,7 @@
                     f1: (z) => {
                         if (istJoe(z)) { return antwort('Joe: „Die Fuge zwischen Sockel und Stein ist seit 1949 nicht nachgearbeitet. Unglaublich.“'); }
                         z.flags.hinweisPfahl = true; punkte(z, 'bruecke');
-                        return antwort(['Chani kratzt das Moos von der Tafel: „Frühe Nachkriegs-Antiqua, sehr selbstbewusst gesetzt.“', '„Was ausführt, ruht im dritten von sieben Pfählen – flussab, wo das Wasser warm ist.“', 'Chani: „Flussab, wo das Wasser warm ist … das Hallenbad!“']);
+                        return antwort(['Chani kratzt das Moos von der Tafel: „Frühe Nachkriegs-Antiqua, sehr selbstbewusst gesetzt.“', '„Was ausführt, ruht in der dritten Laterne – flussab, wo das Wasser warm ist.“', 'Chani: „Flussab, wo das Wasser warm ist … das Hallenbad! Und davor die Radbrücke mit den gelben Laternen.“']);
                     }
                 },
                 {
@@ -388,6 +388,19 @@
                     }
                 },
                 {
+                    // Die Radbrücke mit den gelben Laternen steht beim Hallenbad; in der dritten Laterne ruht das Siegel der Ausführung
+                    id: 'laterne', name: 'Dritte Laterne der Radbrücke', x: 74, y: 4, b: 9, h: 30, form: 'laterne',
+                    sichtbar: (z) => !hat(z, 'siegel_exekutive'),
+                    ansehen: () => antwort('Die dritte der gelben Laternen auf der Radbrücke, vom Hallenbad aus gezählt. Am Sockel sitzt eine Klappe, die nicht ganz schließt.'),
+                    benutzen: (z) => {
+                        geben(z, 'siegel_exekutive'); punkte(z, 'siegel2', 20);
+                        return antwort([`${name(z)} hebelt die lose Klappe am Sockel der dritten Laterne auf.`, 'Darin: ein Siegel mit einem Schlüsselbund. Das zweite Siegel!']);
+                    },
+                    f1: (z) => antwort(istJoe(z)
+                        ? 'Joe: „Die Klappe ist nicht abgedichtet. Da hat jemand etwas versteckt – oder gepfuscht.“'
+                        : 'Chani: „Die dritte Laterne. Hier ruht, was ausführt.“')
+                },
+                {
                     id: 'zurkarte', name: 'Bauzaun-Tor', x: 88.3, y: 40.3, b: 8.6, h: 32, form: 'pfeil',
                     benutzen: (z) => {
                         if (!z.flags.gegnerBaustelleWeg) { return antwort('Vor dem Tor liegt ein Stapel abgeschraubter Wegweiser. Pinsel bewacht ihn.'); }
@@ -409,7 +422,7 @@
                     reden: (z) => {
                         if (z.flags.abend && !z.flags.lastenrad) {
                             z.flags.lastenrad = true; punkte(z, 'lastenrad');
-                            return antwort(['Lorette: „Die Fledermäuse sind ausgeflogen. Geht ruhig rein.“', '„Und nehmt das Lastenrad mit. Für den Rückweg – man weiß ja nie, was in so einem Tempel herumrollt.“']);
+                            return antwort(['Lorette: „Die Fledermäuse sind ausgeflogen. Geht ruhig rein.“', '„Und nehmt das Lastenrad mit. Für den Rückweg – man weiß ja nie, was in so einem Tempel herumrollt.“', 'Mit drei Handgriffen klappt Lorette das Lastenrad zusammen – Lenker, Kiste, Räder –, bis es so groß ist wie eine Brotdose. Chani steckt es in ihre Tasche. Lorette: „Faltrad-Gutachten, Seite 213.“']);
                         }
                         if (z.flags.lastenrad) { return antwort('Lorette: „Und bringt mir das Lastenrad mit vollem Akku zurück!“'); }
                         return antwort(['Lorette: „Der Kellergang ist gesperrt. Fledermausgutachten! Hier überwintern Zwergfledermäuse.“', '„Erst wenn sie zur Nacht ausfliegen, ab halb neun, darf jemand durch. Steht auf Seite 212.“']);
@@ -567,7 +580,7 @@
                     sichtbar: (z) => z.flags.gitterOffen && !z.flags.kugelGeschafft,
                     ansehen: () => antwort('Ein langer Gang, leicht abschüssig. Am oberen Ende: eine riesige steinerne Wahlkugel. Sie wackelt.'),
                     benutzen: (z) => !z.flags.brueckeDa ? antwort('Der Gang liegt auf der anderen Seite des Abgrunds. Ohne Brücke kommt ihr da nicht hin.') : antwort(['Ein Knirschen. Die Wahlkugel löst sich und rollt los!', z.flags.lastenrad
-                        ? '(Lorettes Lastenrad! Tippen oder Leertaste/→ für Tempo.)'
+                        ? 'Chani zieht das Lastenrad aus der Tasche – ein Ruck, ausgeklappt! Joe tritt in die Pedale, Chani springt in die Kiste. (Tippen oder Leertaste/→ für Tempo.)'
                         : '(Rennen! Tippen oder Leertaste/→ für Tempo.)'], { minispiel: 'kugel' })
                 },
                 {
@@ -786,15 +799,14 @@
         if (art === 'boot') {
             // Nach der Flucht geht es nicht zurück zum Kanuverleih, sondern flussab direkt zum Hallenbad.
             z.flags.bootGewonnen = true; punkte(z, 'boot', 30);
-            geben(z, 'siegel_exekutive'); ortFrei(z, 'baustelle'); punkte(z, 'siegel2', 20);
+            ortFrei(z, 'baustelle');
             wechseln(z, 'baustelle');
             return antwort([
                 'Pinsel und Ledeiw gehen die alternativen Fakten aus. Ledeiw: „Schieß doch mit der Wahrheit!“ – Pinsel: „Haben wir nicht an Bord.“',
                 'Beide lehnen sich gleichzeitig über dieselbe Bordwand, um nach Nachschub zu suchen. Das Motorboot kippt, läuft voll und geht unter. Blubb. Vor lauter Dummheit.',
-                'Ihr treibt flussab bis zum alten Bootssteg hinter dem Hallenbad. Sieben Pfähle ragen aus dem Wasser.',
-                'Der dritte Pfahl ist hohl. Darin: ein Siegel mit einem Schlüsselbund. Das zweite Siegel!',
+                'Ihr treibt flussab bis unter die Radbrücke beim Hallenbad. Oben stehen die gelben Laternen, eine neben der anderen.',
                 '(Neuer Ort auf der Karte: Baustelle Hallenbad)',
-                'Hinter dem Steg: die Baustelle des Hallenbads. Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Bauleiterin Frau Kemper schaut euch skeptisch an.',
+                'Am Ufer: die Baustelle des Hallenbads. Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Bauleiterin Frau Kemper schaut euch skeptisch an.',
                 'Da prusten Pinsel und Ledeiw aus der Ems, stapfen tropfnass und auf Socken durch den Bauzaun – und schrauben sofort Wegweiser ab.'
             ], { szene: 'baustelle', ohneEinstieg: true, erscheinen: ['gegner'] });
         }
@@ -825,17 +837,20 @@
 
     const BOOT_ARTEN = ['Treibholz', 'Entenfamilie', 'Schild „Alternative Route“', 'Plakat „Grenzen dicht!“ (treibt)'];
 
+    // Bootsflucht bewusst gutmütig: Treibgut kommt langsamer und seltener, Schüsse fliegen langsam und selten.
+    const BOOT_TEMPO = (s) => 0.36 + Math.min(0.14, s.zeit / 120), SCHUSS_TEMPO = 0.32, NAH = 0.045;
+
     function bootSchritt(s, dt, eingabe) {
         if (s.status !== 'laeuft') { return s; }
         if (eingabe === 'hoch') { s.spur = Math.max(0, s.spur - 1); }
         if (eingabe === 'runter') { s.spur = Math.min(2, s.spur + 1); }
         s.zeit += dt;
         // Treibgut von vorn
-        const tempo = 0.4 + Math.min(0.25, s.zeit / 80);
+        const tempo = BOOT_TEMPO(s);
         s.naechstes -= dt;
         if (s.naechstes <= 0 && s.sinken === null) {
             s.hindernisse.push({ x: 1.05, spur: Math.floor(s.rnd() * 3), art: BOOT_ARTEN[Math.floor(s.rnd() * BOOT_ARTEN.length)] });
-            s.naechstes = 1.5 + s.rnd() * 1.1;
+            s.naechstes = 2.3 + s.rnd() * 1.4;
         }
         for (const h of s.hindernisse) { h.x -= tempo * dt; }
         // Verfolger zielen auf eure Spur und schießen alternative Fakten von hinten
@@ -844,10 +859,10 @@
         if (s.naechsterSchuss <= 0 && s.munition > 0) {
             s.munition -= 1;
             s.schuesse.push({ x: 0.2, spur: s.spur, text: ALTERNATIVE_FAKTEN[s.munition] });
-            s.naechsterSchuss = 1.6 + s.rnd() * 1.0;
+            s.naechsterSchuss = 2.6 + s.rnd() * 1.2;
         }
-        for (const f of s.schuesse) { f.x += 0.5 * dt; }
-        const nah = (x) => Math.abs(x - BOOT_X) < 0.06;
+        for (const f of s.schuesse) { f.x += SCHUSS_TEMPO * dt; }
+        const nah = (x) => Math.abs(x - BOOT_X) < NAH;
         const getroffen = s.hindernisse.filter((h) => nah(h.x) && h.spur === s.spur);
         const beschossen = s.schuesse.filter((f) => nah(f.x) && f.spur === s.spur);
         const n = getroffen.length + beschossen.length;
@@ -867,10 +882,10 @@
 
     /** Ausweich-Hilfe für Tests und Demo: Zeit bis zum nächsten Treffer je Spur; rechtzeitig in die sicherste Nachbarspur wechseln. */
     function bootAutopilot(s) {
-        const tempo = 0.4 + Math.min(0.25, s.zeit / 80);
+        const tempo = BOOT_TEMPO(s);
         const zeitBis = (spur) => Math.min(Infinity,
             ...s.hindernisse.filter((h) => h.spur === spur && h.x > BOOT_X - 0.06).map((h) => Math.max(0, h.x - (BOOT_X + 0.06)) / tempo),
-            ...s.schuesse.filter((f) => f.spur === spur && f.x < BOOT_X + 0.06).map((f) => Math.max(0, (BOOT_X - 0.06) - f.x) / 0.5));
+            ...s.schuesse.filter((f) => f.spur === spur && f.x < BOOT_X + 0.06).map((f) => Math.max(0, (BOOT_X - 0.06) - f.x) / SCHUSS_TEMPO));
         if (zeitBis(s.spur) > 0.45) { return null; }
         const ziel = [0, 1, 2].sort((a, b) => zeitBis(b) - zeitBis(a) || Math.abs(a - s.spur) - Math.abs(b - s.spur))[0];
         if (ziel === s.spur) { return null; }
@@ -966,6 +981,7 @@
         ['aktion', 'f1', 'skulptur'],
         ['aktion', 'benutzen', 'boot'],
         ['minispiel', 'boot', true],
+        ['aktion', 'benutzen', 'laterne'],
         ['figur'],
         ['aktion', 'f1', 'leitung'],
         ['aktion', 'f2', 'bauleiter'],

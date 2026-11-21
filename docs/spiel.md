@@ -64,13 +64,13 @@ Ausführlich mit allen Texten und Regieanweisungen: [`spiel-loesungsweg.md`](spi
    er erinnert sich, schließt auf und geht. Gleich danach poltern Pinsel und Ledeiw herein und versperren den Ausgang. **Chani:** Gemälde „Der Rat
    von 1949“ deuten → „Protokoll 47“. Regal mit Ratsprotokollen benutzen → **Siegel der Beschlüsse**. **Joe**, Kartusche auf die beiden → festgeklebt. Ausgang.
 3. **Emsdeich am Kanuverleih** (flussauf vom Hallenbad, mit Skulpturen): Johanna (sie hat den Kanuverleih „vergesellschaftet“) den **Stadtplan** geben →
-   Paddel. **Chani:** Inschrift an der Steinskulptur deuten → „dritter von sieben Pfählen, flussab, wo das Wasser warm ist“. Ruderboot benutzen →
+   Paddel. **Chani:** Inschrift an der Steinskulptur deuten → „in der dritten Laterne, flussab, wo das Wasser warm ist“. Ruderboot benutzen →
    **Bootsflucht**: Pinsel und Ledeiw haben sich aus dem Dichtstoff befreit (auf Socken) und schießen von hinten alternative Fakten; als sie keine mehr haben,
-   geht ihr Boot unter. Ihr treibt bis zum Bootssteg am Hallenbad: dritter Pfahl → **Siegel der Ausführung**. Es geht direkt an der Baustelle weiter.
+   geht ihr Boot unter. Ihr treibt bis unter die Radbrücke beim Hallenbad: dritte Laterne benutzen → **Siegel der Ausführung**. Es geht direkt an der Baustelle weiter.
 4. **Baustelle Hallenbad** (Sanierung; das Freibad ist nur beschriftet und nicht im Umbau): **Joe:** Kartusche auf die leckende Leitung (Grube läuft leer).
    **Joe:** Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**. **Chani:** Live-Story bei Pinsel und Ledeiw → sie
    stolpern in den Bauwagen. Bauzaun-Tor.
-5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lorette reden → Lastenrad. Durch den Haupteingang
+5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lorette reden → Lastenrad (zusammengefaltet, in Chanis Tasche; im Gang wieder ausgeklappt). Durch den Haupteingang
    in den Schulflur (Klassenzimmer 1a, 2b und WC mit Absagen; die Schule ist zweizügig), dort die Kellertür benutzen (nach 20:30 Uhr, Taschenlampe nötig).
 6. **Krypta:** **Chani:** Wandfresko deuten → „von unten nach oben“. Symbolschloss: **Urne, Buch, Waage** → Tempelschlüssel. Tor benutzen (drei Siegel + Schlüssel).
 7. **Tempel:** Zwei Balance-Plattformen auf Drehzapfen: **Chani** auf die dicke rechte (Kamera), **Joe** auf die schmale linke (Hut). Jede Figur steht
@@ -89,9 +89,32 @@ Effekte aus, ohne die gespeicherte Ton-Einstellung zu ändern. Test-Tabs mit dem
 - Reines HTML/CSS/JavaScript ohne Bibliotheken: `logik.js` (Zustand, Szenen, Rätsel, Minispiele, Speichern – ohne
   Browser testbar), `darstellung.js` (Canvas-Grafik im Code, Eingabe, WebAudio-Töne, Speicherplätze), `spiel.css`.
   CSP-konform (keine Inline-Skripte).
-- Tests: `tests/FraktionPerfekt.Web.Tests/spiel/logik.test.cjs` (node --test), eingebunden in `dotnet test` über
+- Tests: `tests/FraktionPerfekt.Web.Tests/spiel/logik.test.cjs` (node --test; ebenso `spiel3d.test.cjs`), eingebunden in `dotnet test` über
   `SpielTests` (ohne Node übersprungen). Geprüft u. a.: Die Komplettlösung führt bis zum Ende, Rätsel (Schloss, Gitter,
   Quiz), Speichern/Laden mit Abwehr fremder Daten, Speicher, der Ausnahmen wirft, und beide Minispiele.
+
+## 3D-Fassung (`/spiel3d/`, alle Akte)
+
+Zweite Darstellung desselben Spiels mit three.js (0.170, lokal mitgeliefert, CSP-konform ohne Import-Map). Spiellogik,
+Speicherformat, Komplettlösung und Professor Relbeil sind identisch: `/spiel3d/` lädt `logik.js`, `grafik.js` (Porträts,
+Inventar-Icons, Reisekarte), `musik.js` und `spiel.css` aus `/spiel/`. Speicherplätze heißen `fp-spiel3d-…`.
+
+- Schauplätze: Eine Szene der Spiellogik besteht in 3D aus einem oder mehreren begehbaren Bereichen
+  (`Spiel3d/bereiche.js`, `akt3.js`, `akt45.js`, Innenräume in `innen.js`):
+  `buero` = Vor der Zukunftsschmiede + Büro; `archiv` = Vor dem Rathaus + Rathausflur + Rathausarchiv;
+  `ems` = Emsdeich am Kanuverleih; `baustelle` = Radbrücke beim Hallenbad (gelbe Doppellaternen, in der dritten das
+  Siegel) + Baustelle; `schule` = Schulhof (abends mit Fledermäusen); `schulflur`; `krypta`; `tempel` = Tempelhalle
+  (Fallgitter, Plattformen, Tafel, Abgrund mit Hängebrücke, Gang) + Kammer des Grals.
+  Gebäude aus 3D-Gebäudemodellen LoD2 (© Geobasis NRW, dl-de/zero-2-0) mit Gelände; Innenräume frei erfunden.
+- Minispiele in 3D mit derselben Simulation wie die Pixel-Fassung: Bootsflucht auf der Ems (bewusst gutmütig: weniger
+  Treibgut, langsame und seltene alternative Fakten) und Wahlkugel im Tempelgang – mit Lorettes Lastenrad, das Chani
+  zusammengefaltet in der Tasche trägt.
+- Texte, die nur in 3D anders sind (`Spiel3d/anpassung3d.js`): Chris steht vor dem Rathaus – er wollte selbst
+  Bürgermeister werden, gewählt wurde Dietrich Aden (CDU), jetzt lässt er niemanden hinein; „Rathaustür“, Wegweiser.
+- Direkteinstieg: `/cheatsheet` (Spickzettel) bzw. `/spiel3d/?start=…` spielt die Komplettlösung bis dorthin nach.
+- Tests: `tests/FraktionPerfekt.Web.Tests/spiel/spiel3d.test.cjs` (Komplettlösung mit den 3D-Texten, jeder Hotspot jeder
+  Szene hat ein 3D-Gegenstück, Direkteinstiege und Spickzettel, keine Inline-Skripte, nur lokale Importe). Browsertests
+  stumm mit `/spiel3d/?ton=aus`; mit Software-Rendering zusätzlich `&test` (große Zeitschritte, Minispiele mit Autopilot).
 
 ## Grafiken im Stil der Vorlagen (Freigabe ausstehend)
 

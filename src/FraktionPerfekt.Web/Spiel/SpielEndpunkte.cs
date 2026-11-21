@@ -2,7 +2,7 @@ namespace FraktionPerfekt.Web.Spiel;
 
 /// <summary>
 /// Easteregg „Joe &amp; Chani und der Gral der Demokratie“: liegt bewusst nicht in wwwroot, sondern wird nur an angemeldete
-/// Personen ausgeliefert. Einstieg: Konami-Code (↑↑↓↓←→←→BA) oder siebenmal schnell auf das Logo tippen.
+/// Personen ausgeliefert (Pixel-Fassung unter /spiel/, 3D-Fassung unter /spiel3d/). Einstieg: Konami-Code (↑↑↓↓←→←→BA) oder siebenmal schnell auf das Logo tippen.
 /// </summary>
 internal static partial class SpielEndpunkte
 {
@@ -58,6 +58,38 @@ internal static partial class SpielEndpunkte
             return Results.File(pfad, "image/png");
         }).RequireAuthorization();
 
+        // 3D-Fassung (three.js, Akt 1–2): eigene Dateien in Spiel3d/, nutzt logik.js, grafik.js, musik.js und spiel.css unter /spiel/.
+        // Nur flache Dateinamen; three.js liegt lokal bei (CSP: Skripte nur von 'self').
+        var ordner3d = Path.Combine(inhalt, "Spiel3d");
+        app.MapGet("/spiel3d/{datei?}", (string? datei, HttpContext http) =>
+        {
+            if (string.IsNullOrEmpty(datei) && !http.Request.Path.Value!.EndsWith('/'))
+            {
+                return Results.LocalRedirect("~/spiel3d/");
+            }
+
+            var name = string.IsNullOrEmpty(datei) ? "index.html" : datei;
+            var treffer = Datei3dName().Match(name);
+            var pfad = Path.Combine(ordner3d, name);
+            if (!treffer.Success || !File.Exists(pfad))
+            {
+                return Results.NotFound();
+            }
+
+            var typ = treffer.Groups[1].Value switch
+            {
+                "html" => "text/html; charset=utf-8",
+                "css" => "text/css; charset=utf-8",
+                "js" => "text/javascript; charset=utf-8",
+                _ => "application/json; charset=utf-8",
+            };
+            http.Response.Headers.CacheControl = "no-cache";
+            return Results.File(pfad, typ);
+        }).RequireAuthorization();
+
+        // Spickzettel mit Direkteinstiegen in die 3D-Fassung (kurze Adresse /cheatsheet)
+        app.MapGet("/cheatsheet", () => Results.LocalRedirect("~/spiel3d/cheatsheet.html")).RequireAuthorization();
+
         // Hymne „Greven an der Ems“ für den Player im Impressum: öffentlich wie das Impressum selbst.
         // Quelle ist assets/ im Repository; beim Veröffentlichen landet sie in Spiel/musik (siehe csproj).
         var musik = Directory.Exists(Path.Combine(ordner, "musik"))
@@ -78,4 +110,7 @@ internal static partial class SpielEndpunkte
 
     [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.png$")]
     private static partial System.Text.RegularExpressions.Regex GrafikName();
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.(html|css|js|json)$")]
+    private static partial System.Text.RegularExpressions.Regex Datei3dName();
 }

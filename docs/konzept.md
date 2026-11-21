@@ -126,7 +126,7 @@ Für Kontakte und Bürgeranliegen gelten eigene Datenschutzhinweise und Löschfr
 
 ### Außerhalb des Plans: Easteregg-Spiel ✅
 
-Ein kleines Point-and-Click-Spiel („Joe & Chani und der Gral der Demokratie“) unter `/spiel`, ohne Bezug zu Fachdaten. Details: `docs/spiel.md`.
+Ein kleines Point-and-Click-Spiel („Joe & Chani und der Gral der Demokratie“) unter `/spiel`, ohne Bezug zu Fachdaten; dazu eine 3D-Fassung mit realen Greven-Schauplätzen (LoD2) unter `/spiel3d` und ein Spickzettel mit Direkteinstiegen unter `/cheatsheet`. Details: `docs/spiel.md`.
 
 ## Bedienung und Integration ins Handy und den Rechner
 

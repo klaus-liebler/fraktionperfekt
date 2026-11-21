@@ -2,13 +2,15 @@ using System.Diagnostics;
 
 namespace FraktionPerfekt.Web.Tests;
 
-/// <summary>Führt die Tests der Spiellogik (node --test) aus; ohne Node wird der Test übersprungen.</summary>
+/// <summary>Führt die Tests des Spiels (node --test) aus: Spiellogik und 3D-Fassung; ohne Node wird der Test übersprungen.</summary>
 public sealed class SpielTests
 {
-    [Fact]
-    public async Task Spiellogik_Tests_mit_Node_sind_gruen()
+    [Theory]
+    [InlineData("logik.test.cjs")]
+    [InlineData("spiel3d.test.cjs")]
+    public async Task Spiellogik_Tests_mit_Node_sind_gruen(string testdatei)
     {
-        var datei = Path.Combine(Projektordner(), "spiel", "logik.test.cjs");
+        var datei = Path.Combine(Projektordner(), "spiel", testdatei);
         File.Exists(datei).ShouldBeTrue(datei);
         ProcessStartInfo start = new("node", $"--test \"{datei}\"") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
         Process? node;

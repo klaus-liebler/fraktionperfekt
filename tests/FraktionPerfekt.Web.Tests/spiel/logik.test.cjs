@@ -259,7 +259,10 @@ test('Emsdeich: Inschrift an der Skulptur, Boot vom Kanuverleih, Flucht endet am
     assert.equal(ende.szene, 'baustelle');
     assert.deepEqual(ende.erscheinen, ['gegner']);
     assert.match(ende.text.join(' '), /geht unter/);
+    assert.ok(!z.inventar.includes('siegel_exekutive'));   // das Siegel steckt in der dritten Laterne der Radbrücke
+    assert.match(S.aktion(z, 'benutzen', 'laterne').text.join(' '), /zweite Siegel/);
     assert.ok(z.inventar.includes('siegel_exekutive'));
+    assert.equal(S.sichtbareHotspots(z).some((h) => h.id === 'laterne'), false);
     assert.ok(z.orte.includes('baustelle'));
     // Im Archiv kleben jetzt nur noch die Schuhsohlen
     z.szene = 'karte'; S.reisen(z, 'archiv');

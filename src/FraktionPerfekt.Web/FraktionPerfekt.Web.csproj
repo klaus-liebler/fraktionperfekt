@@ -33,6 +33,10 @@
     <!-- Easteregg-Spiel: nur für angemeldete Personen über /spiel/ ausgeliefert (nicht in wwwroot) -->
     <None Remove="Spiel\**" />
     <Content Include="Spiel\**" Exclude="Spiel\**\*.cs" CopyToPublishDirectory="PreserveNewest" />
+    <!-- 3D-Fassung des Spiels: /spiel3d/ (three.js und LoD2-Daten liegen bei) -->
+    <None Remove="Spiel3d\**" />
+    <Content Remove="Spiel3d\**" />
+    <Content Include="Spiel3d\**" CopyToPublishDirectory="PreserveNewest" />
     <!-- Spielgrafiken: einzige Quelle ist assets/ (erzeugt mit tools/Grafik/erzeuge.mjs) -->
     <Content Include="..\..\assets\*.png" Link="Spiel\grafik\%(Filename)%(Extension)" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
     <!-- Hymne „Greven an der Ems“ für den Player im Impressum (öffentlich, siehe SpielEndpunkte.MapHymne) -->

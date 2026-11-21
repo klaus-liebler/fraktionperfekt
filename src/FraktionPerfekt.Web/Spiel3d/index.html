@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="robots" content="noindex" />
+    <title>Der Gral der Demokratie 3D – Joe &amp; Chani</title>
+    <link rel="stylesheet" href="../spiel/spiel.css" />
+    <link rel="stylesheet" href="spiel3d.css" />
+</head>
+<body>
+    <div id="buehne">
+        <canvas id="leinwand" aria-label="Spielszene in 3D"></canvas>
+        <canvas id="karte" width="256" height="144" hidden aria-label="Reisekarte von Greven"></canvas>
+        <div id="orttitel" aria-live="polite"></div>
+        <div id="hoverlabel" hidden></div>
+        <div id="blende"></div>
+        <div id="laden" hidden>Greven wird gebaut …</div>
+        <div id="minihud" hidden></div>
+        <div id="ende" hidden><p class="gross">ENDE</p><p id="endepunkte"></p><p>Der Gral der Demokratie ist eine Kiste mit einem Schlitz und ein Bleistift an einer Schnur.</p><button type="button" id="nochmal">Noch einmal spielen</button></div>
+        <div id="titel">
+            <p class="vorspann">Ein Abenteuer aus der Fraktion · in 3D</p>
+            <div id="titelbilder"></div>
+            <h1><span class="oberzeile">Joe &amp; Chani und</span>Der Gral der Demokratie</h1>
+            <p>Ein anonymer Brief, drei Siegel, ein Tempel unter Greven – und zwei Herren in zu engen Anzügen, die schneller sein wollen.</p>
+            <div class="knoepfe">
+                <button type="button" id="neu">Neues Spiel</button>
+                <button type="button" id="weiter" hidden>Weiterspielen</button>
+            </div>
+            <div class="musikregler">
+                <button type="button" id="musik">♪ Musik an</button>
+                <label for="lautstaerke">Lautstärke</label>
+                <input type="range" id="lautstaerke" min="0" max="1" step="0.05" />
+            </div>
+            <p class="klein">Antippen: hingehen und die naheliegende Aktion · Verben unten wählen · langes Drücken: alle Aktionen<br />
+                Tastatur: 1–8 Verb, ←/→ auswählen, Enter, Tab Figur wechseln, Esc Pause · Alle fünf Akte in 3D – Direkteinstiege: <a href="cheatsheet.html">Spickzettel</a>.<br />
+                Gebäude: 3D-Gebäudemodelle LoD2 © Geobasis NRW (dl-de/zero-2-0) · Alle Figuren und Handlungen sind frei erfunden.</p>
+            <p class="klein"><a href="../spiel/">Zur klassischen Pixel-Fassung</a></p>
+        </div>
+        <div id="textbox" hidden role="status" aria-live="polite"><div id="portrait" hidden></div><p id="text"></p><span class="weiter">▶</span></div>
+        <div id="dialog" hidden role="dialog" aria-label="Auswahl"></div>
+        <div id="kontext" hidden role="menu"></div>
+        <div id="menue" hidden role="dialog" aria-label="Pause"></div>
+    </div>
+    <div id="leiste" hidden>
+        <div id="satz" aria-live="polite"></div>
+        <div id="leistenreihe">
+            <div id="verben" aria-label="Verben"></div>
+            <div id="figuren" aria-label="Figur wählen"></div>
+            <div id="inventar" aria-label="Inventar"></div>
+            <div id="rechts"><span id="punkte"></span><button type="button" id="pause" title="Pause (Esc)">❚❚</button></div>
+        </div>
+    </div>
+    <script src="../spiel/grafik.js"></script>
+    <script src="../spiel/musik.js"></script>
+    <script src="../spiel/logik.js"></script>
+    <script src="anpassung3d.js"></script>
+    <script type="module" src="darstellung3d.js"></script>
+</body>
+</html>

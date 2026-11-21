@@ -146,6 +146,11 @@ public sealed partial class AppStartTests : IAsyncLifetime
         (await http.GetStringAsync("spiel/", abbruch)).ShouldContain("Gral der Demokratie");
         (await http.GetAsync("spiel/logik.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetAsync("spiel/SpielEndpunkte.cs", abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await http.GetStringAsync("spiel3d/", abbruch)).ShouldContain("Gral der Demokratie 3D");
+        (await http.GetAsync("spiel3d/darstellung3d.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await http.GetStringAsync("cheatsheet", abbruch)).ShouldContain("Spickzettel");
+        (await http.GetAsync("spiel3d/welt_rathaus.json", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await http.GetAsync("spiel3d/..%2Fspiel%2FSpielEndpunkte.cs", abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         // KI-Schnittstelle: nur mit Schlüssel, eigenes Konto ohne vertrauliche Seiten; MCP mit Werkzeugen.
         using var ki = new HttpClient { BaseAddress = _adresse };
