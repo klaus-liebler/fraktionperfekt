@@ -110,13 +110,15 @@ export async function schulhof(renderer) {
             { obj: tuer, stand: stand(1.6), eintraege: [{ id: 'eingang' }] },
             { obj: tor, stand: [28.0, -14.6], eintraege: [{ id: 'zurkarte' }] },
             { obj: platte, stand: [18.4, -16.6], eintraege: [{ deko: 'Tischtennisplatte', text: 'Eine Tischtennisplatte aus Beton. Joe: „Unverwüstlich. Wie das Ehrenamt.“' }] },
-            { obj: rad, stand: [9.6, -11.9], eintraege: [{ deko: 'Lorettes Lastenrad', text: 'Ein grünes Lastenrad mit Holzkiste. Ein Aufkleber: „Faltbar nach Gutachten, Seite 213“.' }], sichtbarObj: (z) => !z.flags.lastenrad || faltZeit >= 0 },
+            { obj: rad, stand: [9.6, -11.9], eintraege: [{ deko: 'Lorettes Lastenrad', text: 'Ein grünes Lastenrad mit Holzkiste. Ein Aufkleber: „Faltbar nach Gutachten, Seite 213“.' }], klickbar: () => rad.visible },
             { obj: kellerG, stand: [...stand(3.2, -.4)], eintraege: [{ deko: 'Kellerabgang', text: 'Ein vergitterter Kellerabgang. Darüber ein Schild: „Fledermausquartier – bitte leise“.' }] }
         ],
         npcs: [{ hotspot: 'lore', figur: 'lorette', pos: [10.3, -15.2], rot: 2.2, pose: 'stehen', stand: [11.8, -13.6] }],
-        aktualisieren(z) {
-            if (abend === false && z.flags.abend && flugZeit < 0) { flugZeit = 0; }
+        aktualisieren(z, rigVon, sofort) {
+            if (abend === false && z.flags.abend && flugZeit < 0 && !sofort) { flugZeit = 0; }
             abendSetzen(!!z.flags.abend);
+            // Lorette faltet das Lastenrad mit der Zeile, die es sagt; wer später kommt, sieht es nicht mehr
+            if (z.flags.lastenrad && sofort) { rad.visible = false; faltZeit = -1; }
             if (z.flags.lastenrad && rad.visible && faltZeit < 0) { faltZeit = 0; }
             if (!z.flags.lastenrad) { rad.visible = true; rad.scale.setScalar(1); faltZeit = -1; }
         },
@@ -152,7 +154,7 @@ export function schulflurBereich(renderer) {
             { obj: o.keller, stand: [6.6, -.9], eintraege: [{ id: 'kellertuer' }] },
             { obj: o.hof, stand: [-7.1, .3], eintraege: [{ id: 'zumhof' }] },
             { obj: o.bilder, stand: [-5.6, -.9], eintraege: [{ deko: 'Kinderbilder', text: 'Häuser, Sonnen, eine Bürgermeisterin mit drei Armen. Eins heißt „Mein Rathaus“ – mit Rutsche.' }] },
-            { obj: o.haken, stand: [1.2, -.9], eintraege: [{ deko: 'Turnbeutel', text: 'Turnbeutel in allen Farben. Über die richtige Farbe streitet gerade der Elternabend.' }] }
+            { obj: o.haken, stand: [4.55, -.9], eintraege: [{ deko: 'Turnbeutel', text: 'Turnbeutel in allen Farben. Über die richtige Farbe streitet gerade der Elternabend.' }] }
         ],
         npcs: []
     });
@@ -174,7 +176,7 @@ export function kryptaBereich(renderer) {
             const hat = (g) => z.inventar.includes(g);
             o.siegelTeile.forEach((s) => { s.visible = !!z.flags.tempelOffen; });
             o.fluegel.position.x = z.flags.tempelOffen ? 1.9 : 0;
-            o.scheiben.forEach((s, i) => { s.rotation.y = hat('tempelschluessel') || z.flags.tempelOffen ? [2, 1, 0][i] * 2.1 : i * .7; });
+            o.scheiben.forEach((s, i) => { s.rotation.y = z.flags.schlossOffen || hat('tempelschluessel') || z.flags.tempelOffen ? [2, 1, 0][i] * 2.1 : i * .7; });
         }
     });
 }
@@ -196,6 +198,8 @@ export function tempelHalleBereich(renderer) {
             { obj: o.gangTor, stand: [0, -19.4], eintraege: [{ id: 'gang' }] }
         ],
         npcs: [],
+        // Die Hängebrücke schiebt sich mit dem Antrag zur Geschäftsordnung aus den Kanten
+        dinge: [{ obj: o.bruecke, sichtbar: (b) => !!b.flags.brueckeDa }],
         /** Plattformen: Wer auf seiner Plattform steht, bleibt dort, bis er woanders hingeht. */
         plattformen: { links: { obj: o.links, x: -3.2, z: -4.2 }, rechts: { obj: o.rechts, x: 3.2, z: -4.2 } },
         /** Erst wenn das Fallgitter fast oben ist, springen die beiden herunter. */
@@ -203,7 +207,6 @@ export function tempelHalleBereich(renderer) {
         aktualisieren(z) {
             zustandSetzen(z);
             o.gitter.userData.ziel = z.flags.gitterOffen ? 4.2 : 0;
-            o.bruecke.visible = !!z.flags.brueckeDa;
             o.tf.material.emissive.set(z.flags.goGeloest ? 0x000000 : z.flags.gitterOffen ? 0x2a1a00 : 0x000000);
             for (const s of ['links', 'rechts']) { o[s].children[1].position.y = .55 - (z.platten[s] ? .12 : 0); }
             o.kugel.position.copy(r.gangPunkt(0, 0, 1.8)); o.kugel.position.z -= 2.5;
@@ -234,7 +237,7 @@ function kugelFlucht(r) {
             const [joe, chani] = figs;
             if (sim.lastenrad && rad) {
                 rad.position.set(0, p.y, p.z); rad.rotation.set(Math.asin(-.1) * -1, Math.PI / 2, 0);
-                rad.userData.raeder.forEach((w) => { w.rotation.x += sim.tempo * .6; });
+                rad.userData.raeder.forEach((w) => { w.rotation.z -= sim.tempo * .6; });   // vorwärts (+x) rollen = im Uhrzeigersinn um z
                 joe.position.set(.0, p.y + .45, p.z + .4); joe.rotation.y = Math.PI;
                 chani.position.set(0, p.y + .45, p.z - .9); chani.rotation.y = Math.PI;
             } else {
@@ -249,7 +252,11 @@ function kugelFlucht(r) {
 }
 
 export function tempelFinaleBereich(renderer) {
-    const r = innen.tempelFinale(renderer), o = r.objekte;
+    const r = innen.tempelFinale(renderer), o = r.objekte, tick0 = r.tick;
+    // Der goldene Becher (alles außer dem Steinpodest) als eigene Gruppe: Pinsel kann ihn mitnehmen
+    const becher = new THREE.Group(); becher.name = 'becher';
+    for (const teil of o.pokal.children.slice(1)) { becher.add(teil); }
+    o.pokal.add(becher);
     greifbar(o.pokal, 1.2, 2.0, 1.2); greifbar(o.urne, 1.0, 1.3, .8);
     return Object.assign(r, {
         boden: [r.scene.getObjectByName('boden')],
@@ -258,15 +265,28 @@ export function tempelFinaleBereich(renderer) {
             { obj: o.urne, stand: [1.8, -.7], eintraege: [{ id: 'urne' }] }
         ],
         npcs: [
-            { sichtbar: (z) => z.flags.kugelGeschafft, figur: 'pinsel', pos: [-3.6, -1.4], rot: 1.6, pose: 'stehen', ende: [-4.6, 2.6], endeRot: 2.6 },
-            { sichtbar: (z) => z.flags.kugelGeschafft, figur: 'ledeiw', pos: [-3.4, -.1], rot: 1.9, pose: 'stehen', ende: [-3.8, 3.0], endeRot: 2.6 },
-            { sichtbar: (z) => z.ende && z.flags.antragUebergeben, figur: 'chris', pos: [4.2, 1.6], rot: -2.0, pose: 'arme' },
-            { sichtbar: (z) => z.ende && z.flags.lastenrad, figur: 'lorette', pos: [3.0, 2.6], rot: -2.6, pose: 'stehen' },
-            { sichtbar: (z) => z.ende && z.flags.stadtplanWeg, figur: 'johanna', pos: [4.6, .2], rot: -1.6, pose: 'stehen' }
+            // Pinsel und Ledeiw stolpern aus dem Seitengang herein und gehen am Ende zum Ausgang (Fledermaus-Sackgasse)
+            { sichtbar: (b) => b.flags.gegnerFinale && !b.flags.gegnerAbgang, figur: 'pinsel', pos: [-3.6, -1.4], rot: 1.6, pose: 'stehen', von: [-5.2, 5.6], nach: [[-4.6, 2.8], [-5.4, 6.5]] },
+            { sichtbar: (b) => b.flags.gegnerFinale && !b.flags.gegnerAbgang, figur: 'ledeiw', pos: [-3.4, -.1], rot: 1.9, pose: 'stehen', von: [-4.4, 6.0], nach: [[-3.8, 3.0], [-4.6, 6.8]] },
+            // Wer unterwegs geholfen hat, kommt mit der eigenen Zeile herein
+            { sichtbar: (b) => !!b.flags.chrisHilft, figur: 'chris', pos: [4.2, 1.6], rot: -2.0, pose: 'arme', von: [5.4, 6.4] },
+            { sichtbar: (b) => !!b.flags.loretteHilft, figur: 'lorette', pos: [3.0, 2.6], rot: -2.6, pose: 'stehen', von: [3.2, 6.6] },
+            { sichtbar: (b) => !!b.flags.johannaHilft, figur: 'johanna', pos: [4.6, .2], rot: -1.6, pose: 'stehen', von: [6.0, 5.8] }
         ],
-        aktualisieren(z) {
-            // Im Finale tragen Joe und Chani die Urne gemeinsam
-            o.urne.userData.getragen = !!z.ende;
+        aktualisieren(z, rigVon) {
+            // Pinsel nimmt den Pokal vom Podest und trägt ihn davon
+            const pinsel = rigVon && rigVon('pinsel'), soll = z.flags.pokalGenommen && pinsel ? pinsel : o.pokal;
+            if (becher.parent !== soll) {
+                soll.add(becher);
+                if (soll === o.pokal) { becher.position.set(0, 0, 0); becher.scale.setScalar(1); becher.rotation.set(0, 0, 0); } else { becher.position.set(.05, -.05, .38); becher.scale.setScalar(.55); }
+            }
+            if (!z.flags.urneGetragen) { o.urne.userData.getragen = false; }
+        },
+        tick(dt, t) {
+            tick0(dt, t);
+            // Getragen: Die Kiste hebt sich zwischen Joe und Chani
+            const ziel = o.urne.userData.getragen ? 1.25 : .93;
+            o.kiste.position.y += (ziel - o.kiste.position.y) * Math.min(1, dt * 2.5);
         }
     });
 }

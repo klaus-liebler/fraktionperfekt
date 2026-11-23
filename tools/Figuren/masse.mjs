@@ -1,10 +1,11 @@
 // Gesichtsmaße relativ zum Kopfknochen (Meter, Achsen der Figur: y oben, z vorn) für das Zubehör in figuren3d.js
+import fs from 'node:fs';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { getBounds } from '@gltf-transform/functions';
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const mul = (m, v) => [m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12], m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13], m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14]];
-for (const n of ['joe', 'chani']) {
+for (const n of (process.argv.length > 2 ? process.argv.slice(2) : fs.readdirSync('../../src/FraktionPerfekt.Web/Spiel3d').filter((d) => /^figur_.*.glb$/.test(d)).map((d) => d.slice(6, -4)))) {
     const doc = await io.read(`../../src/FraktionPerfekt.Web/Spiel3d/figur_${n}.glb`), r = doc.getRoot();
     const pos = (name) => { const nd = r.listNodes().find((x) => x.getName() === name); return mul(nd.getWorldMatrix(), [0, 0, 0]).map((v) => v / 100); };
     const k = pos('Bip01_Head'), rel = (p) => p.map((v, i) => +(v - k[i]).toFixed(3));

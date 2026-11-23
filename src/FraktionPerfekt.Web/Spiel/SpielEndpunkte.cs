@@ -1,64 +1,23 @@
 namespace FraktionPerfekt.Web.Spiel;
 
 /// <summary>
-/// Easteregg „Joe &amp; Chani und der Gral der Demokratie“: liegt bewusst nicht in wwwroot, sondern wird nur an angemeldete
-/// Personen ausgeliefert (Pixel-Fassung unter /spiel/, 3D-Fassung unter /spiel3d/). Einstieg: Konami-Code (↑↑↓↓←→←→BA) oder siebenmal schnell auf das Logo tippen.
+/// Easteregg „Joe &amp; Chani und Grevens Gral der Demokratie“ (3D, three.js): liegt bewusst nicht in wwwroot, sondern wird nur an
+/// angemeldete Personen ausgeliefert (/spiel3d/; die frühere Adresse /spiel/ leitet dorthin um). Einstieg: Konami-Code
+/// (↑↑↓↓←→←→BA) oder siebenmal schnell auf das Logo tippen.
 /// </summary>
 internal static partial class SpielEndpunkte
 {
-    private static readonly Dictionary<string, string> Dateien = new(StringComparer.Ordinal)
-    {
-        ["index.html"] = "text/html; charset=utf-8",
-        ["spiel.css"] = "text/css; charset=utf-8",
-        ["logik.js"] = "text/javascript; charset=utf-8",
-        ["musik.js"] = "text/javascript; charset=utf-8",
-        ["grafik.js"] = "text/javascript; charset=utf-8",
-        ["darstellung.js"] = "text/javascript; charset=utf-8",
-    };
-
     public static void MapSpiel(this IEndpointRouteBuilder app)
     {
         var inhalt = app.ServiceProvider.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
         var ordner = Path.Combine(inhalt, "Spiel");
-        // Grafiken: einzige Quelle ist assets/ im Repository; beim Veröffentlichen landen sie in Spiel/grafik (siehe csproj).
-        var grafik = Directory.Exists(Path.Combine(ordner, "grafik"))
-            ? Path.Combine(ordner, "grafik")
-            : Path.GetFullPath(Path.Combine(inhalt, "..", "..", "assets"));
-        app.MapGet("/spiel/{datei?}", (string? datei, HttpContext http) =>
+        // Frühere Pixel-Fassung: alte Lesezeichen und Links führen zur 3D-Fassung
+        foreach (var alt in new[] { "/spiel", "/spiel/{**rest}" })
         {
-            if (string.IsNullOrEmpty(datei) && !http.Request.Path.Value!.EndsWith('/'))
-            {
-                return Results.LocalRedirect("~/spiel/"); // relative Pfade im Spiel brauchen den Schrägstrich
-            }
+            app.MapGet(alt, () => Results.LocalRedirect("~/spiel3d/")).RequireAuthorization();
+        }
 
-            var name = string.IsNullOrEmpty(datei) ? "index.html" : datei;
-            if (!Dateien.TryGetValue(name, out var typ))
-            {
-                return Results.NotFound();
-            }
-
-            http.Response.Headers.CacheControl = "no-cache";
-            return Results.File(Path.Combine(ordner, name), typ);
-        }).RequireAuthorization();
-
-        app.MapGet("/spiel/grafik/{datei}", (string datei, HttpContext http) =>
-        {
-            if (!GrafikName().IsMatch(datei))
-            {
-                return Results.NotFound();
-            }
-
-            var pfad = Path.Combine(grafik, datei);
-            if (!File.Exists(pfad))
-            {
-                return Results.NotFound();
-            }
-
-            http.Response.Headers.CacheControl = "no-cache";
-            return Results.File(pfad, "image/png");
-        }).RequireAuthorization();
-
-        // 3D-Fassung (three.js, alle fünf Akte): eigene Dateien in Spiel3d/, nutzt logik.js, grafik.js, musik.js und spiel.css unter /spiel/.
+        // Alle Dateien des Spiels liegen in Spiel3d/ (Spiellogik, Darstellung, Musik, Modelle, Texturen, Weltdaten).
         // Nur flache Dateinamen; three.js liegt lokal bei (CSP: Skripte nur von 'self').
         var ordner3d = Path.Combine(inhalt, "Spiel3d");
         app.MapGet("/spiel3d/{datei?}", (string? datei, HttpContext http) =>
@@ -89,7 +48,7 @@ internal static partial class SpielEndpunkte
             return Results.File(pfad, typ);
         }).RequireAuthorization();
 
-        // Spickzettel mit Direkteinstiegen (?start=…) in die 3D- und die Pixel-Fassung (kurze Adresse /cheatsheet)
+        // Spickzettel mit Direkteinstiegen (?start=…) (kurze Adresse /cheatsheet)
         app.MapGet("/cheatsheet", () => Results.LocalRedirect("~/spiel3d/cheatsheet.html")).RequireAuthorization();
 
         // Hymne „Greven an der Ems“ für den Player im Impressum: öffentlich wie das Impressum selbst.
@@ -109,9 +68,6 @@ internal static partial class SpielEndpunkte
             return Results.File(pfad, "audio/mpeg", enableRangeProcessing: true); // Range: Spulen im Player
         }).AllowAnonymous();
     }
-
-    [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.png$")]
-    private static partial System.Text.RegularExpressions.Regex GrafikName();
 
     [System.Text.RegularExpressions.GeneratedRegex(@"^[a-z0-9_]+\.(html|css|js|json|glb|jpg)$")]
     private static partial System.Text.RegularExpressions.Regex Datei3dName();

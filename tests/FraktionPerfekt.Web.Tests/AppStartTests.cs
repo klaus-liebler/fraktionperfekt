@@ -143,11 +143,11 @@ public sealed partial class AppStartTests : IAsyncLifetime
         (await http.GetAsync("dokumentation/kommentare.md", abbruch)).StatusCode.ShouldBe(HttpStatusCode.Forbidden); // Mitglied: kein Zugang
 
         // Easteregg-Spiel (angemeldet)
-        (await http.GetStringAsync("spiel/", abbruch)).ShouldContain("Gral der Demokratie");
-        (await http.GetAsync("spiel/logik.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await http.GetAsync("spiel/SpielEndpunkte.cs", abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await http.GetStringAsync("spiel3d/", abbruch)).ShouldContain("Gral der Demokratie 3D");
+        (await http.GetStringAsync("spiel/", abbruch)).ShouldContain("Gral der Demokratie 3D"); // frühere Pixel-Fassung: Umleitung
+        (await http.GetStringAsync("spiel/logik.js", abbruch)).ShouldContain("Gral der Demokratie 3D");
         (await http.GetAsync("spiel3d/darstellung3d.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await http.GetAsync("spiel3d/logik.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetStringAsync("cheatsheet", abbruch)).ShouldContain("Spickzettel");
         (await http.GetAsync("spiel3d/welt_rathaus.json", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetAsync("spiel3d/figur_joe.glb", abbruch)).Content.Headers.ContentType!.MediaType.ShouldBe("model/gltf-binary");

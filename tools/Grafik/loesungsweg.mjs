@@ -1,5 +1,5 @@
-// Erzeugt docs/spiel-loesungsweg.md: den kompletten Lösungsweg mit allen Dialogen und Regieanweisungen
-// (wann Figuren und Dinge erscheinen oder verschwinden), direkt aus dem Spiel (logik.js, grafik.js).
+// Erzeugt docs/spiel-loesungsweg.md: den kompletten Lösungsweg mit allen Dialogen und der Regie (welche Textzeile
+// Figuren kommen oder gehen lässt und Dinge verändert), direkt aus der Spiellogik (Spiel3d/logik.js).
 //   node tools/Grafik/loesungsweg.mjs
 // Die Datei darf von Hand bearbeitet werden (Änderungswünsche); danach werden die Änderungen ins Spiel übernommen
 // und die Datei neu erzeugt.
@@ -10,40 +10,60 @@ import { fileURLToPath } from 'node:url';
 
 const wurzel = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(import.meta.url);
-const S = require(join(wurzel, 'src', 'FraktionPerfekt.Web', 'Spiel', 'logik.js'));
-const G = require(join(wurzel, 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+const S = require(join(wurzel, 'src', 'FraktionPerfekt.Web', 'Spiel3d', 'logik.js'));
 
 const kopie = (z) => JSON.parse(JSON.stringify(z));
 const FIGUR = { joe: 'Joe', chani: 'Chani' };
 const VERB = { ansehen: 'Schau an', benutzen: 'Benutze', reden: 'Rede mit', f1: null, f2: null, gegenstand: 'Gib/Benutze' };
-const PERSON = { christian: 'Chris', joanna: 'Johanna', lore: 'Lorette', kemper: 'Frau Kemper', pinsel: 'Pinsel', ledeiw: 'Ledeiw', joe: 'Joe', chani: 'Chani' };
-const BILD = {
-    buero_zukunftsschmiede_v2: 'Büro mit Umschlag', buero_zukunftsschmiede_v2_ohne_umschlag: 'Büro ohne Umschlag', rathaus_flur_v2: 'Rathausflur vor der Archivtür',
-    archiv_v2: 'Archiv (Tür offen)', ems_ufer: 'Emsdeich am Kanuverleih', baustelle_bad: 'Baustelle, Grube unter Wasser', baustelle_bad_grube_trocken: 'Baustelle, Grube trocken',
-    schulhof_nacht: 'Schulhof', schulflur: 'Schulflur', krypta: 'Krypta', tempel_eingang: 'Tempel mit Fallgitter und Plattformen', tempel_abgrund: 'Tempel: Tafel und Abgrund (ohne Brücke)',
-    tempel_abgrund_bruecke: 'Tempel: Abgrund mit Hängebrücke', tempel_finale: 'Tempel: Pokal und Holzkiste', karte_greven: 'Reisekarte'
-};
-// Bildänderungen, die nicht am Hintergrund hängen (Überlagerungen und Animationen)
+// Was im Bild passiert, wenn eine Zeile einen Regie-Schlüssel nennt (Figuren gehen und kommen zu Fuß)
 const REGIE = {
-    uhr: ['abend', 'Die Uhr springt auf 20:35, Fledermäuse flattern über den Hof (ab jetzt immer)'],
-    tor: ['tempelOffen', 'Die drei Siegel leuchten im Tor'],
-    leitung: ['grubeTrocken', 'Das Leck hört auf zu sprudeln'],
-    boot: ['gegnerBefreit', 'Im Archiv kleben ab jetzt nur noch zwei Paar Schuhsohlen an der Rückwand (Pinsel und Ledeiw sind weg)']
+    briefGelesen: 'Brief gelesen',
+    antragUebergeben: 'Chris hält den Antrag',
+    archivOffen: 'Die Rathaustür ist offen; Chris geht zur Straße davon',
+    gegnerArchiv: 'Pinsel und Ledeiw kommen von der Straße und drängen sich vorbei ins Rathaus (im Archiv stehen sie dann vor der Stahltür)',
+    hinweisProtokoll: 'Hinweis: Protokoll 47',
+    dichtstoffArchiv: 'Zwei Raupen Dichtstoff erscheinen vor ihren Schuhspitzen',
+    gegnerArchivFest: 'Pinsel und Ledeiw rutschen festgeklebt an die Rückwand (gleiten, ohne zu gehen)',
+    stadtplanWeg: 'Der Stadtplan hängt an der Preistafel',
+    hinweisPfahl: 'Hinweis: dritte Laterne',
+    gegnerBefreit: 'Im Archiv bleiben nur noch die Schuhsohlen',
+    bootGewonnen: 'Das Ruderboot ist weg (flussab)',
+    gegnerBaustelle: 'Pinsel und Ledeiw kommen durch das Bauzaun-Tor herein; der Stapel Wegweiser entsteht',
+    helme: 'Joe und Chani tragen Bauhelme',
+    leckDicht: 'Das Leck hört auf zu sprudeln',
+    grubeTrocken: 'Die Grube läuft leer, unten glänzt das Siegel',
+    gegnerBaustelleWeg: 'Pinsel und Ledeiw laufen rückwärts in den Bauwagen; der Stapel Wegweiser verschwindet',
+    klappeAuf: 'Die Klappe der Laterne steht offen',
+    abend: 'Es wird dunkel, die Fledermäuse fliegen aus',
+    lastenrad: 'Lorette faltet das Lastenrad, Chani steckt es ein',
+    hinweisKrypta: 'Hinweis: Urne, Buch, Waage',
+    schlossOffen: 'Die Scheiben des Schlosses drehen sich in die richtige Stellung',
+    tempelOffen: 'Die Siegel leuchten im Tor',
+    gitterOffen: 'Das Fallgitter hebt sich; Joe und Chani springen herunter und gehen hindurch',
+    goGeloest: 'Die Tafel erlischt',
+    brueckeDa: 'Die Hängebrücke schiebt sich über den Abgrund',
+    kugelGeschafft: 'Die Kugel steckt im Torbogen',
+    gegnerFinale: 'Pinsel und Ledeiw stolpern aus dem Seitengang herein',
+    pokalGenommen: 'Pinsel nimmt den Pokal vom Podest',
+    urneGetragen: 'Joe und Chani gehen zur Urne und heben sie gemeinsam an',
+    chrisHilft: 'Chris kommt herein',
+    loretteHilft: 'Lorette kommt herein',
+    johannaHilft: 'Johanna kommt herein',
+    gegnerAbgang: 'Pinsel und Ledeiw gehen mit dem Pokal hinaus',
+    ende: 'Abspann „ENDE“ (nach dem letzten Text)'
 };
-const zitat = (zeilen) => zeilen.filter(Boolean).map((t) => `> ${t}`).join('\n>\n');
-
-function fz(z) {
-    const name = (n) => FIGUR[n] || n;
-    return z.szene === 'karte' ? null : {
-        bild: G.hintergrund(z).replace('_256x144', ''),
-        hotspots: S.sichtbareHotspots(z).map((h) => h.name),
-        personen: G.npcPlaetze(z, S.sichtbareHotspots(z)).map((p) => PERSON[p.name] + (p.hinten ? ' (verkleinert hinten, festgeklebt)' : '')),
-        plaetze: G.npcPlaetze(z, S.sichtbareHotspots(z)).map((p) => `${PERSON[p.name]}@${Math.round(p.x)}`),
-        plattformen: G.plattformen(z).filter((p) => p.figur).map((p) => `${name(p.figur)} auf der ${p.seite === 'links' ? 'linken' : 'rechten'} Plattform`),
-        ueber: G.ueberlagerungen(z, 0).map((o) => o.bild)
-    };
+function regieText(k, z) {
+    if (S.GEGENSTAENDE[k]) { return `${z.inventar.includes(k) ? 'ins Inventar' : 'aus dem Inventar'}: ${S.GEGENSTAENDE[k].name}`; }
+    return REGIE[k] || `Zustand „${k}“`;
 }
-
+/** Texte als Zitat; Zeilen mit Regie bekommen darunter, was in diesem Moment im Bild passiert. */
+function zitat(zeilen, e, z) {
+    return zeilen.filter(Boolean).map((t, i) => {
+        const r = e && e.regie && e.regie[i];
+        return `> ${t}` + (r ? `\n>\n> ↳ _${r.map((k) => regieText(k, z)).join(' · ')}_` : '');
+    }).join('\n>\n');
+}
+const personen = (z) => S.sichtbareHotspots(z).filter((h) => h.form === 'person' || h.form === 'gegner').map((h) => h.name);
 function differenz(vorher, nachher, a, b) {
     const neu = nachher.filter((x) => !vorher.includes(x)), weg = vorher.filter((x) => !nachher.includes(x));
     return [neu.length ? `${a}: ${neu.join(', ')}` : null, weg.length ? `${b}: ${weg.join(', ')}` : null].filter(Boolean);
@@ -77,13 +97,13 @@ p('Kompletter Lösungsweg mit allen Texten und Regieanweisungen. Die Datei wird 
 p('Änderungswünsche einfach direkt hineinschreiben (Texte ändern, Regie ergänzen, Kommentare als „**Klaus:** …“) – sie werden dann ins Spiel übernommen');
 p('und die Datei neu erzeugt.');
 p();
-p('**Lesart:** `> …` ist ein Text, der im Textfeld erscheint (eine Zeile pro Klick). „Regie“ beschreibt, was sich im Bild ändert. Grundregel:');
-p('Figuren verschwinden, tauchen auf oder wechseln den Platz erst, **wenn der zugehörige Text gelesen ist**; Hintergrund und Gegenstände ändern sich sofort.');
-p('Ausnahme: Öffnet sich das Fallgitter im Tempel, bleibt der Raum mit den Plattformen stehen, bis der Text gelesen ist; dann Blende in den Raum mit dem Abgrund.');
+p('**Lesart:** `> …` ist ein Text, der im Textfeld erscheint (eine Zeile pro Klick). `↳` darunter: was **mit dieser Zeile** im Bild');
+p('passiert. Grundregel: Figuren und Dinge ändern sich erst, nachdem der Grund im Text steht. Figuren kommen und gehen dabei zu Fuß,');
+p('Genommenes wandert zur Figur, Neues wächst ins Bild. „Regie“ unter einem Schritt fasst Inventar, Orte und Szenenwechsel zusammen.');
 p();
 p('## Vorspann (neues Spiel)');
 p();
-p('_Regie: Titelbild mit Erkennungsmelodie. „Neues Spiel“ → Zukunftsschmiede; Joe (aktiv) und Chani stehen links vom Schreibtisch._');
+p('_Regie: Titelbild (Greven als Stadtmodell auf dem Kartentisch) mit Erkennungsmelodie. „Neues Spiel“ → Zukunftsschmiede; Joe (aktiv) und Chani stehen im Büro._');
 p();
 p(zitat([...S.VORSTELLUNG, ...S.EINLEITUNG]));
 p();
@@ -101,7 +121,7 @@ besuch.buero = [kopie(z)];
 szene = 'buero';
 for (const s of S.KOMPLETTLOESUNG) {
     nr++;
-    const vorher = kopie(z), fzV = fz(z), invV = z.inventar.map((g) => S.GEGENSTAENDE[g].name), orteV = [...z.orte];
+    const vorher = kopie(z), invV = z.inventar.map((g) => S.GEGENSTAENDE[g].name), orteV = [...z.orte];
     const titel = schrittName(z, s);
     const e = S.schritt(z, s);
     (e.text || []).forEach((t) => hauptTexte.add(t));
@@ -112,34 +132,23 @@ for (const s of S.KOMPLETTLOESUNG) {
     regie.push(...differenz(invV, invN, 'Inventar neu', 'Inventar weg'));
     const neuOrte = z.orte.filter((o) => !orteV.includes(o)).map((o) => S.ORTE[o].name);
     if (neuOrte.length) { regie.push(`Neuer Ort auf der Karte: ${neuOrte.join(', ')}`); }
-    if (z.szene === vorher.szene && fzV) {
-        const fzN = fz(z);
-        const gitter = fzV.bild === 'tempel_eingang' && fzN.bild !== fzV.bild;
-        if (gitter) { regie.push('Das Fallgitter hebt sich. Raum, Plattformen und beide Figuren darauf bleiben stehen, bis der Text gelesen ist; dann Blende: Joe und Chani stehen im Raum mit Tafel und Abgrund (links vom Abgrund)'); }
-        else if (fzN.bild !== fzV.bild) { regie.push(`Hintergrund wechselt sofort: ${BILD[fzV.bild] || fzV.bild} → ${BILD[fzN.bild] || fzN.bild}`); }
-        const basis = (l) => l.map((n) => n.replace(/ \(.*\)$/, '')).sort().join();
-        const pers = basis(fzV.personen) === basis(fzN.personen) && fzV.personen.join() !== fzN.personen.join()
-            ? [`Wechseln den Platz (nach dem Text): ${fzN.personen.filter((n) => !fzV.personen.includes(n)).join(', ')}`]
-            : differenz(fzV.personen, fzN.personen, 'Erscheint (nach dem Text)', 'Verschwindet (nach dem Text)');
-        if (pers.length) { regie.push(...pers); }
-        else if (fzV.plaetze.join() !== fzN.plaetze.join()) { regie.push(`Wechselt den Platz (nach dem Text): ${fzN.personen.filter((n, i) => fzV.plaetze[i] !== fzN.plaetze[i]).join(', ')}`); }
-        if (!gitter) { regie.push(...differenz(fzV.plattformen, fzN.plattformen, 'Sofort (verkleinert im Hintergrund, die andere Figur bleibt, wo sie ist)', 'Steigt herunter')); }
-        if (REGIE[s[2]] && !vorher.flags[REGIE[s[2]][0]] && z.flags[REGIE[s[2]][0]]) { regie.push(REGIE[s[2]][1]); }
-        regie.push(...differenz(fzV.hotspots, fzN.hotspots, 'Neu anklickbar', 'Nicht mehr anklickbar'));
+    if (z.szene === vorher.szene && z.szene !== 'karte') {
+        const hV = S.sichtbareHotspots(vorher).map((h) => h.name), hN = S.sichtbareHotspots(z).map((h) => h.name);
+        regie.push(...differenz(hV, hN, 'Neu anklickbar', 'Nicht mehr anklickbar'));
     }
     if (z.szene !== vorher.szene && s[0] !== 'reisen') {
         if (z.szene === 'karte') { regie.push('Blende → Reisekarte.'); }
         else { regie.push(`Blende → ${S.SZENEN[z.szene].titel}.`); }
     }
-    if (s[0] === 'reisen') { regie.unshift('Rote Reiselinie wächst vom letzten Ort zum Ziel, dann Blende.'); }
+    if (s[0] === 'reisen') { regie.unshift('Joes Hut wandert auf der Karte vom letzten Ort zum Ziel, dann Blende.'); }
     if (s[0] === 'reisen' || (z.szene !== vorher.szene && z.szene !== 'karte')) {
         if (szene && besuch[szene]) { besuch[szene].push(vorher); }
         if (z.szene !== 'karte') {
             szene = z.szene; (besuch[szene] = besuch[szene] || []).push(kopie(z));
             p(`## Szene: ${S.SZENEN[z.szene].titel}`);
             p();
-            const f = fz(z);
-            p(`_Bild: ${BILD[f.bild] || f.bild}. Personen: ${f.personen.length ? f.personen.join(', ') : 'keine'}. Anklickbar: ${f.hotspots.join(', ')}._`);
+            const pers = personen(z);
+            p(`_Personen: ${pers.length ? pers.join(', ') : 'keine'}. Anklickbar: ${S.sichtbareHotspots(z).map((h) => h.name).join(', ')}._`);
             p();
         }
     }
@@ -148,13 +157,13 @@ for (const s of S.KOMPLETTLOESUNG) {
     if (e.text && e.text.length) {
         const texte = [...e.text];
         if (z.szene !== vorher.szene && z.szene !== 'karte' && !e.ohneEinstieg && !texte.includes(S.einstieg(z, z.szene))) { texte.push(S.einstieg(z, z.szene)); }
-        p(zitat(texte)); p();
+        p(zitat(texte, e, z)); p();
     }
     if (s[0] === 'minispiel' && s[1] === 'boot') {
-        p('_Minispiel Bootsflucht: Das Ruderboot fährt flussab (Bild läuft nach links). Von vorn treibt Treibgut heran (Treibholz, Entenfamilie, Schild „Alternative Route“,');
-        p(`Plakat „Grenzen dicht!“). Hinten (links) folgen Pinsel und Ledeiw im Motorboot und schießen ${S.ALTERNATIVE_FAKTEN.length} alternative Fakten als Sprechblasen in eure Spur:`);
+        p('_Minispiel Bootsflucht: Das Ruderboot fährt flussab. Von vorn treibt Treibgut heran (Treibholz, Entenfamilie, Schild „Alternative Route“,');
+        p(`Plakat „Grenzen dicht!“). Hinten folgen Pinsel und Ledeiw im Motorboot und schießen ${S.ALTERNATIVE_FAKTEN.length} alternative Fakten in eure Spur:`);
         p(`${S.ALTERNATIVE_FAKTEN.map((t) => `„${t}“`).join(', ')}. Anzeige oben: „Alternative Fakten: N“ und drei Herzen. Sind die Fakten verschossen,`);
-        p('kippt das Motorboot und sinkt (Blasen, „Blubb!“). Drei Treffer = gekentert, noch einmal._');
+        p('kippt das Motorboot und sinkt („Blubb!“). Drei Treffer = gekentert, noch einmal._');
         p();
     }
     if (s[0] === 'minispiel' && s[1] === 'kugel') {

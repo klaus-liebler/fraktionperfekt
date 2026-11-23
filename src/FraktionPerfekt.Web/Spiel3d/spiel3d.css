@@ -1,7 +1,8 @@
-/* Joe & Chani 3D – Ergänzungen zu ../spiel/spiel.css */
+/* Joe & Chani 3D – Ergänzungen zu spiel.css (Grundgerüst: Bühne, Textfeld, Leiste, Menüs) */
 #buehne { margin: 0; }
 #leinwand { image-rendering: auto; touch-action: none; }
-#karte { position: absolute; background: #0b0706; box-shadow: 0 0 0 100vmax #0b0706; image-rendering: pixelated; image-rendering: crisp-edges; }
+/* Reisekarte als Stadtmodell (karte3d.js): Die Karte zeichnet WebGL, das Element nimmt nur Klicks entgegen */
+#karte { position: absolute; background: transparent; }
 #orttitel { position: absolute; left: 14px; top: 10px; font: bold 20px Georgia, serif; color: #fff; text-shadow: 2px 2px 0 #000, 0 0 6px #000; pointer-events: none; }
 #hoverlabel { position: absolute; transform: translateX(-50%); padding: 2px 8px; background: rgba(14, 8, 4, .8); border: 1px solid #c9a227; color: #ffe08a; font-weight: bold; font-size: 15px; white-space: nowrap; pointer-events: none; z-index: 3; }
 #blende { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .35s ease; z-index: 4; }
@@ -12,14 +13,13 @@
 #textbox { z-index: 5; }
 #dialog, #menue, #kontext { z-index: 8; }
 #minihud { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); padding: 4px 14px; background: rgba(14, 8, 4, .85); border: 2px solid #c9a227; color: #ffe08a; font-weight: bold; font-size: 18px; white-space: nowrap; z-index: 3; pointer-events: none; }
+#minihud.treffer { background: rgba(120, 12, 8, .92); border-color: #ff6b5a; color: #fff; }
 #ende { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: rgba(0, 0, 0, .55); color: #fff; text-align: center; z-index: 6; }
 #ende[hidden] { display: none; }
 #ende .gross { font: bold 72px Georgia, serif; color: #ffd54f; margin: 0; text-shadow: 3px 3px 0 #000; }
 #ende p { margin: 0; max-width: 40em; }
 #ende button { margin-top: 12px; padding: 6px 16px; font-weight: bold; }
 
-/* Reisekarte als Stadtmodell (karte3d.js): Die Karte zeichnet WebGL, das Element nimmt nur Klicks entgegen */
-#karte.drei { background: transparent; box-shadow: none; }
 /* Titel über dem 3D-Kartentisch: Mitte frei für Joe, Chani und Greven, Text oben, Knöpfe unten */
 #titel { justify-content: space-between; padding: 14px 18px 10px;
     background: linear-gradient(to bottom, rgba(10, 6, 3, .82) 0%, rgba(10, 6, 3, .35) 26%, rgba(10, 6, 3, 0) 42%, rgba(10, 6, 3, 0) 58%, rgba(10, 6, 3, .55) 72%, rgba(10, 6, 3, .9) 100%); }

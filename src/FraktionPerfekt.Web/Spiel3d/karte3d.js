@@ -133,13 +133,13 @@ export async function baueKarte(renderer) {
     for (const st of d.stationen) {
         const g = new THREE.Group(); g.position.copy(ort(st.p[0], st.p[1])); scene.add(g);
         const stab = new THREE.Mesh(new THREE.CylinderGeometry(.0025, .0012, .1, 8), nadelMetall); stab.position.y = .05; stab.castShadow = true; g.add(stab);
-        const farbe = st.id === 'tempel' ? 0x7b3fa0 : 0xc62828;
+        const farbe = 0xc62828;
         const kopfMat = new THREE.MeshStandardMaterial({ color: farbe, roughness: .3, metalness: .1, transparent: true });
         const kopf = new THREE.Mesh(new THREE.SphereGeometry(.018, 24, 16), kopfMat); kopf.position.y = .105; kopf.castShadow = true; g.add(kopf);
         const nummer = etikett(st.nr, false); nummer.position.y = .16; g.add(nummer);
         const name = etikett(st.name, true); name.position.y = .22; name.visible = false; g.add(name);
         const ziel = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshBasicMaterial({ visible: false })); ziel.position.y = .1; ziel.userData.id = st.id; g.add(ziel);
-        if (st.id !== 'tempel') { treffbar.push(ziel); }
+        treffbar.push(ziel);
         nadeln[st.id] = { g, kopf, kopfMat, farbe, nummer, name, ziel };
     }
 
@@ -186,11 +186,11 @@ export async function baueKarte(renderer) {
         bild(t, { orte, hover, reise }) {
             ansicht = 'karte'; kameraStellen(t, kamera.aspect);
             for (const [id, n] of Object.entries(nadeln)) {
-                const da = id === 'tempel' || orte.includes(id), h = hover === id;
+                const da = orte.includes(id), h = hover === id;
                 n.kopfMat.color.set(h ? 0xffd54f : da ? n.farbe : 0xb8a888); n.kopfMat.opacity = da ? 1 : .55;
                 const s = h ? 1.35 : 1; n.kopf.scale.setScalar(s);
-                n.kopf.position.y = .105 + (da && id !== 'tempel' ? Math.sin(t * 2.4 + n.g.position.x * 9) * .004 : 0);
-                n.nummer.visible = da; n.name.visible = h || (da && id !== 'tempel' && !hover);
+                n.kopf.position.y = .105 + (da ? Math.sin(t * 2.4 + n.g.position.x * 9) * .004 : 0);
+                n.nummer.visible = da; n.name.visible = h || (da && !hover);
                 n.name.material.opacity = h ? 1 : .8;
             }
             if (reise && nadeln[reise.von] && nadeln[reise.nach]) {

@@ -420,19 +420,28 @@ export function schulflur(renderer) {
     for (const [y, r] of [[1.4, .25], [.9, -.2]]) { const b = at(box(1.5, .07, .01, band), 0, y, .09, keller); b.rotation.z = r; }
     at(plane(.24, .3, std({ color: 0xffffff })), .28, 1.2, .1, keller);
     keller.position.set(6.6, 0, z0 + .04); scene.add(keller);
-    // Kinderbilder, Garderobenleiste mit Turnbeuteln
+    // Kinderbilder und Garderobenleiste nur auf freier Wand (Türen: 1a −4,9…−3,9, 2b −1,1…−0,1, WC 2,1…3,1, Keller 6,05…7,15)
+    const bildX = [-7.2, -6.58, -5.96, -3.2, -2.0, .45, 1.3];
     const farben = ['#e74c3c', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e67e22'];
     const bilder = new THREE.Group(); bilder.name = 'bilder';
     for (let i = 0; i < 7; i++) {
         const tex = canvasTex(128, 96, (g, w, h) => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h); g.fillStyle = farben[i % 6]; g.beginPath(); g.arc(40 + rnd() * 40, 40, 20, 0, 7); g.fill();
             g.fillStyle = '#2a8a3a'; g.fillRect(0, h - 18, w, 18); g.fillStyle = '#5a3a2a'; g.fillRect(80, 40, 18, 40); g.fillStyle = '#e74c3c'; g.beginPath(); g.moveTo(74, 40); g.lineTo(89, 22); g.lineTo(104, 40); g.fill(); }, false);
-        const b = plane(.5, .38, std({ map: tex })); b.position.set(-7.2 + i * .62 + (i > 2 ? 1.8 : 0) + (i > 4 ? 1.6 : 0), 1.85 + (i % 2) * .15, z0 + .02); b.rotation.z = (rnd() - .5) * .1; bilder.add(b);
+        const b = plane(.5, .38, std({ map: tex })); b.position.set(bildX[i], 1.85 + (i % 2) * .15, z0 + .02); b.rotation.z = (rnd() - .5) * .1; bilder.add(b);
     }
     scene.add(bilder);
     const haken = new THREE.Group(); haken.name = 'turnbeutel';
-    at(box(3.2, .08, .06, holz), 0, 1.35, 0, haken);
-    for (let i = 0; i < 7; i++) { const tb = at(box(.28, .38, .06, std({ color: new THREE.Color(farben[i % 6]) })), -1.4 + i * .46, 1.1, .05, haken); tb.rotation.z = (rnd() - .5) * .15; }
-    haken.position.set(1.2, 0, z0 + .04); scene.add(haken);
+    at(box(2.6, .08, .06, holz), 0, 1.45, 0, haken);
+    // Turnbeutel: Stoffsack (unten bauchig) an zwei Kordeln über einem Haken
+    const kordel = std({ color: 0xf2efe6, roughness: .9 });
+    for (let i = 0; i < 6; i++) {
+        const beutel = new THREE.Group(); beutel.position.set(-1.1 + i * .44, 1.42, .06); beutel.rotation.z = (rnd() - .5) * .12; haken.add(beutel);
+        at(box(.012, .012, .07, metall), 0, -.02, 0, beutel);
+        const sack = new THREE.Mesh(new THREE.CylinderGeometry(.13, .15, .34, 16), std({ color: new THREE.Color(farben[i]), roughness: .85 }));
+        sack.scale.z = .35; sack.castShadow = true; at(sack, 0, -.33, .035, beutel);
+        for (const s of [-1, 1]) { const k = at(new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .19, 6), kordel), s * .065, -.1, .035, beutel); k.rotation.z = s * .62; }
+    }
+    haken.position.set(4.55, 0, z0 + .04); scene.add(haken);
     // Ausgang zum Hof (Glastür links), Deckenlicht
     const hof = new THREE.Group(); hof.name = 'hoftuer';
     const licht = plane(2.4, 2.6, new THREE.MeshBasicMaterial({ color: 0x9fb4d8 })); licht.rotation.y = Math.PI / 2; at(licht, .015, 1.3, 0, hof);

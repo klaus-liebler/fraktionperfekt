@@ -1,4 +1,4 @@
-// Joe & Chani 3D – Porträts für Sprechblasen und Figurenknöpfe: Kopfbilder der 3D-Figuren statt der Pixel-Porträts.
+// Joe & Chani 3D – Porträts für Sprechblasen und Figurenknöpfe: Kopfbilder der 3D-Figuren.
 // Ein kleiner eigener Renderer fotografiert den Kopf im Studiolicht; jedes Bild (Figur, Ausdruck, Hut) nur einmal.
 import * as THREE from './three_min.js';
 import * as FIG from './figuren3d.js';
@@ -25,10 +25,16 @@ export function portraetMaler(figuren) {
         const rand = new THREE.DirectionalLight(0xffc890, 1.6); rand.position.set(-1.5, 2, -1.5); scene.add(rand);
         kamera = new THREE.PerspectiveCamera(20, 1, .05, 10);
     }
+    /** 3D-Figur zur Sprecher-Kennung; Nebenfiguren entstehen beim ersten Bedarf (ihr Modell lädt dann im Hintergrund). */
+    function figur(id) {
+        if (figuren[id]) { return figuren[id]; }
+        if (!NEBEN[id]) { return null; }
+        return neben[id] || (neben[id] = NEBEN[id]());
+    }
     function malen(id, ausdruck, hut) {
         buehne();
-        let f = figuren[id];
-        if (!f) { if (!NEBEN[id]) { return null; } f = neben[id] || (neben[id] = NEBEN[id]()); }
+        const f = figur(id);
+        if (!f) { return null; }
         const u = f.userData;
         // Figur kurz in die Porträtbühne holen und danach zurückstellen
         const eltern = f.parent, pos = f.position.clone(), rot = f.rotation.clone();
@@ -36,7 +42,8 @@ export function portraetMaler(figuren) {
         scene.add(f); f.position.set(0, 0, 0); f.rotation.set(0, 0, 0);
         if (u.hut) { u.hut.visible = !!hut; }
         if (u.helm) { u.helm.visible = false; }
-        if (!u.rb) { FIG.pose(f, 1.3, 'stehen'); }
+        // Joe und Chani behalten ihre Haltung aus dem Spiel; Porträt-Nebenfiguren stehen ruhig (sonst T-Pose des Modells)
+        if (!u.rb || neben[id] === f) { FIG.pose(f, 1.3, 'stehen'); }
         const zurueck = FIG.gesicht(f, ausdruck);
         f.updateMatrixWorld(true);
         const kopf = u.head.getWorldPosition(new THREE.Vector3());
@@ -56,9 +63,13 @@ export function portraetMaler(figuren) {
         return bild;
     }
     return {
+        /** Alle Nebenfiguren schon anlegen: Ihre Modelle laden im Hintergrund, bevor sie das erste Mal sprechen. */
+        vorbereiten() { for (const id of Object.keys(NEBEN)) { figur(id); } },
         /** Porträt als neues Canvas (darf in den DOM); null, wenn es für id keine 3D-Figur gibt. */
         bild(id, ausdruck = 'neutral', hut = false) {
-            const schluessel = `${id}|${ausdruck}|${id === 'joe' && hut ? 1 : 0}`;
+            // Solange das Rocketbox-Modell noch lädt, gilt das Bild der einfachen Figur nur vorläufig
+            const f = figur(id), rb = f && f.userData.rb ? 1 : 0;
+            const schluessel = `${id}|${ausdruck}|${id === 'joe' && hut ? 1 : 0}|${rb}`;
             if (!cache.has(schluessel)) { cache.set(schluessel, malen(id, ausdruck, id === 'joe' && hut)); }
             const m = cache.get(schluessel);
             if (!m) { return null; }

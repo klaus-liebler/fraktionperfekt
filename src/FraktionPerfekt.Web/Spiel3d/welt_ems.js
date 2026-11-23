@@ -34,8 +34,16 @@ export function baue(renderer, DATEN) {
     g.computeVertexNormals();
     const m = new THREE.Mesh(g, mat); m.receiveShadow = true; m.name = 'ground'; scene.add(m);
     // wide apron beyond the measured area
-    let lo = Infinity; for (const v of HF.d) lo = Math.min(lo, v);
-    const ap = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), mat); ap.rotation.x = -Math.PI / 2; ap.position.y = lo - .4; ap.receiveShadow = true; scene.add(ap);
+    // the apron lies at the height of the terrain border (no visible step where the measured area ends)
+    let rand = 0, k = 0;
+    for (let i = 0; i < HF.nx; i++) { for (const j of [0, HF.ny - 1]) { rand += HF.d[j * HF.nx + i]; k++; } }
+    for (let j = 0; j < HF.ny; j++) { for (const i of [0, HF.nx - 1]) { rand += HF.d[j * HF.nx + i]; k++; } }
+    // a frame around the measured area (not underneath it: the river bed and the low banks lie deeper than the border)
+    const y = rand / k - .08, A = 800, x0 = HF.x0 + .5, x1 = HF.x0 + W - .5, n0 = HF.y0 + .5, n1 = HF.y0 + D - .5;
+    for (const [ea, eb, na, nb] of [[-A, A, n1, A], [-A, A, -A, n0], [-A, x0, n0, n1], [x1, A, n0, n1]]) {
+      const ap = new THREE.Mesh(new THREE.PlaneGeometry(eb - ea, nb - na), mat); ap.rotation.x = -Math.PI / 2;
+      ap.position.set((ea + eb) / 2, y, -(na + nb) / 2); ap.receiveShadow = true; ap.name = 'ground'; scene.add(ap);
+    }
     return m;
   }
   // lay a flat (subdivided) mesh onto the terrain
@@ -232,8 +240,8 @@ export function baue(renderer, DATEN) {
   const LOD2 = [];
   const wallUniforms = { uNight: { value: 0 } };
   const riverX = n => 10 * Math.sin(n / 55) + 4 * Math.sin(n / 23);
-  // deck height of the bridge (gentle arch, ramps down to the dikes)
-  const BL = 48, BR = 62;
+  // deck height of the bridge (gentle arch); it ends on the dike crests (e ≈ ±49), like the real cycle bridge
+  const BL = 38, BR = 49;
   function deckY(e) {
     const a = Math.abs(e);
     if (a <= BL) return 3.4 + 1.8 * (1 - (e / BL) ** 2);

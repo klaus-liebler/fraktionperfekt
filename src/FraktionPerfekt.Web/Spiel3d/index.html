@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <meta name="robots" content="noindex" />
     <title>Grevens Gral der Demokratie 3D – Joe &amp; Chani</title>
-    <link rel="stylesheet" href="../spiel/spiel.css" />
+    <link rel="stylesheet" href="spiel.css" />
     <link rel="stylesheet" href="spiel3d.css" />
 </head>
 <body>
     <div id="buehne">
         <canvas id="leinwand" aria-label="Spielszene in 3D"></canvas>
-        <canvas id="karte" width="256" height="144" hidden aria-label="Reisekarte von Greven"></canvas>
+        <div id="karte" hidden aria-label="Reisekarte von Greven"></div>
         <div id="orttitel" aria-live="polite"></div>
         <div id="hoverlabel" hidden></div>
         <div id="blende"></div>
@@ -37,8 +37,7 @@
             </div>
             <p class="klein">Antippen: hingehen und die naheliegende Aktion · Verben unten wählen · langes Drücken: alle Aktionen<br />
                 Tastatur: 1–8 Verb, ←/→ auswählen, Enter, Tab Figur wechseln, Esc Pause · Alle fünf Akte in 3D – Direkteinstiege: <a href="cheatsheet.html">Spickzettel</a>.<br />
-                Gebäude: 3D-Gebäudemodelle LoD2 © Geobasis NRW (dl-de/zero-2-0) · Karte © OpenStreetMap-Mitwirkende (ODbL) · Figuren Joe und Chani: Microsoft Rocketbox (MIT) · Texturen: Poly Haven (CC0) · Alle Figuren und Handlungen sind frei erfunden.</p>
-            <p class="klein"><a href="../spiel/">Zur klassischen Pixel-Fassung</a></p>
+                Gebäude: 3D-Gebäudemodelle LoD2 © Geobasis NRW (dl-de/zero-2-0) · Karte © OpenStreetMap-Mitwirkende (ODbL) · Figuren: Microsoft Rocketbox (MIT) · Texturen: Poly Haven (CC0) · Alle Figuren und Handlungen sind frei erfunden.</p>
             </div>
         </div>
         <div id="textbox" hidden role="status" aria-live="polite"><div id="portrait" hidden></div><p id="text"></p><span class="weiter">▶</span></div>
@@ -55,10 +54,8 @@
             <div id="rechts"><span id="punkte"></span><button type="button" id="pause" title="Pause (Esc)">❚❚</button></div>
         </div>
     </div>
-    <script src="../spiel/grafik.js"></script>
-    <script src="../spiel/musik.js"></script>
-    <script src="../spiel/logik.js"></script>
-    <script src="anpassung3d.js"></script>
+    <script src="musik.js"></script>
+    <script src="logik.js"></script>
     <script type="module" src="darstellung3d.js"></script>
 </body>
 </html>

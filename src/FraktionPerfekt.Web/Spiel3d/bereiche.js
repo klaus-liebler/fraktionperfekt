@@ -3,6 +3,8 @@
 //   archiv → „Vor dem Rathaus“ (Außen, Chris vor der Tür) + „Rathausflur“ + „Rathausarchiv“ (Untergeschoss)
 // Jeder Bereich liefert: scene, frei(x, z), hoehe(x, z), kamera(p), spawn, hotspots und Nebenfiguren (npcs).
 // Hotspot-Einträge: { id } = Hotspot der Spiellogik; { tor, spawn, name } = Wechsel in einen anderen Bereich; { deko, name, text } = nur Ansehen.
+// sichtbarObj(bild): Ding, das genommen wird (wandert zur Figur) oder erscheint (wächst); klickbar(bild): nur anklickbar, wenn wahr.
+// dinge: weitere Dinge mit sichtbar(bild) und Übergang; aktualisieren(bild, npcRig, sofort): Zustand des Bereichs zeigen.
 import * as THREE from './three_min.js';
 import * as innen from './innen.js';
 import { emsDeich, baustelle, radbruecke } from './akt3.js';
@@ -137,7 +139,9 @@ async function rathausAussen(renderer) {
     const turm = klickKoerper(scene, 20, 20, 20, 0, w.H(0, 21) + 12, -21, .22);
     const tuerZiel = W3(...gm);
     return {
-        scene, hoehe: (x, z) => w.H(x, -z), frei: aussenFrei(w, [14, -20], 30, []),
+        // Nur der Platz vor dem Rathaus: nicht hinter die Fassadenlinie und nicht rechts am Gebäude entlang nach hinten,
+        // wo Stützen und Glaswände die Figuren verdecken würden
+        scene, hoehe: (x, z) => w.H(x, -z), frei: ((platz) => (x, z) => platz(x, z) && z >= 7 && !(x > 34.5 && z < 14))(aussenFrei(w, [14, -20], 30, [])),
         boden: (() => { const b = []; scene.traverse((o) => { if (o.name === 'ground') { b.push(o); } }); return b; })(),
         kamera: (p) => {
             // hinter der Figur, leicht zum Eingang gedreht
@@ -159,7 +163,11 @@ async function rathausAussen(renderer) {
             { obj: bank, stand: [11.2, 21.2], eintraege: [{ deko: 'Bank', text: 'Eine Bank vor dem Rathaus. Ideal zum Warten auf Beschlüsse.' }] }
         ].filter((h) => h.obj),
         npcs: [
-            { hotspot: 'chris', figur: 'chris', pos: P(vor(1.1, .2)), rot: blickRaus, pose: 'arme', stand: P(vor(2.5, -.9)) }
+            // Chris geht nach dem Aufschließen zur Straße (Ortsverein, Gewerkschaftsbus)
+            { hotspot: 'chris', figur: 'chris', pos: P(vor(1.1, .2)), rot: blickRaus, pose: 'arme', stand: P(vor(2.5, -.9)), nach: [P(vor(4, 2.5)), [12.5, 31]] },
+            // Gleich danach drängen sich Pinsel und Ledeiw von der Straße her an Joe und Chani vorbei ins Rathaus
+            { figur: 'pinsel', durchzug: (b) => !!b.flags.gegnerArchiv, tempo: 2.4, weg: [[13.5, 31], P(vor(4, 1.5)), P(vor(.4, .3)), P(vor(-2.5, .3))] },
+            { figur: 'ledeiw', durchzug: (b) => !!b.flags.gegnerArchiv, tempo: 2.4, weg: [[12.4, 32.4], P(vor(4.4, .6)), P(vor(.4, -.4)), P(vor(-2.5, -.4))] }
         ],
         tick(dt, t) {
             flags.forEach((f, k) => { const p = f.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); p.setZ(i, Math.sin(t * 2.2 + y * 1.6 + k) * .12 * (1.6 - y) / 3.2); } p.needsUpdate = true; });
@@ -184,7 +192,8 @@ function bueroInnen(renderer) {
             { obj: o.fensterGlas, stand: [-3.3, -.8], eintraege: [{ deko: 'Schaufenster', text: 'Draußen die Marktstraße im Abendlicht. Gegenüber das Eiscafé.' }] }
         ],
         npcs: [],
-        aktualisieren(z) { o.garderobeSachen.visible = !z.inventar.includes('taschenlampe'); }
+        // Hut, Jacke und Taschenlampe wandern von der Garderobe zu Joe
+        dinge: [{ obj: o.garderobeSachen, sichtbar: (b) => !b.inventar.includes('taschenlampe'), art: 'nehmen' }]
     });
 }
 
@@ -204,6 +213,7 @@ function rathausFlur(renderer) {
     });
 }
 
+const FEST = { pinsel: { pos: [2.7, -2.75], rot: .1, pose: 'kleben', gleiten: true }, ledeiw: { pos: [3.6, -2.75], rot: -.1, pose: 'kleben', gleiten: true } };
 function archivInnen(renderer) {
     const r = innen.archiv(renderer), o = r.objekte;
     greifbar(o.sohlen, 1.6, .3, .6, .1); o.sohlen.children[o.sohlen.children.length - 1].position.x = 3.15; o.sohlen.children[o.sohlen.children.length - 1].position.z = -2.7;
@@ -223,12 +233,14 @@ function archivInnen(renderer) {
             { obj: o.lesetisch, stand: [1.6, 1.9], eintraege: [{ deko: 'Lesetisch', text: 'Ein Lesetisch mit grüner Bankerlampe. Darauf ein Zettel: „Protokoll 47 – NICHT ausleihen!“' }] }
         ],
         npcs: [
-            { hotspot: 'gegner', figur: 'pinsel', pos: [-4.2, .45], rot: Math.PI / 2 - .3, fest: [2.7, -2.75], festRot: .1, pose: 'arme', stand: [-2.7, .9] },
-            { hotspot: 'gegner', figur: 'ledeiw', pos: [-4.2, 1.8], rot: Math.PI / 2 + .3, fest: [3.6, -2.75], festRot: -.1, pose: 'arme', stand: [-2.7, .9] }
+            // Festgeklebt rutschen beide samt Parkettdiele an die Rückwand (gleiten, ohne zu gehen)
+            { hotspot: 'gegner', figur: 'pinsel', pos: [-4.2, .45], rot: Math.PI / 2 - .3, pose: 'arme', stand: [-2.7, .9], lage: (b) => (b.flags.gegnerArchivFest ? FEST.pinsel : null) },
+            { hotspot: 'gegner', figur: 'ledeiw', pos: [-4.2, 1.8], rot: Math.PI / 2 + .3, pose: 'arme', stand: [-2.7, .9], lage: (b) => (b.flags.gegnerArchivFest ? FEST.ledeiw : null) }
         ],
+        // Die Dichtstoffraupen erscheinen mit Joes Kartusche
+        dinge: o.raupen.map((m) => ({ obj: m, sichtbar: (b) => !!(b.flags.dichtstoffArchiv || b.flags.gegnerArchivFest) })),
         aktualisieren(z) {
             const f = z.flags;
-            o.raupen.forEach((m) => { m.visible = !!f.gegnerArchivFest; });
             o.sohlen.visible = !!f.gegnerArchivFest;
             o.sohlen.children.forEach((c, i) => { if (c.geometry && c.geometry.type === 'BoxGeometry') { c.visible = !!f.gegnerBefreit; } });
         }

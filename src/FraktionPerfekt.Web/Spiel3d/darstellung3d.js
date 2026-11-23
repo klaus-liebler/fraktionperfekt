@@ -1,5 +1,5 @@
-// Joe & Chani und der Gral der Demokratie – 3D-Darstellung (three.js). Gleiche Spiellogik (logik.js), gleiche Bedienung wie die
-// Pixel-Fassung: Verbleiste, Satzzeile, Inventar, Porträts, Dialoge, Pause-Menü, Speicherplätze, Joes Handy.
+// Joe & Chani und der Gral der Demokratie – Darstellung (three.js) zur Spiellogik (logik.js):
+// Verbleiste, Satzzeile, Inventar, Porträts, Dialoge, Pause-Menü, Speicherplätze, Joes Handy.
 // Schauplätze aus LoD2-Daten (Marktstraße, Rathaus) und frei erfundene Innenräume; begehbar per Klick (Wegsuche auf einem Raster).
 import * as THREE from './three_min.js';
 import { bereich as bereichLaden, SZENE_ZU_BEREICHEN, startBereich } from './bereiche.js';
@@ -8,7 +8,7 @@ import { baueKarte } from './karte3d.js';
 import { portraetMaler } from './portraets3d.js';
 import { gegenstandMaler } from './gegenstaende3d.js';
 
-const S = window.GralSpiel, G = window.Grafik;
+const S = window.GralSpiel;
 const $ = (id) => document.getElementById(id);
 const leinwand = $('leinwand'), buehne = $('buehne');
 const textbox = $('textbox'), textEl = $('text'), portraitEl = $('portrait'), dialogEl = $('dialog'), menueEl = $('menue'), kontextEl = $('kontext'), titelEl = $('titel');
@@ -34,20 +34,20 @@ const kamZiel = new THREE.Vector3();
 let z = null, warteschlange = [], danach = null, pausiert = false, hover = null, geladen = false;
 let verb = 'gehe', objekt = null, sprecher = null, sprecherSchreck = false, benutzenBis = 0, zeit = 0;
 let akt = null;                 // aktueller Bereich (3D)
-let gehalten = null;            // sichtbare Logik-Hotspots vor der letzten Aktion (Figuren verschwinden erst nach dem Text)
+let bild = null;                // angezeigter Spielstand (Kopie): hinkt der Logik nach, bis die Textzeile mit dem Grund erscheint
 let blende = false, reise = null, letzterOrt = 'buero';
 let mini = null, eingabeBoot = null, tippen = false;   // laufendes Minispiel (Bootsflucht oder Wahlkugel)
 const endeEl = $('ende');
 const hudEl = $('minihud');
 const figuren = { joe: FIG.joe(), chani: FIG.chani() };
-// karte3d: Reisekarte und Titelbild als Stadtmodell (karte3d.js), ohne sie die Pixelkarte; portraets: Kopfbilder der 3D-Figuren (portraets3d.js);
+// karte3d: Reisekarte und Titelbild als Stadtmodell (karte3d.js); portraets: Kopfbilder der 3D-Figuren (portraets3d.js);
 // icons: Inventarbilder als 3D-Modelle (gegenstaende3d.js)
 let karte3d = null, titelZeit = 0, portraets = null, icons = null;
 const held = { joe: { ziel: null, weg: [], auftrag: null }, chani: { ziel: null, weg: [] } };
 let spur = [];                  // Fußspur der aktiven Figur (die andere folgt ihr)
 const npcCache = {};
 
-// ---------- Ton (wie in der Pixel-Fassung) ----------
+// ---------- Ton ----------
 let ton = true;
 try { ton = window.localStorage.getItem('fp-spiel-ton') !== 'aus'; } catch (_) { ton = true; }
 let audio = null, effektBus = null;
@@ -104,7 +104,8 @@ function ziele() {
     if (!akt || !z) { return []; }
     const sichtbare = S.sichtbareHotspots(z), aus = [];
     for (const h of akt.hotspots) {
-        if (h.sichtbarObj && !h.sichtbarObj(z)) { continue; }
+        if (h.sichtbarObj && !h.sichtbarObj(bild)) { continue; }
+        if (h.klickbar && !h.klickbar(bild)) { continue; }
         const e = eintrag(h, sichtbare);
         if (e) { aus.push({ h, obj: h.obj, stand: h.stand, ...e, name: e.art === 'logik' ? e.h.name : e.name }); }
     }
@@ -116,36 +117,152 @@ function ziele() {
     return aus;
 }
 
-// ---------- Nebenfiguren ----------
+// ---------- Regie: angezeigter Spielstand ----------
+// Die Spiellogik ändert ihren Zustand sofort. Angezeigt wird „bild“: Nach einer Aktion übernimmt es alles außer den
+// Regie-Schlüsseln (logik.js, antwort()); die kommen erst mit der Textzeile, die den Grund nennt. Am Ende des Textes ist
+// bild wieder gleich der Logik. Figuren, Dinge, Helme, Hut, Inventar und das Ende richten sich nur nach bild.
+const kopie = (x) => JSON.parse(JSON.stringify(x));
+/** Einen Regie-Schlüssel (Flag, Gegenstand oder 'ende') aus quelle in ziel übernehmen. */
+function uebernehmen(ziel, quelle, k) {
+    if (k === 'ende') { ziel.ende = quelle.ende; ziel.flags.ende = quelle.flags.ende; return; }
+    if (S.GEGENSTAENDE[k]) {
+        const soll = quelle.inventar.includes(k), i = ziel.inventar.indexOf(k);
+        if (soll && i < 0) { ziel.inventar.push(k); } else if (!soll && i >= 0) { ziel.inventar.splice(i, 1); }
+        return;
+    }
+    if (quelle.flags[k] === undefined) { delete ziel.flags[k]; } else { ziel.flags[k] = quelle.flags[k]; }
+}
+/** Nach einer Aktion: alles sofort zeigen, nur die Regie-Schlüssel bleiben beim alten Stand, bis ihre Zeile erscheint. */
+function regieVorbereiten(e, vorher) {
+    bild = kopie(z);
+    for (const schluessel of Object.values(e.regie || {})) { for (const k of schluessel) { uebernehmen(bild, vorher, k); } }
+}
+/** Bereich (und auf Wunsch die Leiste) an den angezeigten Stand anpassen; sofort = beim Betreten, ohne Übergänge. */
+function bildAuffrischen(leiste, sofort) {
+    if (akt && akt.aktualisieren) { akt.aktualisieren(bild, npcRig, !!sofort); }
+    if (leiste) { leisteAktualisieren(); }
+}
+
+// ---------- Nebenfiguren: kommen und gehen zu Fuß ----------
+// Bereichs-Einträge (bereiche.js, akt3.js, akt45.js): { hotspot | sichtbar(bild), figur, pos, rot, pose, stand,
+//   von: Auftrittsort (kommt von dort herein), nach: Abgangsort oder Wegpunkte (geht dorthin und verschwindet), rueckwaerts,
+//   lage(bild): { pos, rot, pose, gleiten } (anderer Platz im Spielstand, z. B. festgeklebt), tempo }
+// Durchzug: { figur, durchzug(bild), weg: [Punkte] } läuft einmal den Weg entlang, sobald durchzug wahr wird.
+const NPC_TEMPO = 1.4;
 function npcs() {
     if (!akt) { return []; }
-    const sichtbarIds = gehalten || new Set(S.sichtbareHotspots(z).map((h) => h.id));
+    const sichtbarIds = new Set(S.sichtbareHotspots(bild).map((h) => h.id));
     return akt.npcs.map((def) => {
         const key = akt.id + ':' + def.figur;
-        if (!npcCache[key]) { const rig = FIG[def.figur](); rig.traverse((o) => { if (o.isMesh) { o.castShadow = true; } }); akt.scene.add(rig); npcCache[key] = { def, rig }; }
+        if (!npcCache[key]) { const rig = FIG[def.figur](); rig.visible = false; akt.scene.add(rig); npcCache[key] = { def, rig, zeigt: false, weg: [], geht: false, snap: true, ort: [...(def.pos || def.weg[0])], blick: def.rot || 0 }; }
         const n = npcCache[key];
-        n.sichtbar = def.sichtbar ? !!def.sichtbar(z) : sichtbarIds.has(def.hotspot);
+        n.soll = def.durchzug ? false : def.sichtbar ? !!def.sichtbar(bild) : sichtbarIds.has(def.hotspot);
+        n.sichtbar = n.zeigt && n.soll && !n.geht && !n.weg.length;   // anklickbar erst, wenn sie angekommen ist
         return n;
     });
 }
-function npcsAktualisieren() {
+const npcRig = (figur) => { const n = akt && npcCache[akt.id + ':' + figur]; return n ? n.rig : null; };
+function lageVon(def) {
+    const l = def.lage ? def.lage(bild) : null;
+    return { pos: (l && l.pos) || def.pos, rot: l && l.rot !== undefined ? l.rot : def.rot, pose: (l && l.pose) || def.pose || 'stehen', gleiten: !!(l && l.gleiten) };
+}
+/** Einen Schritt auf dem Weg gehen; true, solange die Figur unterwegs ist. */
+function schreiten(n, dt, tempo, rueckwaerts) {
+    if (!n.weg.length) { return false; }
+    const [zx, zz] = n.weg[0], dx = zx - n.ort[0], dz = zz - n.ort[1], d = Math.hypot(dx, dz), s = Math.min(d, tempo * dt);
+    if (d > 1e-4) { n.ort[0] += dx / d * s; n.ort[1] += dz / d * s; n.blick = Math.atan2(dx, dz) + (rueckwaerts ? Math.PI : 0); }
+    if (d - s < .02) { n.weg.shift(); }
+    return true;
+}
+function drehen(rig, ziel, dt) { let d = ziel - rig.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); rig.rotation.y += d * Math.min(1, dt * 8); }
+function npcsAktualisieren(dt) {
     for (const n of npcs()) {
         const { def, rig } = n;
-        rig.visible = n.sichtbar;
-        if (!n.sichtbar) { continue; }
-        const fest = def.fest && z.flags.gegnerArchivFest && !gehalten;
-        const amEnde = def.ende && z.ende && textbox.hidden;
-        const [x, zz] = fest ? def.fest : amEnde ? def.ende : def.pos;
-        rig.position.set(x, akt.hoehe(x, zz), zz);
-        rig.rotation.y = fest ? def.festRot : amEnde ? def.endeRot : def.rot;
+        if (def.durchzug) { durchzug(n, dt); continue; }
+        const l = lageVon(def);
+        if (n.snap) {
+            n.snap = false; n.zeigt = n.soll; n.geht = false; n.weg = []; n.ort = [...l.pos]; n.ziel = l.pos; rig.rotation.y = l.rot;
+        } else if (n.soll && (!n.zeigt || n.geht)) {
+            // kommt herein (vom Auftrittsort) – oder kehrt um, falls sie gerade ging
+            if (!n.zeigt) { n.ort = [...(def.von || l.pos)]; }
+            n.zeigt = true; n.geht = false; n.weg = [[...l.pos]]; n.ziel = l.pos;
+        } else if (!n.soll && n.zeigt && !n.geht) {
+            // geht hinaus (zum Abgangsort); ohne Abgangsort verschwindet sie an Ort und Stelle
+            if (def.nach) { n.geht = true; n.weg = (Array.isArray(def.nach[0]) ? def.nach : [def.nach]).map((p) => [...p]); } else { n.zeigt = false; }
+        } else if (n.soll && n.ziel !== l.pos) {
+            n.weg = [[...l.pos]]; n.ziel = l.pos;   // neuer Platz im selben Bereich (z. B. festgeklebt an der Rückwand)
+        }
+        rig.visible = n.zeigt;
+        if (!n.zeigt) { continue; }
+        const tempo = l.gleiten ? .9 : (def.tempo || NPC_TEMPO);
+        const unterwegs = schreiten(n, dt, tempo, n.geht && def.rueckwaerts);
+        if (!unterwegs && n.geht) { n.zeigt = false; n.geht = false; rig.visible = false; continue; }
+        rig.position.set(n.ort[0], akt.hoehe(n.ort[0], n.ort[1]), n.ort[1]);
         // Wer spricht, schaut zur aktiven Figur
         const redet = !textbox.hidden && (sprecher === def.hotspot || sprecher === def.figur || (sprecher === 'gegner' && (def.hotspot === 'gegner' || def.figur === 'pinsel' || def.figur === 'ledeiw')));
         const p = figuren[z.figur].position;
-        if (redet && !fest) { rig.rotation.y = Math.atan2(p.x - x, p.z - zz); }
-        let art = redet ? (sprecherSchreck ? 'erschrocken' : 'reden') : (def.pose || 'stehen');
-        if (fest && !redet) { art = 'kleben'; }
-        FIG.pose(rig, zeit, art);
+        const gehtZuFuss = unterwegs && !l.gleiten;
+        drehen(rig, gehtZuFuss ? n.blick : redet && !l.gleiten ? Math.atan2(p.x - n.ort[0], p.z - n.ort[1]) : l.rot, dt);
+        rig.userData.tempoFaktor = tempo / 2.3;
+        FIG.pose(rig, zeit, gehtZuFuss ? 'gehen' : redet ? (sprecherSchreck ? 'erschrocken' : 'reden') : l.pose);
     }
+}
+/** Durchzug: läuft einmal den Weg entlang (z. B. Pinsel und Ledeiw vorbei ins Rathaus) und verschwindet am Ende. */
+function durchzug(n, dt) {
+    const an = !!n.def.durchzug(bild), rig = n.rig;
+    if (n.snap) { n.snap = false; n.fertig = an; n.zeigt = false; }
+    if (!an) { n.fertig = false; }
+    if (an && !n.fertig && !n.zeigt) { n.zeigt = true; n.ort = [...n.def.weg[0]]; n.weg = n.def.weg.slice(1).map((p) => [...p]); }
+    rig.visible = n.zeigt;
+    if (!n.zeigt) { return; }
+    const tempo = n.def.tempo || 2.0;
+    if (!schreiten(n, dt, tempo)) { n.zeigt = false; n.fertig = true; rig.visible = false; return; }
+    rig.position.set(n.ort[0], akt.hoehe(n.ort[0], n.ort[1]), n.ort[1]);
+    drehen(rig, n.blick, dt);
+    rig.userData.tempoFaktor = tempo / 2.3;
+    FIG.pose(rig, zeit, 'gehen');
+}
+
+// ---------- Dinge: Genommenes wandert zur Figur, Neues wächst ins Bild ----------
+// Quellen: Hotspots mit sichtbarObj(bild) (art: 'nehmen' | 'schwinden') und akt.dinge: [{ obj, sichtbar(bild), art }].
+function dingeListe() {
+    if (!akt) { return []; }
+    return akt.hotspots.filter((h) => h.sichtbarObj).map((h) => ({ obj: h.obj, sichtbar: h.sichtbarObj, art: h.art || 'nehmen' })).concat(akt.dinge || []);
+}
+const V3 = new THREE.Vector3();
+function dingeAktualisieren(dt, sofort) {
+    for (const d of dingeListe()) {
+        const o = d.obj, u = o.userData, soll = !!d.sichtbar(bild);
+        if (!u.ursprung) { u.ursprung = { pos: o.position.clone(), skala: o.scale.clone() }; }
+        if (sofort || u.gezeigt === undefined) { u.gezeigt = soll; u.anim = null; o.visible = soll; o.position.copy(u.ursprung.pos); o.scale.copy(u.ursprung.skala); continue; }
+        if (soll !== u.gezeigt) { u.gezeigt = soll; u.anim = { art: soll ? 'wachsen' : (d.art || 'nehmen'), t: 0, von: o.position.clone() }; o.visible = true; }
+        const a = u.anim;
+        if (!a) { continue; }
+        a.t += dt;
+        const k = Math.min(1, a.t / (a.art === 'wachsen' ? .6 : .8)), e = k * k * (3 - 2 * k);
+        o.scale.copy(u.ursprung.skala).multiplyScalar(Math.max(.01, a.art === 'wachsen' ? e : 1 - e));
+        if (a.art === 'nehmen' && o.parent) {
+            // zur aktiven Figur (Brusthöhe) wandern und dabei schrumpfen
+            figuren[z.figur].getWorldPosition(V3); V3.y += 1.1; o.parent.updateMatrixWorld(true); o.parent.worldToLocal(V3);
+            o.position.lerpVectors(a.von, V3, e);
+        }
+        if (k >= 1) { u.anim = null; o.position.copy(u.ursprung.pos); o.scale.copy(u.ursprung.skala); o.visible = soll; }
+    }
+}
+
+/** Finale: Joe und Chani gehen zur Urne und heben sie gemeinsam an. */
+function urneTragen(dt) {
+    const plaetze = { joe: [1.1, -1.9, Math.PI / 2], chani: [2.5, -1.9, -Math.PI / 2] };
+    let da = 0;
+    spur = [];   // die Begleitung folgt jetzt nicht mehr, beide gehen selbst
+    for (const n of ['joe', 'chani']) {
+        const f = figuren[n], [x, zz, blick] = plaetze[n], dx = x - f.position.x, dz = zz - f.position.z, d = Math.hypot(dx, dz);
+        held[n].weg = []; held[n].auftrag = null;
+        if (d < .03) { f.userData.blickZiel = blick; f.userData.geht = false; da++; continue; }
+        const s = Math.min(d, 1.6 * dt);
+        f.position.x += dx / d * s; f.position.z += dz / d * s; f.userData.blickZiel = Math.atan2(dx, dz); f.userData.geht = true;
+    }
+    if (da === 2) { figuren.joe.userData.traegt = true; spur = []; if (akt.objekte && akt.objekte.urne) { akt.objekte.urne.userData.getragen = true; } }
 }
 
 // ---------- Wegsuche (Raster, A*, Sichtlinien-Glättung) ----------
@@ -162,10 +279,12 @@ function sichtlinie(a, b) {
     for (let i = 1; i <= n; i++) { const t = i / n; if (!frei(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)) { return false; } }
     return true;
 }
-function wegSuchen(von, nach) {
+/** Weg von → nach; rand: Suchfenster um Start und Ziel (Meter). Liegt das Ziel nur über einen weiten Umweg (z. B. über den
+ *  Brückenkopf auf die Radbrücke), sucht sie noch einmal mit großem Fenster. */
+function wegSuchen(von, nach, rand = 14) {
     if (sichtlinie(von, nach)) { return [nach]; }
-    const minX = Math.min(von[0], nach[0]) - 14, minZ = Math.min(von[1], nach[1]) - 14;
-    const nx = Math.ceil((Math.abs(nach[0] - von[0]) + 28) / RASTER), nz = Math.ceil((Math.abs(nach[1] - von[1]) + 28) / RASTER);
+    const minX = Math.min(von[0], nach[0]) - rand, minZ = Math.min(von[1], nach[1]) - rand;
+    const nx = Math.ceil((Math.abs(nach[0] - von[0]) + 2 * rand) / RASTER), nz = Math.ceil((Math.abs(nach[1] - von[1]) + 2 * rand) / RASTER);
     const zelle = (p) => [Math.round((p[0] - minX) / RASTER), Math.round((p[1] - minZ) / RASTER)];
     const pos = (i, k) => [minX + i * RASTER, minZ + k * RASTER];
     const ok = new Uint8Array(nx * nz), g = new Float32Array(nx * nz).fill(Infinity), vor = new Int32Array(nx * nz).fill(-1), zu = new Uint8Array(nx * nz);
@@ -178,7 +297,7 @@ function wegSuchen(von, nach) {
     const hoch = (a) => { let i = offen.length - 1; offen.push(a); while (i >= 0 && offen[i][0] > a[0]) { offen[i + 1] = offen[i]; i--; } offen[i + 1] = a; };
     const h = (i, k) => Math.hypot(i - zi, k - zk);
     let bester = start, besterH = h(si, sk), schritte = 0;
-    while (offen.length && schritte++ < 60000) {
+    while (offen.length && schritte++ < 400000) {
         const [, c] = offen.pop();
         if (zu[c]) { continue; } zu[c] = 1;
         const ci = c % nx, ck = (c - ci) / nx;
@@ -195,6 +314,7 @@ function wegSuchen(von, nach) {
             }
         }
     }
+    if (!zu[ziel] && rand < 40 && frei(nach[0], nach[1])) { return wegSuchen(von, nach, 60); }
     const ende = zu[ziel] ? ziel : bester;
     const punkte = [];
     for (let c = ende; c !== -1 && c !== start; c = vor[c]) { const ci = c % nx; punkte.unshift(pos(ci, (c - ci) / nx)); }
@@ -211,8 +331,9 @@ const xz = (o) => [o.position.x, o.position.z];
 /** Aktive Figur zu einem Ort schicken; danach ggf. eine Aktion ausführen. */
 function gehe(ziel, auftrag, blickAuf) {
     const n = z.figur, f = figuren[n];
+    if (figuren.joe.userData.traegt || (bild && bild.flags.urneGetragen)) { return; }   // die Urne wird getragen
     if (f.userData.aufPlatte) { S.platteVerlassen(z, n); f.userData.aufPlatte = null; }
-    npcHindernisse = npcs().filter((m) => m.sichtbar).map((m) => [m.rig.position.x, m.rig.position.z]);
+    npcHindernisse = npcs().filter((m) => m.zeigt && !m.def.durchzug).map((m) => [m.ort[0], m.ort[1]]);
     held[n].weg = wegSuchen(xz(f), ziel);
     held[n].auftrag = auftrag || null; held[n].blickAuf = blickAuf || null;
     if (!held[n].weg.length) { ankunft(n); }
@@ -288,7 +409,9 @@ async function betreten(id, spawnName) {
     akt = b; hover = null; hoverEl.hidden = true; auswahl = -1;
     b.scene.add(figuren.joe, figuren.chani);
     aufstellen(spawnName);
-    if (b.aktualisieren) { b.aktualisieren(z); }
+    for (const [k, n] of Object.entries(npcCache)) { if (k.startsWith(id + ':')) { n.snap = true; } }
+    bildAuffrischen(false, true);
+    dingeAktualisieren(0, true);
     ortTitelEl.textContent = b.titel;
     karteEl.hidden = true;
     renderer.compile(b.scene, kamera);
@@ -305,16 +428,17 @@ const SPRECHER = [['Joe', 'joe'], ['Chani', 'chani'], ['Chris', 'christian'], ['
 const SPRECHER_HOTSPOT = { christian: 'chris', joanna: 'joanna', lore: 'lore', kemper: 'bauleiter' };
 const sprecherAus = (zeile) => { for (const [n, id] of SPRECHER) { if (zeile.startsWith(n + ':') || zeile.startsWith(n + ' ')) { return id; } } return null; };
 const ausdruck = (zeile) => (/(Kugel|rollt|heult|Knirschen|Hilfe|poltert|stürzen|klebt)/.test(zeile) ? 'erschrocken' : /(!|Geschafft|Danke|richtig|Solidarität|leicht)/.test(zeile) ? 'lacht' : 'neutral');
-const hutAuf = () => !!z && z.inventar.includes('taschenlampe');
+const hutAuf = () => !!(bild || z) && (bild || z).inventar.includes('taschenlampe');
 function portraetBild(n, a) {
-    const bild = portraets && portraets.bild(n, a, hutAuf());
-    return bild || G.ausschnitt(G.portraet(n === 'joe' && hutAuf() ? 'joe_hut' : n, a), 64, 64);
+    return (portraets && portraets.bild(n, a, hutAuf())) || leeresBild(192);
 }
+/** Platzhalter, solange (oder falls) ein 3D-Bild nicht gemalt werden kann. */
+function leeresBild(px) { const c = document.createElement('canvas'); c.width = c.height = px; return c; }
 
 function zeigeText() {
     if (warteschlange.length === 0) {
-        textbox.hidden = true; sprecher = null; gehalten = null;
-        if (akt && akt.aktualisieren) { akt.aktualisieren(z); }
+        textbox.hidden = true; sprecher = null;
+        if (z) { bild = kopie(z); bildAuffrischen(false); }
         const d = danach; danach = null;
         if (d && d.dialog) { dialogZeigen(d.dialog); }
         if (d && d.gespraech) { gespraechZeigen(d.gespraech); }
@@ -323,7 +447,9 @@ function zeigeText() {
         leisteAktualisieren();
         return;
     }
-    const zeile = warteschlange.shift(), wer = sprecherAus(zeile);
+    const naechste = warteschlange.shift(), zeile = naechste.text, wer = sprecherAus(zeile);
+    // Regie: Was diese Zeile begründet, wird jetzt sichtbar (Figuren kommen oder gehen, Dinge wandern, Inventar)
+    if (naechste.regie && bild) { for (const k of naechste.regie) { uebernehmen(bild, z, k); } bildAuffrischen(naechste.regie.some((k) => S.GEGENSTAENDE[k])); }
     sprecherSchreck = ausdruck(zeile) === 'erschrocken';
     sprecher = wer === 'pinsel' || wer === 'ledeiw' ? 'gegner' : SPRECHER_HOTSPOT[wer] || wer;
     portraitEl.replaceChildren();
@@ -334,14 +460,12 @@ function zeigeText() {
 /** Ergebnis einer Aktion anzeigen; bei Szenenwechsel Blende und neuer Bereich. */
 function ergebnis(e, vorherSzene) {
     const vorher = vorherSzene === undefined ? z.szene : vorherSzene;
-    warteschlange = warteschlange.concat(e.text || []);
+    warteschlange = warteschlange.concat((e.text || []).map((t, i) => ({ text: t, regie: (e.regie && e.regie[i]) || null })));
     if (e.dialog) { danach = { dialog: e.dialog }; }
     if (e.minispiel === 'boot') { danach = { minispiel: 'boot' }; }
     if (e.minispiel === 'kugel') { danach = { minispiel: 'kugel' }; }
-    // Figuren, die erst nach dem Text auftauchen (Pinsel und Ledeiw nach dem Bootsunglück)
-    if (e.erscheinen) { gehalten = new Set(S.sichtbareHotspots(z).map((h) => h.id).filter((id) => !e.erscheinen.includes(id))); }
     if (z.szene !== vorher) {
-        if (z.szene !== 'karte' && S.SZENEN[z.szene] && !e.ohneEinstieg && !(e.text || []).includes(S.einstieg(z, z.szene))) { warteschlange.push(S.einstieg(z, z.szene)); }
+        if (z.szene !== 'karte' && S.SZENEN[z.szene] && !e.ohneEinstieg && !(e.text || []).includes(S.einstieg(z, z.szene))) { warteschlange.push({ text: S.einstieg(z, z.szene), regie: null }); }
         if (S.ORTE[vorher]) { letzterOrt = vorher; }
         plaetze.schreiben('auto', z);
     }
@@ -353,7 +477,6 @@ function ergebnis(e, vorherSzene) {
 async function szeneZeigen(spawn) {
     if (z.szene === 'karte') { karteZeigen(); return; }
     const liste = SZENE_ZU_BEREICHEN[z.szene];
-    if (!liste) { nochNichtIn3d(); return; }
     let id = startBereich(z, z.szene);
     if (z.szene === 'buero' && spawn === 'start') { id = 'buero_innen'; }
     if (z.szene === 'buero' && spawn !== 'start') { id = 'schmiede_aussen'; }
@@ -397,19 +520,18 @@ function lesehinweis() {
 }
 
 // ---------- Aktionen ----------
-/** Aktion der Spiellogik ausführen; Szenenwechsel mit Blende, Figuren verschwinden erst nach dem Text. */
+/** Aktion der Spiellogik ausführen; Szenenwechsel mit Blende. Was sich ändert, zeigt sich erst mit seiner Textzeile (Regie). */
 function handlungsErgebnis(tun, opt) {
-    const szene = z.szene, vorherSichtbar = new Set(S.sichtbareHotspots(z).map((h) => h.id)), punkteVorher = z.punkte;
+    const szene = z.szene, vorher = kopie(z), punkteVorher = z.punkte;
     const e = tun();
+    regieVorbereiten(e, vorher);
     klang(opt && opt.kartusche ? 'kartusche' : z.punkte > punkteVorher ? 'erfolg' : 'klick');
     if (z.szene !== szene) {
         const neu = z.szene; z.szene = szene;
         blenden(async () => { z.szene = neu; await szeneZeigen('von_' + szene); ergebnis(e, szene); });
         return;
     }
-    const jetzt = new Set(S.sichtbareHotspots(z).map((h) => h.id));
-    if ((e.text || []).length && [...vorherSichtbar].some((id) => !jetzt.has(id))) { gehalten = vorherSichtbar; }
-    if (akt && akt.aktualisieren && !gehalten) { akt.aktualisieren(z); }
+    bildAuffrischen(true);
     ergebnis(e);
 }
 function handlung(art, h, gegenstand) {
@@ -488,9 +610,9 @@ function leisteAktualisieren() {
         figurenEl.appendChild(k);
     }
     inventarEl.replaceChildren();
-    for (const gid of z.inventar) {
+    for (const gid of (bild || z).inventar) {
         const k = document.createElement('button'); k.type = 'button'; k.className = 'ding' + (objekt === gid ? ' aktiv' : ''); k.title = S.GEGENSTAENDE[gid].name; k.setAttribute('aria-label', S.GEGENSTAENDE[gid].name);
-        const bild3d = icons && icons.bild(gid), bild = bild3d || G.ausschnitt(G.icon(gid), 16, 16); bild.className = bild3d ? 'icon icon3d' : 'icon'; k.appendChild(bild);
+        const bild = (icons && icons.bild(gid)) || leeresBild(64); bild.className = 'icon icon3d'; k.appendChild(bild);
         k.addEventListener('click', () => {
             if (gid === 'handy' && (verb === 'benutze' || verb === 'gehe')) { if (!textbox.hidden) { lesehinweis(); return; } anrufen(); return; }
             if (verb === 'benutze' || verb === 'gib') { objekt = objekt === gid ? null : gid; klang('klick'); leisteAktualisieren(); return; }
@@ -569,8 +691,8 @@ textbox.addEventListener('click', () => zeigeText());
 let auswahl = -1;
 document.addEventListener('keydown', (ev) => {
     if (!z || !titelEl.hidden) { return; }
-    if (ev.key === 'Escape' && !textbox.hidden && (warteschlange.some((l) => S.VORSTELLUNG.includes(l)) || S.VORSTELLUNG.includes(textEl.textContent))) {
-        ev.preventDefault(); warteschlange = warteschlange.filter((l) => !S.VORSTELLUNG.includes(l)); zeigeText(); return;
+    if (ev.key === 'Escape' && !textbox.hidden && (warteschlange.some((l) => S.VORSTELLUNG.includes(l.text)) || S.VORSTELLUNG.includes(textEl.textContent))) {
+        ev.preventDefault(); warteschlange = warteschlange.filter((l) => !S.VORSTELLUNG.includes(l.text)); zeigeText(); return;
     }
     if (ev.key === 'Escape' || ev.key === 'p' || ev.key === 'P') { ev.preventDefault(); pauseUmschalten(); return; }
     if (pausiert) { return; }
@@ -602,42 +724,18 @@ function bildschirm(obj) {
     return { x: (p.x + 1) / 2 * r.width + r.left - bu.left, y: (1 - p.y) / 2 * r.height + r.top - bu.top, sichtbar: p.z < 1 };
 }
 
-// ---------- Reisekarte (Pixel-Karte als Überlagerung) ----------
-const karteCtx = karteEl.getContext('2d');
-const KB = 256, KH = 144;
-const ortPunkt = (id) => ({ x: S.ORTE[id].x * KB / 100, y: S.ORTE[id].y * KH / 100 });
+// ---------- Reisekarte (Greven als Stadtmodell, karte3d.js; das Element #karte nimmt nur Klicks entgegen) ----------
 let karteHover = null;
 function karteZeigen() {
     karteEl.hidden = false; ortTitelEl.textContent = 'Greven'; akt = null;
-    if (karte3d && figuren.joe.parent === karte3d.scene) { karte3d.scene.remove(figuren.joe, figuren.chani); }
+    if (figuren.joe.parent === karte3d.scene) { karte3d.scene.remove(figuren.joe, figuren.chani); }
 }
 function zeichneKarte() {
-    if (karte3d) { karte3d.bild(zeit, { orte: z.orte, hover: karteHover, reise }); renderer.render(karte3d.scene, karte3d.kamera); return; }
-    karteCtx.imageSmoothingEnabled = false;
-    const k = G.bild('karte_greven_256x144');
-    if (k) { karteCtx.drawImage(k, 0, 0); }
-    for (const id of Object.keys(S.ORTE)) {
-        const { x, y } = ortPunkt(id);
-        if (!z.orte.includes(id)) { karteCtx.globalAlpha = .55; karteCtx.fillStyle = 'rgb(228,196,148)'; karteCtx.beginPath(); karteCtx.arc(x, y, 5, 0, Math.PI * 2); karteCtx.fill(); karteCtx.globalAlpha = 1; continue; }
-        const puls = karteHover === id ? 7 : 6 + (Math.floor(zeit * 3) % 2);
-        karteCtx.strokeStyle = karteHover === id ? 'rgb(252,216,0)' : 'rgba(255,255,255,0.8)'; karteCtx.lineWidth = 1;
-        karteCtx.beginPath(); karteCtx.arc(Math.round(x) + .5, Math.round(y) + .5, puls, 0, Math.PI * 2); karteCtx.stroke();
-        if (SZENE_ZU_BEREICHEN[id]) { karteCtx.fillStyle = 'rgb(252,216,0)'; karteCtx.fillRect(Math.round(x) + 6, Math.round(y) - 8, 3, 3); }
-    }
-    if (reise) {
-        const a = ortPunkt(reise.von), b = ortPunkt(reise.nach), t = Math.min(1, reise.t);
-        const n = Math.max(8, Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 2)), bis = Math.floor(t * n);
-        const bogen = (u) => ({ x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u - Math.sin(u * Math.PI) * 10 });
-        karteCtx.fillStyle = 'rgb(188,0,0)';
-        for (let i = 0; i <= bis; i++) { const p = bogen(i / n); if (i % 3 === 2) { continue; } karteCtx.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 2); }
-        const p = bogen(t); karteCtx.fillStyle = 'rgb(60,30,20)'; karteCtx.fillRect(Math.round(p.x) - 3, Math.round(p.y) - 9, 7, 3); karteCtx.fillRect(Math.round(p.x) - 2, Math.round(p.y) - 12, 5, 3);
-    }
+    karte3d.bild(zeit, { orte: z.orte, hover: karteHover, reise }); renderer.render(karte3d.scene, karte3d.kamera);
 }
 function kartePunkt(ev) {
-    if (karte3d) { const r = karteEl.getBoundingClientRect(); return karte3d.treffer((ev.clientX - r.left) / r.width * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1, z.orte); }
-    const r = karteEl.getBoundingClientRect(), x = (ev.clientX - r.left) * KB / r.width, y = (ev.clientY - r.top) * KH / r.height;
-    const o = Object.entries(S.ORTE).find(([id, ort]) => z.orte.includes(id) && Math.abs(x - ort.x * KB / 100) < 8 && Math.abs(y - ort.y * KH / 100) < 8);
-    return o ? o[0] : null;
+    const r = karteEl.getBoundingClientRect();
+    return karte3d.treffer((ev.clientX - r.left) / r.width * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1, z.orte);
 }
 karteEl.addEventListener('pointermove', (ev) => { if (!z || reise || !textbox.hidden) { return; } karteHover = kartePunkt(ev); karteEl.style.cursor = karteHover ? 'pointer' : 'default'; satzEl.textContent = `Reise nach ${karteHover ? S.ORTE[karteHover].name : '…'}`; });
 karteEl.addEventListener('pointerdown', (ev) => {
@@ -647,26 +745,11 @@ karteEl.addEventListener('pointerdown', (ev) => {
     const ort = kartePunkt(ev); if (ort) { reiseStarten(ort); }
 });
 function reiseStarten(ziel) {
-    if (!SZENE_ZU_BEREICHEN[ziel]) { nochNichtIn3d(ziel); return; }
     klang('klick');
     reise = { von: S.ORTE[letzterOrt] ? letzterOrt : 'buero', nach: ziel, t: ziel === letzterOrt ? 1 : 0 };
 }
 function reiseAnkunft(ziel) {
-    blenden(async () => { const v = z.szene; const e = S.reisen(z, ziel); await szeneZeigen('karte'); ergebnis(e, v); });
-}
-
-/** Schauplätze ab Akt 3 gibt es (noch) nur in der Pixel-Fassung: Spielstand dorthin mitnehmen. */
-function nochNichtIn3d(ort) {
-    const name = ort ? S.ORTE[ort].name : (S.SZENEN[z.szene] ? S.SZENEN[z.szene].titel : z.szene);
-    auswahlListe(`„${name}“ gibt es in der 3D-Fassung noch nicht. In der klassischen Pixel-Fassung könnt ihr mit diesem Spielstand weiterspielen.`, [
-        { text: 'In der klassischen Fassung weiterspielen', tun: () => {
-            if (ort && z.szene === 'karte') { S.reisen(z, ort); }
-            try { window.localStorage.setItem('fp-spiel-auto', S.speichern(z)); } catch (_) { /* ohne Speicher */ }
-            plaetze.schreiben('auto', z);
-            window.location.href = '../spiel/';
-        } },
-        { text: 'Hierbleiben', tun: () => { if (z.szene !== 'karte' && !SZENE_ZU_BEREICHEN[z.szene]) { z.szene = 'karte'; karteZeigen(); } } }
-    ]);
+    blenden(async () => { const v = z.szene; const e = S.reisen(z, ziel); bild = kopie(z); await szeneZeigen('karte'); ergebnis(e, v); });
 }
 
 // ---------- Minispiel: Bootsflucht auf der Ems ----------
@@ -689,12 +772,22 @@ function bootSchritt(dt) {
         const ein = ZEITRAFFER ? S.bootAutopilot(mini) : eingabeBoot; eingabeBoot = null;
         S.bootSchritt(mini, d, ein);
     }
-    hudEl.textContent = mini.sinken !== null ? `Blubb!   Leben ${'♥'.repeat(Math.max(0, mini.leben))}` : `Alternative Fakten: ${mini.munition + mini.schuesse.length}   Leben ${'♥'.repeat(Math.max(0, mini.leben))}   ·   ↑/↓ oder oben/unten tippen`;
+    // Anzeige: Herzen des Ruderboots (beim dritten Treffer kentert es) und die restlichen alternativen Fakten der Verfolger;
+    // ein Treffer meldet sich kurz in Rot (was getroffen hat, wie viele Treffer noch gehen)
+    if (mini.treffer > (mini.gemeldet || 0)) { mini.gemeldet = mini.treffer; mini.meldungBis = zeit + 1.8; klang('fehler'); }
+    const herzen = '♥'.repeat(Math.max(0, mini.leben)) + '♡'.repeat(Math.max(0, 3 - Math.max(0, mini.leben)));
+    const fakten = mini.munition + mini.schuesse.length;
+    const meldung = mini.meldungBis > zeit && mini.leben > 0;
+    hudEl.classList.toggle('treffer', !!meldung);
+    hudEl.textContent = mini.sinken !== null ? `Blubb! Das Motorboot geht unter.   Boot ${herzen}`
+        : meldung ? `Treffer: ${mini.letzterTreffer}! Noch ${mini.leben === 1 ? 'ein Treffer' : `${mini.leben} Treffer`}, dann kentert ihr.   Boot ${herzen}`
+            : `Boot ${herzen}   ·   Pinsel und Ledeiw: noch ${fakten} alternative ${fakten === 1 ? 'Fakt' : 'Fakten'}   ·   ↑/↓ ausweichen`;
     if (mini.status === 'laeuft') { return; }
-    const ok = mini.status === 'gewonnen', v = z.szene; mini = null; hudEl.hidden = true;
+    const ok = mini.status === 'gewonnen', v = z.szene; mini = null; hudEl.hidden = true; hudEl.classList.remove('treffer');
     akt.bootFlucht.ende(); bootRigs().forEach((r) => { r.visible = false; });
     klang(ok ? 'erfolg' : 'fehler');
-    const e = S.minispielEnde(z, 'boot', ok);
+    const vorher = kopie(z), e = S.minispielEnde(z, 'boot', ok);
+    regieVorbereiten(e, vorher);
     if (z.szene !== v) {
         const neu = z.szene; z.szene = v;
         blenden(async () => { z.szene = neu; await szeneZeigen(); ergebnis(e, v); });
@@ -722,7 +815,8 @@ function kugelSchritt(dt) {
     const ok = mini.status === 'gewonnen'; mini = null; hudEl.hidden = true;
     akt.kugelFlucht.ende();
     klang(ok ? 'erfolg' : 'fehler');
-    const e = S.minispielEnde(z, 'kugel', ok);
+    const vorher = kopie(z), e = S.minispielEnde(z, 'kugel', ok);
+    regieVorbereiten(e, vorher);
     if (ok) { blenden(async () => { await betreten('tempel_finale', 'start'); ergebnis(e); }); }
     else { aufstellen('gang'); ergebnis(e); danach = { minispiel: 'kugel' }; }
 }
@@ -733,7 +827,7 @@ function plattenAbgleich() {
     let gesprungen = false;
     for (const n of ['joe', 'chani']) {
         const f = figuren[n], seite = z.platten.links === n ? 'links' : z.platten.rechts === n ? 'rechts' : null;
-        if (z.flags.gitterOffen && f.userData.aufPlatte) {
+        if (bild.flags.gitterOffen && f.userData.aufPlatte) {
             // Gitter offen: Sobald es oben ist, springen beide neben ihrer Plattform herunter; die aktive Figur geht hindurch, die andere folgt
             if (akt.gitterOben && !akt.gitterOben()) { continue; }
             const pl = akt.plattformen[f.userData.aufPlatte], lx = pl.x - Math.sign(pl.x) * 1.3, lz = pl.z + .2;
@@ -743,7 +837,7 @@ function plattenAbgleich() {
             gesprungen = true;
             continue;
         }
-        if (seite && !held[n].weg.length && !z.flags.gitterOffen) {
+        if (seite && !held[n].weg.length && !bild.flags.gitterOffen) {
             const pl = akt.plattformen[seite];
             f.userData.aufPlatte = seite; f.position.set(pl.x, pl.obj.userData.oben - .12, pl.z);
         } else if (!seite) { f.userData.aufPlatte = null; }
@@ -769,13 +863,12 @@ function menueZeigen() {
     knopf(ton ? 'Ton aus' : 'Ton an', () => { ton = !ton; try { window.localStorage.setItem('fp-spiel-ton', ton ? 'an' : 'aus'); } catch (_) { /* egal */ } menueZeigen(); });
     knopf('Figuren vorstellen', () => { pauseUmschalten(); ergebnis({ text: S.VORSTELLUNG }); });
     knopf('Neues Spiel', () => starten(S.neuerZustand(), true));
-    knopf('Klassische Pixel-Fassung', () => { try { window.localStorage.setItem('fp-spiel-auto', S.speichern(z)); } catch (_) { /* egal */ } window.location.href = '../spiel/'; });
     const zurueck = document.createElement('a'); zurueck.href = '../'; zurueck.textContent = 'Zurück zu FraktionPerfekt'; menueEl.appendChild(zurueck);
     menueEl.hidden = false;
 }
 
 async function starten(zustand, neu, ort) {
-    z = zustand; pausiert = false; reise = null; gehalten = null;
+    z = zustand; bild = kopie(z); pausiert = false; reise = null;
     figuren.joe.userData.traegt = false; figuren.joe.userData.aufPlatte = figuren.chani.userData.aufPlatte = null;
     if (mini && akt && akt.bootFlucht) { akt.bootFlucht.ende(); } if (mini && akt && akt.kugelFlucht) { akt.kugelFlucht.ende(); } mini = null; hudEl.hidden = true; endeEl.hidden = true;
     menueEl.hidden = true; titelEl.hidden = true; dialogEl.hidden = true; kontextEl.hidden = true;
@@ -798,13 +891,16 @@ function schleife() {
         if (!z.ende) { z.sekunden += dt; }
         if (reise) { reise.t += dt * .9; if (reise.t >= 1.15) { const ziel = reise.nach; reise = null; reiseAnkunft(ziel); } }
         if (mini && textbox.hidden && dialogEl.hidden) { if (mini.art === 'kugel') { kugelSchritt(dt); } else { bootSchritt(dt); } }
-        else if (akt && !mini) { laufen(dt); plattenAbgleich(); }
+        else if (akt && !mini) {
+            laufen(dt); plattenAbgleich();
+            if (akt.id === 'tempel_finale' && bild.flags.urneGetragen && !figuren.joe.userData.traegt) { urneTragen(dt); }
+        }
     }
     if (!z && karte3d && !titelEl.hidden) { titelBild(dt); }
     if (z && akt) {
         figuren.joe.userData.hut.visible = hutAuf();
         if (figuren.joe.userData.jackeAn !== hutAuf()) { figuren.joe.userData.jackeAn = hutAuf(); figuren.joe.userData.jacke(hutAuf()); }
-        const helme = !!(akt.helme && akt.helme(z));
+        const helme = !!(akt.helme && akt.helme(bild));
         FIG.helm(figuren.joe, helme); FIG.helm(figuren.chani, helme);
         if (helme) { figuren.joe.userData.hut.visible = false; }
         for (const n of ['joe', 'chani']) {
@@ -814,8 +910,8 @@ function schleife() {
             const art = ud.geht ? 'gehen' : redet ? (sprecherSchreck ? 'erschrocken' : 'reden') : (benutzenBis > zeit && n === z.figur ? 'benutzen' : 'stehen');
             FIG.pose(f, zeit, art);
         }
-        for (const h of akt.hotspots) { if (h.sichtbarObj) { h.obj.visible = h.sichtbarObj(z); } }
-        npcsAktualisieren();
+        dingeAktualisieren(dt, false);
+        npcsAktualisieren(dt);
         if (akt.tick) { akt.tick(dt, zeit); }
         if (mini && mini.art === 'kugel') { akt.kugelFlucht.bild(mini, zeit); }
         else if (mini) { akt.bootFlucht.bild(mini, zeit); bootRigs().forEach((r, i) => FIG.pose(r, zeit, i === 0 ? 'zielen' : 'sitzen')); npcs().forEach((m) => { m.rig.visible = false; }); }
@@ -823,14 +919,8 @@ function schleife() {
         kamera.position.lerp(k.p, a); kamZiel.lerp(k.t, a); kamera.lookAt(kamZiel);
         renderer.render(akt.scene, kamera);
         satzEl.textContent = satz();
-        endeEl.hidden = !(z.ende && textbox.hidden);
-        if (z.ende && !endeEl.hidden) { $('endepunkte').textContent = `${z.punkte} Punkte · ${Math.round(z.sekunden / 60)} Minuten`; }
-        if (z.ende && akt.id === 'tempel_finale' && !figuren.joe.userData.traegt) {
-            // Joe und Chani tragen die Urne gemeinsam
-            figuren.joe.userData.traegt = true; held.joe.weg = []; held.chani.weg = [];
-            figuren.joe.position.set(1.1, 0, -1.9); figuren.joe.userData.blickZiel = Math.PI / 2;
-            figuren.chani.position.set(2.5, 0, -1.9); figuren.chani.userData.blickZiel = -Math.PI / 2;
-        }
+        endeEl.hidden = !(bild.ende && textbox.hidden);
+        if (bild.ende && !endeEl.hidden) { $('endepunkte').textContent = `${z.punkte} Punkte · ${Math.round(z.sekunden / 60)} Minuten`; }
     }
     if (z && !karteEl.hidden) { zeichneKarte(); if (!karteHover) { satzEl.textContent = 'Reise nach …'; } }
     requestAnimationFrame(schleife);
@@ -860,9 +950,8 @@ function groesse() {
     const b = window.innerWidth, h = Math.max(200, window.innerHeight - leiste);
     buehne.style.width = `${b}px`; buehne.style.height = `${h}px`;
     renderer.setSize(b, h, false);
-    const f = Math.min(b / 256, h / 144);
-    if (karte3d) { karteEl.classList.add('drei'); Object.assign(karteEl.style, { width: `${b}px`, height: `${h}px`, left: '0px', top: '0px' }); karte3d.groesse(b / h); }
-    else { Object.assign(karteEl.style, { width: `${256 * f}px`, height: `${144 * f}px`, left: `${(b - 256 * f) / 2}px`, top: `${(h - 144 * f) / 2}px` }); }
+    Object.assign(karteEl.style, { width: `${b}px`, height: `${h}px`, left: '0px', top: '0px' });
+    if (karte3d) { karte3d.groesse(b / h); }
     kamera.aspect = b / h; kamera.fov = b / h < 1.2 ? 62 : 48; kamera.updateProjectionMatrix();
 }
 window.addEventListener('resize', groesse);
@@ -913,32 +1002,34 @@ const SPRUENGE = {
 };
 function sprungZustand(name) {
     const sp = Object.prototype.hasOwnProperty.call(SPRUENGE, name) ? SPRUENGE[name] : null;
-    const zz = sp ? S.sprungZustand(name) : null;   // Schrittzahlen: GralSpiel.SPRUENGE (gemeinsam mit der Pixel-Fassung)
+    const zz = sp ? S.sprungZustand(name) : null;   // Schrittzahlen: GralSpiel.SPRUENGE
     if (!zz) { return null; }
     if (['baustelle', 'ems_deich', 'radbruecke'].includes(sp.bereich)) { zz.figur = 'joe'; }
     return { zz, sp };
 }
 const sprungName = (new URLSearchParams(window.location.search).get('start') || '').toLowerCase();
 
-// Realistische Figuren (Rocketbox) parallel zu den Grafiken laden; schlägt das fehl, bleiben die einfachen Figuren
+// Realistische Figuren (Rocketbox) und das Stadtmodell laden; schlägt eine Figur fehl, bleibt ihre einfache Fassung
 const realistisch = (n) => FIG.realistisch(figuren[n], n).catch((e) => console.warn(`Figur ${n}: einfache Fassung`, e));
-const kartenbau = baueKarte(renderer).then((k) => { karte3d = k; groesse(); }).catch((e) => console.warn('Reisekarte: Pixelfassung', e));
-Promise.all([G.laden('../spiel/grafik/'), realistisch('joe'), realistisch('chani'), kartenbau]).then(() => {
-    try { portraets = portraetMaler(figuren); } catch (e) { console.warn('Porträts: Pixelfassung', e); }
-    try { icons = gegenstandMaler(); } catch (e) { console.warn('Inventar: Pixel-Icons', e); }
+const kartenbau = baueKarte(renderer).then((k) => { karte3d = k; groesse(); });
+Promise.all([realistisch('joe'), realistisch('chani'), kartenbau]).then(() => {
+    try { portraets = portraetMaler(figuren); } catch (e) { console.warn('Porträts: ohne Bilder', e); }
+    if (portraets) { setTimeout(() => portraets.vorbereiten(), 1500); }   // Nebenfiguren (Rocketbox) im Hintergrund nachladen
+    try { icons = gegenstandMaler(); } catch (e) { console.warn('Inventar: ohne Bilder', e); }
     geladen = true; $('neu').disabled = false; weiterKnopf.disabled = false;
     const sprung = sprungZustand(sprungName);
     if (sprung) { starten(sprung.zz, false, sprung.sp.bereich ? sprung.sp : { titel: sprung.sp.titel }); }
-    if (!karte3d && $('titelbilder')) { $('titelbilder').append(G.ausschnitt(G.portraet('joe_hut', 'lacht'), 64, 64), G.ausschnitt(G.portraet('chani', 'lacht'), 64, 64)); }
-}).catch((e) => { $('titelbilder').textContent = e.message; });
+}).catch((e) => { $('titelbilder').textContent = `Das Spiel konnte nicht geladen werden (${e.message}). Es braucht einen Browser mit WebGL.`; });
 
 // Für Browsertests: Spielstand lesen und klickbare Ziele mit Bildschirmposition (nur lesen)
 window.GralSpielStand = () => ({ z, mini: mini ? { leben: mini.leben, status: mini.status } : null, bereich: akt ? akt.id : null, pos: xz(figuren[z ? z.figur : 'joe']), weg: z ? held[z.figur].weg : [], textOffen: !textbox.hidden, dialogOffen: !dialogEl.hidden, karte: !karteEl.hidden,
     beschaeftigt: !!(blende || reise || (mini && mini.status === 'laeuft') || held.joe.weg.length || held.chani.weg.length || held.joe.auftrag || held.chani.auftrag) || !ladenEl.hidden });
+// Für Browsertests: eine Aktion der Spiellogik so auslösen, als hätte die aktive Figur sie am Ziel ausgeführt
+window.GralSpiel3dHandlung = (art, id, gegenstand) => { const lh = z && logikHotspot(id); if (lh && textbox.hidden) { handlung(art, lh, gegenstand); return true; } return false; };
 window.GralSpiel3dZiele = () => ziele().map((zi) => ({ name: zi.name, id: zi.art === 'logik' ? zi.h.id : null, art: zi.art, ...bildschirm(zi.obj) }));
 window.GralSpiel3dTreffer = (x, y) => { const t = treffer({ clientX: x, clientY: y }); if (!t) { const r = leinwand.getBoundingClientRect(); ndc.set((x - r.left) / r.width * 2 - 1, -((y - r.top) / r.height) * 2 + 1); strahl.setFromCamera(ndc, kamera); const h = strahl.intersectObject(akt.scene, true).filter((q) => q.object.isMesh)[0]; return h ? 'blockiert: ' + (h.object.name || h.object.parent.name || h.object.geometry.type) : null; } return t.ziel ? t.ziel.name : 'boden'; };
 window.GralSpiel3dOrte = () => Object.keys(S.ORTE).filter((id) => z && z.orte.includes(id)).map((id) => {
-    const r = karteEl.getBoundingClientRect(), p = karte3d ? karte3d.bildschirm(id) : { x: S.ORTE[id].x / 100, y: S.ORTE[id].y / 100 };
+    const r = karteEl.getBoundingClientRect(), p = karte3d.bildschirm(id);
     return { id, x: r.left + p.x * r.width, y: r.top + p.y * r.height };
 });
 requestAnimationFrame(schleife);

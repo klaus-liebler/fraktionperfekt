@@ -1,9 +1,9 @@
 // Tests der Spiellogik „Joe & Chani und der Gral der Demokratie“ (node --test).
-// Diese Tests laufen ohne Browser und geben nie Ton aus; Browser-Tests des Spiels starten stumm (--mute-audio, /spiel/?ton=aus).
+// Diese Tests laufen ohne Browser und geben nie Ton aus; Browser-Tests des Spiels starten stumm (--mute-audio, /spiel3d/?ton=aus).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const S = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'logik.js'));
+const S = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel3d', 'logik.js'));
 
 test('Komplettlösung führt bis zum Ende (das Spiel ist lösbar)', () => {
     const z = S.neuerZustand();
@@ -46,7 +46,6 @@ test('Rätsel: falsche Symbolfolge öffnet das Schloss nicht, richtige schon', (
 });
 
 test('Fallgitter: Joe auf die schmale linke, Chani auf die dicke rechte Plattform – jede Figur steht allein auf ihrer', () => {
-    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
     const z = S.neuerZustand();
     z.szene = 'tempel';
     S.aktion(z, 'benutzen', 'platte_rechts');          // Joe gehört nicht auf die rechte
@@ -57,15 +56,9 @@ test('Fallgitter: Joe auf die schmale linke, Chani auf die dicke rechte Plattfor
     S.figurWechseln(z);
     S.aktion(z, 'benutzen', 'platte_links');           // Chani gehört nicht auf die linke
     assert.equal(z.platten.links, 'joe');
-    // Joe steht für sich auf seiner Plattform (verkleinert im Hintergrund), Chani bewegt sich unabhängig
-    const joe = G.aufPlattform(z, 'joe');
-    assert.ok(joe && joe.skala < 1 && joe.y < G.BODEN && joe.seite === 'links');
-    assert.equal(G.aufPlattform(z, 'chani'), null);
-    const [links, rechts] = G.plattformen(z);
-    assert.ok(links.dicke < rechts.dicke, 'links schmaler als rechts');
-    assert.ok(links.oben > G.PLATTFORMEN.links.oben, 'belegte Plattform senkt sich');
-    assert.equal(rechts.oben, G.PLATTFORMEN.rechts.oben, 'die andere Plattform bewegt sich nicht mit');
-    S.aktion(z, 'benutzen', 'platte_rechts');
+    assert.equal(z.platten.rechts, null);
+    const e = S.aktion(z, 'benutzen', 'platte_rechts');
+    assert.match(e.text[e.regie && Object.keys(e.regie)[0]], /Fallgitter hebt sich/);
     assert.equal(z.flags.gitterOffen, true);
 });
 
@@ -81,22 +74,16 @@ test('Plattform verlassen: Wer woandershin geht, steigt herunter; die andere Fig
     assert.equal(z.platten.links, null);
 });
 
-test('Tempel: Bis zur Brücke bleiben Joe und Chani links des Abgrunds, danach erreichen sie den Gang', () => {
-    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+test('Tempel: Ohne Brücke ist der Gang unerreichbar, der Antrag zur Geschäftsordnung baut sie', () => {
     const z = S.neuerZustand();
     for (const s of S.KOMPLETTLOESUNG) { if (s[0] === 'dialog' && s[1] === 'bruecke') { break; } S.schritt(z, s); }
     assert.equal(z.szene, 'tempel'); assert.equal(z.flags.brueckeDa, undefined);
-    const hs = S.sichtbareHotspots(z);
-    const st = G.startplaetze(z, hs);
-    assert.ok(st.joe <= G.ABGRUND_LINKS && st.chani <= G.ABGRUND_LINKS);
-    for (const ziel of [hs.find((h) => h.id === 'gang'), hs.find((h) => h.id === 'abgrund'), 250]) {
-        const p = G.standplaetze(z, hs, ziel, 60, 40);
-        assert.ok(p.aktiv <= G.ABGRUND_LINKS && p.begleit <= G.ABGRUND_LINKS, JSON.stringify(p));
-    }
     assert.match(S.aktion(z, 'benutzen', 'gang').text.join(' '), /Brücke/);
+    S.dialogWahl(z, 'bruecke', '0');
+    assert.equal(z.flags.brueckeDa, undefined);
     S.dialogWahl(z, 'bruecke', '1');
-    const p = G.standplaetze(z, S.sichtbareHotspots(z), S.sichtbareHotspots(z).find((h) => h.id === 'gang'), 60, 40);
-    assert.ok(p.aktiv > 196, `über die Brücke: ${p.aktiv}`);
+    assert.equal(z.flags.brueckeDa, true);
+    assert.equal(S.aktion(z, 'benutzen', 'gang').minispiel, 'kugel');
 });
 
 test('Geschäftsordnungs-Quiz: Fehler setzt zurück, mit Geschäftsordnung gibt es einen Tipp', () => {
@@ -169,54 +156,6 @@ test('Reisen nur zu bekannten Orten; nach dem Tempeltor führt die Schule direkt
     assert.equal(z.szene, 'tempel');
 });
 
-test('Grafiken: alle Bilder liegen in assets/, jede Szene und jeder Spielstand hat ein Bild, Hotspots liegen im Bild', () => {
-    const fs = require('node:fs');
-    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
-    const assets = path.join(__dirname, '..', '..', '..', 'assets');
-    for (const n of G.NAMEN) { assert.ok(fs.existsSync(path.join(assets, n + '.png')), `fehlt: ${n}.png`); }
-    for (const gid of Object.keys(S.GEGENSTAENDE)) { assert.ok(G.ICONS.includes(gid), `kein Icon für ${gid}`); }
-    const z = S.neuerZustand();
-    const pruefe = () => {
-        assert.ok(G.NAMEN.includes(G.hintergrund(z).replace('.png', '')), `${z.szene}: ${G.hintergrund(z)}`);
-        for (const o of G.ueberlagerungen(z, 1.3)) { assert.ok(G.NAMEN.includes(o.bild), o.bild); }
-        for (const h of S.sichtbareHotspots(z)) {
-            const r = G.R(h, z);
-            assert.ok(r.x >= 0 && r.y >= 0 && r.x + r.b <= G.B + 1 && r.y + r.h <= G.H + 1 && r.b > 4 && r.h > 4, `${z.szene}/${h.id} außerhalb: ${JSON.stringify(r)}`);
-        }
-    };
-    pruefe();
-    for (const schritt of S.KOMPLETTLOESUNG) { S.schritt(z, schritt); pruefe(); }
-    for (const n of ['joe', 'joe_hut', 'chani', 'pinsel']) {
-        for (const zustand of ['stehen', 'gehen', 'reden', 'benutzen', 'erschrocken']) { assert.ok(G.NAMEN.includes(G.rahmen(n, zustand, 7, true).bild)); }
-        for (const a of ['neutral', 'lacht', 'erschrocken']) { assert.ok(G.NAMEN.includes(G.portraet(n, a).bild)); }
-    }
-});
-
-test('Keine Figur steht vor einer anderen: Start- und Stehplätze überlappen nie (alle Szenen, alle Hotspots)', () => {
-    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
-    const pruefeAbstand = (xs, wo) => {
-        for (let i = 0; i < xs.length; i++) { for (let j = i + 1; j < xs.length; j++) { assert.ok(Math.abs(xs[i] - xs[j]) >= G.ABSTAND, `${wo}: ${xs[i]} und ${xs[j]} überlappen`); } }
-        for (const x of xs) { assert.ok(x >= 0 && x <= G.B, `${wo}: ${x} außerhalb`); }
-    };
-    const z = S.neuerZustand();
-    const pruefe = () => {
-        if (z.szene === 'karte') { return; }
-        const hs = S.sichtbareHotspots(z), npc = G.npcPlaetze(z, hs).map((p) => p.x);
-        pruefeAbstand(npc, `${z.szene}: Nebenfiguren`);
-        const st = G.startplaetze(z, hs);
-        pruefeAbstand(npc.concat([st.joe, st.chani]), `${z.szene}: Start`);
-        for (const h of hs) {
-            for (const [von, begleit] of [[10, 40], [G.B - 10, G.B - 40], [G.B / 2, G.B / 2 + 30]]) {
-                const p = G.standplaetze(z, hs, h, von, begleit);
-                pruefeAbstand(npc.concat([p.aktiv, p.begleit]), `${z.szene}/${h.id} von ${von}`);
-            }
-        }
-        for (const x of [0, 60, 128, 200, G.B]) { const p = G.standplaetze(z, hs, x, 128, 100); pruefeAbstand(npc.concat([p.aktiv, p.begleit]), `${z.szene}/x=${x}`); }
-    };
-    pruefe();
-    for (const schritt of S.KOMPLETTLOESUNG) { S.schritt(z, schritt); pruefe(); }
-});
-
 test('Archiv: Chris blockiert die Tür, bis er den SPD-Antrag aus dem Briefkasten bekommt', () => {
     const z = S.neuerZustand();
     for (const schritt of S.KOMPLETTLOESUNG.slice(0, 6)) { S.schritt(z, schritt); }
@@ -229,8 +168,11 @@ test('Archiv: Chris blockiert die Tür, bis er den SPD-Antrag aus dem Briefkaste
     assert.match(e.text.join(' '), /Tag-der-offenen-Tür/);
     assert.equal(z.flags.archivOffen, true);
     assert.equal(z.inventar.includes('spd_antrag'), false);
-    // Chris geht, Pinsel und Ledeiw kommen – beides erst, wenn der Text gelesen ist
-    assert.deepEqual(e.erscheinen, ['gegner']);
+    // Chris geht mit der Zeile, in der er aufschließt; Pinsel und Ledeiw kommen eine Zeile später
+    const zeile = (k) => Number(Object.keys(e.regie).find((i) => e.regie[i].includes(k)));
+    assert.match(e.text[zeile('archivOffen')], /schließt das Rathaus auf.*geht er/);
+    assert.match(e.text[zeile('gegnerArchiv')], /zwei Gestalten/);
+    assert.ok(zeile('gegnerArchiv') > zeile('archivOffen'));
     const sichtbar = S.sichtbareHotspots(z).map((h) => h.id);
     assert.ok(!sichtbar.includes('chris'));
     assert.ok(sichtbar.includes('gegner'));
@@ -257,7 +199,8 @@ test('Emsdeich: Inschrift an der Skulptur, Boot vom Kanuverleih, Flucht endet am
     const ende = S.minispielEnde(z, 'boot', true);
     assert.equal(z.szene, 'baustelle');
     assert.equal(ende.szene, 'baustelle');
-    assert.deepEqual(ende.erscheinen, ['gegner']);
+    const zeile = Number(Object.keys(ende.regie).find((i) => ende.regie[i].includes('gegnerBaustelle')));
+    assert.equal(zeile, ende.text.length - 1, 'Pinsel und Ledeiw kommen erst mit der letzten Zeile');
     assert.match(ende.text.join(' '), /geht unter/);
     assert.ok(!z.inventar.includes('siegel_exekutive'));   // das Siegel steckt in der dritten Laterne der Radbrücke
     assert.match(S.aktion(z, 'benutzen', 'laterne').text.join(' '), /zweite Siegel/);
@@ -284,17 +227,8 @@ test('Bootsflucht: Die Verfolger schießen alternative Fakten von hinten; sind s
     assert.ok(sinken);
 });
 
-test('Bedienung: Verb → Gegenstand → Ziel ohne Zwischenklick, auch wenn noch ein Text steht', () => {
-    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
-    assert.equal(G.klickBeiText('gib', 'spd_antrag', true), 'ausfuehren');
-    assert.equal(G.klickBeiText('benutze', 'stadtplan', true), 'ausfuehren');
-    assert.equal(G.klickBeiText('benutze', null, true), 'ausfuehren');
-    assert.equal(G.klickBeiText('gehe', null, true), 'weiter');
-    assert.equal(G.klickBeiText('gib', 'spd_antrag', false), 'weiter');
-});
-
 test('Erkennungsmelodie: Fanfare, unverändertes Haydn-Zitat, Schluss; Stimmung stimmt', () => {
-    const M = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'musik.js'));
+    const M = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel3d', 'musik.js'));
     assert.deepEqual(M.STUECK.teile.map((t) => t.name), ['Fanfare', 'Haydn-Zitat', 'Schluss']);
     const haydn = M.STUECK.teile[1].melodie.map((n) => n[0]).join(' ');
     assert.equal(haydn, 'C5 D5 E5 D5 F5 E5 D5 B4 C5'); // erste Phrase, unverändert
@@ -304,17 +238,12 @@ test('Erkennungsmelodie: Fanfare, unverändertes Haydn-Zitat, Schluss; Stimmung 
     assert.equal(M.spielen(), 0); // ohne Browser: still, kein Fehler
 });
 
-test('Archiv: Pinsel und Ledeiw kleben nach dem Rätsel verkleinert im Hintergrund, der Ausgang ist frei', () => {
-    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+test('Archiv: Pinsel und Ledeiw kleben nach dem Festkleben an der Rückwand, der Ausgang ist frei', () => {
     const z = S.neuerZustand();
     for (const s of S.KOMPLETTLOESUNG) { S.schritt(z, s); if (z.flags.gegnerArchivFest) { break; } }
     assert.equal(z.szene, 'archiv');
-    const gegner = S.sichtbareHotspots(z).find((h) => h.id === 'gegner');
-    assert.ok(gegner, 'die beiden bleiben sichtbar');
-    const plaetze = G.npcPlaetze(z, S.sichtbareHotspots(z)).filter((p) => p.id === 'gegner');
-    assert.equal(plaetze.length, 2);
-    for (const p of plaetze) { assert.ok(p.hinten && p.klebt && p.skala < 1 && p.y < G.BODEN - 10, JSON.stringify(p)); }
-    assert.ok(G.NAMEN.includes('klebemasse_32x6'));
+    assert.ok(S.sichtbareHotspots(z).find((h) => h.id === 'gegner'), 'die beiden bleiben sichtbar');
+    assert.match(S.aktion(z, 'ansehen', 'gegner').text[0], /Rückwand/);
     assert.deepEqual(S.aktion(z, 'benutzen', 'ausgang').szene, 'karte');
 });
 
@@ -336,11 +265,9 @@ test('Schule: erst der Flur mit Klassenzimmern, der Keller nur über die Kellert
 test('Karte: Die Baustelle ist am Hallenbad (das Freibad ist nicht im Umbau)', () => {
     assert.match(S.ORTE.baustelle.name, /Hallenbad/);
     assert.match(S.einstieg(S.neuerZustand(), 'baustelle'), /Hallenbad/);
-    assert.ok(S.ORTE.ems.y > S.ORTE.baustelle.y, 'der Emsdeich liegt flussauf (südlich) vom Hallenbad');
 });
 
-test('Archiv: Nach Festkleben, Speichern und Neuladen stehen beide verkleinert im Hintergrund', () => {
-    const G = require(path.join(__dirname, '..', '..', '..', 'src', 'FraktionPerfekt.Web', 'Spiel', 'grafik.js'));
+test('Archiv: Nach Festkleben, Speichern und Neuladen kleben beide noch', () => {
     const speicher = new Map();
     const plaetze = S.speicherplaetze({ getItem: (k) => speicher.get(k) ?? null, setItem: (k, v) => speicher.set(k, v), removeItem: (k) => speicher.delete(k) });
     const z = S.neuerZustand();
@@ -348,9 +275,9 @@ test('Archiv: Nach Festkleben, Speichern und Neuladen stehen beide verkleinert i
     plaetze.schreiben('auto', z);
     const geladen = plaetze.lesen('auto');
     geladen.szene = 'karte'; S.reisen(geladen, 'archiv');
-    const gegner = G.npcPlaetze(geladen, S.sichtbareHotspots(geladen)).filter((p) => p.id === 'gegner');
-    assert.equal(gegner.length, 2);
-    assert.ok(gegner.every((p) => p.hinten && p.klebt));
+    assert.ok(S.sichtbareHotspots(geladen).some((h) => h.id === 'gegner'));
+    assert.equal(geladen.flags.gegnerArchivFest, true);
+    assert.equal(geladen.flags.dichtstoffArchiv, true);
 });
 
 test('Service Worker hält das Spiel nie im Cache (sonst laufen nach Änderungen alte Skripte)', () => {
@@ -386,4 +313,105 @@ test('Vorstellung nennt nur Fähigkeiten, die es im Spiel gibt', () => {
     const text = S.VORSTELLUNG.join(' ');
     for (const f of [...S.FIGUREN.joe.faehigkeiten, ...S.FIGUREN.chani.faehigkeiten]) { assert.ok(text.includes(f), f); }
     assert.ok(text.includes('Relbeil'));
+});
+
+// ---------- Regie: Figuren und Dinge ändern sich erst, nachdem der Grund im Text steht ----------
+/** Sichtbarer Teil des Spielstands: Flags (ohne Buchhaltung), Inventar, Ende. */
+function sichtbarerStand(z) {
+    const flags = {};
+    for (const [k, v] of Object.entries(z.flags)) { if (!/^(p|hatte|besucht)_/.test(k) && k !== 'ende') { flags[k] = v; } }
+    return { flags, inventar: [...z.inventar], ende: !!z.ende };
+}
+/** Schlüssel, die sich zwischen zwei Ständen unterscheiden (Flag-Name, Gegenstand oder 'ende'). */
+function geaendert(a, b) {
+    const k = new Set();
+    for (const f of new Set([...Object.keys(a.flags), ...Object.keys(b.flags)])) { if (a.flags[f] !== b.flags[f]) { k.add(f); } }
+    for (const g of new Set([...a.inventar, ...b.inventar])) { if (a.inventar.includes(g) !== b.inventar.includes(g)) { k.add(g); } }
+    if (a.ende !== b.ende) { k.add('ende'); }
+    return k;
+}
+function regiePruefen(z, tun, wo) {
+    const vor = sichtbarerStand(z), e = tun(), nach = sichtbarerStand(z);
+    const anders = geaendert(vor, nach), regie = e.regie || {};
+    const genannt = new Set(Object.values(regie).flat());
+    for (const k of anders) { assert.ok(genannt.has(k), `${wo}: „${k}“ ändert sich, aber keine Textzeile nennt den Grund`); }
+    // Umgekehrt darf eine Zeile einen Schlüssel nennen, der schon gilt (Aktion wiederholt) – dann ändert sich eben nichts
+    const bekannt = new Set([...Object.keys(S.GEGENSTAENDE), 'ende']);
+    for (const k of genannt) { assert.ok(bekannt.has(k) || /^[a-z][A-Za-z0-9]*$/.test(k), `${wo}: unbekannter Regie-Schlüssel „${k}“`); }
+    for (const i of Object.keys(regie)) { assert.ok(Number(i) < e.text.length && typeof e.text[i] === 'string', `${wo}: Regie-Zeile ${i} fehlt`); }
+    return e;
+}
+const kopie = (z) => S.laden(S.speichern(z));
+
+test('Regie: Komplettlösung – jede sichtbare Änderung gehört zu der Textzeile, die sie begründet', () => {
+    const z = S.neuerZustand();
+    S.KOMPLETTLOESUNG.forEach((s, i) => regiePruefen(z, () => S.schritt(z, s), `Schritt ${i + 1} ${JSON.stringify(s)}`));
+    assert.equal(z.ende, true);
+});
+
+test('Regie: alle Aktionen an allen Hotspots, an jeder Stelle der Komplettlösung, mit beiden Figuren', () => {
+    const z = S.neuerZustand();
+    let geprueft = 0;
+    const allesProbieren = (wo) => {
+        if (z.szene === 'karte' || z.ende) { return; }
+        for (const figur of ['joe', 'chani']) {
+            for (const h of S.sichtbareHotspots(z)) {
+                const arten = ['ansehen', 'benutzen', 'reden', 'f1', 'f2'].map((a) => [a]).concat(z.inventar.map((g) => ['gegenstand', g]));
+                for (const [art, g] of arten) {
+                    const k = kopie(z); k.figur = figur;
+                    const e = regiePruefen(k, () => S.aktion(k, art, h.id, g), `${wo}: ${figur} ${art} ${h.id}${g ? ' + ' + g : ''}`);
+                    geprueft++;
+                    // Dialoge bis zum Ende durchspielen (Schloss, Quiz, Brücke) – jede Wahl einzeln
+                    if (e.dialog) {
+                        for (const o of S.dialogInhalt(k, e.dialog).optionen) {
+                            const d = kopie(k);
+                            regiePruefen(d, () => S.dialogWahl(d, e.dialog, o.id), `${wo}: Dialog ${e.dialog} → ${o.id}`);
+                        }
+                    }
+                    if (e.minispiel) {
+                        for (const ok of [true, false]) { const m = kopie(k); regiePruefen(m, () => S.minispielEnde(m, e.minispiel, ok), `${wo}: Minispiel ${e.minispiel} ${ok}`); }
+                    }
+                }
+            }
+        }
+    };
+    allesProbieren('Start');
+    S.KOMPLETTLOESUNG.forEach((s, i) => { S.schritt(z, s); allesProbieren(`nach Schritt ${i + 1}`); });
+    assert.ok(geprueft > 1000, `${geprueft} Aktionen geprüft`);
+});
+
+test('Regie: Im Finale kommt jede Helferin und jeder Helfer mit der eigenen Zeile – und nur, wer geholfen hat', () => {
+    const z = S.neuerZustand();
+    for (const s of S.KOMPLETTLOESUNG) { if (s[0] === 'aktion' && s[2] === 'urne') { break; } S.schritt(z, s); }
+    const ohne = kopie(z);
+    for (const f of ['antragUebergeben', 'lastenrad', 'stadtplanWeg']) { delete ohne.flags[f]; }
+    const e1 = regiePruefen(ohne, () => S.aktion(ohne, 'benutzen', 'urne'), 'Finale ohne Hilfe');
+    assert.ok(!e1.text.some((t) => /Chris|Lorette kommt|Johanna/.test(t)));
+    const e2 = regiePruefen(z, () => S.aktion(z, 'benutzen', 'urne'), 'Finale mit Hilfe');
+    const zeile = (k) => Number(Object.keys(e2.regie).find((i) => e2.regie[i].includes(k)));
+    assert.match(e2.text[zeile('chrisHilft')], /Chris kommt herein/);
+    assert.match(e2.text[zeile('loretteHilft')], /Lorette kommt herein/);
+    assert.match(e2.text[zeile('johannaHilft')], /Johanna kommt/);
+    assert.ok(zeile('pokalGenommen') < zeile('gegnerAbgang') && zeile('gegnerAbgang') < zeile('ende'));
+});
+
+test('Regie: Alte Spielstände bekommen die neuen Teilschritte nachgetragen (niemand bleibt unsichtbar stecken)', () => {
+    const alt = S.laden(JSON.stringify({ version: 1, szene: 'baustelle', inventar: ['handy', 'siegel_exekutive'], flags: { bootGewonnen: true, grubeTrocken: true, gegnerArchivFest: true, kugelGeschafft: true } }));
+    for (const f of ['gegnerBaustelle', 'leckDicht', 'dichtstoffArchiv', 'gegnerFinale', 'klappeAuf']) { assert.equal(alt.flags[f], true, f); }
+    assert.ok(S.sichtbareHotspots(alt).some((h) => h.id === 'gegner'), 'Pinsel und Ledeiw stehen weiter auf der Baustelle');
+});
+
+test('Bootsflucht: genug Zeit zum Ausweichen, und ein Treffer nennt, was getroffen hat', () => {
+    const b = S.bootNeu(3);
+    // Treibgut taucht bei x = 1,05 auf und erreicht das Boot (BOOT_X) frühestens nach gut drei Sekunden
+    let t = 0; while (!b.hindernisse.length) { S.bootSchritt(b, .05, null); t += .05; }
+    const h = b.hindernisse[0], start = b.zeit;
+    while (h.x > S.BOOT_X + .045 && b.status === 'laeuft') { S.bootSchritt(b, .05, h.spur === b.spur ? (b.spur > 0 ? 'hoch' : 'runter') : null); }
+    assert.ok(b.zeit - start > 2.5, `Treibgut braucht ${(b.zeit - start).toFixed(2)} s`);
+    // Ohne Ausweichen: Treffer mit Namen, beim dritten ist Schluss
+    const c = S.bootNeu(3);
+    while (c.status === 'laeuft') { S.bootSchritt(c, .05, null); if (c.treffer === 1 && c.leben === 2) { assert.ok(c.letzterTreffer, 'Treffer hat einen Namen'); } }
+    assert.equal(c.status, 'verloren');
+    const e = S.minispielEnde(S.neuerZustand(), 'boot', false);
+    assert.match(e.text.join(' '), /dritte Treffer.*drei Herzen/);
 });

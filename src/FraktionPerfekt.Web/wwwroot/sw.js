@@ -18,7 +18,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
     const anfrage = e.request;
     const url = new URL(anfrage.url);
-    // Das Spiel (/spiel/, /spiel3d/, /cheatsheet) nie aus dem Cache: nach einer Änderung sonst alte Logik und Grafiken
+    // Das Spiel (/spiel3d/, /cheatsheet; /spiel/ leitet dorthin um) nie aus dem Cache: nach einer Änderung sonst alte Logik und Grafiken
     // (z. B. fehlende Figuren); bei der 3D-Fassung passen alte und neue Module sonst nicht zusammen.
     if (anfrage.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith(BASIS + '_blazor') || url.pathname.startsWith(BASIS + 'spiel/')
         || url.pathname.startsWith(BASIS + 'spiel3d/') || url.pathname.startsWith(BASIS + 'cheatsheet')) {

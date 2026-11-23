@@ -136,7 +136,8 @@ export async function emsDeich(renderer) {
             { obj: weg, stand: P(U(-32, -26)), eintraege: [{ id: 'zurkarte' }] }
         ],
         npcs: [{ hotspot: 'joanna', figur: 'johanna', pos: P(U(-19.5, -27)), rot: 2.2, pose: 'stehen', stand: P(U(-21.5, -25.6)) }],
-        aktualisieren(z) { plan.visible = !!z.flags.stadtplanWeg; },
+        // Johanna heftet den Stadtplan an die Preistafel
+        dinge: [{ obj: plan, sichtbar: (b) => !!b.flags.stadtplanWeg }],
         bootFlucht: bootFlucht(scene, w, boot),
         tick() { }
     };
@@ -363,15 +364,20 @@ export async function baustelle(renderer) {
         ],
         npcs: [
             { hotspot: 'bauleiter', figur: 'kemper', pos: [10.2, 47.2], rot: .6, pose: 'stehen', stand: [10.6, 45.6] },
-            { hotspot: 'gegner', figur: 'pinsel', pos: [5.6, 40.6], rot: -Math.PI / 2, pose: 'benutzen', stand: [7.4, 41.4] },
-            { hotspot: 'gegner', figur: 'ledeiw', pos: [5.6, 44.4], rot: -Math.PI / 2, pose: 'stehen', stand: [7.4, 41.4] }
+            // Aus der Ems durch das Bauzaun-Tor herein; später rückwärts in den Bauwagen
+            { hotspot: 'gegner', figur: 'pinsel', pos: [5.6, 40.6], rot: -Math.PI / 2, pose: 'benutzen', stand: [7.4, 41.4], von: [1.4, 41.6], nach: [[9.0, 37.4], [9.3, 35.6]], rueckwaerts: true },
+            { hotspot: 'gegner', figur: 'ledeiw', pos: [5.6, 44.4], rot: -Math.PI / 2, pose: 'stehen', stand: [7.4, 41.4], von: [1.2, 43.6], nach: [[10.0, 37.6], [9.8, 35.6]], rueckwaerts: true }
+        ],
+        dinge: [
+            { obj: siegel, sichtbar: (b) => !!b.flags.grubeTrocken && !b.inventar.includes('siegel_judikative'), art: 'nehmen' },
+            // Die abgeschraubten Wegweiser stapeln Pinsel und Ledeiw erst, wenn sie da sind
+            { obj: stapel, sichtbar: (b) => !!b.flags.gegnerBaustelle && !b.flags.gegnerBaustelleWeg, art: 'schwinden' }
         ],
         aktualisieren(z) {
             const f = z.flags;
-            wasserG.visible = strahl.visible = !f.grubeTrocken;
+            strahl.visible = !f.leckDicht && !f.grubeTrocken;   // das Leck ist dicht …
+            wasserG.visible = !f.grubeTrocken;                    // … dann pumpt die Grube leer
             flick.visible = !!f.grubeTrocken;
-            siegel.visible = !!f.grubeTrocken && !z.inventar.includes('siegel_judikative');
-            stapel.visible = !f.gegnerBaustelleWeg;
         },
         helme: (z) => !!z.flags.helme,
         tick(dt, t) {
@@ -383,10 +389,45 @@ export async function baustelle(renderer) {
 // ======================================================================
 // Radbrücke beim Hallenbad (gelbe Doppellaternen; in der dritten ruht das Siegel der Ausführung)
 // ======================================================================
+/**
+ * Stadt im Hintergrund der Radbrücke: Gebäude aus OpenStreetMap (umgebung_radbruecke.json, erzeugt mit
+ * tools/Welten/umgebung.mjs), lagerichtig zur echten Brücke, als schlichte Klötze mit Flachdach in einem einzigen Mesh.
+ */
+function stadtImHintergrund(scene, H, daten) {
+    const pos = [], farbe = [], idx = [];
+    const wandFarben = [0xc9b8a0, 0xb5684f, 0xd8d0c2, 0xa65a45, 0xe2dccf, 0x9c8a74], dachFarbe = new THREE.Color(0x6b5a52);
+    let k = 0;
+    for (const g of daten.gebaeude) {
+        const p = []; for (let i = 0; i < g.p.length; i += 2) { p.push([g.p[i], g.p[i + 1]]); }
+        let boden = Infinity; for (const [e, n] of p) { boden = Math.min(boden, H(e, n)); }
+        const unten = boden - .5, oben = boden + g.h, wand = new THREE.Color(wandFarben[(k++ * 7) % wandFarben.length]);
+        if (g.name === 'Hallenbad Greven') { wand.set(0xe8eef0); }
+        // Wände
+        for (let i = 0; i < p.length; i++) {
+            const [e0, n0] = p[i], [e1, n1] = p[(i + 1) % p.length], b = pos.length / 3;
+            pos.push(e0, unten, -n0, e1, unten, -n1, e1, oben, -n1, e0, oben, -n0);
+            for (let j = 0; j < 4; j++) { farbe.push(wand.r, wand.g, wand.b); }
+            idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+        }
+        // Dach (Polygon trianguliert)
+        const b = pos.length / 3;
+        for (const [e, n] of p) { pos.push(e, oben, -n); farbe.push(dachFarbe.r, dachFarbe.g, dachFarbe.b); }
+        for (const t of THREE.ShapeUtils.triangulateShape(p.map(([e, n]) => new THREE.Vector2(e, n)), [])) { idx.push(b + t[0], b + t[2], b + t[1]); }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(farbe, 3));
+    geo.setIndex(idx); geo.computeVertexNormals();
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85, side: THREE.DoubleSide }));
+    m.castShadow = false; m.receiveShadow = true; m.name = 'stadt'; scene.add(m);
+    return m;
+}
+
 export async function radbruecke(renderer) {
     const { baue } = await import('./welt_ems.js');
-    const w = baue(renderer, await laden('welt_ems.json'));
+    const [w, umgebung] = await Promise.all([laden('welt_ems.json').then((d) => baue(renderer, d)), laden('umgebung_radbruecke.json')]);
     const { scene, H, W3, riverX, walkH, onBridge } = w;
+    stadtImHintergrund(scene, H, umgebung);
+    scene.fog = new THREE.Fog(0xdfe2e1, 160, 820);   // weiter Blick: die Stadt mit dem Hallenbad hinter dem Deich
     const U = (off, n) => [riverX(n) + off, n];
     const at = (o, [e, n], dy = 0) => { o.position.copy(W3(e, n, dy)); scene.add(o); return o; };
     // Laternen auf der Brücke (vom Hallenbad, also von Westen, aus gezählt): die dritte steht bei e = −10, Nordseite
@@ -402,15 +443,18 @@ export async function radbruecke(renderer) {
     mesh(rumpf, std({ color: 0xf2f0e6, roughness: .5 }), boot, 0, .42, 0).scale.set(1, .7, 1);
     boot.rotation.set(.12, .5, .05); at(boot, U(-14.2, -7), -.1);
     // Weg zur Baustelle
+    // Wegweiser oben auf dem Deich, nahe dem Brückenkopf
     const weg = wegweiser(w, [['Hallenbad / Baustelle', 2.6, -2.2], ['Kanuverleih', 2.25, .9]]);
-    at(weg, U(-27, -6));
-    const eigene = [[...U(-27, -6), .45], [...U(-14.2, -7), 2.2]];
+    at(weg, U(-47, -7));
+    const eigene = [[...U(-47, -7), .45], [...U(-14.2, -7), 2.2]];
     const frei = (x, z) => {
         const e = x, n = -z;
         if (onBridge(e, n)) { return Math.abs(n) < 1.7 && e < riverX(0) + 2; }
         if (n < -16 || n > 12) { return false; }
         const off = e - riverX(n);
-        if (off > -13.6 || off < -38) { return false; }
+        // Ufer und Deich bis knapp hinter die Deichkrone: Dort (e = −49) endet die Brücke auf Kronenhöhe, und es geht ganz
+        // normal auf das Deck; seitlich (über das Geländer) nicht
+        if (off > -13.6 || off < -55) { return false; }
         return !imKreis(w.blockers, e, n) && !imKreis(eigene, e, n);
     };
     const boden = []; scene.traverse((o) => { if (o.name === 'ground') { boden.push(o); } });
@@ -418,14 +462,14 @@ export async function radbruecke(renderer) {
     return {
         scene, frei, boden, hoehe: (x, z) => walkH(x, -z),
         kamera: (p) => { const t = p.clone().lerp(mitte, .35); t.y = p.y + 1.4; return { p: new THREE.Vector3(t.x + 9, t.y + 4.2, t.z + 13), t }; },
-        spawn: { boot: [...U(-17, -8)].map((v, i) => (i ? -v : v)).concat([0]), von_baustelle: [...U(-26, -8)].map((v, i) => (i ? -v : v)).concat([Math.PI / 2]), karte: [...U(-26, -8)].map((v, i) => (i ? -v : v)).concat([Math.PI / 2]) },
+        spawn: { boot: [...U(-17, -8)].map((v, i) => (i ? -v : v)).concat([0]), von_baustelle: [...U(-48.5, -8.5)].map((v, i) => (i ? -v : v)).concat([Math.PI / 2]), karte: [...U(-48.5, -8.5)].map((v, i) => (i ? -v : v)).concat([Math.PI / 2]) },
         hotspots: [
             ...(dritte ? [{ obj: dritte, stand: [-10.9, -1.1], eintraege: [{ id: 'laterne' }, { deko: 'Dritte Laterne', text: 'Die Klappe am Sockel steht offen. Leer – das Siegel habt ihr schon.' }] }] : []),
-            { obj: weg, stand: (() => { const [e, n] = U(-26, -7.2); return [e, -n]; })(), eintraege: [{ tor: 'baustelle', spawn: 'von_bruecke', name: 'Weg zur Baustelle', ansehen: 'Ein Wegweiser: Hallenbad / Baustelle.' }] },
+            { obj: weg, stand: (() => { const [e, n] = U(-47, -8.2); return [e, -n]; })(), eintraege: [{ tor: 'baustelle', spawn: 'von_bruecke', name: 'Weg zur Baustelle', ansehen: 'Ein Wegweiser: Hallenbad / Baustelle.' }] },
             { obj: boot, stand: (() => { const [e, n] = U(-17.5, -9.5); return [e, -n]; })(), eintraege: [{ deko: 'Ruderboot „Volkseigentum“', text: 'Das Ruderboot liegt am Ufer. Johanna holt es später ab – vergesellschaftet ist vergesellschaftet.' }] }
         ],
         npcs: [],
-        aktualisieren(z) { klappe.rotation.y = z.inventar.includes('siegel_exekutive') ? -1.6 : 0; },
+        aktualisieren(z) { klappe.rotation.y = z.flags.klappeAuf || z.inventar.includes('siegel_exekutive') ? -1.6 : 0; },
         tick() { }
     };
 }

@@ -4,12 +4,22 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { STATIONEN } from './karte.mjs';
+
+/** Stationen der Reise (Ort, Koordinaten aus OpenStreetMap). */
+const STATIONEN = [
+    { nr: '1', name: 'SCHMIEDE', lang: 'Zukunftsschmiede', lat: 52.0938, lon: 7.6120 },
+    { nr: '2', name: 'RATHAUS', lang: 'Rathaus', lat: 52.09232, lon: 7.60944 },
+    // Emsdeich mit Skulpturen und Kanuverleih: ein Stück flussauf vom Hallenbad (Flusspunkt aus den OSM-Daten)
+    { nr: '3', name: 'EMSDEICH', lang: 'Emsdeich (Skulpturen, Kanuverleih)', lat: 52.08747, lon: 7.60266 },
+    // Hallenbad Greven, Am Hallenbad 3 (OSM way 45506851, Mittelpunkt des Gebäudes): Baustelle der Sanierung
+    { nr: '4', name: 'HALLENBAD', lang: 'Hallenbad / Baustelle Sanierung', lat: 52.09067, lon: 7.60537 },
+    { nr: '5', name: 'SCHULE', lang: 'Martin-Luther-Grundschule', lat: 52.09457, lon: 7.60966 }
+];
 
 const wurzel = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const daten = JSON.parse(readFileSync(join(wurzel, 'tools', 'Grafik', 'daten', 'greven-osm-kompakt.json'), 'utf8'));
 
-// Ausschnitt wie die Pixelkarte (karte.mjs), Mitte als Ursprung
+// Kartenausschnitt (Breite/Länge der OSM-Abfrage), Mitte als Ursprung
 const LAT0 = 52.0800, LAT1 = 52.0990, LON0 = 7.5960, LON1 = 7.6260;
 const LATM = (LAT0 + LAT1) / 2, LONM = (LON0 + LON1) / 2;
 const MX = 111320 * Math.cos((LATM * Math.PI) / 180), MY = 110574;
@@ -46,7 +56,7 @@ for (const e of daten.elemente) {
 }
 
 // Stationen der Reisekarte (Schlüssel wie ORTE in Spiel/logik.js); der Tempel ist nur ein Fragezeichen
-const ID = { SCHMIEDE: 'buero', RATHAUS: 'archiv', EMSDEICH: 'ems', HALLENBAD: 'baustelle', SCHULE: 'schule', TEMPEL: 'tempel' };
+const ID = { SCHMIEDE: 'buero', RATHAUS: 'archiv', EMSDEICH: 'ems', HALLENBAD: 'baustelle', SCHULE: 'schule' };
 const stationen = STATIONEN.map((s) => ({ id: ID[s.name], nr: s.nr, name: s.lang, p: xy([s.lat, s.lon]) }));
 
 const aus = { quelle: daten.quelle, halb: [BX, BY], stationen, ...ebenen };

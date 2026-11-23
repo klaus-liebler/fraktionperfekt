@@ -1,4 +1,4 @@
-// Joe & Chani 3D – Inventar-Icons: kleine 3D-Modelle der Gegenstände, einmal im Studiolicht fotografiert (statt der 16×16-Pixel-Icons).
+// Joe & Chani 3D – Inventar-Icons: kleine 3D-Modelle der Gegenstände, einmal im Studiolicht fotografiert.
 // Ein eigener kleiner Renderer mit transparentem Hintergrund; jedes Icon wird nur einmal gerendert.
 import * as THREE from './three_min.js';
 

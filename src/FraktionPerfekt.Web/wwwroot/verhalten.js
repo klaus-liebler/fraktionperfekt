@@ -72,7 +72,7 @@ document.addEventListener('click', async (e) => {
 (() => {
     const folge = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
     let stelle = 0, tipps = [];
-    const los = () => { if (document.querySelector('[data-angemeldet]')) { window.location.href = 'spiel3d/'; }   // Standard: 3D-Fassung (Pixel-Fassung über den Titel) };
+    const los = () => { if (document.querySelector('[data-angemeldet]')) { window.location.href = 'spiel3d/'; } };
     document.addEventListener('keydown', (e) => {
         const t = e.target;
         if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) { stelle = 0; return; }

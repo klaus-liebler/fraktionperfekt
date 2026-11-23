@@ -144,7 +144,7 @@ export function chani() {
 
 /** Genosse Chris: rote Strickjacke, Vollbart, Thermoskanne, Schlüsselbund. */
 export function chris() {
-    return character({
+    return nachladen('chris', {
         scale: 1.0, skin: 0xe8b493, top: 0xa3392e, shirt: 0xd8d2c4, legs: 0x5a5146, shoes: 0x3a2c22, eyes: 0x4a3a2a, brows: 0x7d756c, lips: 0xa86a5a,
         headW: 1.04, headH: 1.04, torsoDepth: .78, bauch: 1.12,
         torsoProfile: [[.18, -.05], [.215, .06], [.23, .2], [.225, .36], [.215, .44], [.16, .5], [.06, .54], [0, .545]],
@@ -167,7 +167,7 @@ export function chris() {
 
 /** Pinsel und Ledeiw: zu enge Anzüge. */
 export function pinsel() {
-    return character({
+    return nachladen('pinsel', {
         scale: 1.08, skin: 0xf0c2a2, top: 0x2b3f86, shirt: 0xf2f2f4, legs: 0x2b3f86, shoes: 0x16161a, eyes: 0x3c5a7a, brows: 0xb09060, lips: 0xb07060,
         headW: .96, headH: 1.12, torsoDepth: .64, cuff: true,
         torsoProfile: [[.155, -.05], [.17, .05], [.165, .2], [.185, .36], [.195, .44], [.15, .5], [.06, .54], [0, .545]],
@@ -181,7 +181,7 @@ export function pinsel() {
 }
 
 export function ledeiw() {
-    return character({
+    return nachladen('ledeiw', {
         scale: .98, skin: 0xe6b08e, top: 0x3a3e46, shirt: 0xe6eef6, legs: 0x3a3e46, shoes: 0x16161a, eyes: 0x4a3a2a, brows: 0x4a3a2a, lips: 0xa86a5a,
         headW: 1.1, headH: 1.0, torsoDepth: .82, bauch: 1.2, cuff: true,
         torsoProfile: [[.19, -.05], [.23, .06], [.245, .2], [.235, .36], [.22, .44], [.16, .5], [.06, .54], [0, .545]],
@@ -238,7 +238,7 @@ export function pose(c, t, art) {
 
 /** Genossin Johanna (Linke): lila Pulli, Jutebeutel, Klemmbrett, Dutt. */
 export function johanna() {
-    return character({
+    return nachladen('johanna', {
         scale: .97, skin: 0xeec3a4, top: 0x7d3c98, shirt: 0xe8e0d0, legs: 0x3a4a6a, shoes: 0x2a2a2a, eyes: 0x4a6a3a, brows: 0x5a3a2a, lips: 0xb87070,
         headW: .96, headH: 1.08, torsoDepth: .7, sleeveMat: 0x7d3c98,
         torsoProfile: [[.168, -.05], [.19, .06], [.172, .2], [.18, .32], [.19, .42], [.15, .49], [.055, .535], [0, .54]],
@@ -262,7 +262,7 @@ export function johanna() {
 
 /** Bauleiterin Frau Kemper: orangefarbener Helm, Warnweste, Klemmbrett. */
 export function kemper() {
-    const c = character({
+    return nachladen('kemper', {
         scale: 1.0, skin: 0xe2ad8a, top: 0xf39c12, shirt: 0x2e4a6a, legs: 0x2e4a6a, shoes: 0x3a2a1a, eyes: 0x3a4a5a, brows: 0x6a4a2a, lips: 0xb07060,
         headW: 1.0, headH: 1.04, torsoDepth: .74, sleeveMat: 0x2e4a6a,
         torsoProfile: [[.17, -.05], [.2, .06], [.2, .2], [.205, .34], [.21, .44], [.16, .5], [.06, .54], [0, .545]],
@@ -278,7 +278,6 @@ export function kemper() {
             const brett = mesh(new THREE.BoxGeometry(.2 * s, .27 * s, .012 * s), mat(0x5a5a5a, .6), arms[0].el, -.02 * s, -.33 * s, .06 * s); brett.rotation.x = -.4;
         }
     });
-    return c;
 }
 
 function helmAuf(h, s, farbe) {
@@ -299,7 +298,7 @@ export function helm(c, an) {
 
 /** Lorette (Grüne): Fahrradhelm, grüne Regenjacke, dickes Gutachten unter dem Arm. */
 export function lorette() {
-    return character({
+    return nachladen('lorette', {
         scale: .98, skin: 0xf0c8a8, top: 0x27ae60, topRough: .5, shirt: 0xf2f2e8, legs: 0x4a4038, shoes: 0x5a3a20, eyes: 0x3a6a3a, brows: 0xa07040, lips: 0xc07a70,
         headW: .95, headH: 1.1, torsoDepth: .7, sleeveMat: 0x27ae60,
         torsoProfile: [[.17, -.05], [.195, .06], [.18, .2], [.185, .34], [.195, .44], [.15, .5], [.055, .54], [0, .545]],
@@ -323,7 +322,14 @@ export function lorette() {
 export function lastenrad() {
     const g = new THREE.Group();
     const rahmen = mat(0x2ecc71, .4, .3), schwarz = mat(0x1a1a1a, .6), holz = mat(0xb08050, .7), metall = mat(0xb0b4b8, .3, .8);
-    const rad = (x, z) => { const r = mesh(new THREE.TorusGeometry(.3, .04, 8, 24), schwarz, g, x, .3, z); r.rotation.y = Math.PI / 2; mesh(new THREE.CylinderGeometry(.02, .02, .58, 6), metall, g, x, .3, z).rotation.z = Math.PI / 2; return r; };
+    // Fahrtrichtung +x: Räder stehen in der x-y-Ebene, Achsen quer (z); drehen um z (akt45.js: rotation.z)
+    const rad = (x, z) => {
+        const r = new THREE.Group(); r.position.set(x, .3, z); g.add(r);
+        mesh(new THREE.TorusGeometry(.3, .04, 8, 24), schwarz, r);
+        for (let i = 0; i < 4; i++) { mesh(new THREE.BoxGeometry(.56, .012, .012), metall, r).rotation.z = i * Math.PI / 4; }
+        mesh(new THREE.CylinderGeometry(.02, .02, .14, 6), metall, r).rotation.x = Math.PI / 2;
+        return r;
+    };
     const raeder = [rad(.9, -.3), rad(.9, .3), rad(-.8, 0)];
     mesh(new THREE.BoxGeometry(.8, .5, .75), holz, g, .9, .8, 0);
     mesh(new THREE.BoxGeometry(1.6, .05, .05), rahmen, g, .05, .55, 0);
@@ -341,11 +347,38 @@ export function lastenrad() {
 // Das glb-Modell kommt in die vorhandene Wurzel; die einfachen Körper werden ausgeblendet. Hut, Brille/Schnauzer und
 // Bauhelm hängen an einem Kopfanker, der denselben Rahmen hat wie der Kopf der einfachen Figur.
 
-/** tempo: Geschwindigkeit der Gehanimation (m/s); helm: Maßstab s für helmAuf() am Kopfanker (Meter). */
+/**
+ * tempo: Geschwindigkeit der Gehanimation (m/s); helm: Maßstab s für helmAuf() am Kopfanker (Meter);
+ * zubehoer(kopfanker, hand): Brillen, Helme und Requisiten der Nebenfiguren. Alle Rocketbox-Männer haben dasselbe
+ * Gesichtsskelett wie Joe, alle Frauen dasselbe wie Chani (tools/Figuren/masse.mjs): Augen ±3,2 cm, 9,9 cm über dem
+ * Kopfknochen, 8,6 cm davor (Frauen ±3,0 / 9,0 / 8,6 cm).
+ */
 const RB = {
     joe: { tempo: 2.0, helm: .94 },
-    chani: { tempo: 1.53, helm: .9 }
+    chani: { tempo: 1.53, helm: .9 },
+    chris: { tempo: 2.0, helm: .94, zubehoer: (a, hand) => { brilleRb(a, { rahmen: 0x3a2a20 }); thermoskanne(hand.r); } },
+    pinsel: { tempo: 2.0, helm: .94 },
+    ledeiw: { tempo: 2.0, helm: .94, zubehoer: (a) => brilleRb(a, { rahmen: 0x1a1a1a, klein: true }) },
+    johanna: { tempo: 1.9, helm: .9, zubehoer: (a, hand) => klemmbrett(hand.r, 0x8a5a34, -1) },
+    kemper: { tempo: 1.9, helm: .9, zubehoer: (a, hand) => klemmbrett(hand.l, 0x5a5a5a, 1) },
+    lorette: { tempo: 1.9, helm: .9, zubehoer: (a, hand) => { fahrradhelm(a); gutachten(hand.l, 1); } },
+    relbeil: { tempo: 2.0, helm: .94, zubehoer: (a) => brilleRb(a, { rahmen: 0x6a5030 }) }
 };
+const glbPuffer = {};
+/** glb einmal je Figur laden; mehrere Exemplare (Bereich, Bootsflucht, Porträt) teilen sich die Daten. */
+function glbLaden(name) {
+    if (!glbPuffer[name]) {
+        glbPuffer[name] = fetch(new URL(`figur_${name}.glb`, import.meta.url).href).then((r) => { if (!r.ok) { throw new Error(`figur_${name}.glb: HTTP ${r.status}`); } return r.arrayBuffer(); });
+        glbPuffer[name].catch(() => { delete glbPuffer[name]; });
+    }
+    return glbPuffer[name];
+}
+/** Nebenfigur: sofort die einfache Figur, das Rocketbox-Modell setzt sich nach dem Laden selbst ein. */
+function nachladen(name, o) {
+    const c = character(o);
+    realistisch(c, name).catch((e) => console.warn(`Figur ${name}: einfache Fassung`, e));
+    return c;
+}
 const RB_ERSATZ = { kleben: 'erschrocken', rudern: 'sitzen', zielen: 'sitzen', radeln: 'sitzen' };
 const LAUFTEMPO = 2.3;   // wie laufen() in darstellung3d.js
 
@@ -358,27 +391,40 @@ export async function realistisch(c, name) {
         parser.textureLoader = new THREE.TextureLoader(parser.options.manager);
         return { name: 'fp_texturen_per_img' };
     });
-    const gltf = await lader.loadAsync(new URL(`figur_${name}.glb`, import.meta.url).href);
+    const gltf = await lader.parseAsync(await glbLaden(name), new URL('./', import.meta.url).href);
     const modell = gltf.scene, u = c.userData;
     modell.scale.setScalar(.01);   // Rocketbox: Zentimeter
     modell.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } });
     for (const o of [...c.children]) { o.visible = false; }
     c.add(modell);
     c.updateMatrixWorld(true);
-    // Kopfanker in Ruhehaltung ausrichten: Ursprung am Kopfknochen, Achsen wie die Wurzel (y oben, z vorn), Meter
-    const kopf = modell.getObjectByName('Bip01_Head');
-    const ort = c.worldToLocal(kopf.getWorldPosition(new THREE.Vector3()));
-    const soll = new THREE.Matrix4().compose(ort, new THREE.Quaternion(), new THREE.Vector3(1, 1, 1)).premultiply(c.matrixWorld);
-    const anker = new THREE.Group(); anker.name = 'kopfanker';
-    new THREE.Matrix4().copy(kopf.matrixWorld).invert().multiply(soll).decompose(anker.position, anker.quaternion, anker.scale);
-    kopf.add(anker);
+    /** Anker am Knochen: Ursprung am Knochen, Achsen in der aktuellen Haltung wie die Wurzel (y oben, z vorn), Meter. */
+    const ankerAn = (knochen, name) => {
+        const ort = c.worldToLocal(knochen.getWorldPosition(new THREE.Vector3()));
+        const soll = new THREE.Matrix4().compose(ort, new THREE.Quaternion(), new THREE.Vector3(1, 1, 1)).premultiply(c.matrixWorld);
+        const a = new THREE.Group(); a.name = name;
+        new THREE.Matrix4().copy(knochen.matrixWorld).invert().multiply(soll).decompose(a.position, a.quaternion, a.scale);
+        knochen.add(a);
+        return a;
+    };
+    // Kopfanker in Ruhehaltung
+    const anker = ankerAn(modell.getObjectByName('Bip01_Head'), 'kopfanker');
     // Zubehör neu in Kopfgröße (Maße aus den Gesichtsknochen, siehe tools/Figuren/masse.mjs)
     for (const k of ['hut', 'gesicht', 'helm']) { if (u[k]) { u[k].removeFromParent(); u[k] = null; } }
-    if (name === 'joe') { u.hut = hutRb(anker); u.gesicht = brilleRb(anker); }
+    if (name === 'joe') { u.hut = hutRb(anker); u.gesicht = brilleRb(anker, { bart: true }); }
     u.head = anker; u.s = cfg.helm;
     // Animationen je Pose
     const mixer = new THREE.AnimationMixer(modell), aktionen = {};
     for (const clip of gltf.animations) { aktionen[clip.name] = mixer.clipAction(clip); }
+    if (cfg.zubehoer) {
+        // Handanker in der Stehhaltung ausrichten: Requisiten werden im Rahmen der Figur gebaut (Kanne senkrecht, Klemmbrett
+        // seitlich) und folgen danach der Hand durch alle Gesten
+        if (aktionen.stehen) { aktionen.stehen.play(); mixer.update(0); c.updateMatrixWorld(true); }
+        const hand = {};
+        for (const [k, seite] of [['l', 'L'], ['r', 'R']]) { const b = modell.getObjectByName(`Bip01_${seite}_Hand`); if (b) { hand[k] = ankerAn(b, 'handanker'); } }
+        mixer.stopAllAction();
+        cfg.zubehoer(anker, hand);
+    }
     // Schrittfrequenz höchstens 1,3-fach: lieber etwas Rutschen als hektisches Trippeln
     if (aktionen.gehen) { aktionen.gehen.timeScale = Math.min(1.3, LAUFTEMPO / cfg.tempo); }
     const kiefer = modell.getObjectByName('Bip01_MJaw');
@@ -397,24 +443,67 @@ function hutRb(a) {
     return hut;
 }
 
-/** Randlose Brille und grauer Schnauzer für Joe (Augen ±3,2 cm, 9,9 cm über dem Kopfknochen, Oberlippe bei 3,2 cm). */
-function brilleRb(a) {
+/**
+ * Brille für einen Männerkopf (Augen ±3,2 cm, 9,9 cm über dem Kopfknochen, Oberlippe bei 3,2 cm): randlos (Joe, mit grauem
+ * Schnauzer: bart) oder mit Rahmenfarbe; klein = schmale Gläser (Ledeiw).
+ */
+function brilleRb(a, { bart = false, rahmen = null, klein = false } = {}) {
     const g = new THREE.Group(); a.add(g);
     const lens = new THREE.MeshStandardMaterial({ color: 0xe8f2f8, roughness: .05, metalness: .1, transparent: true, opacity: .22 });
-    const metal = mat(0x8a8d92, .3, .8);
+    const metal = rahmen === null ? mat(0x8a8d92, .3, .8) : mat(rahmen, .4, .2);
+    const b = klein ? .034 : .044, h = klein ? .018 : .028, d = rahmen === null ? .0025 : .004;
     for (const x of [-1, 1]) {
-        mesh(new THREE.BoxGeometry(.044, .028, .002), lens, g, x * .032, .099, .113).castShadow = false;
-        mesh(new THREE.BoxGeometry(.044, .0025, .003), metal, g, x * .032, .1135, .113);
+        mesh(new THREE.BoxGeometry(b, h, .002), lens, g, x * .032, .099, .113).castShadow = false;
+        mesh(new THREE.BoxGeometry(b, d, .003), metal, g, x * .032, .099 + h / 2, .113);
+        if (rahmen !== null) {
+            mesh(new THREE.BoxGeometry(b, d, .003), metal, g, x * .032, .099 - h / 2, .113);
+            for (const s of [-1, 1]) { mesh(new THREE.BoxGeometry(d, h, .003), metal, g, x * .032 + s * b / 2, .099, .113); }
+        }
         mesh(new THREE.BoxGeometry(.0025, .0025, .1), metal, g, x * .066, .108, .064).rotation.y = -x * .2;
     }
-    mesh(new THREE.BoxGeometry(.02, .0025, .003), metal, g, 0, .106, .116);
-    // Schnauzer: zwei leicht hängende Hälften
-    const bart = mat(0xa29b92, .95);
-    for (const x of [-1, 1]) {
-        const m = new THREE.CapsuleGeometry(.0058, .02, 4, 10); m.rotateZ(Math.PI / 2);
-        const h = mesh(m, bart, g, x * .0125, .045, .127); h.rotation.z = x * .28; h.rotation.y = -x * .25; h.scale.set(1, .8, .65);
+    mesh(new THREE.BoxGeometry(.064 - b, .0025, .003), metal, g, 0, .106, .116);
+    if (bart) {
+        // Schnauzer: zwei leicht hängende Hälften
+        const grau = mat(0xa29b92, .95);
+        for (const x of [-1, 1]) {
+            const m = new THREE.CapsuleGeometry(.0058, .02, 4, 10); m.rotateZ(Math.PI / 2);
+            const hb = mesh(m, grau, g, x * .0125, .045, .127); hb.rotation.z = x * .28; hb.rotation.y = -x * .25; hb.scale.set(1, .8, .65);
+        }
     }
     return g;
+}
+
+/** Grüner Fahrradhelm mit Lüftungsschlitzen für einen Frauenkopf (Lorette); sitzt knapp über den Brauen. */
+function fahrradhelm(a) {
+    const g = new THREE.Group(); g.position.set(0, .118, -.008); g.rotation.x = -.12; a.add(g);
+    const R = .12, H = 1.0, schale = mat(0x2ecc71, .3), schlitz = mat(0x14301e, .6);
+    mesh(new THREE.SphereGeometry(R, 28, 14, 0, Math.PI * 2, 0, Math.PI * .5), schale, g).scale.set(1, H, 1.16);
+    // Schlitze: dunkle Streifen, der Schale entlang gebogen (Torusbogen über den Scheitel)
+    const sg = new THREE.Group(); sg.scale.set(1, H, 1.16); g.add(sg);
+    for (let i = -2; i <= 2; i++) {
+        const x = i * .032, r = Math.sqrt(R * R - x * x) + .001;
+        const s = mesh(new THREE.TorusGeometry(r, .0035, 4, 24, Math.PI * .6), schlitz, sg, x, 0, 0);
+        s.rotation.set(0, Math.PI / 2, Math.PI * .2); s.castShadow = false;
+    }
+    return g;
+}
+// Requisiten in der Hand: Handanker mit den Achsen der Figur in der Stehhaltung (y oben, z vorn, x zur linken Seite der
+// Figur), Ursprung am Handgelenk, Meter; aussen = −1 für die rechte, +1 für die linke Hand
+function thermoskanne(h) {
+    if (!h) { return; }
+    const t = new THREE.Group(); t.position.set(0, -.11, .03); h.add(t);
+    mesh(new THREE.CylinderGeometry(.034, .034, .22, 16), mat(0x9aa3a8, .3, .8), t);
+    mesh(new THREE.CylinderGeometry(.029, .034, .04, 16), mat(0x2a2a2a, .5), t, 0, .13, 0);
+}
+function klemmbrett(h, farbe, aussen) {
+    if (!h) { return; }
+    const b = mesh(new THREE.BoxGeometry(.012, .27, .2), mat(farbe, .6), h, aussen * .035, -.12, .03);
+    mesh(new THREE.BoxGeometry(.002, .22, .16), mat(0xffffff, .9), b, aussen * .007, -.01, 0);
+}
+function gutachten(h, aussen) {
+    if (!h) { return; }
+    const b = mesh(new THREE.BoxGeometry(.07, .3, .22), mat(0xf4f0e0, .9), h, aussen * .05, -.12, .03);
+    mesh(new THREE.BoxGeometry(.075, .05, .225), mat(0x27ae60, .6), b, 0, .11, 0);
 }
 
 /** Joe: Lederjacke an = das karierte Sakko wird zu braunem Leder umgefärbt (Hose, Hemd, Haut bleiben). */
@@ -477,7 +566,7 @@ function poseRb(c, t, art) {
 
 /** Professor Relbeil (nur am Telefon, für sein Porträt): weißes Haar, Vollbart, Brille, Tweedjacke, Fliege. */
 export function relbeil() {
-    return character({
+    return nachladen('relbeil', {
         scale: 1.0, skin: 0xeab896, top: 0x7a6a4e, shirt: 0xf2efe6, legs: 0x4a4038, shoes: 0x3a2c22, eyes: 0x4a6a8a, brows: 0xe8e4dc, lips: 0xa86a5a,
         headW: 1.0, headH: 1.1, torsoDepth: .74,
         torsoProfile: [[.17, -.05], [.2, .06], [.205, .2], [.21, .36], [.205, .44], [.155, .5], [.06, .54], [0, .545]],
