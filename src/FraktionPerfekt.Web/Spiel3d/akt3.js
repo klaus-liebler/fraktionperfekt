@@ -286,18 +286,14 @@ export async function baustelle(renderer) {
             if (imVorplatz(c.x, c.z)) { weg.push(o); }
         }
     });
-    // Bäume am Platz (sie stünden mitten im Bild) und die Laufbahn, soweit sie über den Platz reicht
+    // Bäume am Platz (sie stünden mitten im Bild) und die Laufbahn
     scene.traverse((o) => {
         if (!o.isMesh || o.parent !== scene || weg.includes(o)) { return; }
         if (o.material && o.material.color && o.material.color.getHex() === 0xf2c12e && o.geometry.type !== 'TubeGeometry') {   // gelbe Geländer der alten Welt
             o.geometry.computeBoundingBox(); const c = o.geometry.boundingBox.getCenter(new THREE.Vector3()); if (imVorplatz(c.x, c.z, 6)) { weg.push(o); }
         }
         if (o.material === w.M.bark) { o.geometry.computeBoundingBox(); const c = o.geometry.boundingBox.getCenter(new THREE.Vector3()); if (imVorplatz(c.x, c.z, 4)) { weg.push(o); } }
-        if (o.geometry.type === 'RingGeometry') {
-            o.updateMatrixWorld(true); const p = o.geometry.attributes.position, v = new THREE.Vector3(), inv = o.matrixWorld.clone().invert();
-            for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); if (imVorplatz(v.x, v.z, 2)) { v.y = y0 - .6; v.applyMatrix4(inv); p.setXYZ(i, v.x, v.y, v.z); } }
-            p.needsUpdate = true;
-        }
+        if (o.geometry.type === 'RingGeometry') { weg.push(o); }   // Laufbahn des Sportplatzes: ragte über Platz und Hintergrund
     });
     weg.forEach((o) => scene.remove(o));
     // Gelände unter dem Vorplatz eben (knapp unter dem Pflaster)
