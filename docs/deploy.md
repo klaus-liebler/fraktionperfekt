@@ -1,7 +1,7 @@
 # Bereitstellung auf dem Webserver (Testsystem)
 
 Ziel: **https://liebler.iui.hs-osnabrueck.de/fraktionperfekt/** auf demselben Server wie VibeVHS. Das Kit in `deploy/server`
-folgt dem VibeVHS-Kit (`C:\repos\vibevhs\deploy`): self-contained Linux-Build, Programm in `/opt`, Daten in `/var/lib`,
+folgt dem VibeVHS-Kit (`C:\repos\vibevhs\deploy`): framework-abhängiger Linux-Build (gemeinsame ASP.NET-Core-Runtime aus VibeVHS-Schritt 09; `deploy.ps1 -MitRuntime` = self-contained), Programm in `/opt`, Daten in `/var/lib`,
 systemd-Dienst nur auf `127.0.0.1`, nginx davor mit Zugangspasswort, jeder root-Schritt als eigenes Skript mit Sicherung und Rückweg.
 
 | | VibeVHS | FraktionPerfekt |

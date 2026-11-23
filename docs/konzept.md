@@ -218,7 +218,7 @@ Eine eigene Web-App für die fraktionsspezifische Logik; Dateien perspektivisch 
 | Karten | Leaflet mit OpenStreetMap | ✅ |
 | RIS | OParl-Adapter hinter einem Port, Mock mit Grevener Gremien | ◐ |
 | KI | API + MCP-Server, Mock-Modell | ◐ |
-| Betrieb | Linux-Server `liebler.iui.hs-osnabrueck.de/fraktionperfekt` (Klaus' Server, derselbe wie VibeVHS): self-contained Build, systemd, nginx mit Zugangspasswort (Basic Auth) davor, Daten in `/var/lib/fraktionperfekt`, Sicherung vor jedem Update und täglich, automatischer Rückweg; Ausrollen per `deploy/server/deploy.ps1` | ✅ seit 17.11.2026, siehe `docs/deploy.md` |
+| Betrieb | Linux-Server `liebler.iui.hs-osnabrueck.de/fraktionperfekt` (Klaus' Server, derselbe wie VibeVHS): framework-abhängiger Build (gemeinsame .NET-Runtime aus VibeVHS-Schritt 09), systemd, nginx mit Zugangspasswort (Basic Auth) davor, Daten in `/var/lib/fraktionperfekt`, Sicherung vor jedem Update und täglich, automatischer Rückweg; Ausrollen per `deploy/server/deploy.ps1` | ✅ seit 17.11.2026, siehe `docs/deploy.md` |
 | Schema-Änderungen | Migrationen beim Start; die Migration „Initial“ ist seit dem ersten Ausrollen eingefroren, Änderungen nur als **zusätzliche** Migrationen | Regel |
 
 Alternative ohne Eigenentwicklung: Nextcloud mit Kalender, Deck, Forms und Collabora deckt Kalender, Dateien und Texte ab, aber nicht Vertretungslogik, Terminbesetzung, Abstimmungen mit Quorum oder die Plakatkarte. Diese vier Punkte sind der eigentliche Mehrwert einer eigenen App.

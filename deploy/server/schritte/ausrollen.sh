@@ -5,6 +5,7 @@
 # Aufruf: sudo bash /tmp/fraktionperfekt-kit/schritte/ausrollen.sh /tmp/fraktionperfekt.tar.gz
 # Rückweg von Hand: sudo bash /tmp/fraktionperfekt-kit/schritte/ausrollen.sh --zurueck
 source "$(dirname "$0")/gemeinsam.sh"
+source "$(dirname "$0")/liebler-dotnet.sh"
 als_root
 
 if [[ "${1:-}" == "--zurueck" ]]; then
@@ -28,6 +29,8 @@ archiv="${1:?Pfad zum Archiv fehlt}"
 neu=$(mktemp -d "$PROGRAMM.neu.XXXX")
 tar -xzf "$archiv" -C "$neu" --strip-components=1
 [[ -f "$neu/FraktionPerfekt.Web" ]] || { rm -rf "$neu"; fehler "Archiv enthält kein FraktionPerfekt.Web"; }
+# Framework-abhängiges Paket: passende gemeinsame Runtime vorhanden? (VibeVHS-Schritt 09) – sonst nichts ändern
+dotnet_pruefen "$neu" "FraktionPerfekt.Web" || { rm -rf "$neu"; fehler "Ausrollen abgebrochen: Runtime fehlt (siehe oben). Nichts geändert."; }
 # Sicherheitsnetz: Daten gehören nie ins Programm (würden sonst mit ausgerollt)
 if find "$neu" \( -name '*.db' -o -name '*.db-wal' -o -name '*.db-shm' -o -path '*/data/*' \) | grep -q .; then
     rm -rf "$neu"

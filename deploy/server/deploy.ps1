@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    FraktionPerfekt auf liebler.iui.hs-osnabrueck.de ausrollen (gleiches Muster wie VibeVHS): self-contained Linux-Build,
+    FraktionPerfekt auf liebler.iui.hs-osnabrueck.de ausrollen (gleiches Muster wie VibeVHS): framework-abhängiger Linux-Build (Runtime einmalig auf dem Server, VibeVHS-Schritt 09),
     Kit und Archiv hochladen, auf dem Server mit sudo einspielen. Übertragen wird NUR das Programm (dotnet publish) –
     die Datenbank und alle Daten bleiben auf dem Server in /var/lib/fraktionperfekt und werden nie überschrieben.
 .EXAMPLE
@@ -14,7 +14,9 @@ param(
     [string] $Ziel = "srvadmin@liebler.iui.hs-osnabrueck.de",
     [string] $Schluessel = "$env:USERPROFILE\.ssh\id_ed25519_liebler_iui_hs_osnabrueck",
     [switch] $NurKit,
-    [switch] $NurBauen
+    [switch] $NurBauen,
+    # Paket mit eigener .NET-Runtime (self-contained, ~70 statt ~20 MB) – nur, falls die gemeinsame Runtime fehlt
+    [switch] $MitRuntime
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,11 +45,12 @@ function Kit-Hochladen {
 
 if ($NurKit) { Kit-Hochladen; return }
 
-Write-Host "» dotnet publish (linux-x64, self-contained)" -ForegroundColor Cyan
+$eigeneRuntime = if ($MitRuntime) { "true" } else { "false" }
+Write-Host ("» dotnet publish (linux-x64, {0})" -f $(if ($MitRuntime) { "mit eigener Runtime" } else { "framework-abhängig" })) -ForegroundColor Cyan
 $build = Join-Path $ausgabe "fraktionperfekt"
 if (Test-Path $build) { Remove-Item $build -Recurse -Force }
 # Eigener Artefakt-Ordner: Die lokal laufende Instanz (bin\) bleibt unberührt
-dotnet publish (Join-Path $wurzel "src\FraktionPerfekt.Web") -c Release -r linux-x64 --self-contained true -o $build -p:DebugType=None `
+dotnet publish (Join-Path $wurzel "src\FraktionPerfekt.Web") -c Release -r linux-x64 --self-contained $eigeneRuntime -o $build -p:DebugType=None `
     --artifacts-path (Join-Path $ausgabe "artefakte")
 if ($LASTEXITCODE -ne 0) { throw "Build fehlgeschlagen." }
 Remove-Item (Join-Path $build "appsettings.Development.json") -ErrorAction SilentlyContinue
