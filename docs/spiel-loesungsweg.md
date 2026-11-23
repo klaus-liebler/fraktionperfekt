@@ -232,7 +232,7 @@ _Regie: Nach dem Text startet das Minispiel Bootsflucht (siehe unten)._
 
 ## Szene: Baustelle Hallenbad
 
-_Personen: Bauleiterin Frau Kemper, Pinsel und Ledeiw (AfD). Anklickbar: Bauleiterin Frau Kemper, Leckende Leitung, Baugrube, Pinsel und Ledeiw (AfD), Dritte Laterne der Radbrücke, Bauzaun-Tor._
+_Personen: Bauleiterin Frau Kemper, Pinsel und Ledeiw (AfD). Anklickbar: Bauleiterin Frau Kemper, Leckende Leitung, Baugrube, Pinsel und Ledeiw (AfD), Wandbild „Grevener Bäder“, Schild „EINGANG HALLENBAD“, Dritte Laterne der Radbrücke, Bauzaun-Tor._
 
 **20. Minispiel Bootsflucht gewinnen**
 
@@ -246,11 +246,11 @@ _Personen: Bauleiterin Frau Kemper, Pinsel und Ledeiw (AfD). Anklickbar: Bauleit
 >
 > (Neuer Ort auf der Karte: Baustelle Hallenbad)
 >
-> Am Ufer: die Baustelle des Hallenbads. Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Bauleiterin Frau Kemper schaut euch skeptisch an.
+> Am Ufer: die Baustelle des Hallenbads. Vor dem Eingang mit dem Wandbild der Grevener Bäder eine Grube, die langsam vollläuft. Bauleiterin Frau Kemper schaut euch skeptisch an.
 >
-> Da prusten Pinsel und Ledeiw aus der Ems, stapfen tropfnass und auf Socken durch den Bauzaun – und schrauben sofort Wegweiser ab.
+> Da prusten Pinsel und Ledeiw aus der Ems, stapfen tropfnass und auf Socken zum Eingang, stellen eine Leiter ans Schild – und schrauben die Buchstaben von „EINGANG“ ab.
 >
-> ↳ _Pinsel und Ledeiw kommen durch das Bauzaun-Tor herein; der Stapel Wegweiser entsteht_
+> ↳ _Pinsel und Ledeiw kommen durch das Bauzaun-Tor herein; Leiter am Schild, die Buchstaben von „EINGANG“ fehlen_
 
 _Minispiel Bootsflucht: Das Ruderboot fährt flussab. Von vorn treibt Treibgut heran (Treibholz, Entenfamilie, Schild „Alternative Route“,
 Plakat „Grenzen dicht!“). Hinten folgen Pinsel und Ledeiw im Motorboot und schießen 12 alternative Fakten in eure Spur:
@@ -297,7 +297,7 @@ _Regie: Nicht mehr anklickbar: Leckende Leitung_
 
 **25. Joe: Benutze → Baugrube**
 
-> Joe steigt mit Helm in die Grube. Unter einer alten Beckenfliese: ein Siegel mit einer Waage. Das dritte Siegel!
+> Joe steigt mit Helm in die Grube. Im alten Schacht unter dem Pflaster, direkt vor der Eingangstür: ein Siegel mit einer Waage. Das dritte Siegel!
 >
 > ↳ _ins Inventar: Siegel des Rechts_
 
@@ -313,13 +313,33 @@ _Regie: Inventar neu: Siegel des Rechts_
 >
 > Beide stürzen zur Kamera, drehen sich ins beste Licht – und laufen dabei rückwärts in den Bauwagen. Die Tür fällt zu.
 >
-> ↳ _Pinsel und Ledeiw laufen rückwärts in den Bauwagen; der Stapel Wegweiser verschwindet_
+> ↳ _Pinsel und Ledeiw laufen rückwärts in den Bauwagen; die Buchstaben liegen vor dem Tor_
 >
 > Von innen: „Lügenpresse!“ Chani: „Ich bin Kunsthistorikerin.“
 
-_Regie: Nicht mehr anklickbar: Pinsel und Ledeiw (AfD)_
+_Regie: Neu anklickbar: Abgeschraubte Buchstaben „EINGANG“ · Nicht mehr anklickbar: Pinsel und Ledeiw (AfD)_
 
-**28. Chani: Benutze → Bauzaun-Tor**
+**28. Figur wechseln (jetzt Joe)**
+
+> Jetzt spielt Joe. Kartusche und Verkaufsgespräch stehen bereit.
+
+**29. Joe: Benutze → Abgeschraubte Buchstaben „EINGANG“**
+
+> Joe zieht den Akkuschrauber aus der Jackentasche – Vertreterausstattung – und steigt auf die Leiter.
+>
+> Schraube für Schraube: E – I – N – G – A – N – G. Über der Tür steht wieder „EINGANG HALLENBAD“.
+>
+> ↳ _Über der Tür steht wieder „EINGANG HALLENBAD“; Leiter und Buchstaben sind weg_
+>
+> Joe: „Abgedichtet hab ich’s nicht. Aber festgeschraubt. Hält länger als jede Legislaturperiode.“
+
+_Regie: Nicht mehr anklickbar: Abgeschraubte Buchstaben „EINGANG“_
+
+**30. Figur wechseln (jetzt Chani)**
+
+> Jetzt spielt Chani. Deuten und Live-Story stehen bereit.
+
+**31. Chani: Benutze → Bauzaun-Tor**
 
 > Drei Siegel! Laut Brief führt der Weg zum Tempel unter die Martin-Luther-Grundschule.
 >
@@ -331,13 +351,13 @@ _Regie: Neuer Ort auf der Karte: Martin-Luther-Grundschule · Blende → Reiseka
 
 _Personen: Lorette (Grüne). Anklickbar: Lorette (Grüne), Schulhofuhr, Haupteingang, Schultor._
 
-**29. Reise über die Karte nach Martin-Luther-Grundschule**
+**32. Reise über die Karte nach Martin-Luther-Grundschule**
 
 > Ein leerer Schulhof. Im Haupteingang brennt Licht – Elternabend. Davor: Lorette von den Grünen, mit Lastenrad und Gutachten.
 
 _Regie: Joes Hut wandert auf der Karte vom letzten Ort zum Ziel, dann Blende._
 
-**30. Chani: Benutze → Schulhofuhr**
+**33. Chani: Benutze → Schulhofuhr**
 
 > Ihr setzt euch auf die Tischtennisplatte und wartet. Joe erzählt von Silikon, Chani von Caravaggio.
 >
@@ -345,7 +365,7 @@ _Regie: Joes Hut wandert auf der Karte vom letzten Ort zum Ziel, dann Blende._
 >
 > ↳ _Es wird dunkel, die Fledermäuse fliegen aus_
 
-**31. Chani: Rede mit → Lorette (Grüne)**
+**34. Chani: Rede mit → Lorette (Grüne)**
 
 > Lorette: „Die Fledermäuse sind ausgeflogen. Geht ruhig rein.“
 >
@@ -359,7 +379,7 @@ _Regie: Joes Hut wandert auf der Karte vom letzten Ort zum Ziel, dann Blende._
 
 _Personen: keine. Anklickbar: Klasse 1a, Klasse 2b, WC, Kellertür, Ausgang zum Hof._
 
-**32. Chani: Benutze → Haupteingang**
+**35. Chani: Benutze → Haupteingang**
 
 > Ihr geht hinein.
 >
@@ -371,7 +391,7 @@ _Regie: Blende → Flur der Martin-Luther-Grundschule._
 
 _Personen: keine. Anklickbar: Wandfresko, Symbolschloss, Tor mit drei Vertiefungen, Treppe nach oben._
 
-**33. Chani: Benutze → Kellertür**
+**36. Chani: Benutze → Kellertür**
 
 > Ihr knipst die Taschenlampe an und steigt die Kellertreppe hinab …
 >
@@ -379,7 +399,7 @@ _Personen: keine. Anklickbar: Wandfresko, Symbolschloss, Tor mit drei Vertiefung
 
 _Regie: Blende → Geheime Krypta unter der Schule._
 
-**34. Chani: Deuten → Wandfresko**
+**37. Chani: Deuten → Wandfresko**
 
 > Chani leuchtet das Fresko ab: „Unten eine Urne, darüber ein Buch, ganz oben eine Waage.“
 >
@@ -387,25 +407,25 @@ _Regie: Blende → Geheime Krypta unter der Schule._
 >
 > ↳ _Hinweis: Urne, Buch, Waage_
 
-**35. Chani: Benutze → Symbolschloss**
+**38. Chani: Benutze → Symbolschloss**
 
 > Welches Symbol kommt zuerst?
 
 _Regie: Nach dem Text erscheint eine Auswahl._
 
-**36. Auswahl: „Urne“**
+**39. Auswahl: „Urne“**
 
 > Klick: Urne.
 
 _Regie: Nach dem Text erscheint eine Auswahl._
 
-**37. Auswahl: „Buch“**
+**40. Auswahl: „Buch“**
 
 > Klick: Buch.
 
 _Regie: Nach dem Text erscheint eine Auswahl._
 
-**38. Auswahl: „Waage“**
+**41. Auswahl: „Waage“**
 
 > Urne, Buch, Waage – von unten nach oben. Das Schloss springt auf.
 >
@@ -421,7 +441,7 @@ _Regie: Inventar neu: Tempelschlüssel · Nicht mehr anklickbar: Symbolschloss_
 
 _Personen: keine. Anklickbar: Inschrift über dem Fallgitter, Linke Plattform (schmal, mit Hut), Rechte Plattform (dick, mit Kamera), Fallgitter._
 
-**39. Chani: Benutze → Tor mit drei Vertiefungen**
+**42. Chani: Benutze → Tor mit drei Vertiefungen**
 
 > Drei Siegel rasten ein. Der Schlüssel dreht sich mit einem tiefen „Klonk“.
 >
@@ -433,17 +453,17 @@ _Personen: keine. Anklickbar: Inschrift über dem Fallgitter, Linke Plattform (s
 
 _Regie: Blende → Tempel des Grundgesetzes._
 
-**40. Chani: Benutze → Rechte Plattform (dick, mit Kamera)**
+**43. Chani: Benutze → Rechte Plattform (dick, mit Kamera)**
 
 > Chani steigt auf die dicke rechte Plattform. Sie senkt sich ein Stück und rastet ein.
 >
 > Das Gitter bleibt unten. (Tipp: Figur wechseln – Joe gehört auf die linke Plattform.)
 
-**41. Figur wechseln (jetzt Joe)**
+**44. Figur wechseln (jetzt Joe)**
 
 > Jetzt spielt Joe. Kartusche und Verkaufsgespräch stehen bereit.
 
-**42. Joe: Benutze → Linke Plattform (schmal, mit Hut)**
+**45. Joe: Benutze → Linke Plattform (schmal, mit Hut)**
 
 > Joe steigt auf die schmale linke Plattform. Sie senkt sich ein Stück und rastet ein.
 >
@@ -455,25 +475,25 @@ _Regie: Blende → Tempel des Grundgesetzes._
 
 _Regie: Neu anklickbar: Tafel der Geschäftsordnung, Langer abschüssiger Gang · Nicht mehr anklickbar: Inschrift über dem Fallgitter, Linke Plattform (schmal, mit Hut), Rechte Plattform (dick, mit Kamera), Fallgitter_
 
-**43. Joe: Benutze → Tafel der Geschäftsordnung**
+**46. Joe: Benutze → Tafel der Geschäftsordnung**
 
 > Die Tafel leuchtet auf.
 
 _Regie: Nach dem Text erscheint eine Auswahl._
 
-**44. Auswahl: „Sofort, vor der Sache selbst“**
+**47. Auswahl: „Sofort, vor der Sache selbst“**
 
 > Richtig! Die nächste Zeile leuchtet auf.
 
 _Regie: Nach dem Text erscheint eine Auswahl._
 
-**45. Auswahl: „Die Bürgermeisterin oder der Bürgermeister“**
+**48. Auswahl: „Die Bürgermeisterin oder der Bürgermeister“**
 
 > Richtig! Die nächste Zeile leuchtet auf.
 
 _Regie: Nach dem Text erscheint eine Auswahl._
 
-**46. Auswahl: „Die Mehrheit der abgegebenen Stimmen“**
+**49. Auswahl: „Die Mehrheit der abgegebenen Stimmen“**
 
 > Alle Fragen richtig. Die Tafel erlischt. Jetzt fehlt nur noch ein Weg über den Abgrund.
 >
@@ -481,13 +501,13 @@ _Regie: Nach dem Text erscheint eine Auswahl._
 
 _Regie: Neu anklickbar: Abgrund · Nicht mehr anklickbar: Tafel der Geschäftsordnung_
 
-**47. Joe: Benutze → Abgrund**
+**50. Joe: Benutze → Abgrund**
 
 > Ihr tretet an die Kante und ruft zum Pult hinüber. Welchen Antrag stellt ihr?
 
 _Regie: Nach dem Text erscheint eine Auswahl._
 
-**48. Auswahl: „Antrag zur Geschäftsordnung“**
+**51. Auswahl: „Antrag zur Geschäftsordnung“**
 
 > „Antrag zur Geschäftsordnung!“ ruft Joe. Es knirscht: Aus beiden Kanten schieben sich Steinbalken, Bohlen klappen herab, Seile spannen sich – eine Hängebrücke über den Abgrund. Anträge zur Geschäftsordnung gehen eben vor.
 >
@@ -497,7 +517,7 @@ _Regie: Nach dem Text erscheint eine Auswahl._
 
 _Regie: Nicht mehr anklickbar: Abgrund_
 
-**49. Joe: Benutze → Langer abschüssiger Gang**
+**52. Joe: Benutze → Langer abschüssiger Gang**
 
 > Ein Knirschen. Die Wahlkugel löst sich und rollt los!
 >
@@ -505,7 +525,7 @@ _Regie: Nicht mehr anklickbar: Abgrund_
 
 _Regie: Nach dem Text startet das Minispiel Wahlkugel (siehe unten)._
 
-**50. Minispiel Wahlkugel gewinnen**
+**53. Minispiel Wahlkugel gewinnen**
 
 > Ihr hechtet in die Halle – die Kugel donnert vorbei und bleibt im Torbogen stecken.
 >
@@ -521,11 +541,11 @@ _Minispiel Wahlkugel: Joe und Chani rennen (mit Lorettes Lastenrad: fahren) durc
 
 _Regie: Neu anklickbar: Goldener Pokal auf einem Podest, Schlichte Holzkiste · Nicht mehr anklickbar: Langer abschüssiger Gang_
 
-**51. Joe: Kartusche → Goldener Pokal auf einem Podest**
+**54. Joe: Kartusche → Goldener Pokal auf einem Podest**
 
 > Joe klopft daran: „Hohl. Wie manche Argumente.“
 
-**52. Joe: Benutze → Schlichte Holzkiste**
+**55. Joe: Benutze → Schlichte Holzkiste**
 
 > Pinsel reißt den Pokal vom Podest und jubelt. Ledeiw ruft: „Den Rest remigrieren wir auch!“ – und versucht, die Wahlurne allein hochzuheben.
 >
@@ -667,7 +687,7 @@ Gegenstände, die nirgends passen, ergeben: „<Gegenstand> und <Ziel> – das p
 
 - _Schau an:_ Frau Kemper, Bauleiterin. Helm, Klemmbrett, wenig Zeit.
 - _Rede mit:_ Kemper: „Ohne Helm kommt hier keiner in die Grube. Und Helme hab ich nur für Kunden.“
-- _Chani: Live-Story:_ Chani filmt die Baustelle. Frau Kemper: „Bitte nicht das Becken filmen, das ist noch nicht dicht.“
+- _Chani: Live-Story:_ Chani filmt die Baustelle. Frau Kemper: „Bitte nicht die Grube filmen, die ist noch nicht dicht.“
 
 **Leckende Leitung**
 
@@ -681,11 +701,22 @@ Gegenstände, die nirgends passen, ergeben: „<Gegenstand> und <Ziel> – das p
 
 **Pinsel und Ledeiw (AfD)**
 
-- _Schau an:_ Pinsel und Ledeiw, tropfnass und auf Socken, schrauben Wegweiser ab und stapeln sie vor dem Ausgang.
-- _Rede mit:_ Ledeiw: „Der Wegweiser nach Münster muss weg. Der zeigt ins Ausland!“ ⏎ Pinsel: „Wir remigrieren alle Schilder. Auch das hier: ‚Nordwalde‘. Klingt schon so nordisch, der darf bleiben.“
+- _Schau an:_ Pinsel und Ledeiw, tropfnass und auf Socken. Pinsel steht auf der Leiter und schraubt die Buchstaben vom Schild „EINGANG HALLENBAD“, Ledeiw hält die Leiter und stapelt die Buchstaben vor dem Bauzaun-Tor.
+- _Rede mit:_ Ledeiw: „‚Eingang‘ – klingt nach offenen Grenzen. Muss weg.“ ⏎ Pinsel: „‚Hallenbad‘ darf bleiben. Das ist deutsches Kulturgut. Mit Sprungturm.“
 - _Joe: Kartusche:_ Joe überlegt, sie festzukleben. Aber auf Sand hält selbst der beste Dichtstoff nicht. Berufsehre.
 - _Joe: Verkaufsgespräch:_ Joe will ihnen Dichtstoff verkaufen. „Ist da Gender drin?“, fragt Ledeiw. Gespräch beendet.
 - _Chani: Deuten:_ Chani deutet: „Sie suchen nach Bestätigung, nicht nach dem Gral. Eine Kamera würde sie ablenken.“
+
+**Wandbild „Grevener Bäder“**
+
+- _Schau an:_ Das Wandbild neben dem Eingang: „GREVENER BÄDER“, das E in Schwarz-Rot-Gold. Ein Junge saust lachend eine blaue Rutsche hinunter, daneben taucht ein Schwimmer mit Taucherbrille.
+- _Joe: Kartusche:_ Joe: „Ein Graffiti abdichten? Niemals. Das ist Kunst am Bau.“
+- _Chani: Deuten:_ Chani tritt einen Schritt zurück: „Sprühdose, sicherer Strich, um 2020. Der Junge lacht zur Kamera – aber der Taucher schaut nach unten.“ ⏎ Chani: „Genau dahin, wo jetzt die Grube ist.“
+
+**Schild „EINGANG HALLENBAD“**
+
+- _Schau an:_ Das Schild über der Tür: „      HALLENBAD“. Wo „EINGANG“ stand, sind nur noch Schraublöcher.
+- _Benutze:_ Ohne Buchstaben gibt es nichts anzuschrauben. Die liegen vor dem Tor.
 
 **Dritte Laterne der Radbrücke**
 
@@ -696,7 +727,7 @@ Gegenstände, die nirgends passen, ergeben: „<Gegenstand> und <Ziel> – das p
 
 **Bauzaun-Tor**
 
-- _Benutze:_ Vor dem Tor liegt ein Stapel abgeschraubter Wegweiser. Pinsel bewacht ihn.
+- _Benutze:_ Vor dem Tor stapeln sich die abgeschraubten Buchstaben, und Ledeiw hält die Leiter quer davor.
 
 ### Hof der Martin-Luther-Grundschule
 

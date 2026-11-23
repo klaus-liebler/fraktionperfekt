@@ -145,7 +145,7 @@ function bildAuffrischen(leiste, sofort) {
 
 // ---------- Nebenfiguren: kommen und gehen zu Fuß ----------
 // Bereichs-Einträge (bereiche.js, akt3.js, akt45.js): { hotspot | sichtbar(bild), figur, pos, rot, pose, stand,
-//   von: Auftrittsort (kommt von dort herein), nach: Abgangsort oder Wegpunkte (geht dorthin und verschwindet), rueckwaerts,
+//   von: Auftrittsort oder Wegpunkte (kommt von dort herein), hoch: steht so viel höher (Leiter), nach: Abgangsort oder Wegpunkte (geht dorthin und verschwindet), rueckwaerts,
 //   lage(bild): { pos, rot, pose, gleiten } (anderer Platz im Spielstand, z. B. festgeklebt), tempo }
 // Durchzug: { figur, durchzug(bild), weg: [Punkte] } läuft einmal den Weg entlang, sobald durchzug wahr wird.
 const NPC_TEMPO = 1.4;
@@ -184,8 +184,10 @@ function npcsAktualisieren(dt) {
             n.snap = false; n.zeigt = n.soll; n.geht = false; n.weg = []; n.ort = [...l.pos]; n.ziel = l.pos; rig.rotation.y = l.rot;
         } else if (n.soll && (!n.zeigt || n.geht)) {
             // kommt herein (vom Auftrittsort) – oder kehrt um, falls sie gerade ging
-            if (!n.zeigt) { n.ort = [...(def.von || l.pos)]; }
-            n.zeigt = true; n.geht = false; n.weg = [[...l.pos]]; n.ziel = l.pos;
+            // von: Auftrittsort oder Liste von Wegpunkten (erster = Auftrittsort)
+            const von = def.von && Array.isArray(def.von[0]) ? def.von : def.von ? [def.von] : [l.pos];
+            if (!n.zeigt) { n.ort = [...von[0]]; n.weg = von.slice(1).map((q) => [...q]).concat([[...l.pos]]); } else { n.weg = [[...l.pos]]; }
+            n.zeigt = true; n.geht = false; n.ziel = l.pos;
         } else if (!n.soll && n.zeigt && !n.geht) {
             // geht hinaus (zum Abgangsort); ohne Abgangsort verschwindet sie an Ort und Stelle
             if (def.nach) { n.geht = true; n.weg = (Array.isArray(def.nach[0]) ? def.nach : [def.nach]).map((p) => [...p]); } else { n.zeigt = false; }
@@ -197,7 +199,7 @@ function npcsAktualisieren(dt) {
         const tempo = l.gleiten ? .9 : (def.tempo || NPC_TEMPO);
         const unterwegs = schreiten(n, dt, tempo, n.geht && def.rueckwaerts);
         if (!unterwegs && n.geht) { n.zeigt = false; n.geht = false; rig.visible = false; continue; }
-        rig.position.set(n.ort[0], akt.hoehe(n.ort[0], n.ort[1]), n.ort[1]);
+        rig.position.set(n.ort[0], akt.hoehe(n.ort[0], n.ort[1]) + (!unterwegs && def.hoch ? def.hoch : 0), n.ort[1]);   // hoch: steht oben (Leiter)
         // Wer spricht, schaut zur aktiven Figur
         const redet = !textbox.hidden && (sprecher === def.hotspot || sprecher === def.figur || (sprecher === 'gegner' && (def.hotspot === 'gegner' || def.figur === 'pinsel' || def.figur === 'ledeiw')));
         const p = figuren[z.figur].position;

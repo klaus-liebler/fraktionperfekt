@@ -102,7 +102,7 @@ test('Wer mitten in einer Szene kommt oder geht, hat einen Auftritts- bzw. Abgan
     // Festgeklebt rutschen sie an die Rückwand, statt dorthin zu springen
     assert.match(def('bereiche.js', "hotspot: 'gegner', figur: 'pinsel'"), /lage: /);
     // Baustelle: aus der Ems herein, rückwärts in den Bauwagen hinaus
-    for (const f of ['pinsel', 'ledeiw']) { assert.match(def('akt3.js', `hotspot: 'gegner', figur: '${f}'`), /von: .*nach: .*rueckwaerts: true/); }
+    for (const f of ['pinsel', 'ledeiw']) { assert.match(quelle('akt3.js'), new RegExp(`hotspot: 'gegner', figur: '${f}'[^}]*?von: [\\s\\S]*?nach: [\\s\\S]*?rueckwaerts: true`)); }
     // Finale: Pinsel und Ledeiw kommen und gehen, die Helfer kommen herein
     for (const f of ['pinsel', 'ledeiw']) { assert.match(def('akt45.js', `gegnerAbgang, figur: '${f}'`), /von: .*nach: /); }
     for (const f of ['chris', 'lorette', 'johanna']) { assert.match(def('akt45.js', `Hilft, figur: '${f}'`), /von: /); }

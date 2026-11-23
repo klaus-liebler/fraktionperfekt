@@ -65,9 +65,11 @@ Ausführlich mit allen Texten und der Regie je Textzeile: [`spiel-loesungsweg.md
    **Bootsflucht**: Pinsel und Ledeiw haben sich aus dem Dichtstoff befreit (auf Socken) und schießen von hinten alternative Fakten; als sie keine mehr haben,
    geht ihr Boot unter. Ihr treibt bis unter die Radbrücke beim Hallenbad. Den Deich hinauf und an der Deichkrone auf die Brücke: dritte Laterne
    benutzen → **Siegel der Ausführung**. Es geht direkt an der Baustelle weiter.
-4. **Baustelle Hallenbad** (Sanierung; das Freibad ist nur beschriftet und nicht im Umbau): **Joe:** Kartusche auf die leckende Leitung (Leck dicht,
-   die Grube läuft leer). **Joe:** Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**. **Chani:** Live-Story bei
-   Pinsel und Ledeiw → sie laufen rückwärts in den Bauwagen. Bauzaun-Tor.
+4. **Baustelle am Eingang des Hallenbads** (Sanierung; das Freibad ist nur beschriftet und nicht im Umbau): Vor der Tür mit dem Wandbild der
+   Grevener Bäder ist eine Grube aufgerissen; Pinsel und Ledeiw schrauben die Buchstaben von „EINGANG“ ab. **Joe:** Kartusche auf die leckende
+   Leitung (Leck dicht, die Grube läuft leer). **Joe:** Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**.
+   **Chani:** Live-Story bei Pinsel und Ledeiw → sie laufen rückwärts in den Bauwagen. **Joe:** die abgeschraubten Buchstaben benutzen → er
+   schraubt sie wieder an. Bauzaun-Tor.
 5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lorette reden → Lastenrad (zusammengefaltet, in
    Chanis Tasche; im Gang wieder ausgeklappt). Durch den Haupteingang in den Schulflur (Klassenzimmer 1a – abends leer –, 2b mit Elternabend und
    WC), dort die Kellertür benutzen (nach 20:30 Uhr, Taschenlampe nötig).
@@ -93,7 +95,10 @@ three.js (0.170, lokal mitgeliefert, CSP-konform ohne Import-Map und ohne Inline
   `ems` = Emsdeich am Kanuverleih; `baustelle` = Radbrücke beim Hallenbad (gelbe Doppellaternen oben auf der Brücke, in der
   dritten das Siegel; die Brücke endet wie in echt auf den Deichkronen, dort geht es aufs Deck; im Hintergrund die Stadt mit
   dem Hallenbad aus OpenStreetMap, lagerichtig zur echten Brücke: `node tools/Welten/umgebung.mjs` → `umgebung_radbruecke.json`;
-  die Spielbrücke ist kürzer als die echte, Gebäude jenseits der Brückenenden rücken um die Differenz heran) + Baustelle; `schule` = Schulhof (abends mit Fledermäusen); `schulflur`; `krypta`; `tempel` = Tempelhalle
+  die Spielbrücke ist kürzer als die echte, Gebäude jenseits der Brückenenden rücken um die Differenz heran) + Baustelle am
+  Eingang des Hallenbads (`hallenbad_eingang.js`, nach Foto und Luftbild: Wandbild „Grevener Bäder“, Schild „EINGANG HALLENBAD“,
+  blaue Pfeiler, rechts der rund 5,8 m vorspringende Umkleidetrakt; Grube vor der Tür, Bauzaun, Leiter, Bauwagen; der Ortsrahmen
+  sitzt an der LoD2-Wand neben der Tür; das LoD2-Hallenbad mit Dächern und Rutsche weicht dem nachgebauten Gebäude); `schule` = Schulhof (abends mit Fledermäusen); `schulflur`; `krypta`; `tempel` = Tempelhalle
   (Fallgitter, Plattformen, Tafel, Abgrund mit Hängebrücke, Gang) + Kammer des Grals.
   Gebäude aus 3D-Gebäudemodellen LoD2 (© Geobasis NRW, dl-de/zero-2-0) mit Gelände; Innenräume frei erfunden.
   Begehbar ist nur, wo die Kamera die Figuren sieht: Vor dem Rathaus etwa endet der Platz an der Fassadenlinie und nicht

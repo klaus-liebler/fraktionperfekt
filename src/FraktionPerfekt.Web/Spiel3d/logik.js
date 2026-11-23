@@ -362,15 +362,17 @@
             titel: 'Baustelle Hallenbad',
             stimmung: 'baustelle',
             einstieg: (z) => z.flags.gegnerBaustelleWeg
-                ? 'Das Hallenbad wird saniert: Bauzaun, Bagger, ein leeres Becken. Aus dem Bauwagen ruft es leise „Lügenpresse!“.'
-                : 'Das Hallenbad wird saniert: Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Pinsel und Ledeiw, noch tropfnass von der Ems, schrauben Wegweiser ab.',
+                ? 'Der Eingang des Hallenbads, mitten in der Sanierung: Bauzaun, eine Grube vor der Tür, daneben das Wandbild der Grevener Bäder. Aus dem Bauwagen ruft es leise „Lügenpresse!“.'
+                : z.flags.gegnerBaustelle
+                    ? 'Der Eingang des Hallenbads, mitten in der Sanierung: vor der Tür eine Grube, die langsam vollläuft. Pinsel und Ledeiw, noch tropfnass von der Ems, schrauben die Buchstaben vom Schild „EINGANG HALLENBAD“.'
+                    : 'Der Eingang des Hallenbads, mitten in der Sanierung: Bauzaun, eine Grube vor der Tür, die langsam vollläuft, daneben das Wandbild der Grevener Bäder.',
             hotspots: [
                 {
                     id: 'bauleiter', name: 'Bauleiterin Frau Kemper', form: 'person',
                     ansehen: () => antwort('Frau Kemper, Bauleiterin. Helm, Klemmbrett, wenig Zeit.'),
                     reden: (z) => z.flags.helme ? antwort('Kemper: „Helme auf, dann dürft ihr runter. Und nichts anfassen, was teuer aussieht.“') : antwort('Kemper: „Ohne Helm kommt hier keiner in die Grube. Und Helme hab ich nur für Kunden.“'),
                     f2: (z) => {
-                        if (!istJoe(z)) { return antwort('Chani filmt die Baustelle. Frau Kemper: „Bitte nicht das Becken filmen, das ist noch nicht dicht.“'); }
+                        if (!istJoe(z)) { return antwort('Chani filmt die Baustelle. Frau Kemper: „Bitte nicht die Grube filmen, die ist noch nicht dicht.“'); }
                         z.flags.helme = true; punkte(z, 'helme');
                         return antwort(['Joe: „Noch nicht dicht? Da hätte ich etwas für Sie.“ Zehn Minuten Fachgespräch über Fugen im Nassbereich.', ['Frau Kemper bestellt 40 Kartuschen – und reicht zwei Helme rüber. Joe und Chani setzen sie auf. „Kunden dürfen in die Grube.“', 'helme']]);
                     }
@@ -393,15 +395,15 @@
                         if (!z.flags.grubeTrocken) { return antwort('Zu nass. Erst das Leck stopfen.'); }
                         if (!z.flags.helme) { return antwort('Frau Kemper: „Ohne Helm nicht in die Grube!“'); }
                         geben(z, 'siegel_judikative'); punkte(z, 'siegel3', 20);
-                        return antwort([[`${name(z)} steigt mit Helm in die Grube. Unter einer alten Beckenfliese: ein Siegel mit einer Waage. Das dritte Siegel!`, 'siegel_judikative']]);
+                        return antwort([[`${name(z)} steigt mit Helm in die Grube. Im alten Schacht unter dem Pflaster, direkt vor der Eingangstür: ein Siegel mit einer Waage. Das dritte Siegel!`, 'siegel_judikative']]);
                     }
                 },
                 {
                     id: 'gegner', name: 'Pinsel und Ledeiw (AfD)', form: 'gegner',
                     // Erst nach dem Bootsunglück: Sie stapfen aus der Ems herein (minispielEnde)
                     sichtbar: (z) => z.flags.gegnerBaustelle && !z.flags.gegnerBaustelleWeg,
-                    ansehen: () => antwort('Pinsel und Ledeiw, tropfnass und auf Socken, schrauben Wegweiser ab und stapeln sie vor dem Ausgang.'),
-                    reden: () => antwort(['Ledeiw: „Der Wegweiser nach Münster muss weg. Der zeigt ins Ausland!“', 'Pinsel: „Wir remigrieren alle Schilder. Auch das hier: ‚Nordwalde‘. Klingt schon so nordisch, der darf bleiben.“']),
+                    ansehen: () => antwort('Pinsel und Ledeiw, tropfnass und auf Socken. Pinsel steht auf der Leiter und schraubt die Buchstaben vom Schild „EINGANG HALLENBAD“, Ledeiw hält die Leiter und stapelt die Buchstaben vor dem Bauzaun-Tor.'),
+                    reden: () => antwort(['Ledeiw: „‚Eingang‘ – klingt nach offenen Grenzen. Muss weg.“', 'Pinsel: „‚Hallenbad‘ darf bleiben. Das ist deutsches Kulturgut. Mit Sprungturm.“']),
                     f1: (z) => antwort(istJoe(z)
                         ? 'Joe überlegt, sie festzukleben. Aber auf Sand hält selbst der beste Dichtstoff nicht. Berufsehre.'
                         : 'Chani deutet: „Sie suchen nach Bestätigung, nicht nach dem Gral. Eine Kamera würde sie ablenken.“'),
@@ -410,6 +412,38 @@
                         z.flags.gegnerBaustelleWeg = true; punkte(z, 'story');
                         return antwort(['Chani hebt das Handy: „Wir sind live! Wollen Sie den Menschen etwas sagen?“', ['Beide stürzen zur Kamera, drehen sich ins beste Licht – und laufen dabei rückwärts in den Bauwagen. Die Tür fällt zu.', 'gegnerBaustelleWeg'], 'Von innen: „Lügenpresse!“ Chani: „Ich bin Kunsthistorikerin.“']);
                     }
+                },
+                {
+                    // Das Wandbild „Grevener Bäder“ neben dem Eingang
+                    id: 'wandbild', name: 'Wandbild „Grevener Bäder“', form: 'bild',
+                    ansehen: () => antwort('Das Wandbild neben dem Eingang: „GREVENER BÄDER“, das E in Schwarz-Rot-Gold. Ein Junge saust lachend eine blaue Rutsche hinunter, daneben taucht ein Schwimmer mit Taucherbrille.'),
+                    f1: (z) => antwort(istJoe(z)
+                        ? 'Joe: „Ein Graffiti abdichten? Niemals. Das ist Kunst am Bau.“'
+                        : ['Chani tritt einen Schritt zurück: „Sprühdose, sicherer Strich, um 2020. Der Junge lacht zur Kamera – aber der Taucher schaut nach unten.“', 'Chani: „Genau dahin, wo jetzt die Grube ist.“'])
+                },
+                {
+                    // Das Schild über dem Eingang: Pinsel und Ledeiw schrauben die Buchstaben ab, Joe schraubt sie wieder an
+                    id: 'schild', name: 'Schild „EINGANG HALLENBAD“', form: 'inschrift',
+                    ansehen: (z) => antwort(z.flags.schildHeil
+                        ? 'Das Schild über der Tür: „EINGANG HALLENBAD“. Alle Buchstaben sitzen, frisch verschraubt.'
+                        : z.flags.gegnerBaustelle ? 'Das Schild über der Tür: „      HALLENBAD“. Wo „EINGANG“ stand, sind nur noch Schraublöcher.' : 'Das Schild über der Tür: „EINGANG HALLENBAD“, dunkelblau auf hellblau.'),
+                    benutzen: (z) => (z.flags.gegnerBaustelle && !z.flags.schildHeil
+                        ? antwort('Ohne Buchstaben gibt es nichts anzuschrauben. Die liegen vor dem Tor.')
+                        : antwort('Das Schild hängt fest. Daran hat sich schon einmal jemand versucht.'))
+                },
+                {
+                    // Die abgeschraubten Buchstaben: Joe schraubt sie wieder an
+                    id: 'buchstaben', name: 'Abgeschraubte Buchstaben „EINGANG“', form: 'kasten',
+                    sichtbar: (z) => z.flags.gegnerBaustelleWeg && !z.flags.schildHeil,
+                    ansehen: () => antwort('E, I, N, G, A, N, G – sieben Buchstaben auf dem Pflaster, die Schrauben in einem Joghurtbecher daneben.'),
+                    benutzen: (z) => {
+                        if (!istJoe(z)) { return antwort('Chani hält die Leiter fest: „Joe, du bist dran. Du hast den Akkuschrauber.“'); }
+                        z.flags.schildHeil = true; punkte(z, 'schild');
+                        return antwort(['Joe zieht den Akkuschrauber aus der Jackentasche – Vertreterausstattung – und steigt auf die Leiter.',
+                            ['Schraube für Schraube: E – I – N – G – A – N – G. Über der Tür steht wieder „EINGANG HALLENBAD“.', 'schildHeil'],
+                            'Joe: „Abgedichtet hab ich’s nicht. Aber festgeschraubt. Hält länger als jede Legislaturperiode.“']);
+                    },
+                    f1: (z) => antwort(istJoe(z) ? 'Joe: „Buchstaben klebt man nicht. Die schraubt man.“' : 'Chani: „Grotesk, serifenlos, Siebzigerjahre. Gehört über die Tür.“')
                 },
                 {
                     // Die Radbrücke mit den gelben Laternen steht beim Hallenbad; in der dritten Laterne ruht das Siegel der Ausführung
@@ -427,7 +461,7 @@
                 {
                     id: 'zurkarte', name: 'Bauzaun-Tor', form: 'pfeil',
                     benutzen: (z) => {
-                        if (z.flags.gegnerBaustelle && !z.flags.gegnerBaustelleWeg) { return antwort('Vor dem Tor liegt ein Stapel abgeschraubter Wegweiser. Pinsel bewacht ihn.'); }
+                        if (z.flags.gegnerBaustelle && !z.flags.gegnerBaustelleWeg) { return antwort('Vor dem Tor stapeln sich die abgeschraubten Buchstaben, und Ledeiw hält die Leiter quer davor.'); }
                         if (hat(z, 'siegel_judikative')) { ortFrei(z, 'schule'); }
                         return antwort(hat(z, 'siegel_judikative') ? ['Drei Siegel! Laut Brief führt der Weg zum Tempel unter die Martin-Luther-Grundschule.', '(Neuer Ort auf der Karte: Martin-Luther-Grundschule)'] : 'Zur Karte.', { szene: 'karte' });
                     }
@@ -836,8 +870,8 @@
                 'Beide lehnen sich gleichzeitig über dieselbe Bordwand, um nach Nachschub zu suchen. Das Motorboot kippt, läuft voll und geht unter. Blubb. Vor lauter Dummheit.',
                 ['Ihr treibt flussab bis unter die Radbrücke beim Hallenbad. Oben stehen die gelben Laternen, eine neben der anderen.', 'bootGewonnen'],
                 '(Neuer Ort auf der Karte: Baustelle Hallenbad)',
-                'Am Ufer: die Baustelle des Hallenbads. Bauzaun, Bagger, ein leeres Becken – und eine Grube, die langsam vollläuft. Bauleiterin Frau Kemper schaut euch skeptisch an.',
-                ['Da prusten Pinsel und Ledeiw aus der Ems, stapfen tropfnass und auf Socken durch den Bauzaun – und schrauben sofort Wegweiser ab.', 'gegnerBaustelle']
+                'Am Ufer: die Baustelle des Hallenbads. Vor dem Eingang mit dem Wandbild der Grevener Bäder eine Grube, die langsam vollläuft. Bauleiterin Frau Kemper schaut euch skeptisch an.',
+                ['Da prusten Pinsel und Ledeiw aus der Ems, stapfen tropfnass und auf Socken zum Eingang, stellen eine Leiter ans Schild – und schrauben die Buchstaben von „EINGANG“ ab.', 'gegnerBaustelle']
             ], { szene: 'baustelle', ohneEinstieg: true });
         }
         z.flags.kugelGeschafft = true; z.flags.gegnerFinale = true; punkte(z, 'kugel', 30);
@@ -1029,6 +1063,9 @@
         ['aktion', 'benutzen', 'grube'],
         ['figur'],
         ['aktion', 'f2', 'gegner'],
+        ['figur'],
+        ['aktion', 'benutzen', 'buchstaben'],
+        ['figur'],
         ['aktion', 'benutzen', 'zurkarte'],
         ['reisen', 'schule'],
         ['aktion', 'benutzen', 'uhr'],
@@ -1157,7 +1194,7 @@
      */
     const SPRUENGE = {
         buero: 0, marktstrasse: 5, karte: 6, rathaus: 7, rathausflur: 8, archiv: 8, ems: 15, boot: 18, radbruecke: 20, baustelle: 21,
-        schule: 29, schulflur: 32, krypta: 33, tempel: 39, gang: 48, finale: 50
+        schule: 32, schulflur: 35, krypta: 36, tempel: 42, gang: 51, finale: 53
     };
     function sprungZustand(name) {
         if (!Object.prototype.hasOwnProperty.call(SPRUENGE, name)) { return null; }

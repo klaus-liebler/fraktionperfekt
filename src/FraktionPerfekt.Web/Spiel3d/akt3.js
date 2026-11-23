@@ -1,6 +1,7 @@
 // Joe & Chani 3D – Akt 3: Emsdeich am Kanuverleih (mit der Radbrücke), Bootsflucht auf der Ems, Baustelle am Hallenbad.
 // Gelände und Brücke aus den 3D-Prototypen; Kanuverleih, Steg, Skulpturen, Baustelle frei erfunden.
 import * as THREE from './three_min.js';
+import { eingangHallenbad } from './hallenbad_eingang.js';
 
 const laden = (name) => fetch(name).then((r) => { if (!r.ok) { throw new Error('Daten fehlen: ' + name); } return r.json(); });
 const std = (o) => new THREE.MeshStandardMaterial(Object.assign({ roughness: .8 }, o));
@@ -234,154 +235,177 @@ function bootFlucht(scene, w, bootVorlage) {
 // ======================================================================
 export async function baustelle(renderer) {
     const { baue } = await import('./welt_bad.js');
-    const w = baue(renderer, await laden('welt_bad.json'));
-    const { scene, H, W3 } = w;
-    const E0 = 4, E1 = 34, N0 = -58, N1 = -32;               // Bauzaun
-    const GRUBE = [12, -46, 19, -40], BECKEN = [23, -55, 31, -46];
-    const P = ([e, n]) => [e, -n];
-    const at = (o, e, n, dy = 0) => { o.position.copy(W3(e, n, dy)); scene.add(o); return o; };
-    const eigene = [];
-    const boden0 = (e, n) => H(e, n);
-    // Gelände in Grube und Becken absenken
-    const senken = [[...GRUBE, 2.3], [...BECKEN, 2.0]];
+    const daten = await laden('welt_bad.json');
+    const w = baue(renderer, daten);
+    const { scene, H, MW1, MW2, MWN } = w;
+    // Das LoD2-Hallenbad (Wände, Dächer über seinem Grundriss, die Rutsche) weicht dem nachgebauten Gebäude (hallenbad_eingang.js)
+    {
+        const bad = []; daten.lod2.forEach((b) => { if (b.s) { bad.push(...b.g); } });
+        const imBad = (x, z) => bad.some(([a, b, c]) => {
+            const d1 = (x - b[0]) * (a[1] - b[1]) - (a[0] - b[0]) * (z - b[1]), d2 = (x - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (z - c[1]), d3 = (x - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (z - a[1]);
+            return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+        });
+        const raus = [];
+        scene.traverse((o) => {
+            if (!o.isMesh || o.parent !== scene) { return; }
+            if (o.name === 'pool' || o.name === 'slide') { raus.push(o); return; }
+            const g = o.geometry, p = g.attributes.position;
+            if (o.material && o.material.color && o.material.color.getHex() === 0xf2c12e) {   // Stützen der Rutsche
+                g.computeBoundingBox(); const c = g.boundingBox.getCenter(new THREE.Vector3()); if (imBad(c.x, c.z) || Math.hypot(c.x - 5, c.z + 26) < 25) { raus.push(o); } return;
+            }
+            if (o.material && o.material.vertexColors && o.material.flatShading && !g.index && p) {   // Dächer der LoD2-Gebäude: nur die über dem Bad
+                const behalten = [];
+                for (let i = 0; i < p.count; i += 3) { const x = (p.getX(i) + p.getX(i + 1) + p.getX(i + 2)) / 3, z = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3; if (!imBad(x, z)) { behalten.push(i); } }
+                for (const name of Object.keys(g.attributes)) {
+                    const at = g.attributes[name], n = at.itemSize, neu = new at.array.constructor(behalten.length * 3 * n);
+                    behalten.forEach((i, k) => { for (let j = 0; j < 3 * n; j++) { neu[k * 3 * n + j] = at.array[i * n + j]; } });
+                    g.setAttribute(name, new THREE.BufferAttribute(neu, n, at.normalized));
+                }
+            }
+        });
+        raus.forEach((o) => scene.remove(o));
+    }
+    // Ortsrahmen des Eingangs (hallenbad_eingang.js): x entlang der Eingangsfront, z zum Platz hin. Die Seitenwand des
+    // vorspringenden Umkleidetrakts (lokal x = 4,3) liegt auf der LoD2-Wand an der Ecke (E −18,5 / N −8,1).
+    const L = Math.hypot(MW2[0] - MW1[0], MW2[1] - MW1[1]), d = [(MW2[0] - MW1[0]) / L, (MW2[1] - MW1[1]) / L];
+    const nullE = -18.5 - 4.3 * d[0], nullN = -8.1 - 4.3 * d[1], ROT = Math.atan2(d[1], d[0]);
+    const y0 = H(nullE + 1.4 * d[0] + 3 * MWN[0], nullN + 1.4 * d[1] + 3 * MWN[1]);
+    const ort = new THREE.Group(); ort.position.set(nullE, y0, -nullN); ort.rotation.y = ROT; scene.add(ort); ort.updateMatrixWorld(true);
+    const welt = (x, z) => { const v = ort.localToWorld(new THREE.Vector3(x, 0, z)); return [v.x, v.z]; };
+    const lokal = (x, z) => { const v = ort.worldToLocal(new THREE.Vector3(x, y0, z)); return [v.x, v.z]; };
+    const blick = (r) => r + ROT;   // Drehung im Ortsrahmen → Welt
+    // Was die Welt schon an dieser Stelle hatte (grober Pavillon, Wandbild, Tür, Vordach, Leuchte, Bügel, Pflaster), weicht
+    const VX = [-16.5, 22.5], VZ = [-1.2, 18.5];
+    const imVorplatz = (x, z, rand = 0) => { const [a, b] = lokal(x, z); return a > VX[0] - rand && a < VX[1] + rand && b > VZ[0] - rand && b < VZ[1] + rand; };
+    const weg = [];
+    scene.traverse((o) => {
+        if (o === w.ground || o === ort || !o.parent || o.parent !== scene) { return; }
+        if (['mural', 'door', 'globelamp', 'bench'].includes(o.name) || o.getObjectByName('esign')) { weg.push(o); return; }
+        if (o.isMesh && (o.name === 'ground' || o.geometry.type === 'TorusGeometry')) {
+            o.geometry.computeBoundingBox(); const c = o.geometry.boundingBox.getCenter(new THREE.Vector3()); o.localToWorld(c);
+            if (imVorplatz(c.x, c.z)) { weg.push(o); }
+        }
+    });
+    // Bäume am Platz (sie stünden mitten im Bild) und die Laufbahn, soweit sie über den Platz reicht
+    scene.traverse((o) => {
+        if (!o.isMesh || o.parent !== scene || weg.includes(o)) { return; }
+        if (o.material && o.material.color && o.material.color.getHex() === 0xf2c12e && o.geometry.type !== 'TubeGeometry') {   // gelbe Geländer der alten Welt
+            o.geometry.computeBoundingBox(); const c = o.geometry.boundingBox.getCenter(new THREE.Vector3()); if (imVorplatz(c.x, c.z, 6)) { weg.push(o); }
+        }
+        if (o.material === w.M.bark) { o.geometry.computeBoundingBox(); const c = o.geometry.boundingBox.getCenter(new THREE.Vector3()); if (imVorplatz(c.x, c.z, 4)) { weg.push(o); } }
+        if (o.geometry.type === 'RingGeometry') {
+            o.updateMatrixWorld(true); const p = o.geometry.attributes.position, v = new THREE.Vector3(), inv = o.matrixWorld.clone().invert();
+            for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); if (imVorplatz(v.x, v.z, 2)) { v.y = y0 - .6; v.applyMatrix4(inv); p.setXYZ(i, v.x, v.y, v.z); } }
+            p.needsUpdate = true;
+        }
+    });
+    weg.forEach((o) => scene.remove(o));
+    // Gelände unter dem Vorplatz eben (knapp unter dem Pflaster)
     {
         const p = w.ground.geometry.attributes.position;
         for (let i = 0; i < p.count; i++) {
-            const e = p.getX(i), n = -p.getZ(i);
-            for (const [a, b, c, d, tief] of senken) { if (e > a - 1.2 && e < c + 1.2 && n > b - 1.2 && n < d + 1.2) { p.setY(i, p.getY(i) - tief); } }
+            if (!imVorplatz(p.getX(i), p.getZ(i), 1.5)) { continue; }
+            const [a, b] = lokal(p.getX(i), p.getZ(i)), inGrube = a > -4.8 && a < 4.6 && b > 1.6 && b < 9.6;   // Grube (hallenbad_eingang.js) frei lassen
+            p.setY(i, Math.min(p.getY(i), y0 - (inGrube ? 1.8 : .06)));
         }
         p.needsUpdate = true; w.ground.geometry.computeVertexNormals();
     }
-    const kasten = (rect, tief, wandMat, bodenMat, randMat) => {
-        const [a, b, c, d] = rect, g = new THREE.Group();
-        const y0 = Math.min(H(a, b), H(c, d), H(a, d), H(c, b));
-        const bw = c - a, bt = d - b;
-        mesh(new THREE.BoxGeometry(bw, .1, bt), bodenMat, g, 0, -tief, 0);
-        for (const [x, z, sw, st] of [[0, -bt / 2, bw, .2], [0, bt / 2, bw, .2], [-bw / 2, 0, .2, bt], [bw / 2, 0, .2, bt]]) { mesh(new THREE.BoxGeometry(sw, tief + .1, st), wandMat, g, x, -tief / 2 + .02, -z); }
-        // Kante auf Geländehöhe (Rand aus Beton bzw. Holzbohlen)
-        for (const [x, z, sw, st] of [[0, -bt / 2 - .25, bw + .9, .5], [0, bt / 2 + .25, bw + .9, .5], [-bw / 2 - .25, 0, .5, bt], [bw / 2 + .25, 0, .5, bt]]) { mesh(new THREE.BoxGeometry(sw, .08, st), randMat, g, x, .02, -z); }
-        g.position.set((a + c) / 2, y0, -(b + d) / 2); scene.add(g); return { g, y0 };
-    };
-    const erde = std({ color: 0x6a5038, roughness: 1 }), schlamm = std({ color: 0x4a3a2a, roughness: .5 });
-    const fliese = std({ map: w.canvasTex(128, 128, (g, cw, ch) => { g.fillStyle = '#9fd3e6'; g.fillRect(0, 0, cw, ch); g.strokeStyle = '#e8f4f8'; g.lineWidth = 3; for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * 32, 0); g.lineTo(i * 32, ch); g.moveTo(0, i * 32); g.lineTo(cw, i * 32); g.stroke(); } }), roughness: .3 });
-    fliese.map.repeat.set(4, 2);
-    const grube = kasten(GRUBE, 2.3, erde, schlamm, std({ color: 0x7a5a3a, roughness: .95 })); grube.g.name = 'grube';
-    const wasserG = mesh(new THREE.BoxGeometry(GRUBE[2] - GRUBE[0] - .3, .05, GRUBE[3] - GRUBE[1] - .3), std({ color: 0x5a6a50, roughness: .1, metalness: .3, transparent: true, opacity: .85 }), grube.g, 0, -1.1, 0);
-    const siegel = mesh(new THREE.CylinderGeometry(.2, .2, .05, 24), std({ color: 0xd4af37, metalness: .9, roughness: .2, emissive: 0x3a2a00 }), grube.g, .6, -2.2, .4);
-    const fliesenrest = mesh(new THREE.BoxGeometry(.4, .04, .4), fliese, grube.g, .2, -2.22, .4); fliesenrest.rotation.y = .4;
-    greifbar(grube.g, GRUBE[2] - GRUBE[0] - .4, 1.0, GRUBE[3] - GRUBE[1] - 1.0, -1.7);   // unterhalb der Leitung, damit beide klickbar bleiben
-    // leckende Leitung an der Nordkante der Grube
-    const leitung = new THREE.Group(); leitung.name = 'leitung';
-    mesh(new THREE.CylinderGeometry(.14, .14, 8.5, 14), std({ color: 0x5a5a5a, metalness: .6, roughness: .5 }), leitung).rotation.z = Math.PI / 2;
-    const strahl = new THREE.Group(); leitung.add(strahl);
-    const wasserM = std({ color: 0xbfe0f0, transparent: true, opacity: .7, roughness: .1 });
-    for (let i = 0; i < 7; i++) { mesh(new THREE.SphereGeometry(.07, 8, 6), wasserM, strahl, 0, 0, 0).castShadow = false; }
-    leitung.position.set((GRUBE[0] + GRUBE[2]) / 2, grube.y0 - .7, -(GRUBE[3] - .15)); scene.add(leitung);
-    greifbar(leitung, 8.5, .8, .8, 0);
-    const flick = mesh(new THREE.CylinderGeometry(.18, .18, .3, 14), std({ color: 0x1a1a1a, roughness: .3 }), leitung, -.4, 0, 0); flick.rotation.z = Math.PI / 2;
-    // leeres Becken (in Sanierung)
-    const becken = kasten(BECKEN, 2.0, fliese, fliese, std({ color: 0xd8d4cc, roughness: .8 })); becken.g.name = 'becken';
-    for (const x of [-2, 2]) { const l = new THREE.Group(); for (const dz of [-.25, .25]) { mesh(new THREE.TorusGeometry(.25, .03, 6, 12, Math.PI), std({ color: 0xc0c4c8, metalness: .8 }), l, 0, .3, dz); mesh(new THREE.CylinderGeometry(.03, .03, 2.2, 6), std({ color: 0xc0c4c8, metalness: .8 }), l, .25, -.8, dz); } l.position.set(x, 0, (BECKEN[3] - BECKEN[1]) / 2 - .2); l.rotation.y = Math.PI / 2; becken.g.add(l); }
-    greifbar(becken.g, BECKEN[2] - BECKEN[0], 1.2, BECKEN[3] - BECKEN[1], -.5);
-    // Bagger
-    const gelb = std({ color: 0xf2b01e, roughness: .5, metalness: .2 }), schwarz = std({ color: 0x222222, roughness: .7 });
-    const bagger = new THREE.Group(); bagger.name = 'bagger';
-    for (const z of [-1.1, 1.1]) { mesh(new THREE.BoxGeometry(3.6, .8, .7), schwarz, bagger, 0, .4, z); }
-    const oben = new THREE.Group(); oben.position.y = .9; bagger.add(oben);
-    mesh(new THREE.BoxGeometry(3.0, 1.0, 2.4), gelb, oben, -.3, .5, 0);
-    mesh(new THREE.BoxGeometry(1.2, 1.5, 1.1), std({ color: 0x2a3a4a, roughness: .1, metalness: .4 }), oben, .6, 1.75, .55);
-    const arm1 = mesh(new THREE.BoxGeometry(3.4, .35, .35), gelb, oben, 2.0, 2.1, -.4); arm1.rotation.z = .45;
-    const arm2 = mesh(new THREE.BoxGeometry(2.6, .3, .3), gelb, oben, 4.1, 2.0, -.4); arm2.rotation.z = -1.0;
-    mesh(new THREE.BoxGeometry(.8, .7, .9), schwarz, oben, 4.9, .7, -.4);
-    bagger.rotation.y = Math.PI * .8; at(bagger, 25, -38); eigene.push([25, -38, 2.6], [22.5, -39.5, 1.2]);
-    // Bauwagen
+    const e = eingangHallenbad(ort, { baustelle: true, welt: true });
+    // Bauwagen links auf dem Platz (Tür zum Platz hin)
+    const schwarz = std({ color: 0x222222, roughness: .7 });
     const wagen = new THREE.Group(); wagen.name = 'bauwagen';
     mesh(new THREE.BoxGeometry(5, 2.3, 2.3), std({ color: 0x3a7a4a, roughness: .7 }), wagen, 0, 1.6, 0);
     mesh(new THREE.CylinderGeometry(1.25, 1.25, 5.04, 20, 1, false, 0, Math.PI), std({ color: 0x5a5a5a }), wagen, 0, 2.75, 0).rotation.set(0, 0, Math.PI / 2);
     for (const x of [-1.6, 1.6]) { for (const z of [-1.0, 1.0]) { mesh(new THREE.CylinderGeometry(.38, .38, .2, 16), schwarz, wagen, x, .38, z).rotation.x = Math.PI / 2; } }
     mesh(new THREE.BoxGeometry(.9, 1.8, .05), std({ color: 0x2a4a3a }), wagen, 1.4, 1.4, 1.17);
     for (const x of [-1.2, 0]) { mesh(new THREE.BoxGeometry(.8, .6, .04), std({ color: 0xbfd6e2, roughness: .1, metalness: .3 }), wagen, x, 1.9, 1.17); }
-    wagen.rotation.y = Math.PI; at(wagen, 9.5, -35.2); eigene.push([9.5, -35.2, 2.9], [7.5, -35.2, 1.5], [11.5, -35.2, 1.5]);
-    // Bauzaun mit Tor im Westen
+    wagen.position.set(-12.6, 0, 9.0); ort.add(wagen);
+    // Bauzaun um den Platz, Tor vorn links, davor der Weg zur Karte
     const zaunTex = w.canvasTex(128, 128, (g, cw, ch) => { g.clearRect(0, 0, cw, ch); g.strokeStyle = '#c8ccd0'; g.lineWidth = 3; for (let i = 0; i <= 8; i++) { g.beginPath(); g.moveTo(i * 16, 0); g.lineTo(i * 16, ch); g.moveTo(0, i * 16); g.lineTo(cw, i * 16); g.stroke(); } });
     const gitter = new THREE.MeshStandardMaterial({ map: zaunTex, transparent: true, alphaTest: .3, side: THREE.DoubleSide, metalness: .6, roughness: .4 });
     const fuss = std({ color: 0xc8483a, roughness: .9 }), rohr = std({ color: 0xb0b4b8, metalness: .7, roughness: .4 });
-    const zaun = (e0, n0, e1, n1) => {
-        const l = Math.hypot(e1 - e0, n1 - n0), k = Math.max(1, Math.round(l / 3.5));
+    const zaun = (x0, z0, x1, z1) => {
+        const l = Math.hypot(x1 - x0, z1 - z0), k = Math.max(1, Math.round(l / 3.5));
         for (let i = 0; i < k; i++) {
-            const a = i / k, b = (i + 1) / k, ea = e0 + (e1 - e0) * a, na = n0 + (n1 - n0) * a, eb = e0 + (e1 - e0) * b, nb = n0 + (n1 - n0) * b;
-            const em = (ea + eb) / 2, nm = (na + nb) / 2, len = Math.hypot(eb - ea, nb - na), rot = Math.atan2(-(nb - na), eb - ea);
-            const p = new THREE.Group();
+            const a = i / k, b = (i + 1) / k, xa = x0 + (x1 - x0) * a, za = z0 + (z1 - z0) * a, xb = x0 + (x1 - x0) * b, zb = z0 + (z1 - z0) * b;
+            const p = new THREE.Group(), len = Math.hypot(xb - xa, zb - za);
             const f = mesh(new THREE.PlaneGeometry(len, 1.9), gitter, p, 0, 1.15, 0); f.castShadow = false; f.userData.durchlaessig = true;
             for (const x of [-len / 2, len / 2]) { mesh(new THREE.CylinderGeometry(.03, .03, 2.0, 6), rohr, p, x, 1.1, 0); mesh(new THREE.BoxGeometry(.6, .15, .25), fuss, p, x, .08, 0); }
             mesh(new THREE.BoxGeometry(len, .04, .04), rohr, p, 0, 2.08, 0);
-            p.position.copy(W3(em, nm)); p.rotation.y = rot; scene.add(p);
+            p.position.set((xa + xb) / 2, 0, (za + zb) / 2); p.rotation.y = -Math.atan2(zb - za, xb - xa); ort.add(p);
         }
     };
-    zaun(E0, N1, E1, N1); zaun(E1, N1, E1, N0); zaun(E1, N0, E0, N0); zaun(E0, N0, E0, -45); zaun(E0, -40, E0, N1);
+    zaun(-16.2, 18, -10.6, 18); zaun(-7.4, 18, 22.2, 18); zaun(-16.2, 4.6, -16.2, 18); zaun(22.2, 11.5, 22.2, 18);
     const tor = new THREE.Group(); tor.name = 'tor';
-    const torFluegel = mesh(new THREE.PlaneGeometry(2.6, 1.9), gitter, tor, 0, 1.15, 1.3); torFluegel.rotation.y = Math.PI / 2 + .9; torFluegel.userData.durchlaessig = true; torFluegel.position.set(-.9, 1.15, 1.6);
-    const torSchild = mesh(new THREE.PlaneGeometry(1.2, .5), std({ map: texte(w.canvasTex, 256, 104, '#ffffff', '#c0392b', ['Baustelle', 'Betreten verboten'], 'bold 28px Arial'), side: THREE.DoubleSide }), tor, 0, 1.7, -2.4);
-    torSchild.rotation.y = Math.PI / 2;
-    at(tor, E0, -42.5); greifbar(tor, 1.2, 2.4, 5, 1.2);
-    // Stapel abgeschraubter Wegweiser vor dem Tor
-    const stapel = new THREE.Group(); stapel.name = 'stapel';
-    ['Münster', 'Nordwalde', 'Emsdetten', 'Saerbeck', 'Ladbergen', 'Reckenbeck'].forEach((t, i) => {
-        const tex = texte(w.canvasTex, 256, 56, '#f2d230', '#1a1a1a', [t], 'bold 32px Arial');
-        const s = mesh(new THREE.BoxGeometry(1.3, .03, .3), [std({ color: 0xaaaaaa }), std({ color: 0xaaaaaa }), std({ map: tex }), std({ color: 0xaaaaaa }), std({ color: 0xaaaaaa }), std({ color: 0xaaaaaa })], stapel, 0, .03 + i * .045, 0);
-        s.rotation.y = (i % 3 - 1) * .25;
-    });
-    at(stapel, E0 - 1.0, -42.5);
-    // Schild „Hallenbad wird saniert“
-    const info = new THREE.Group(); info.name = 'infotafel';
-    mesh(new THREE.PlaneGeometry(3.2, 1.6), std({ map: texte(w.canvasTex, 512, 256, '#1f5fa8', '#ffffff', ['Hier wird saniert:', 'Ihr Hallenbad', 'Wiedereröffnung: bald'], 'bold 44px Arial') }), info, 0, 2.2, 0);
-    for (const x of [-1.4, 1.4]) { mesh(new THREE.CylinderGeometry(.05, .05, 3, 8), rohr, info, x, 1.5, -.05); }
-    info.rotation.y = -Math.PI / 2 + .2; at(info, 33, -36); eigene.push([33, -36, .6]);
+    const torFluegel = mesh(new THREE.PlaneGeometry(2.6, 1.9), gitter, tor, -1.0, 1.15, .9); torFluegel.rotation.y = -.9; torFluegel.userData.durchlaessig = true;
+    mesh(new THREE.PlaneGeometry(1.2, .5), std({ map: texte(w.canvasTex, 256, 104, '#ffffff', '#c0392b', ['Baustelle', 'Betreten verboten'], 'bold 28px Arial'), side: THREE.DoubleSide }), tor, 2.4, 1.7, .02);
+    tor.position.set(-9, 0, 18); ort.add(tor); greifbar(tor, 3.4, 2.4, 1.2, 1.2);
+    // Wegweiser zur Radbrücke rechts
     const zurBruecke = new THREE.Group(); zurBruecke.name = 'zurbruecke';
     mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), rohr, zurBruecke, 0, 1.2, 0);
-    mesh(new THREE.BoxGeometry(1.3, .3, .03), [rohr, rohr, rohr, rohr, std({ map: texte(w.canvasTex, 256, 60, '#f4f2ea', '#1a3a6a', ['Radbrücke / Ems →'], 'bold 28px Arial') }), std({ map: texte(w.canvasTex, 256, 60, '#f4f2ea', '#1a3a6a', ['Radbrücke / Ems →'], 'bold 28px Arial') })], zurBruecke, .5, 2.1, 0);
-    greifbar(zurBruecke, 1.4, 2.4, .6); zurBruecke.rotation.y = -Math.PI / 2; at(zurBruecke, E1 - 1.2, -34); eigene.push([E1 - 1.2, -34, .4]);
-    const frei = (x, z) => {
-        const e = x, n = -z;
-        if (e < E0 + .5 || e > E1 - .5 || n < N0 + .5 || n > N1 - .5) { return false; }
-        return !imKreis(eigene, e, n) && !(e > GRUBE[0] - .9 && e < GRUBE[2] + .9 && n > GRUBE[1] - .9 && n < GRUBE[3] + .9) && !(e > BECKEN[0] - .9 && e < BECKEN[2] + .9 && n > BECKEN[1] - .9 && n < BECKEN[3] + .9);
+    const brTex = texte(w.canvasTex, 256, 60, '#f4f2ea', '#1a3a6a', ['Radbrücke / Ems →'], 'bold 28px Arial');
+    mesh(new THREE.BoxGeometry(1.3, .3, .03), [rohr, rohr, rohr, rohr, std({ map: brTex }), std({ map: brTex })], zurBruecke, .5, 2.1, 0);
+    greifbar(zurBruecke, 1.4, 2.4, .6); zurBruecke.position.set(20.6, 0, 14.6); zurBruecke.rotation.y = .4; ort.add(zurBruecke);
+
+    // ---------- Begehbar: der Vorplatz bis zum Zaun, nicht in Grube, Gebäude und Möbel (alles im Ortsrahmen)
+    const kreise = [[-.2, .9, .45], [-10.4, 3.4, .7], [-11.6, 8.5, .7], [-9.7, 7.2, .5], [-6.4, 5.2, .9], [4.6, 9.2, .5], [6.6, 8.6, .3], [8.2, 8.6, .3],
+        [2.9, 6.4, .35], [4.7, 7.4, .45], [13.6, 9.0, .35], [20.6, 14.6, .4]];
+    const strecken = [[-8.6, 10.2, -4.9, 10.2], [-3.4, 10.8, 1.6, 10.8], [3.8, 10.2, 8.6, 10.2], [12.6, 7.4, 12.6, 10.0], [12.6, 10.0, 18, 10.4]];
+    const nahStrecke = (x, z, [a, b, c, dd]) => { const vx = c - a, vz = dd - b, t = Math.max(0, Math.min(1, ((x - a) * vx + (z - b) * vz) / (vx * vx + vz * vz))); return Math.hypot(x - a - vx * t, z - b - vz * t) < .35; };
+    const freiLokal = (x, z) => {
+        if (x < -15.6 || x > 21.6 || z < .45 || z > 17.4) { return false; }
+        if (x > 3.6 && z < 7.4) { return false; }                     // Umkleidetrakt mit Hecke
+        if (x > -4.7 && x < 4.5 && z > 2.0 && z < 9.3) { return false; } // Grube mit Bauzaun
+        if (x < -8.2 && z < 3.4) { return false; }                     // Hecke und Baum links
+        if (x > -15.4 && x < -9.8 && z > 7.6 && z < 10.4) { return false; }   // Bauwagen
+        if (kreise.some(([a, b, r]) => Math.hypot(x - a, z - b) < r)) { return false; }
+        return !strecken.some((s) => nahStrecke(x, z, s));
     };
+    const frei = (x, z) => { const [a, b] = lokal(x, z); return freiLokal(a, b); };
     const boden = []; scene.traverse((o) => { if (o.name === 'ground') { boden.push(o); } });
-    const mitte = W3(19, -45);
+    const W = (x, z) => welt(x, z);
+    const kv = (x, y, z) => ort.localToWorld(new THREE.Vector3(x, y, z));
     return {
-        scene, frei, boden, hoehe: (x, z) => boden0(x, -z),
-        kamera: (p) => { const t = p.clone().lerp(mitte, .3); t.y = p.y + 1.0; return { p: new THREE.Vector3(p.x * .7 + mitte.x * .3 + 4, p.y + 6.5, p.z + 12), t }; },
-        spawn: { karte: [8.5, 42.6, Math.PI / 2], von_bruecke: [E1 - 2.6, 34.6, -Math.PI / 2] },
+        scene, frei, boden, hoehe: (x, z) => (imVorplatz(x, z) ? y0 : H(x, -z)),
+        kamera: (p) => {
+            const [lx, lz] = lokal(p.x, p.z), x = Math.max(-9, Math.min(14, lx));
+            return { p: kv(x * .55 + 1.5, 7.6, Math.min(lz, 15) + 11.5), t: kv(x * .75 + .4, 1.5, Math.min(lz, 15) - 3.5) };
+        },
+        spawn: { karte: [...W(-9, 15.8), blick(Math.PI)], von_bruecke: [...W(18.6, 13.6), blick(-Math.PI / 2)] },
         hotspots: [
-            { obj: leitung, stand: [16.5, 38.6], eintraege: [{ id: 'leitung' }] },
-            { obj: grube.g, stand: [11, 43], eintraege: [{ id: 'grube' }] },
-            { obj: tor, stand: [5.4, 42.5], eintraege: [{ id: 'zurkarte' }] },
-            { obj: zurBruecke, stand: [E1 - 2.2, 34.6], eintraege: [{ tor: 'radbruecke', spawn: 'von_baustelle', name: 'Weg zur Radbrücke', ansehen: 'Ein Schild: „Radbrücke / Ems“. Dahinter die gelben Laternen.' }] },
-            { obj: becken.g, stand: [27, 44.6], eintraege: [{ deko: 'Leeres Becken', text: 'Das Außenbecken, leer und frisch verfugt. Joe: „Ordentliche Arbeit. Fast so gut wie meine.“' }] },
-            { obj: bagger, stand: [21.5, 36.5], eintraege: [{ deko: 'Bagger', text: 'Ein Bagger. Der Schlüssel steckt nicht – Frau Kemper hat ihn um den Hals.' }] },
-            { obj: wagen, stand: [13.4, 37.2], eintraege: [{ deko: 'Bauwagen', text: 'Der Bauwagen. Drinnen: Kaffeemaschine, Bauplan, Gummistiefel.' }] },
-            { obj: info, stand: [31.6, 37.2], eintraege: [{ deko: 'Bauschild', text: '„Hier wird saniert: Ihr Hallenbad. Wiedereröffnung: bald.“ Das Datum ist überklebt.' }] }
+            { obj: e.leitung, stand: W(-5.2, 5.0), eintraege: [{ id: 'leitung' }] },
+            { obj: e.grube, stand: W(2.6, 9.8), eintraege: [{ id: 'grube' }] },
+            { obj: e.wandbild, stand: W(-6.4, 1.6), eintraege: [{ id: 'wandbild' }] },
+            { obj: e.schild, stand: W(2.2, 1.3), eintraege: [{ id: 'schild' }] },
+            { obj: e.buchstaben, stand: W(-8.4, 14.4), eintraege: [{ id: 'buchstaben' }], klickbar: (b) => !!b.flags.gegnerBaustelleWeg && !b.flags.schildHeil },
+            { obj: tor, stand: W(-9, 16.6), eintraege: [{ id: 'zurkarte' }] },
+            { obj: zurBruecke, stand: W(19.6, 13.8), eintraege: [{ tor: 'radbruecke', spawn: 'von_baustelle', name: 'Weg zur Radbrücke', ansehen: 'Ein Schild: „Radbrücke / Ems“. Dahinter die gelben Laternen.' }] },
+            { obj: wagen, stand: W(-10.6, 11.4), eintraege: [{ deko: 'Bauwagen', text: 'Der Bauwagen. Drinnen: Kaffeemaschine, Bauplan, Gummistiefel.' }] },
+            { obj: e.bauschild, stand: W(7.4, 9.9), eintraege: [{ deko: 'Bauschild', text: '„Stadt Greven – Sanierung Hallenbad. Bauleitung: Frau Kemper. Wiedereröffnung: bald.“ Das Datum ist überklebt.' }] }
         ],
         npcs: [
-            { hotspot: 'bauleiter', figur: 'kemper', pos: [10.2, 47.2], rot: .6, pose: 'stehen', stand: [10.6, 45.6] },
-            // Aus der Ems durch das Bauzaun-Tor herein; später rückwärts in den Bauwagen
-            { hotspot: 'gegner', figur: 'pinsel', pos: [5.6, 40.6], rot: -Math.PI / 2, pose: 'benutzen', stand: [7.4, 41.4], von: [1.4, 41.6], nach: [[9.0, 37.4], [9.3, 35.6]], rueckwaerts: true },
-            { hotspot: 'gegner', figur: 'ledeiw', pos: [5.6, 44.4], rot: -Math.PI / 2, pose: 'stehen', stand: [7.4, 41.4], von: [1.2, 43.6], nach: [[10.0, 37.6], [9.8, 35.6]], rueckwaerts: true }
+            { hotspot: 'bauleiter', figur: 'kemper', pos: W(-6.8, 7.6), rot: blick(.6), pose: 'stehen', stand: W(-7.2, 8.9) },
+            // Aus der Ems durch das Bauzaun-Tor herein zur Leiter (Pinsel steigt hinauf, Ledeiw hält sie); später rückwärts in den Bauwagen
+            { hotspot: 'gegner', figur: 'pinsel', tempo: 2.3, pos: W(-.2, .55), rot: blick(Math.PI), pose: 'benutzen', hoch: 1.05, stand: W(-2.8, 1.4),
+                von: [W(-9, 20), W(-9, 15), W(-4.75, 11.5), W(-4.75, 1.5)], nach: [W(-4.75, 1.5), W(-4.75, 11.5), W(-10.4, 11.8), W(-11.2, 10.3)], rueckwaerts: true },
+            { hotspot: 'gegner', figur: 'ledeiw', tempo: 2.3, pos: W(.9, 1.6), rot: blick(-2.4), pose: 'stehen', stand: W(-2.8, 1.4),
+                von: [W(-9.8, 20), W(-9.8, 15.2), W(-4.75, 11.8), W(-4.75, 1.9)], nach: [W(-4.75, 1.9), W(-4.75, 11.8), W(-10.8, 12.1), W(-11.0, 10.3)], rueckwaerts: true }
         ],
         dinge: [
-            { obj: siegel, sichtbar: (b) => !!b.flags.grubeTrocken && !b.inventar.includes('siegel_judikative'), art: 'nehmen' },
-            // Die abgeschraubten Wegweiser stapeln Pinsel und Ledeiw erst, wenn sie da sind
-            { obj: stapel, sichtbar: (b) => !!b.flags.gegnerBaustelle && !b.flags.gegnerBaustelleWeg, art: 'schwinden' }
+            { obj: e.siegel, sichtbar: (b) => !!b.flags.grubeTrocken && !b.inventar.includes('siegel_judikative'), art: 'nehmen' },
+            // Leiter und abgeschraubte Buchstaben gibt es erst, wenn Pinsel und Ledeiw da sind; Joe schraubt sie wieder an
+            { obj: e.leiter, sichtbar: (b) => !!b.flags.gegnerBaustelle && !b.flags.schildHeil, art: 'schwinden' },
+            { obj: e.buchstaben, sichtbar: (b) => !!b.flags.gegnerBaustelle && !b.flags.schildHeil, art: 'schwinden' }
         ],
         aktualisieren(z) {
             const f = z.flags;
-            strahl.visible = !f.leckDicht && !f.grubeTrocken;   // das Leck ist dicht …
-            wasserG.visible = !f.grubeTrocken;                    // … dann pumpt die Grube leer
-            flick.visible = !!f.grubeTrocken;
+            e.strahl.visible = !f.leckDicht && !f.grubeTrocken;   // das Leck ist dicht …
+            e.wasser.visible = !f.grubeTrocken;                    // … dann pumpt die Grube leer
+            e.schildMat.map = f.gegnerBaustelle && !f.schildHeil ? e.schildKaputt : e.schildHeil;
         },
         helme: (z) => !!z.flags.helme,
         tick(dt, t) {
-            strahl.children.forEach((s, i) => { const k = ((t * 1.6 + i / 7) % 1); s.position.set(.6, -k * 1.2, k * .9); s.scale.setScalar(1 - k * .4); });
+            e.strahl.children.forEach((s, i) => { const k = ((t * 1.6 + i / 9) % 1); s.position.set(k * .5, -k * .9, k * .4); s.scale.setScalar(1 - k * .4); });
         }
     };
 }
