@@ -60,7 +60,7 @@ else
                     <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => bearbeiten = false)" />
                 </div>
                 <p class="fp-small fp-muted">Werkzeugleiste für Überschriften, Listen, Tabellen und Links; unten rechts zwischen Markdown und WYSIWYG umschalten.
-                    Bilder einfach einfügen (Strg+V) oder hineinziehen. [[Seitentitel]] verlinkt eine Wiki-Seite.</p>
+                    Bilder einfach einfügen (<kbd>Strg</kbd>+<kbd>V</kbd>) oder hineinziehen. [[Seitentitel]] verlinkt eine Wiki-Seite.</p>
             }
             else
             {
@@ -113,7 +113,7 @@ else
                 <h2>Bilder dieser Seite</h2>
                 @if (bilder.Count == 0)
                 {
-                    <p class="fp-small fp-muted">Noch keine Bilder. Im Bearbeiten-Modus einfach ein Bild einfügen (Strg+V) oder hineinziehen.</p>
+                    <p class="fp-small fp-muted">Noch keine Bilder. Im Bearbeiten-Modus einfach ein Bild einfügen (<kbd>Strg</kbd>+<kbd>V</kbd>) oder hineinziehen.</p>
                 }
                 else
                 {

@@ -28,7 +28,7 @@
             <div class="fp-field"><label class="fp-lbl">Ziel-Gremium</label><RadzenDropDown TValue="Guid?" @bind-Value="gremium" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" /></div>
             <div class="fp-field"><label class="fp-lbl" for="a-thema">Politikfeld</label><RadzenTextBox id="a-thema" @bind-Value="thema" Placeholder="z. B. Schule und Bildung" /></div>
         </div>
-        <span class="fp-lbl">Antragstext (Bilder per Strg+V einfügen)</span>
+        <span class="fp-lbl">Antragstext (Bilder per <kbd>Strg</kbd>+<kbd>V</kbd> einfügen)</span>
         <MarkdownEditor @ref="editor" @bind-Text="text" BezugArt="@FraktionPerfekt.Application.Wissen.BildBesitzer.Entwurf" BezugId="@entwurfId" Bezeichnung="Antragstext" Hoehe="100%" />
     </ChildContent>
     <Knoepfe><BegruendeterButton Text="Anlegen" Icon="save" Freigabe="@(string.IsNullOrWhiteSpace(titel) ? Freigabe.Nein("Bitte einen Titel eingeben.") : Freigabe.Ja)" Click="AnlegenAsync" /></Knoepfe>

@@ -9,7 +9,7 @@ Bild-Hooks; er ist CSP-konform (keine eingebetteten Skripte, keine Style-Element
 **Darstellung:** serverseitig mit Markdig. Roh-HTML wird nie übernommen, Links nur `http`, `https`, `mailto` oder relativ,
 Bilder nur aus der eigenen Ablage (`dateien/bild/{guid}`). Überschriften rücken eine Ebene ein (`#` → h2).
 
-**Bilder einfügen:** Strg+V (Zwischenablage), Hineinziehen oder Bild-Knopf in der Werkzeugleiste.
+**Bilder einfügen:** <kbd>Strg</kbd>+<kbd>V</kbd> (Zwischenablage), Hineinziehen oder Bild-Knopf in der Werkzeugleiste.
 
 - Im Browser: größer als 2000 px (längste Kante) wird verkleinert, Fotos (JPEG) werden neu kodiert – EXIF/GPS fällt weg.
 - Server (`POST dateien/bild`, mit Antiforgery-Token): Prüfung an der Dateisignatur (PNG, JPEG, GIF, WebP – kein SVG),

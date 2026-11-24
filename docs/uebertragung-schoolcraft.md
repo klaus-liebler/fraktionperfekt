@@ -124,6 +124,9 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 
 - Jeder Tastenhinweis in Oberfläche, Hilfe und Touren als `<kbd>`, Kürzelliste auf `/hilfe`. Klein und nur am Rechner wirksam; gehört zu Nr. 3.
 - **Aufwand:** S.
+- **Umgesetzt (24.11.2026) ✅:** Kürzelliste „Tastenkürzel“ in `docs/hilfe.md` (auf `/hilfe`), Tastenhinweise in Oberfläche, Hilfe, Wiki-Doku und
+  Suchvorschlägen als `<kbd>`. Die Markdown-Darstellung lässt genau `<kbd>` durch (alles andere HTML bleibt Text). Touren enthalten keine
+  Tastenhinweise. Test `TastenkuerzelTests`.
 
 ---
 

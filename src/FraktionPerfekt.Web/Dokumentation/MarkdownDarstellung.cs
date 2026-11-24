@@ -40,7 +40,7 @@ public static partial class MarkdownDarstellung
         var renderer = new HtmlRenderer(schreiber);
         Pipeline.Setup(renderer);
         renderer.Render(dokument);
-        return schreiber.ToString();
+        return Tasten(schreiber.ToString());
     }
 
     /// <summary>Zerlegt das Dokument an den Überschriften der Ebenen 1–3 (für Inhaltsverzeichnis und Kommentare je Abschnitt).</summary>
@@ -85,7 +85,7 @@ public static partial class MarkdownDarstellung
 
             if (kopf is null)
             {
-                abschnitte.Add(new Abschnitt(string.Empty, 0, string.Empty, string.Empty, inhalt.ToString()));
+                abschnitte.Add(new Abschnitt(string.Empty, 0, string.Empty, string.Empty, Tasten(inhalt.ToString())));
                 return;
             }
 
@@ -93,8 +93,8 @@ public static partial class MarkdownDarstellung
             var titelRenderer = new HtmlRenderer(titel);
             Pipeline.Setup(titelRenderer);
             titelRenderer.WriteLeafInline(kopf);
-            var titelHtml = titel.ToString();
-            abschnitte.Add(new Abschnitt(kopf.GetAttributes().Id ?? string.Empty, kopf.Level, titelHtml, ReinerText(titelHtml), inhalt.ToString()));
+            var titelHtml = Tasten(titel.ToString());
+            abschnitte.Add(new Abschnitt(kopf.GetAttributes().Id ?? string.Empty, kopf.Level, titelHtml, ReinerText(titelHtml), Tasten(inhalt.ToString())));
         }
     }
 
@@ -116,6 +116,12 @@ public static partial class MarkdownDarstellung
 
         return dokument;
     }
+
+    /// <summary>
+    /// Tastenkürzel (aus SchoolCraft FA-3236): Das einzige HTML, das durchkommt, ist <c>&lt;kbd&gt;</c> – Markdig gibt es wegen DisableHtml als
+    /// Text aus; nur genau diese Tags werden zurückverwandelt, ihr Inhalt bleibt maskierter Text.
+    /// </summary>
+    internal static string Tasten(string html) => html.Replace("&lt;kbd&gt;", "<kbd>", StringComparison.Ordinal).Replace("&lt;/kbd&gt;", "</kbd>", StringComparison.Ordinal);
 
     /// <summary>Erlaubt http(s), mailto und Anker; relative Pfade gehen über <paramref name="linkZiel"/>; alles andere (javascript:, data: …) entfällt.</summary>
     internal static string? SichererLink(string? url, Func<string, string?>? linkZiel)

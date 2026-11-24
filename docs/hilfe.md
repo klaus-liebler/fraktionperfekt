@@ -134,6 +134,19 @@ Die Suche oben findet Personen, Kontakte und Bürgeranliegen auch bei Tippfehler
 „Kuehlert“ findet Kühlert, „Waschko“ findet Waschkowitz-Biggeleben. Dasselbe gilt beim Zuweisen von Aufgaben und Anliegen und bei
 Themenpaten: In der Auswahl einfach den Namen tippen. Jeder Bereich zeigt nur, was im jeweiligen Modul sichtbar ist.
 
+## Tastenkürzel
+
+Nur am Rechner; auf dem Handy genügt Tippen.
+
+| Kürzel | Wirkung |
+|---|---|
+| <kbd>Strg</kbd>+<kbd>K</kbd> (Mac <kbd>⌘</kbd>+<kbd>K</kbd>) | ins Suchfeld springen, von jeder Seite aus |
+| <kbd>↑</kbd> <kbd>↓</kbd> | Vorschlag der Suche wählen |
+| <kbd>Enter</kbd> | gewählten Vorschlag öffnen; ohne Auswahl alle Treffer zeigen |
+| <kbd>Esc</kbd> | Vorschläge, Rückfrage oder Dialog schließen (ungespeicherte Texte: mit Nachfrage) |
+| <kbd>Strg</kbd>+<kbd>V</kbd> | Bild in Antrag, Wiki-Seite oder Ticket einfügen |
+| <kbd>Tab</kbd> / <kbd>Umschalt</kbd>+<kbd>Tab</kbd> | zum nächsten bzw. vorigen Feld; gesperrte Schaltflächen zeigen dabei ihre Begründung |
+
 ## Rückfragen
 
 Was sich nicht einfach zurücknehmen lässt – Löschen, Stornieren, Widerrufen, Zurückziehen, eine Vertretung absagen, eine Sitzung beenden,
