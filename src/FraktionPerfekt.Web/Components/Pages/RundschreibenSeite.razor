@@ -1,0 +1,171 @@
+@page "/rundschreiben"
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Postausgang
+@using FraktionPerfekt.Domain.Postausgang
+@inject Vorgang Vorgang
+@inject DialogService Dialoge
+
+<PageTitle>Rundschreiben · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Rundschreiben</h1>
+        <p class="fp-sub">Fraktionsinfo, Einladungen und Mitteilungen an Ratsmitglieder, Fraktion oder Kampagnenteam – mit passender Anrede je Person, über den Postausgang.
+            Frühere Rundschreiben dienen als Vorlage.</p>
+    </div>
+    <Hinzufuegen Objekt="Rundschreiben" Freigabe="@RundschreibenDienst.Recht(benutzer?.Rolle)" Klick="@(() => Oeffnen(null))" />
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+}
+
+<GrosserDialog @bind-Offen="offen" Titel="@(vorlage is null ? "Rundschreiben schreiben" : $"Rundschreiben (Vorlage: {vorlage.Betreff})")"
+               Geaendert="@(Pflichtangaben.Text(betreff) || Pflichtangaben.Text(text))">
+    <ChildContent>
+        <div class="fp-form">
+            <div class="fp-field fp-grow"><label class="fp-lbl" for="r-betreff">Betreff</label><RadzenTextBox id="r-betreff" @bind-Value="betreff" Immediate="true" /></div>
+            <div class="fp-field"><label class="fp-lbl">An</label>
+                <RadzenDropDown TValue="Empfaengerkreis" @bind-Value="kreis" Data="@Kreise" TextProperty="Text" ValueProperty="Wert" Change="@(_ => vorschau = null)" /></div>
+            <div class="fp-field"><label class="fp-lbl">Gestaltung</label>
+                <RadzenDropDown TValue="Gestaltung" @bind-Value="gestaltung" Data="@Gestaltungen" Change="@(_ => vorschau = null)" /></div>
+            <div class="fp-field"><label class="fp-lbl">Anrede</label>
+                <RadzenDropDown TValue="Anredestil" @bind-Value="anrede" Data="@Anreden" TextProperty="Text" ValueProperty="Wert" Change="@(_ => vorschau = null)" /></div>
+            @if (anrede == Anredestil.Sammelanrede)
+            {
+                <div class="fp-field"><label class="fp-lbl" for="r-sammel">Gemeinsame Anrede</label><RadzenTextBox id="r-sammel" @bind-Value="sammelanrede" Immediate="true" /></div>
+            }
+        </div>
+        <div class="fp-field"><label class="fp-lbl" for="r-text">Text</label><RadzenTextArea id="r-text" @bind-Value="text" Rows="10" Style="width:100%" Immediate="true" /></div>
+        <p class="fp-small fp-muted">@empfaengerHinweis</p>
+        @if (fehlt.Count > 0)
+        {
+            <p class="fp-small fp-muted" role="status">Es fehlt noch: @string.Join(", ", fehlt)</p>
+        }
+        @if (vorschau is not null)
+        {
+            <h3>Vorschau (erste Person im Empfängerkreis)</h3>
+            <pre class="fp-vorschau">@vorschau</pre>
+        }
+    </ChildContent>
+    <Knoepfe>
+        <BegruendeterButton Text="Vorschau" ButtonStyle="ButtonStyle.Light" Freigabe="@OkFreigabe" Click="VorschauAsync" />
+        <BegruendeterButton Text="Senden" Icon="send" Freigabe="@OkFreigabe" Click="SendenAsync" />
+    </Knoepfe>
+</GrosserDialog>
+
+<section class="fp-card fp-tbl">
+    <h2>Archiv</h2>
+    @if (archiv.Count == 0)
+    {
+        <p class="fp-muted">@(RundschreibenDienst.Recht(benutzer?.Rolle) is { Erlaubt: false } nein ? nein.Begruendung : "Noch keine Rundschreiben versandt.")</p>
+    }
+    else
+    {
+        <table>
+            <thead><tr><th>Versandt</th><th>Betreff</th><th>An</th><th>Von</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var z in archiv)
+                {
+                    <tr>
+                        <td>@(z.Rundschreiben.VersandtAm is { } am ? Ortszeit.AlsOrtszeit(am).ToString("dd.MM.yyyy HH:mm") : "")</td>
+                        <td><b>@z.Rundschreiben.Betreff</b> <span class="fp-small fp-muted">· @z.Rundschreiben.Gestaltung</span></td>
+                        <td>@z.Rundschreiben.Kreis.Anzeigename() (@z.Rundschreiben.Empfaenger)</td>
+                        <td>@z.Absender</td>
+                        <td><RadzenButton Text="Als Vorlage" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => Oeffnen(z.Rundschreiben))" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private sealed record Wahl<T>(T Wert, string Text);
+
+    private static readonly IReadOnlyList<Wahl<Empfaengerkreis>> Kreise = Enum.GetValues<Empfaengerkreis>().Select(k => new Wahl<Empfaengerkreis>(k, k.Anzeigename())).ToList();
+
+    private static readonly IReadOnlyList<Gestaltung> Gestaltungen = Enum.GetValues<Gestaltung>();
+
+    private static readonly IReadOnlyList<Wahl<Anredestil>> Anreden =
+    [
+        new(Anredestil.Persoenlich, "persönlich (je Person: Du/Sie, Begrüßung)"), new(Anredestil.Foermlich, "förmlich mit Namen"),
+        new(Anredestil.Sammelanrede, "gemeinsame Anrede"),
+    ];
+
+    private Benutzer? benutzer;
+    private IReadOnlyList<RundschreibenZeile> archiv = [];
+    private bool offen;
+    private Rundschreiben? vorlage;
+    private string? betreff, text, sammelanrede = "Liebe Kolleginnen und Kollegen", vorschau, meldung, empfaengerHinweis;
+    private Empfaengerkreis kreis = Empfaengerkreis.Fraktion;
+    private Gestaltung gestaltung = Gestaltung.Fraktionsinfo;
+    private Anredestil anrede = Anredestil.Persoenlich;
+    private bool fehler;
+
+    private IReadOnlyList<string> fehlt => Pflichtangaben.Fehlend(("Betreff", Pflichtangaben.Text(betreff)), ("Text", Pflichtangaben.Text(text)),
+        ("gemeinsame Anrede", anrede != Anredestil.Sammelanrede || Pflichtangaben.Text(sammelanrede)));
+
+    private Freigabe OkFreigabe => fehlt.Count > 0 ? Freigabe.Nein($"Es fehlt noch: {string.Join(", ", fehlt)}.") : Freigabe.Ja;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync() => archiv = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RundschreibenDienst>().ArchivAsync());
+
+    private void Oeffnen(Rundschreiben? r)
+    {
+        vorlage = r;
+        betreff = r?.Betreff;
+        text = r?.Text;
+        kreis = r?.Kreis ?? Empfaengerkreis.Fraktion;
+        gestaltung = r?.Gestaltung ?? Gestaltung.Fraktionsinfo;
+        anrede = r?.Anredestil ?? Anredestil.Persoenlich;
+        vorschau = null;
+        sammelanrede = r?.Sammelanrede ?? "Liebe Kolleginnen und Kollegen";
+        offen = true;
+    }
+
+    private NeuesRundschreiben Neu() => new(betreff!, text!, gestaltung, anrede, sammelanrede, kreis, vorlage?.Id);
+
+    private async Task VorschauAsync()
+    {
+        try
+        {
+            vorschau = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RundschreibenDienst>().VorschauAsync(Neu()));
+            var n = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RundschreibenDienst>().EmpfaengerAsync(kreis))).Count;
+            empfaengerHinweis = $"Geht an {n} Personen ({kreis.Anzeigename()}); jede bekommt ihre eigene Anrede.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+    }
+
+    private async Task SendenAsync()
+    {
+        var n = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RundschreibenDienst>().EmpfaengerAsync(kreis))).Count;
+        if (!await Dialoge.BestaetigenAsync($"„{betreff}“ geht an {n} Personen ({kreis.Anzeigename()}) per Mail, dazu ein kurzer Push-Hinweis. Versandt ist versandt.",
+                "Rundschreiben senden?", "Senden"))
+        {
+            return;
+        }
+
+        try
+        {
+            var r = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<RundschreibenDienst>().SendenAsync(Neu()));
+            (meldung, fehler, offen) = ($"Rundschreiben an {r.Empfaenger} Personen in den Postausgang gelegt.", false, false);
+            (betreff, text, vorschau, vorlage) = (null, null, null, null);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

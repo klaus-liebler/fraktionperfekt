@@ -67,6 +67,7 @@ public static class Registrierung
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Sitzungserinnerung", d.GetRequiredService<Termine.Sitzungserinnerung>().ErinnernAsync));
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Abwesenheiten-Löschfrist", d.GetRequiredService<Termine.Sitzungserinnerung>().AbwesenheitenLoeschfristAsync));
         dienste.AddScoped<Postausgang.PushAboDienst>();
+        dienste.AddScoped<Postausgang.RundschreibenDienst>();
         return dienste;
     }
 }

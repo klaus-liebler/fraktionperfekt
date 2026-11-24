@@ -206,6 +206,11 @@ es keinen Anlegen-Dialog; die Raumbuchung bleibt als Formular auf ihrer Seite. T
 ### 12 Rundschreiben mit Gestaltungen und Archiv als Vorlage (FA-820 ff.)
 Einladungen, Fraktionsinfo an Mitglieder und Kampagnenteam mit Anredestilen und Archiv als Vorlage; läuft über den vorhandenen Postausgang. M.
 
+**Umgesetzt (24.11.2026) ✅:** `Rundschreiben` (Domain/Postausgang; Zusatzmigration `Rundschreiben`), `RundschreibenDienst` (Vorstand, Geschäftsführung),
+Seite `/rundschreiben` mit großem Dialog, Vorschau, Rückfrage vor dem Senden und Archiv („Als Vorlage“). Gestaltungen Schlicht/Fraktionsinfo/Einladung
+als Textrahmen (Mails sind Text), Anredestile persönlich (vorhandene Du/Sie-Einstellung je Person), förmlich, Sammelanrede; je Person eine eigene Mail,
+dazu ein knapper Push ohne Inhalt. Nicht übernommen: HTML-Briefpapier und Serienbrief-Platzhalter. Tests: `RundschreibenTests`.
+
 ### 13 Podium für Meinungsbilder (FK-15)
 Für Klausurtagungen und öffentliche Bürgerdialoge der Fraktion: Podium-Runde mit Spitznamen ohne Konto, Ergebnisse auf den Beamer. Fraktionsinterne Abstimmungen bleiben in FraktionPerfekt (Nr. 1). Stufe 1 nur Link (S).
 

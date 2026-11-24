@@ -29,6 +29,14 @@ public sealed partial class FraktionDbContext
         // Geheime Abstimmung: Vermerk (wer, eindeutig je Person) und Stimmzettel (wie, ohne Person und Zeit; Tabelle WITHOUT ROWID, siehe Migration)
         Einfach<Stimmvermerk>(modelBuilder, "Stimmvermerke", b => b.HasIndex(x => new { x.UmfrageId, x.PersonId }).IsUnique());
         Einfach<Stimmzettel>(modelBuilder, "Stimmzettel", b => b.HasIndex(x => x.UmfrageId));
+        // Rundschreiben mit Gestaltung, Anrede und Archiv (aus SchoolCraft)
+        Einfach<Domain.Postausgang.Rundschreiben>(modelBuilder, "Rundschreiben", b =>
+        {
+            b.Property(x => x.Betreff).HasMaxLength(300);
+            b.Property(x => x.Sammelanrede).HasMaxLength(200);
+            b.Property(x => x.Text).HasMaxLength(20000);
+            b.HasIndex(x => x.ErstelltAm);
+        });
         // Beamer-Ansicht einer Sitzung mit geheimer Adresse (nur Prüfwert)
         Einfach<Domain.Sitzungen.BeamerZugang>(modelBuilder, "BeamerZugaenge", b =>
         {

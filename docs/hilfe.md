@@ -127,6 +127,13 @@ vollständig. Für Fraktionszwecke ist das angemessen; eine kryptografische Lös
 Administration frei. **Terminbesetzung**: Zu Einladungen (Vereinsjubiläum, Bürgerversammlung) melden Mitglieder
 Interesse; der Vorstand bestätigt. Nach dem Termin: Kurzbericht.
 
+### Rundschreiben
+
+**Rundschreiben** (Vorstand, Geschäftsführung) → **Rundschreiben hinzufügen**: Betreff, an wen (Ratsmitglieder, Fraktion, Kampagnenteam, alle),
+Gestaltung (schlicht, Fraktionsinfo, Einladung), Anrede (persönlich – jede Person so, wie sie es unter Einstellungen gewählt hat –, förmlich oder eine
+gemeinsame Anrede), Text → **Vorschau** → **Senden** (mit Rückfrage). Alles läuft über den Postausgang. Im **Archiv** öffnet **Als Vorlage** ein früheres
+Rundschreiben zum Wiederverwenden.
+
 ### Wissen, Dateien, Anfragen, Anliegen, Presse
 
 **Wiki** mit Versionen und Wiki-Links; die KI macht nur Vorschläge, die eine verantwortliche Person annimmt oder ablehnt.

@@ -14,7 +14,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261124222858_Korrekturregel";
+    public override string LastMigrationId => "20261124223551_Rundschreiben";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -2145,6 +2145,63 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("PersonId");
 
                 b.ToTable("PushAbos");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Postausgang.Rundschreiben", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Anredestil")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Betreff")
+                    .IsRequired()
+                    .HasMaxLength(300)
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("Empfaenger")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long>("ErstelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("ErstelltVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Gestaltung")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Kreis")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Sammelanrede")
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasMaxLength(20000)
+                    .HasColumnType("TEXT");
+
+                b.Property<long?>("VersandtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("VorlageId")
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("ErstelltAm");
+
+                b.ToTable("Rundschreiben");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Ressourcen.Buchung", b =>

@@ -144,7 +144,7 @@ public sealed partial class AppStartTests : IAsyncLifetime
         (await http.GetStringAsync("suche/vorschlaege?q=Kuehlert", abbruch)).ShouldContain("Kühlert");
 
         // Alle Hauptseiten laden (vorgerendert, Status 200).
-        foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit", "sitzungen", "aufgaben", "antraege", "abstimmungen", "wahlen", "ressourcen", "besetzung", "wahlkampf", "auslagen", "handy/plakat", "handy/auslage", "anfragen", "beschluesse", "anliegen", "presse", "kontakte", "suche?q=Haushalt", "wiki", "wiki/vorschlaege", "wiki/seite/Fraktionssitzung", "dateien", "hilfe", "dokumentation", "impressum" })
+        foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit", "sitzungen", "aufgaben", "antraege", "abstimmungen", "wahlen", "rundschreiben", "ressourcen", "besetzung", "wahlkampf", "auslagen", "handy/plakat", "handy/auslage", "anfragen", "beschluesse", "anliegen", "presse", "kontakte", "suche?q=Haushalt", "wiki", "wiki/vorschlaege", "wiki/seite/Fraktionssitzung", "dateien", "hilfe", "dokumentation", "impressum" })
         {
             var r = await http.GetAsync(seite, abbruch);
             r.StatusCode.ShouldBe(HttpStatusCode.OK, $"Seite /{seite}");

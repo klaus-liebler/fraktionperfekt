@@ -638,6 +638,21 @@ public static class Spalteneinstufung
                 ["OptionId"] = (Spaltenart.Vorgang, "gewählte Option – bewusst ohne Person und ohne Zeitpunkt"),
                 ["UmfrageId"] = (Spaltenart.Vorgang, null),
             },
+            ["Rundschreiben"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["Anredestil"] = (Spaltenart.Vorgang, null),
+                ["Betreff"] = (Spaltenart.Vorgang, null),
+                ["Empfaenger"] = (Spaltenart.Beleg, "Zahl der Empfänger:innen beim Versand (eingefroren)"),
+                ["ErstelltAm"] = (Spaltenart.Vorgang, null),
+                ["ErstelltVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["Gestaltung"] = (Spaltenart.Vorgang, null),
+                ["Kreis"] = (Spaltenart.Vorgang, null),
+                ["Sammelanrede"] = (Spaltenart.Vorgang, null),
+                ["Text"] = (Spaltenart.Vorgang, null),
+                ["VersandtAm"] = (Spaltenart.Vorgang, null),
+                ["VorlageId"] = (Spaltenart.Vorgang, "Archiv-Rundschreiben, das als Vorlage diente"),
+            },
             ["BeamerZugaenge"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),

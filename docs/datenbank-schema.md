@@ -141,6 +141,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Protokoll](#protokoll) – 10 Spalten
 - [PushAbos](#pushabos) – 8 Spalten
 - [Ressourcen](#ressourcen) – 6 Spalten
+- [Rundschreiben](#rundschreiben) – 12 Spalten
 - [Sitzungen](#sitzungen) – 14 Spalten
 - [Sitzungsanwesenheiten](#sitzungsanwesenheiten) – 4 Spalten
 - [Spenden](#spenden) – 9 Spalten
@@ -1038,6 +1039,27 @@ Klasse: `FraktionPerfekt.Domain.Ressourcen.Ressource`
 | Beschreibung | TEXT |  |  | S |  |
 | FreigabeNoetig | INTEGER | ja |  | S |  |
 | Name | TEXT | ja |  | S | Name der Ressource |
+
+## Rundschreiben
+
+Klasse: `FraktionPerfekt.Domain.Postausgang.Rundschreiben`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| Anredestil | TEXT(40) | ja |  | G |  |
+| Betreff | TEXT(300) | ja |  | G |  |
+| Empfaenger | INTEGER | ja |  | B | Zahl der Empfänger:innen beim Versand (eingefroren) |
+| ErstelltAm | INTEGER | ja | Index | G |  |
+| ErstelltVonPersonId | BLOB | ja |  | G |  |
+| Gestaltung | TEXT(40) | ja |  | G |  |
+| Kreis | TEXT(40) | ja |  | G |  |
+| Sammelanrede | TEXT(200) |  |  | G |  |
+| Text | TEXT(20000) | ja |  | G |  |
+| VersandtAm | INTEGER |  |  | G |  |
+| VorlageId | BLOB |  |  | G | Archiv-Rundschreiben, das als Vorlage diente |
+
+Indizes: (ErstelltAm)
 
 ## Sitzungen
 

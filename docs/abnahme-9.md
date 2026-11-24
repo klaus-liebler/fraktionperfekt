@@ -14,6 +14,7 @@ Drehbuch für die aus SchoolCraft übernommenen Konzepte (`docs/uebertragung-sch
 | 7 | Übungsinstanz | Johannes Wilp | 4 min |
 | 8 | Korrekturregel | Felix Bäumer, Dames Joud | 3 min |
 | 9 | Anlegen per Dialog | Liz Kühlert | 2 min |
+| 10 | Rundschreiben | Johannes Wilp | 4 min |
 
 ## 1. Geheime Abstimmung
 
@@ -102,4 +103,15 @@ Siehe [`abnahme-3.md`](abnahme-3.md), Szene 7.
 - **Aufgabe:** Klicken Sie **Kontakt hinzufügen**, tragen Sie nur die Organisation ein und versuchen Sie OK. Ergänzen Sie den Namen und speichern Sie.
   Öffnen Sie den Dialog erneut, tippen Sie etwas und drücken Sie <kbd>Esc</kbd>.
 - **Erwartung:** OK ist zunächst grau, darunter „Es fehlt noch: Name“; nach dem Namen speichert OK. <kbd>Esc</kbd> fragt nach, weil schon etwas eingetragen ist.
+- **Zeit:** ____ min. **Beobachtungen:**
+
+## 10. Rundschreiben (Punkt 12)
+
+- **Startpunkt:** **Rundschreiben** (Johannes Wilp, Vorstand).
+- **Aufgabe:** Schreiben Sie eine Fraktionsinfo an die Ratsmitglieder mit persönlicher Anrede, sehen Sie sich die Vorschau an und senden Sie. Öffnen Sie es
+  im Archiv **Als Vorlage**, ändern Sie die Anrede auf „gemeinsame Anrede“ und den Kreis auf „Kampagnenteam“, senden Sie erneut.
+- **Erwartung:**
+  - Die Vorschau zeigt Kopf „FRAKTIONSINFO“, Anrede, Text und Gruß; vor dem Senden kommt eine Rückfrage mit der Zahl der Empfänger:innen.
+  - Im **Postausgang** (Administration) steht je Person eine Mail mit eigener Anrede (Du/Sie nach Einstellung) und ein kurzer Push.
+  - Liz Kühlert (Mitglied) sieht den Bereich nicht im Menü.
 - **Zeit:** ____ min. **Beobachtungen:**

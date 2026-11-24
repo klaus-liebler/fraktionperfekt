@@ -133,6 +133,7 @@
         new("Fraktion", "Gremien und Mandate", "gremien", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur Kampagnen und öffentliche Termine.") : Freigabe.Ja),
         new("Fraktion", "Personen", "personen", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur Kampagnen und öffentliche Termine.") : Freigabe.Ja),
         new("Fraktion", "Räume und Ressourcen", "ressourcen"),
+        new("Fraktion", "Rundschreiben", "rundschreiben", FraktionPerfekt.Application.Postausgang.RundschreibenDienst.Recht),
         new("Fraktion", "Terminbesetzung", "besetzung", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur die Kampagnen.") : Freigabe.Ja),
         new("Politik", "Anfragen an die Verwaltung", "anfragen", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur die Kampagnen.") : Freigabe.Ja),
         new("Politik", "Beschlusslage", "beschluesse", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur die Kampagnen.") : Freigabe.Ja),

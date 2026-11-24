@@ -31,6 +31,7 @@ public static class Funktionskatalog
         new("Anfrage an die Verwaltung schreiben", "anfrage verwaltung", "anfragen", KeinKampagnenteam),
         new("Bürgeranliegen erfassen", "anliegen buerger buergerin", "anliegen", KeinKampagnenteam),
         new("Pressemitteilung schreiben", "presse mitteilung", "presse", KeinKampagnenteam),
+        new("Rundschreiben schreiben", "rundschreiben rundmail fraktionsinfo einladung mail an alle", "rundschreiben", Postausgang.RundschreibenDienst.Recht),
         new("Kontakt anlegen", "kontakt adresse adressbuch", "kontakte", KeinKampagnenteam),
         new("Datei ablegen", "datei hochladen upload dokument", "dateien", JedeRolle),
         new("Wiki-Seite anlegen", "wiki seite wissen", "wiki", JedeRolle),

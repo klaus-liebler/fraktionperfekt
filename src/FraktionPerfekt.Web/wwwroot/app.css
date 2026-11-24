@@ -564,3 +564,4 @@ kbd { display: inline-block; min-width: 1.4em; padding: 0 5px; border: 1px solid
 .fp-beamer-tops li.vertagt { color: var(--fp-muted); font-style: italic; }
 .fp-beamer-beschluss { font-size: .75em; color: var(--fp-muted); }
 .fp-proto.fp-uebung { background: var(--fp-good-weak); color: var(--fp-good); }
+.fp-vorschau { white-space: pre-wrap; font-family: var(--fp-font); background: var(--fp-surface-2); border-radius: 8px; padding: 10px 12px; max-height: 40vh; overflow: auto; }

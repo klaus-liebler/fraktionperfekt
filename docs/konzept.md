@@ -114,6 +114,7 @@ Zeitraum, Beschreibung, Status (Planung, aktiv, abgeschlossen) und optional eine
 | 14 | Anfragen an die Verwaltung | Gestellte Anfragen mit Frist verfolgen, Antwort ablegen, Erinnerung bei Überschreitung | 2 | ✅ |
 | 15 | Beschlusslage-Archiv | Was hat Rat oder Ausschuss wann beschlossen, was hat die Fraktion beschlossen; durchsuchbar, aus RIS und eigenen Protokollen gespeist | 2 | ✅ (RIS-Teil wie Modul 10) |
 | 16 | Kontakte | Vereine, Verwaltung, Presse, Initiativen; Ansprechpartner pro Thema, letzte Kontakte | 2 | ✅ |
+| 16a | Rundschreiben | Fraktionsinfo, Einladungen und Mitteilungen an Ratsmitglieder, Fraktion oder Kampagnenteam; Gestaltung (schlicht, Fraktionsinfo, Einladung), Anrede je Person nach ihrer Einstellung, förmlich oder als Sammelanrede; Versand über den Postausgang; Archiv als Vorlage (seit 24.11.2026, aus SchoolCraft) | 2 | ✅ |
 | 17 | Bürgeranliegen | Eingang per Formular oder E-Mail, Zuweisung an zuständiges Mitglied, Status bis zur Antwort | 3 | ✅ (Löschfrist für Name/Kontakt) |
 | 18 | Pressearbeit | Redaktionskalender, Entwürfe von Pressemitteilungen und Social-Media-Beiträgen mit Freigabe, Pressespiegel | 3 | ✅ (vier Augen) |
 | 19 | Finanzen | Budget der Fraktion, Spenden, Auslagen mit Belegfoto vom Handy und Freigabe zur Erstattung durch den Schatzmeister/Kassier; Kassenbericht | 3 | ✅ Fraktions- und Wahlkampfkasse getrennt |
