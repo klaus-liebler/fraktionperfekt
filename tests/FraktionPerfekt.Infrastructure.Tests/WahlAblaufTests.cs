@@ -109,6 +109,38 @@ public sealed class WahlAblaufTests
     }
 
     [Fact]
+    public async Task Amt_direkt_zuweisen_per_Akklamation_ab_Datum_mit_Grund()
+    {
+        await using var u = await TestUmgebung.ErzeugenAsync();
+        var kurney = await u.AnmeldenAsync("bkurney");
+        var gries = await u.AnmeldenAsync("mgries");
+        var ab = new DateOnly(2026, 12, 1);
+
+        // Nur Vorstand und Geschäftsführung; Grund ist Pflicht
+        await u.AnmeldenAsync("lkuehlert");
+        (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).AmtZuweisenAsync(Fraktionsamt.Kassier, kurney.Id, ab, null, "x"))))
+            .Message.ShouldContain("Vorstand");
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
+        (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => W(d).AmtZuweisenAsync(Fraktionsamt.Kassier, kurney.Id, ab, null, " "))))
+            .Message.ShouldContain("Grund");
+
+        var w = await u.InAsync(d => W(d).AmtZuweisenAsync(Fraktionsamt.Kassier, kurney.Id, ab, null, "per Akklamation in der Fraktionssitzung am 24.11.2026"));
+        w.Status.ShouldBe(Wahlstatus.Angenommen);
+        var person = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonAsync(kurney.Id)))!;
+        person.RollenAm(ab, u.Uhr.GetUtcNow()).ShouldContain(Rolle.Kassier);
+        person.RollenAm(ab.AddDays(-1), u.Uhr.GetUtcNow()).ShouldNotContain(Rolle.Kassier);
+        person.StandAm(ab, u.Uhr.GetUtcNow()).Funktion.ShouldBe("Schatzmeister/Kassier");
+        person.RollenVersionen.ShouldContain(v => v.Rolle == Rolle.Kassier && v.Vorgang.Grund.Contains("Akklamation", StringComparison.Ordinal));
+        (await u.InAsync(d => W(d).DetailAsync(w.Id)))!.Wahlprotokoll.ShouldContain("ohne Wahlgang");
+
+        // Nachfolge ebenfalls direkt: Vorgängerin verliert Amt und Rolle ab dem neuen Datum
+        await u.InAsync(d => W(d).AmtZuweisenAsync(Fraktionsamt.Kassier, gries.Id, new DateOnly(2027, 1, 1), null, "Rücktritt, Nachfolge per Akklamation"));
+        person = (await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonAsync(kurney.Id)))!;
+        person.RollenAm(new DateOnly(2027, 1, 1), u.Uhr.GetUtcNow()).ShouldNotContain(Rolle.Kassier);
+        (await u.InAsync(d => W(d).AemterAsync(new DateOnly(2027, 1, 1)))).Single(a => a.Amtszeit.Amt == Fraktionsamt.Kassier).Amtszeit.PersonId.ShouldBe(gries.Id);
+    }
+
+    [Fact]
     public async Task Vor_Ende_der_Amtszeit_Aufgabe_Neuwahl_einmal()
     {
         await using var u = await TestUmgebung.ErzeugenAsync();

@@ -14,7 +14,11 @@
         <h1>Wahlen und Ämter</h1>
         <p class="fp-sub">Vorstand, Kasse, Sprecher:innen und Benennungen mit Amtszeit: Kandidaturen, Wahlgang (geheim oder offen), Stichwahl, Annahme.</p>
     </div>
-    <Hinzufuegen Objekt="Wahl" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)" Klick="@(() => formular = true)" />
+    <div class="fp-row">
+        <Hinzufuegen Objekt="Wahl" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)" Klick="@(() => formular = true)" />
+        <BegruendeterButton Text="Amt direkt zuweisen" Icon="badge" ButtonStyle="ButtonStyle.Light" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)"
+                            Click="@(() => zuweisen = true)" />
+    </div>
 </div>
 
 @if (meldung is not null)
@@ -40,6 +44,32 @@
         <div class="fp-field"><label class="fp-lbl">bis (leer = Ende der Wahlperiode)</label><RadzenDatePicker TValue="DateTime?" @bind-Value="bis" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
     </div>
     <label class="fp-small"><input type="checkbox" @bind="geheim" /> geheim wählen</label>
+</AnlegenDialog>
+
+<AnlegenDialog @bind-Offen="zuweisen" Titel="Amt direkt zuweisen (ohne Wahlgang)" OkText="Zuweisen" OnOk="ZuweisenAsync"
+               Geaendert="@(zPerson is not null || Pflichtangaben.Text(zGrund))"
+               Fehlt="@Pflichtangaben.Fehlend(("Person", zPerson is not null), ("Grund", Pflichtangaben.Text(zGrund)), ("Ausschuss", zAmt != Fraktionsamt.Sprecher || zGremium is not null), ("wofür benannt wird", zAmt != Fraktionsamt.Benennung || Pflichtangaben.Text(zBezeichnung)))">
+    <p class="fp-small">Für Ämter, die ohne Wahlgang vergeben werden – z. B. per Akklamation in der Sitzung. Rolle und Funktion gelten ab dem Datum, mit dem Grund im
+        Verlauf; eine bisherige Amtszeit endet am Vortag.</p>
+    <div class="fp-form">
+        <div class="fp-field"><label class="fp-lbl">Amt</label>
+            <RadzenDropDown TValue="Fraktionsamt" @bind-Value="zAmt" Data="@Aemter" TextProperty="Text" ValueProperty="Wert" /></div>
+        <div class="fp-field"><label class="fp-lbl">Person</label>
+            <Personenwahl TItem="PersonZeile" @bind-Value="zPerson" Data="@personen" Suchtext="@(p => p.Name)" TextProperty="Sortiername" AriaLabel="Person" /></div>
+        @if (zAmt == Fraktionsamt.Sprecher)
+        {
+            <div class="fp-field"><label class="fp-lbl">Ausschuss</label>
+                <RadzenDropDown TValue="Guid?" @bind-Value="zGremium" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" /></div>
+        }
+        @if (zAmt == Fraktionsamt.Benennung)
+        {
+            <div class="fp-field"><label class="fp-lbl" for="z-bez">Wofür</label><RadzenTextBox id="z-bez" @bind-Value="zBezeichnung" Immediate="true" /></div>
+        }
+        <div class="fp-field"><label class="fp-lbl">ab</label><RadzenDatePicker TValue="DateTime" @bind-Value="zAb" DateFormat="dd.MM.yyyy" /></div>
+        <div class="fp-field"><label class="fp-lbl">bis (leer = Ende der Wahlperiode)</label><RadzenDatePicker TValue="DateTime?" @bind-Value="zBis" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+    </div>
+    <div class="fp-field"><label class="fp-lbl" for="z-grund">Grund</label>
+        <RadzenTextBox id="z-grund" @bind-Value="zGrund" Immediate="true" Placeholder="z. B. per Akklamation in der Fraktionssitzung am 24.11." Style="width:100%" /></div>
 </AnlegenDialog>
 
 <section class="fp-card fp-tbl">
@@ -104,12 +134,23 @@
     private DateTime ab;
     private DateTime? bis;
     private bool geheim = true;
+    private bool zuweisen;
+    private Fraktionsamt zAmt = Fraktionsamt.Vorsitz;
+    private Guid? zPerson;
+    private Guid? zGremium;
+    private string? zBezeichnung;
+    private string? zGrund;
+    private DateTime zAb;
+    private DateTime? zBis;
+    private IReadOnlyList<PersonZeile> personen = [];
     private string? meldung;
 
     protected override async Task OnInitializedAsync()
     {
         benutzer = await Vorgang.BenutzerAsync();
         ab = Ortszeit.Jetzt(Uhr).Date.AddDays(1);
+        zAb = Ortszeit.Jetzt(Uhr).Date;
+        personen = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().PersonenAsync())).Where(p => p.Aktiv).ToList();
         gremien = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().GremienAsync());
         liste = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WahlDienst>().ListeAsync());
         aemter = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WahlDienst>().AemterAsync());
@@ -125,6 +166,21 @@
         Wahlstatus.Angenommen => $"{z.Gewaehlt} (angenommen)",
         _ => "ohne Ergebnis",
     };
+
+    private async Task ZuweisenAsync()
+    {
+        try
+        {
+            var w = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WahlDienst>().AmtZuweisenAsync(zAmt, zPerson!.Value, DateOnly.FromDateTime(zAb),
+                zBis is { } b ? DateOnly.FromDateTime(b) : null, zGrund!, zAmt == Fraktionsamt.Sprecher ? zGremium : null, zBezeichnung));
+            Navigation.NavigateTo($"wahlen/{w.Id}");
+        }
+        catch (InvalidOperationException ex)
+        {
+            meldung = ex.Message;
+            zuweisen = false;
+        }
+    }
 
     private async Task AnlegenAsync()
     {

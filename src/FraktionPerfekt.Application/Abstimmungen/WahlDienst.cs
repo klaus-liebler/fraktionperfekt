@@ -258,9 +258,58 @@ public sealed class WahlDienst(
 
         var wer = await benutzer.ErmittelnAsync(abbruch);
         var w = await daten.LadenAsync<Wahl>(wahlId, "Wahl", abbruch);
-        var gewaehlt = w.GewaehltPersonId!.Value;
+        await AmtUebernehmenAsync(w, w.GewaehltPersonId!.Value, $"Wahl: {w.Titel}", wer, abbruch);
+        await protokoll.ProtokollierenAsync("Wahl.Angenommen", $"{Pseudonym.Person(w.GewaehltPersonId!.Value)} hat die Wahl angenommen (Amtszeit ab {w.AmtAb:dd.MM.yyyy})",
+            nameof(Wahl), wahlId, abbruch: abbruch);
+        await daten.SpeichernAsync(abbruch);
+        await stammdaten.SpeichernAsync(abbruch);
+    }
+
+    /// <summary>
+    /// Amt ohne Wahlgang direkt zuweisen (Vorstand, Geschäftsführung) – z. B. per Akklamation in der Sitzung oder wenn die Geschäftsordnung keine
+    /// Wahl verlangt (⚑). Wie nach einer angenommenen Wahl: Amtszeit, Rolle und Funktion bitemporal ab <paramref name="ab"/> mit dem Grund, die
+    /// bisherige Amtszeit endet am Vortag. Im Wahlprotokoll steht der Grund statt der Wahlgänge.
+    /// </summary>
+    public async Task<Wahl> AmtZuweisenAsync(Fraktionsamt amt, Guid personId, DateOnly ab, DateOnly? bis, string grund, Guid? gremiumId = null,
+        string? bezeichnung = null, CancellationToken abbruch = default)
+    {
+        var wer = await PruefenAsync(abbruch);
+        if (string.IsNullOrWhiteSpace(grund))
+        {
+            throw new InvalidOperationException("Bitte den Grund angeben (z. B. „per Akklamation in der Fraktionssitzung am …“).");
+        }
+
+        var person = await stammdaten.PersonAsync(personId, abbruch) ?? throw new InvalidOperationException("Person nicht gefunden.");
+        if (!person.Aktiv)
+        {
+            throw new InvalidOperationException($"{person.Anzeigename} ist nicht mehr aktiv.");
+        }
+
+        Wahl w;
+        try
+        {
+            w = new Wahl(amt, bezeichnung, gremiumId, ab, bis ?? go.Value.WahlperiodeEnde, false, wer.PersonIdPflicht, uhr.GetUtcNow());
+        }
+        catch (ArgumentException ex)
+        {
+            throw new InvalidOperationException(ex.Message.Split(" (Parameter", 2)[0], ex);
+        }
+
+        w.Festhalten(Wahlstatus.Gewaehlt, personId, $"Ohne Wahlgang zugewiesen: {grund.Trim()}.");
+        daten.Hinzufuegen(w);
+        await AmtUebernehmenAsync(w, personId, $"{w.Titel}: {grund.Trim()}", wer, abbruch);
+        await protokoll.ProtokollierenAsync("Wahl.AmtZugewiesen", $"{w.Titel} an {Pseudonym.Person(personId)} ab {ab:dd.MM.yyyy} ohne Wahlgang zugewiesen",
+            nameof(Wahl), w.Id, abbruch: abbruch);
+        await daten.SpeichernAsync(abbruch);
+        await stammdaten.SpeichernAsync(abbruch);
+        return w;
+    }
+
+    /// <summary>Amtszeit anlegen, Vorgänger:in ablösen, Rolle und Funktion bitemporal ab Beginn der Amtszeit setzen (Annahme bzw. direkte Zuweisung).</summary>
+    private async Task AmtUebernehmenAsync(Wahl w, Guid gewaehlt, string grund, Benutzer wer, CancellationToken abbruch)
+    {
         var jetzt = uhr.GetUtcNow();
-        var erfassung = Erfassung.Aenderung(jetzt, $"Wahl: {w.Titel}", wer.Name);
+        var erfassung = Erfassung.Aenderung(jetzt, grund, wer.Name);
 
         // Bisherige Amtszeit desselben Amts endet am Vortag; die Person verliert die Rolle, wenn sie sie durch kein anderes Amt mehr hat.
         var alle = await daten.ListeAsync(daten.Menge<Amtszeit>().OrderBy(a => a.Id), abbruch);
@@ -292,10 +341,6 @@ public sealed class WahlDienst(
         }
 
         w.Annehmen(jetzt);
-        await protokoll.ProtokollierenAsync("Wahl.Angenommen", $"{Pseudonym.Person(gewaehlt)} hat die Wahl angenommen (Amtszeit ab {w.AmtAb:dd.MM.yyyy})",
-            nameof(Wahl), wahlId, abbruch: abbruch);
-        await daten.SpeichernAsync(abbruch);
-        await stammdaten.SpeichernAsync(abbruch);
     }
 
     public async Task AblehnenAsync(Guid wahlId, CancellationToken abbruch = default)
@@ -401,7 +446,11 @@ public sealed class WahlDienst(
 
         if (w.AngenommenAm is { } am && w.GewaehltPersonId is { } g)
         {
-            sb.Append(de, $"\n**Annahme:** {namen.GetValueOrDefault(g, "?")} hat die Wahl am {Ortszeit.AlsOrtszeit(am):dd.MM.yyyy} angenommen.\n");
+            var name = namen.GetValueOrDefault(g, "?");
+            var datum = Ortszeit.AlsOrtszeit(am).ToString("dd.MM.yyyy", de);
+            sb.Append(gaenge.Count == 0
+                ? $"\n**Zuweisung:** Amt am {datum} an {name} übertragen (ohne Wahlgang).\n"
+                : $"\n**Annahme:** {name} hat die Wahl am {datum} angenommen.\n");
         }
 
         return sb.ToString();

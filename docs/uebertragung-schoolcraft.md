@@ -143,7 +143,8 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
   ab Datum und beendet die Vorgänger-Amtszeit, Wahlprotokoll, Fristenprüfung „Neuwahl vorbereiten“. Abweichend von SchoolCraft: ein Sitz je Wahl
   (Benennungen mit mehreren Sitzen = mehrere Wahlen); Los wird nicht gezogen, sondern vom Vorstand erfasst; Sprecher:in/Benennung ändern keine
   Rolle. Ämter, die vor der Einführung von Hand gepflegt wurden (Demodaten), bleiben unberührt, bis eine Wahl sie ablöst. Tests: `MehrheitTests`,
-  `WahlAblaufTests`.
+  `WahlAblaufTests`. Nachtrag (Klaus, 24.11.2026): **Amt direkt zuweisen** ohne Wahlgang (Akklamation) mit Datum und Pflicht-Grund über denselben Weg
+  wie die Annahme (`WahlDienst.AmtZuweisenAsync`); das Wahlergebnis wird mit einem Klick („Wahl annehmen“) in Amt, Rolle und Funktion übernommen.
 
 ### 7 Abstimmen im Sitzungsmodus
 

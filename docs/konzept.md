@@ -146,7 +146,10 @@ erreicht niemand die Mehrheit, **Stichwahl** der Bestplatzierten mit einfacher M
 gewählte Person (oder für sie der Vorstand) **nimmt die Wahl an**: Dann entsteht eine Amtszeit, Rolle (Vorstand bzw. Kassier) und Funktion gelten
 **bitemporal ab Beginn der Amtszeit** mit der Wahl als Grund, die Amtszeit der bisherigen Person endet am Vortag (ihre Rolle auch, wenn sie sie
 durch kein anderes Amt hat). Ein **Wahlprotokoll** fasst Kandidaturen, Wahlgänge, Feststellung und Annahme zusammen. Acht Wochen vor Ende einer
-Amtszeit legt die Fristenprüfung die Aufgabe „Neuwahl vorbereiten“ in den Korb des Vorstands. ⚑ Einstellungen `WahlEnthaltungenZaehlen` (nein),
+Amtszeit legt die Fristenprüfung die Aufgabe „Neuwahl vorbereiten“ in den Korb des Vorstands. **Ohne Wahlgang** (z. B. per Akklamation oder wenn die
+GO keine Wahl verlangt ⚑) weisen Vorstand oder Geschäftsführung ein Amt unter **Amt direkt zuweisen** zu: Person, Beginn, Grund (Pflicht) – Amtszeit,
+Rolle und Funktion gelten dann genauso bitemporal ab dem Datum mit dem Grund im Verlauf, die bisherige Amtszeit endet am Vortag. Ein Wahlergebnis wird
+mit **einem Klick** („Wahl annehmen“, mit Rückfrage) in Amt, Rolle und Funktion übernommen. ⚑ Einstellungen `WahlEnthaltungenZaehlen` (nein),
 `WahlStichwahl` (ja), `WahlGeheimStandard` (ja), `WahlperiodeEnde` (31.10.2030, angenommen), `NeuwahlVorlaufTage` (56).
 
 **RIS in Greven (Sternberg SD.NET):** Adresse `greven.ratsinfomanagement.net`. SD.NET kann eine OParl-Schnittstelle bereitstellen; ob sie in Greven freigeschaltet ist, ist weiter ungeklärt. OParl liefert nur öffentliche Inhalte (Gremien, Personen, Mitgliedschaften, Sitzungen, Tagesordnungen, Vorlagen, Dateien), und zwar nur lesend. Nichtöffentliche Unterlagen gibt es nur über den persönlichen Mandatsträger-Zugang; die App verlinkt dorthin, statt sie zu kopieren. Ist OParl nicht aktiv, sind ein iCal-Export der Sitzungstermine oder eine Anfrage der Fraktion an die Verwaltung, die Schnittstelle freizuschalten, die Wege. Bis dahin werden Mandate einmalig importiert und von Hand gepflegt. Das RIS steht hinter einem Bot-Schutz, der automatisierte Zugriffe blockt (Test am 15.11.2026: 403); für den Abgleich muss die IP des Servers dort freigegeben werden.

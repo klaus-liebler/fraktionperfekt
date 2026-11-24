@@ -118,6 +118,9 @@ Mehrheit der gültigen Stimmen hat, ist gewählt; sonst folgt eine **Stichwahl**
 **Wahl annehmen** – ab Beginn der Amtszeit gelten Amt, Rolle und Funktion, die Vorgängerin bzw. der Vorgänger scheidet am Vortag aus. Unten auf
 der Seite steht das **Wahlprotokoll**; vor Ende einer Amtszeit erinnert eine Aufgabe an die Neuwahl.
 
+Ohne Wahlgang, etwa per Akklamation: **Amt direkt zuweisen** → Amt, Person, ab wann, Grund („per Akklamation in der Fraktionssitzung am …“) → **Zuweisen**.
+Rolle und Funktion gelten ab dem Datum; im Verlauf der Person (Uhr-Symbol) steht der Grund.
+
 **Ehrliche Grenze:** Gegen den Betreiber des Servers, der die Datenbank laufend beobachtet oder Anfragen mitschneidet, schützt das nicht
 vollständig. Für Fraktionszwecke ist das angemessen; eine kryptografische Lösung wäre ein eigenes Vorhaben.
 
