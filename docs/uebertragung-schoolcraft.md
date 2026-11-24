@@ -176,6 +176,11 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 - **Vorteil:** Mandanten mit eigener SQLite-Datei sind schon vorbereitet (`Gemeinsam/Mandant.cs`). Eine Übungsinstanz ist ein Mandant mit Demodaten-Kopie unter eigenem Host (z. B. `uebung.…`) – dort dürfen Testanmeldung und Touren aktiv bleiben, die echte Instanz läuft mit Passkeys und ohne Touren. Zurücksetzen = Datei neu kopieren.
 - **Spielzeit** (Zeitraffer bis zur Sitzung, Fristablauf der Vertretung) nur bei Bedarf: `TimeProvider` ist schon eingespritzt, Quartz müsste folgen → dann L.
 - **Aufwand:** M (ohne Spielzeit).
+- **Umgesetzt (24.11.2026) ✅:** `MandantOptionen.Uebung`, `Betriebsart` (Touren, Testanmeldung, Demo-Schutz je Mandant), `Uebungsinstanz.NeuAufbauenAsync`
+  (frische Demodaten in einer Temp-Datei, dann SQLite-Online-Sicherung über die Übungsdatenbank – statt einer festen Vorlagedatei, damit Termine
+  relativ zu heute stimmen), beim Start für eine leere Übungsdatenbank, „Übung zurücksetzen“ auf `/hilfe` (POST, Rückfrage, danach neu anmelden).
+  Dazu: Hintergrundaufträge laufen je Mandant; ein ausdrücklich festgelegter Mandant hat Vorrang vor dem Host der Anfrage. Ohne Spielzeit; ohne eigenes
+  `instanzen.ps1` (Einrichtung über appsettings und nginx, siehe `docs/deploy.md`). Tests: `BetriebsartTests`, `UebungsinstanzTests`.
 
 ---
 

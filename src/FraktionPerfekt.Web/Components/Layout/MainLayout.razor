@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
+@inject FraktionPerfekt.Application.Gemeinsam.Betriebsart Betriebsart
 
 <RadzenComponents />
 
@@ -67,7 +68,14 @@
                     </div>
                 </Authorized>
             </AuthorizeView>
-            <span class="fp-proto" title="Alle Mails und Push-Mitteilungen werden nur simuliert; nichts verlässt das System. Das RIS ist ein Mock.">Entwicklung · Mock-Anbindungen</span>
+            @if (Betriebsart.IstUebung)
+            {
+                <span class="fp-proto fp-uebung" title="Übungsinstanz mit Demodaten: Hier darf alles ausprobiert werden, Mails gehen nicht hinaus, die Daten werden zurückgesetzt.">Übungsinstanz · Demodaten</span>
+            }
+            else
+            {
+                <span class="fp-proto" title="Alle Mails und Push-Mitteilungen werden nur simuliert; nichts verlässt das System. Das RIS ist ein Mock.">Entwicklung · Mock-Anbindungen</span>
+            }
         </header>
         <main class="fp-content">
             @if (Gesperrt() is { } sperre)

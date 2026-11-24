@@ -11,6 +11,7 @@
 @inject IStammdatenSpeicher Stammdaten
 @inject TimeProvider Uhr
 @inject ILogger<Anmelden> Log
+@inject Betriebsart Betriebsart
 
 <PageTitle>Anmelden · FraktionPerfekt</PageTitle>
 
@@ -21,6 +22,15 @@
         <b>Testanmeldung.</b> Konto wählen. Wer mehrere Rollen hat (z. B. Vorstand und Mitglied), wechselt die aktive
         Rolle nach der Anmeldung oben rechts. Im Betrieb ersetzt die Anmeldung per Passkey (Face ID, Fingerabdruck) diese Seite.
     </div>
+
+    @if (Betriebsart.IstUebung)
+    {
+        <div class="fp-alert fp-info"><b>Übungsinstanz.</b> Alles hier sind Demodaten zum Ausprobieren; nichts geht hinaus, die Daten werden zurückgesetzt.</div>
+    }
+    else if (!Betriebsart.TestanmeldungErlaubt)
+    {
+        <div class="fp-alert fp-crit" role="alert">Die Testanmeldung ist hier abgeschaltet; zum Üben bitte die Übungsinstanz verwenden.</div>
+    }
 
     @if (Fehler is not null)
     {
@@ -94,6 +104,12 @@
 
     private async Task AnmeldenAsync()
     {
+        if (!Betriebsart.TestanmeldungErlaubt)
+        {
+            Fehler = "Die Testanmeldung gibt es nur in der Übungsinstanz.";
+            return;
+        }
+
         if (!Schutz.ZugangscodePruefen(Zugangscode))
         {
             Log.LogWarning("Testanmeldung mit falschem Zugangscode abgelehnt");

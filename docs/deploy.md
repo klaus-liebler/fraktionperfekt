@@ -114,3 +114,21 @@ sudo bash /tmp/fraktionperfekt-kit/schritte/ausrollen.sh /tmp/fraktionperfekt.ta
 - **sqlite3 von Hand:** Die Namensspalten nutzen die Collation `DIN5007_2`, die nur die Anwendung registriert. Die Kommandozeile kann
   sichern und lesen; Sortieren/Vergleichen nach Namen oder `PRAGMA integrity_check` melden dort „no such collation“. Zum Lesen die
   Sichten `v_…` nehmen (z. B. `sqlite3 -readonly /var/lib/fraktionperfekt/fraktionperfekt.db "SELECT * FROM v_PersonNamen LIMIT 5"`).
+
+## Übungsinstanz (seit 24.11.2026)
+
+Eine Übungsinstanz ist ein zweiter Mandant im selben Prozess mit eigener Datenbank und eigenem Host. Beispiel für
+`/etc/fraktionperfekt/appsettings.Testsystem.json` (Hosts anpassen; nginx muss beide Namen an die Anwendung weiterreichen):
+
+```json
+"Mandanten": [
+  { "Kennung": "greven", "Name": "CDU-Fraktion Greven", "Zusatz": "im Rat der Stadt Greven", "Hosts": [ "fraktion.example.de" ] },
+  { "Kennung": "uebung", "Name": "CDU-Fraktion Greven (Übung)", "Uebung": true,
+    "Datenbank": "Data Source=/var/lib/fraktionperfekt/uebung.db", "Hosts": [ "uebung.example.de" ] }
+]
+```
+
+Beim Start wird eine leere Übungsdatenbank mit frischen Demodaten gefüllt; **Übung zurücksetzen** steht auf der Hilfeseite der Übungsinstanz
+(Administration, Vorstand). Dort sind Touren und Testanmeldung an und Mails gesperrt; im Echtbetrieb sind die Touren dann aus.
+`Anmeldung__TestanmeldungNurInUebung=true` schaltet die Testanmeldung im Echtbetrieb ab – erst setzen, wenn es eine echte Anmeldung gibt.
+Die tägliche Sicherung betrifft nur die Hauptdatenbank; die Übungsdatenbank braucht keine.

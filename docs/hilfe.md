@@ -184,6 +184,10 @@ folgt; die Schaltfläche heißt wie die Folge („Löschen“, „Stornieren“)
 
 ## Abnahme und Schulung
 
+**Übungsinstanz:** Zum Üben gibt es eine eigene Adresse mit Demodaten (oben rechts „Übungsinstanz · Demodaten“). Dort darf alles ausprobiert
+werden; Mails gehen nicht hinaus. Administration und Vorstand setzen sie unten auf dieser Seite mit **Übung zurücksetzen** auf frische Demodaten
+zurück – danach melden sich alle neu an. Die Touren gibt es dann nur in der Übungsinstanz.
+
 In Entwicklung und Schulung führen **Touren** durch die wichtigsten Szenen des Gesamt-Drehbuchs: Eine Sprechblase zeigt
 auf die nächste Stelle, sagt, was einzutragen ist, und geht weiter, sobald es getan ist. Unten rechts stehen Schritt und
 Zeit; **Zurück**, **Überspringen** und **Beenden** gehen jederzeit. Jede Tour beginnt mit dem passenden Testkonto

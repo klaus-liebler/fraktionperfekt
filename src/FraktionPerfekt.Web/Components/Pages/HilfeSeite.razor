@@ -3,6 +3,7 @@
 @inject Vorgang Vorgang
 @inject Dokumentkatalog Katalog
 @inject IConfiguration Konfiguration
+@inject FraktionPerfekt.Application.Gemeinsam.Betriebsart Betriebsart
 
 @* Hilfe zur Bedienung (docs/hilfe.md) für alle, mit geführten Touren (aus VibeVHS übernommen). Schalter Abnahmemodus:Aktiv, Standard an.
    Die Touren arbeiten mit Demodaten und Testanmeldung (Kontowechsel) – vor dem Echtbetrieb ausschalten oder überarbeiten (docs/konzept.md). *@
@@ -20,7 +21,7 @@
     }
 </div>
 
-@if (Konfiguration.GetValue("Abnahmemodus:Aktiv", true))
+@if (Betriebsart.TourenAktiv)
 {
     <section class="fp-card" id="touren">
         <div class="fp-head">
@@ -39,6 +40,28 @@
     </section>
 }
 
+@if (Betriebsart.IstUebung)
+{
+    <section class="fp-card">
+        <h2>Übungsinstanz zurücksetzen</h2>
+        <p>Dies ist die <b>Übungsinstanz</b>: Alles hier sind Demodaten, Mails gehen nicht hinaus, die geführten Touren sind an. Zurücksetzen baut frische
+            Demodaten (Termine relativ zu heute) und ersetzt damit alles, was hier geübt wurde; danach melden sich alle neu an. Die echte Instanz bleibt unberührt.</p>
+        @if (rolle is Rolle.Administration or Rolle.Vorstand)
+        {
+            <form method="post" action="uebung/zuruecksetzen">
+                <AntiforgeryToken />
+                <input type="hidden" name="bestaetigt" value="ja" />
+                <button type="submit" class="fp-btn" data-rueckfrage="Übungsinstanz zurücksetzen? Alle Übungsdaten werden ersetzt und alle müssen sich neu anmelden.">Übung zurücksetzen</button>
+            </form>
+        }
+        else
+        {
+            <p class="fp-small fp-muted">Zurücksetzen können Administration und Vorstand.</p>
+        }
+    </section>
+}
+
+
 @if (abschnitte is null)
 {
     <div class="fp-alert fp-warn">Die Hilfedatei fehlt in dieser Auslieferung (docs/hilfe.md).</div>
@@ -52,10 +75,11 @@ else
     private readonly Dokument hilfe = Dokumentkatalog.Finden(Dokumentkatalog.Hilfe)!;
     private IReadOnlyList<Abschnitt>? abschnitte;
     private Freigabe dokuRecht = Freigabe.Ja;
+    private Rolle? rolle;
 
     protected override async Task OnInitializedAsync()
     {
-        var rolle = (await Vorgang.BenutzerAsync()).Rolle;
+        rolle = (await Vorgang.BenutzerAsync()).Rolle;
         dokuRecht = Rechte.DokumentationKommentieren(rolle);
         abschnitte = Katalog.Laden(hilfe, rolle);
     }

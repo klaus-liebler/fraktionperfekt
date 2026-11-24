@@ -11,6 +11,7 @@ Drehbuch für die aus SchoolCraft übernommenen Konzepte (`docs/uebertragung-sch
 | 4 | Wahl der Fraktionsvorsitzenden mit Stichwahl | Johannes Wilp, Liz Kühlert, Michael Gries, drei weitere | 10 min |
 | 5 | Sitzung: Beschlussfähigkeit, geheim abstimmen | Johannes Wilp, vier Mitglieder am Handy | 8 min |
 | 6 | Beamer in der Sitzung | Johannes Wilp, zweiter Rechner | 4 min |
+| 7 | Übungsinstanz | Johannes Wilp | 4 min |
 
 ## 1. Geheime Abstimmung
 
@@ -71,4 +72,14 @@ Siehe [`abnahme-3.md`](abnahme-3.md), Szene 7.
   - Der Beamer zeigt Tagesordnung, „← jetzt“ am laufenden TOP, die Beschlussfähigkeit und „x von y haben abgestimmt“; keine Notizen, keine Namen.
   - Nach spätestens zehn Sekunden ist der neue Stand zu sehen; nach dem Ende der Abstimmung steht das Ergebnis da.
   - Der alte Link zeigt „Dieser Beamer-Link gilt nicht (mehr)“, ebenso der gesperrte.
+- **Zeit:** ____ min. **Beobachtungen:**
+
+## 7. Übungsinstanz (Punkt 9)
+
+- **Vorbereitung:** zweiter Mandant mit `Uebung=true` und eigenem Host (siehe `docs/deploy.md`; lokal z. B. Übung auf `127.0.0.1`, Echtbetrieb auf `localhost`).
+- **Aufgabe:** Melden Sie sich in der Übungsinstanz an, legen Sie einen Termin an, öffnen Sie die Hilfe und setzen Sie die Übung zurück. Öffnen Sie danach
+  die Hilfe in der echten Instanz.
+- **Erwartung:**
+  - Oben rechts steht „Übungsinstanz · Demodaten“, auf der Hilfe die Touren und „Übung zurücksetzen“ (mit Rückfrage).
+  - Nach dem Zurücksetzen ist der Termin weg und die Anmeldung erscheint; die echte Instanz ist unverändert und zeigt keine Touren.
 - **Zeit:** ____ min. **Beobachtungen:**

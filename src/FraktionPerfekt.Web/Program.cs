@@ -56,7 +56,8 @@ builder.Services.AddSingleton(new FraktionPerfekt.Web.Dokumentation.Dokumentkata
 builder.Services.AddScoped<FraktionPerfekt.Application.Gemeinsam.IAktuellerMandant>(d =>
 {
     var auswahl = d.GetRequiredService<FraktionPerfekt.Application.Gemeinsam.MandantAuswahl>();
-    if (d.GetService<IHttpContextAccessor>()?.HttpContext is { } http)
+    // Ein ausdrücklich festgelegter Mandant (Hintergrundauftrag, Aufbau der Übungsinstanz) hat Vorrang vor dem Host der laufenden Anfrage.
+    if (!auswahl.Festgelegt && d.GetService<IHttpContextAccessor>()?.HttpContext is { } http)
     {
         auswahl.Festlegen(auswahl.ZumHost(http.Request.Host.Host));
     }
@@ -69,7 +70,10 @@ builder.Services.AddRateLimits(builder.Configuration);
 FraktionPerfekt.Web.LanBetrieb.Einrichten(builder);
 
 // Demobetrieb: Demodaten mit echten Namen und Adressen → Mails nie über echte Kanäle (Demo-Schutz im Postausgang)
-builder.Services.AddSingleton(new FraktionPerfekt.Application.Postausgang.Demobetrieb(builder.Configuration.GetValue("Demodaten:Anlegen", false)));
+// Übungsinstanz (Mandant mit Uebung=true): ebenfalls Demo-Schutz
+var demodatenAnlegen = builder.Configuration.GetValue("Demodaten:Anlegen", false);
+builder.Services.AddScoped(d => new FraktionPerfekt.Application.Postausgang.Demobetrieb(
+    d.GetRequiredService<FraktionPerfekt.Application.Gemeinsam.Betriebsart>().DemoSchutz(demodatenAnlegen)));
 builder.Services
     .AddFraktionAnwendung(builder.Configuration)
     .AddFraktionInfrastruktur(builder.Configuration, builder.Environment.ContentRootPath, builder.Environment.IsDevelopment(),
@@ -124,6 +128,18 @@ if (app.Configuration.GetValue("Demodaten:Anlegen", false))
     {
         app.Logger.LogInformation("Demodaten angelegt: {Personen} Personen, {Gremien} Gremien, {Termine} Termine, {Faelle} Vertretungsfälle",
             demo.Personen, demo.Gremien, demo.Termine, demo.Vertretungsfaelle);
+    }
+}
+
+// Übungsinstanzen: leere Datenbank mit frischen Demodaten füllen (Zurücksetzen auf der Seite Betrieb)
+foreach (var uebung in app.Services.GetRequiredService<IReadOnlyList<FraktionPerfekt.Application.Gemeinsam.MandantOptionen>>().Where(m => m.Uebung))
+{
+    await using var bereich = app.Services.CreateAsyncScope();
+    bereich.ServiceProvider.GetRequiredService<FraktionPerfekt.Application.Gemeinsam.MandantAuswahl>().Festlegen(uebung);
+    if ((await bereich.ServiceProvider.GetRequiredService<FraktionPerfekt.Application.IStammdatenSpeicher>().PersonenAsync()).Count == 0)
+    {
+        await FraktionPerfekt.Web.Betrieb.UebungEndpunkte.NeuAufbauenAsync(app.Services, uebung);
+        app.Logger.LogInformation("Übungsinstanz {Kennung}: Demodaten angelegt", uebung.Kennung);
     }
 }
 
@@ -198,6 +214,7 @@ app.MapGet("/kalender/abo/{token}.ics", async (string token, KalenderDienst kale
 FraktionPerfekt.Web.Handy.HandyEndpunkte.MapHandy(app);
 FraktionPerfekt.Web.Suche.SucheEndpunkte.MapSuche(app);
 FraktionPerfekt.Web.Beamer.BeamerEndpunkte.MapBeamer(app);
+FraktionPerfekt.Web.Betrieb.UebungEndpunkte.MapUebung(app);
 FraktionPerfekt.Web.Dokumente.DokumentEndpunkte.MapDokumente(app);
 FraktionPerfekt.Web.Wissen.WissenEndpunkte.MapWissen(app);
 FraktionPerfekt.Web.Kampagnen.KampagnenEndpunkte.MapKampagnen(app);

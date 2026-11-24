@@ -20,6 +20,7 @@ public static class Registrierung
         dienste.TryAddScoped<IAktuellerMandant>(d => d.GetRequiredService<MandantAuswahl>());
         dienste.TryAddSingleton(TimeProvider.System);
         dienste.AddScoped<PostausgangDienst>();
+        dienste.AddScoped<Betriebsart>();
         dienste.TryAddSingleton(new Postausgang.Demobetrieb(false));
         dienste.AddScoped<Zustellung>();
         dienste.AddScoped<Stammdaten.StammdatenDienst>();

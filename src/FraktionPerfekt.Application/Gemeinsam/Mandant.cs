@@ -31,6 +31,11 @@ public sealed class MandantOptionen
     /// <summary>Verbindungszeichenfolge der eigenen Datenbank (leer = ConnectionStrings:FraktionPerfekt).</summary>
     public string? Datenbank { get; set; }
 
+    /// <summary>
+    /// Übungsinstanz (aus SchoolCraft FK-14): eigene Datenbank mit Demodaten, zurücksetzbar, Touren und Testanmeldung aktiv, nie echte Mails.
+    /// </summary>
+    public bool Uebung { get; set; }
+
     /// <summary>Hostnamen, unter denen der Mandant erreichbar ist (leer = Standardmandant).</summary>
     public IReadOnlyList<string> Hosts { get; set; } = [];
 
@@ -73,6 +78,9 @@ public sealed class MandantAuswahl(IReadOnlyList<MandantOptionen> mandanten) : I
     public MandantOptionen Mandant => _festgelegt ?? mandanten[0];
 
     public void Festlegen(MandantOptionen mandant) => _festgelegt = mandant;
+
+    /// <summary>Wurde der Mandant in diesem Bereich schon ausdrücklich festgelegt (z. B. für einen Hintergrundauftrag oder die Übungsinstanz)?</summary>
+    public bool Festgelegt => _festgelegt is not null;
 
     /// <summary>Mandant zum Host (ohne Port); unbekannter Host = Standardmandant.</summary>
     public MandantOptionen ZumHost(string? host)
