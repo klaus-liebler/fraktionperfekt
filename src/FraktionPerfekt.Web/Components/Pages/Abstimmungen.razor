@@ -13,7 +13,7 @@
         <h1>Abstimmungen, Umfragen, Terminfindung</h1>
         <p class="fp-sub">Schnelle Meinungsbilder, Umfragen und Terminfindung in der Fraktion. Antragsabstimmungen starten am Antrag.</p>
     </div>
-    <BegruendeterButton Text="Neu" Icon="add" Freigabe="@(benutzer?.Rolle is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam startet keine Fraktionsabstimmungen.") : Freigabe.Ja)" Click="@(() => formular = true)" />
+    <Hinzufuegen Objekt="Abstimmung" Freigabe="@(benutzer?.Rolle is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam startet keine Fraktionsabstimmungen.") : Freigabe.Ja)" Klick="@(() => formular = true)" />
 </div>
 
 @if (meldung is not null)
@@ -21,44 +21,37 @@
     <div class="fp-alert fp-crit" role="alert">@meldung</div>
 }
 
-@if (formular)
-{
-    <section class="fp-card fp-einschub">
-        <h2>Neue Abstimmung</h2>
-        <div class="fp-form">
-            <div class="fp-field"><label class="fp-lbl">Art</label>
-                <RadzenDropDown TValue="Umfrageart" @bind-Value="art" Data="@(Arten.Where(a => a.Wert != Umfrageart.Wahl))" TextProperty="Text" ValueProperty="Wert" /></div>
-            <div class="fp-field"><label class="fp-lbl" for="u-titel">Frage / Titel</label><RadzenTextBox id="u-titel" @bind-Value="titel" /></div>
-            <div class="fp-field"><label class="fp-lbl">Frist</label><RadzenDatePicker TValue="DateTime" @bind-Value="frist" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
-            <div class="fp-field"><label class="fp-lbl">Quorum (%)</label><RadzenNumeric TValue="int" @bind-Value="quorum" Min="0" Max="100" /></div>
-        </div>
-        @if (art != Umfrageart.Terminfindung)
-        {
-            <label class="fp-small" title="Kein Zwischenstand, Stimme endgültig, niemand kann sehen, wer wie gestimmt hat (⚑ Geschäftsordnung)">
-                <input type="checkbox" @bind="geheim" /> geheim abstimmen
-            </label>
-        }
-        @if (art == Umfrageart.Umfrage)
-        {
-            <div class="fp-field"><label class="fp-lbl">Antworten (eine je Zeile)</label><RadzenTextArea @bind-Value="optionen" Rows="4" /></div>
-            <label><input type="checkbox" @bind="mehrfach" /> Mehrfachauswahl</label>
-        }
-        else if (art == Umfrageart.Terminfindung)
-        {
-            <div class="fp-field"><label class="fp-lbl">Terminvorschläge</label>
-                <div class="fp-row">
-                    <RadzenDatePicker TValue="DateTime" @bind-Value="vorschlag" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" />
-                    <RadzenButton Text="Hinzufügen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => zeitpunkte.Add(vorschlag))" />
-                </div>
-                <span class="fp-small">@string.Join(" · ", zeitpunkte.Order().Select(z => z.ToString("ddd dd.MM. HH:mm")))</span>
+<AnlegenDialog @bind-Offen="formular" Titel="Abstimmung hinzufügen" OkText="Starten" OnOk="AnlegenAsync" Geaendert="@Pflichtangaben.Text(titel)"
+               Fehlt="@Pflichtangaben.Fehlend(("Frage", Pflichtangaben.Text(titel)), ("zwei Antworten", art != Umfrageart.Umfrage || (optionen ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length >= 2), ("zwei Terminvorschläge", art != Umfrageart.Terminfindung || zeitpunkte.Count >= 2))">
+    <div class="fp-form">
+        <div class="fp-field"><label class="fp-lbl">Art</label>
+            <RadzenDropDown TValue="Umfrageart" @bind-Value="art" Data="@(Arten.Where(a => a.Wert != Umfrageart.Wahl))" TextProperty="Text" ValueProperty="Wert" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="u-titel">Frage / Titel</label><RadzenTextBox id="u-titel" @bind-Value="titel" /></div>
+        <div class="fp-field"><label class="fp-lbl">Frist</label><RadzenDatePicker TValue="DateTime" @bind-Value="frist" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+        <div class="fp-field"><label class="fp-lbl">Quorum (%)</label><RadzenNumeric TValue="int" @bind-Value="quorum" Min="0" Max="100" /></div>
+    </div>
+    @if (art != Umfrageart.Terminfindung)
+    {
+        <label class="fp-small" title="Kein Zwischenstand, Stimme endgültig, niemand kann sehen, wer wie gestimmt hat (⚑ Geschäftsordnung)">
+            <input type="checkbox" @bind="geheim" /> geheim abstimmen
+        </label>
+    }
+    @if (art == Umfrageart.Umfrage)
+    {
+        <div class="fp-field"><label class="fp-lbl">Antworten (eine je Zeile)</label><RadzenTextArea @bind-Value="optionen" Rows="4" /></div>
+        <label><input type="checkbox" @bind="mehrfach" /> Mehrfachauswahl</label>
+    }
+    else if (art == Umfrageart.Terminfindung)
+    {
+        <div class="fp-field"><label class="fp-lbl">Terminvorschläge</label>
+            <div class="fp-row">
+                <RadzenDatePicker TValue="DateTime" @bind-Value="vorschlag" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" />
+                <RadzenButton Text="Hinzufügen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => zeitpunkte.Add(vorschlag))" />
             </div>
-        }
-        <div class="fp-row">
-            <BegruendeterButton Text="Starten" Icon="send" Freigabe="@(string.IsNullOrWhiteSpace(titel) ? Freigabe.Nein("Bitte eine Frage eingeben.") : Freigabe.Ja)" Click="AnlegenAsync" />
-            <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
+            <span class="fp-small">@string.Join(" · ", zeitpunkte.Order().Select(z => z.ToString("ddd dd.MM. HH:mm")))</span>
         </div>
-    </section>
-}
+    }
+</AnlegenDialog>
 
 <section class="fp-card fp-tbl">
     <table>

@@ -124,7 +124,7 @@ else
     {
         <section class="fp-card">
             <div class="fp-row" style="justify-content:space-between"><h2>Gebiete</h2>
-                <BegruendeterButton Text="Gebiet anlegen" Icon="add" Size="ButtonSize.Small" Freigabe="@steuern" Click="@(() => gebietOffen = true)" /></div>
+                <Hinzufuegen Objekt="Gebiet" Freigabe="@steuern" Klick="@(() => gebietOffen = true)" /></div>
             <div class="fp-tbl">
                 <table>
                     <thead><tr><th>Gebiet</th><th>Art</th><th>Zugeteilt</th><th>Status</th><th></th></tr></thead>
@@ -295,14 +295,12 @@ else
         <Knoepfe><RadzenButton Text="Speichern" Icon="save" Disabled="@string.IsNullOrWhiteSpace(kName)" Click="KampagneSpeichernAsync" /></Knoepfe>
     </GrosserDialog>
 
-    <GrosserDialog @bind-Offen="gebietOffen" Titel="Gebiet anlegen" Klein="true" Geaendert="@(!string.IsNullOrWhiteSpace(gebietName))">
-        <ChildContent>
-            <div class="fp-field"><label class="fp-lbl" for="g-name">Name</label><RadzenTextBox id="g-name" @bind-Value="gebietName" Immediate="true" /></div>
-            <div class="fp-field"><label class="fp-lbl">Art</label><RadzenDropDown TValue="Gebietsart" @bind-Value="gebietArt" Data="@(Enum.GetValues<Gebietsart>())" /></div>
-            <div class="fp-field"><label class="fp-lbl" for="g-beschr">Straßen / Beschreibung</label><RadzenTextBox id="g-beschr" @bind-Value="gebietBeschreibung" /></div>
-        </ChildContent>
-        <Knoepfe><RadzenButton Text="Anlegen" Icon="save" Disabled="@string.IsNullOrWhiteSpace(gebietName)" Click="GebietAnlegenAsync" /></Knoepfe>
-    </GrosserDialog>
+    <AnlegenDialog @bind-Offen="gebietOffen" Titel="Gebiet hinzufügen" OnOk="GebietAnlegenAsync" Geaendert="@(!string.IsNullOrWhiteSpace(gebietName))"
+                   Fehlt="@Pflichtangaben.Fehlend(("Name", Pflichtangaben.Text(gebietName)))">
+        <div class="fp-field"><label class="fp-lbl" for="g-name">Name</label><RadzenTextBox id="g-name" @bind-Value="gebietName" Immediate="true" /></div>
+        <div class="fp-field"><label class="fp-lbl">Art</label><RadzenDropDown TValue="Gebietsart" @bind-Value="gebietArt" Data="@(Enum.GetValues<Gebietsart>())" /></div>
+        <div class="fp-field"><label class="fp-lbl" for="g-beschr">Straßen / Beschreibung</label><RadzenTextBox id="g-beschr" @bind-Value="gebietBeschreibung" /></div>
+    </AnlegenDialog>
 
     <GrosserDialog @bind-Offen="terminOffen" Titel="Termin anlegen" Geaendert="@(!string.IsNullOrWhiteSpace(terminTitel) || !string.IsNullOrWhiteSpace(terminText))">
         <ChildContent>

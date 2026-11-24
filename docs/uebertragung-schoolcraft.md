@@ -198,6 +198,11 @@ wenn sie nötig ist. Protokollnotizen haben schon Fassungen über den Editor und
 ### 11 Einheitliches Anlegen per Dialog (FA-3229)
 FraktionPerfekt hat mit `GrosserDialog` schon große Editor-Dialoge; einheitlich wäre „+ … hinzufügen“ mit OK/Abbrechen und „OK nennt, was fehlt“ für kleine Objekte (Kontakt, Aufgabe, Ressource). Auf Handy-Seiten nicht. M.
 
+**Umgesetzt (24.11.2026) ✅:** Bausteine `Hinzufuegen` (wie SchoolCraft, mit `BegruendeterButton`) und `AnlegenDialog` (auf `GrosserDialog` im kleinen Modus,
+OK gesperrt mit Liste der fehlenden Angaben, Abbrechen mit Nachfrage bei Eingaben), `Pflichtangaben`. Umgestellt: Kontakt, Abstimmung, Wahl, Gebiet.
+Abweichend: Aufgaben entstehen in FraktionPerfekt aus Protokollen und Vorgängen (kein freies Anlegen), Ressourcen kommen aus den Stammdaten – dort gibt
+es keinen Anlegen-Dialog; die Raumbuchung bleibt als Formular auf ihrer Seite. Test `AnlegenDialogTests`.
+
 ### 12 Rundschreiben mit Gestaltungen und Archiv als Vorlage (FA-820 ff.)
 Einladungen, Fraktionsinfo an Mitglieder und Kampagnenteam mit Anredestilen und Archiv als Vorlage; läuft über den vorhandenen Postausgang. M.
 

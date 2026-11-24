@@ -184,6 +184,9 @@ Die App soll sich wie eine native App anfühlen und ohne Schulung nutzbar sein. 
 - **Startseite „Heute“** zeigt nur, was jetzt zu tun ist: nächste Termine, offene Anfragen und Abstimmungen, Hinweise (eigene Kampagnentermine, Gebiete, Tickets, Fristen), jeweils mit einer Ein-Tipp-Antwort.
 - **Schnellaktionen** für die Standardprozesse: Abwesenheit melden, Raum buchen, Antrag starten, Fraktionssitzung einladen, Plakat erfassen, Auslage einreichen.
 - **Neu-Formulare mit langem Text** (Anfrage, Antrag, Fassung, Pressemitteilung, Bürgeranliegen, Kampagne, Termin, Ticket) öffnen einen großen Dialog mit Editor (WYSIWYG, Symbolleiste; Markdown nur über einen unauffälligen Knopf).
+- **Kleine Objekte** (Kontakt, Abstimmung, Wahl, Gebiet) legt am Rechner einheitlich **„+ … hinzufügen“** an (seit 24.11.2026, aus SchoolCraft FA-3229):
+  kleiner Dialog mit OK und Abbrechen; OK ist gesperrt, solange Pflichtangaben fehlen, und nennt sie („Es fehlt noch: Name“). Die Handy-Seiten bleiben
+  einfache Formulare.
 - **Folgeschritte schlägt das System nach jedem Abschluss vor**, als Karte mit einem Knopf:
 
 | Wenn … | … schlägt das System vor |

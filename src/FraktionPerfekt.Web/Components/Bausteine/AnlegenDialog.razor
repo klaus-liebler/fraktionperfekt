@@ -1,0 +1,33 @@
+@*
+    Einheitliches Anlegen kleiner Objekte (aus SchoolCraft FA-3229): „+ … hinzufügen“ öffnet diesen Dialog mit OK und Abbrechen. OK ist gesperrt,
+    solange Pflichtangaben fehlen, und nennt sie („Es fehlt noch: Name“) – im Tooltip und unter den Feldern. Abbrechen bzw. Esc fragt nach, wenn
+    schon etwas eingetragen ist. Nur am Rechner; die Handy-Seiten bleiben einfache Formulare.
+*@
+<GrosserDialog Offen="@Offen" OffenChanged="@OffenChanged" Titel="@Titel" Klein="true" Geaendert="@Geaendert">
+    <ChildContent>
+        @ChildContent
+        @if (Fehlt.Count > 0)
+        {
+            <p class="fp-small fp-muted" role="status">Es fehlt noch: @string.Join(", ", Fehlt)</p>
+        }
+    </ChildContent>
+    <Knoepfe>
+        <BegruendeterButton Text="@OkText" Icon="check" Freigabe="@(Fehlt.Count > 0 ? Freigabe.Nein($"Es fehlt noch: {string.Join(", ", Fehlt)}.") : Freigabe.Ja)" Click="OkAsync" />
+    </Knoepfe>
+</GrosserDialog>
+
+@code {
+    [Parameter] public bool Offen { get; set; }
+    [Parameter] public EventCallback<bool> OffenChanged { get; set; }
+    [Parameter, EditorRequired] public string Titel { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Bezeichnungen der fehlenden Pflichtangaben (leer = OK möglich), z. B. aus <see cref="Pflichtangaben.Fehlend"/>.</summary>
+    [Parameter] public IReadOnlyList<string> Fehlt { get; set; } = [];
+
+    [Parameter] public string OkText { get; set; } = "OK";
+    [Parameter] public EventCallback OnOk { get; set; }
+    [Parameter] public bool Geaendert { get; set; }
+
+    private Task OkAsync() => OnOk.InvokeAsync();
+}

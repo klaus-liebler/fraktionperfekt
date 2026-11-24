@@ -14,7 +14,7 @@
         <h1>Wahlen und Ämter</h1>
         <p class="fp-sub">Vorstand, Kasse, Sprecher:innen und Benennungen mit Amtszeit: Kandidaturen, Wahlgang (geheim oder offen), Stichwahl, Annahme.</p>
     </div>
-    <BegruendeterButton Text="Wahl anlegen" Icon="add" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)" Click="@(() => formular = true)" />
+    <Hinzufuegen Objekt="Wahl" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)" Klick="@(() => formular = true)" />
 </div>
 
 @if (meldung is not null)
@@ -22,32 +22,25 @@
     <div class="fp-alert fp-crit" role="alert">@meldung</div>
 }
 
-@if (formular)
-{
-    <section class="fp-card fp-einschub">
-        <h2>Neue Wahl</h2>
-        <div class="fp-form">
-            <div class="fp-field"><label class="fp-lbl">Amt</label>
-                <RadzenDropDown TValue="Fraktionsamt" @bind-Value="amt" Data="@Aemter" TextProperty="Text" ValueProperty="Wert" /></div>
-            @if (amt == Fraktionsamt.Sprecher)
-            {
-                <div class="fp-field"><label class="fp-lbl">Ausschuss</label>
-                    <RadzenDropDown TValue="Guid?" @bind-Value="gremium" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" /></div>
-            }
-            @if (amt == Fraktionsamt.Benennung)
-            {
-                <div class="fp-field"><label class="fp-lbl" for="w-bez">Wofür</label><RadzenTextBox id="w-bez" @bind-Value="bezeichnung" Placeholder="z. B. Aufsichtsrat Stadtwerke" /></div>
-            }
-            <div class="fp-field"><label class="fp-lbl">Amtszeit ab</label><RadzenDatePicker TValue="DateTime" @bind-Value="ab" DateFormat="dd.MM.yyyy" /></div>
-            <div class="fp-field"><label class="fp-lbl">bis (leer = Ende der Wahlperiode)</label><RadzenDatePicker TValue="DateTime?" @bind-Value="bis" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
-        </div>
-        <label class="fp-small"><input type="checkbox" @bind="geheim" /> geheim wählen</label>
-        <div class="fp-row">
-            <BegruendeterButton Text="Anlegen" Icon="add" Freigabe="@Freigabe.Ja" Click="AnlegenAsync" />
-            <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
-        </div>
-    </section>
-}
+<AnlegenDialog @bind-Offen="formular" Titel="Wahl hinzufügen" OnOk="AnlegenAsync"
+               Fehlt="@Pflichtangaben.Fehlend(("Ausschuss", amt != Fraktionsamt.Sprecher || gremium is not null), ("wofür benannt wird", amt != Fraktionsamt.Benennung || Pflichtangaben.Text(bezeichnung)))">
+    <div class="fp-form">
+        <div class="fp-field"><label class="fp-lbl">Amt</label>
+            <RadzenDropDown TValue="Fraktionsamt" @bind-Value="amt" Data="@Aemter" TextProperty="Text" ValueProperty="Wert" /></div>
+        @if (amt == Fraktionsamt.Sprecher)
+        {
+            <div class="fp-field"><label class="fp-lbl">Ausschuss</label>
+                <RadzenDropDown TValue="Guid?" @bind-Value="gremium" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" /></div>
+        }
+        @if (amt == Fraktionsamt.Benennung)
+        {
+            <div class="fp-field"><label class="fp-lbl" for="w-bez">Wofür</label><RadzenTextBox id="w-bez" @bind-Value="bezeichnung" Placeholder="z. B. Aufsichtsrat Stadtwerke" /></div>
+        }
+        <div class="fp-field"><label class="fp-lbl">Amtszeit ab</label><RadzenDatePicker TValue="DateTime" @bind-Value="ab" DateFormat="dd.MM.yyyy" /></div>
+        <div class="fp-field"><label class="fp-lbl">bis (leer = Ende der Wahlperiode)</label><RadzenDatePicker TValue="DateTime?" @bind-Value="bis" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+    </div>
+    <label class="fp-small"><input type="checkbox" @bind="geheim" /> geheim wählen</label>
+</AnlegenDialog>
 
 <section class="fp-card fp-tbl">
     <h2>Wahlen</h2>

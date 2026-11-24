@@ -13,6 +13,7 @@ Drehbuch für die aus SchoolCraft übernommenen Konzepte (`docs/uebertragung-sch
 | 6 | Beamer in der Sitzung | Johannes Wilp, zweiter Rechner | 4 min |
 | 7 | Übungsinstanz | Johannes Wilp | 4 min |
 | 8 | Korrekturregel | Felix Bäumer, Dames Joud | 3 min |
+| 9 | Anlegen per Dialog | Liz Kühlert | 2 min |
 
 ## 1. Geheime Abstimmung
 
@@ -93,4 +94,12 @@ Siehe [`abnahme-3.md`](abnahme-3.md), Szene 7.
   - Das eigene Zurückziehen in den ersten 30 Minuten fragt nur nach („Zurückziehen“), ohne Begründung.
   - Als Kassier verlangt der Dialog eine Begründung; „Zurückziehen“ ist gesperrt, bis sie eingetragen ist.
   - Die Aufgabe „Auslage prüfen“ verschwindet aus dem Korb des Kassiers.
+- **Zeit:** ____ min. **Beobachtungen:**
+
+## 9. Einheitliches Anlegen (Punkt 11)
+
+- **Startpunkt:** **Kontakte** (Liz Kühlert).
+- **Aufgabe:** Klicken Sie **Kontakt hinzufügen**, tragen Sie nur die Organisation ein und versuchen Sie OK. Ergänzen Sie den Namen und speichern Sie.
+  Öffnen Sie den Dialog erneut, tippen Sie etwas und drücken Sie <kbd>Esc</kbd>.
+- **Erwartung:** OK ist zunächst grau, darunter „Es fehlt noch: Name“; nach dem Namen speichert OK. <kbd>Esc</kbd> fragt nach, weil schon etwas eingetragen ist.
 - **Zeit:** ____ min. **Beobachtungen:**

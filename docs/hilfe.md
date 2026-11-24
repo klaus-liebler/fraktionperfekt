@@ -144,6 +144,12 @@ zahlt aus.
 **Kalender-Abo und Push**: persönlichen Abo-Link erzeugen und in der Kalender-App hinzufügen (ein neuer Link sperrt den
 alten); Push-Mitteilungen einschalten.
 
+## Anlegen
+
+Neues entsteht am Rechner über **+ … hinzufügen** (z. B. „Kontakt hinzufügen“, „Abstimmung hinzufügen“): Ein kleiner Dialog öffnet sich, **OK**
+speichert. Fehlt noch etwas, ist OK grau und darunter steht, was fehlt. Lange Texte (Antrag, Anfrage, Pressemitteilung, Termin) haben einen großen
+Dialog mit Editor.
+
 ## Suchen
 
 Am Rechner springt <kbd>Strg</kbd>+<kbd>K</kbd> (Mac: <kbd>⌘</kbd>+<kbd>K</kbd>) von überall ins Suchfeld. Beim Tippen erscheinen Vorschläge:

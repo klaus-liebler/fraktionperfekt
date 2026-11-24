@@ -1,0 +1,12 @@
+@*
+    Einheitlicher Einstieg zum Anlegen (aus SchoolCraft FA-3229): „+ <Objekt> hinzufügen“ öffnet einen AnlegenDialog. Ist Anlegen nicht erlaubt,
+    erklärt die Schaltfläche warum (Gesperrt heißt erklärt).
+*@
+<BegruendeterButton Text="@($"{Objekt} hinzufügen")" Icon="add" Freigabe="@(Freigabe ?? Freigabe.Ja)" Click="@Klick" />
+
+@code {
+    /// <summary>Bezeichnung im Singular, z. B. „Kontakt“, „Abstimmung“, „Gebiet“.</summary>
+    [Parameter, EditorRequired] public string Objekt { get; set; } = "";
+    [Parameter] public EventCallback Klick { get; set; }
+    [Parameter] public Freigabe? Freigabe { get; set; }
+}
