@@ -319,14 +319,15 @@ export function eingangHallenbad(eltern, { baustelle = false, welt = false } = {
         // Klickfläche der Grube (unsichtbar, unter der Leitung)
         const klick = new THREE.Mesh(new THREE.BoxGeometry(gx1 - gx0, .9, gz1 - gz0 - 1.2), new THREE.MeshBasicMaterial({ visible: false })); klick.position.set((gx0 + gx1) / 2, -1.1, (gz0 + gz1) / 2 + .6); grubeG.add(klick);
         // das Siegel des Rechts im alten Schacht
-        const siegel = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .05, 24), mat(0xd4af37, .2, .9, { emissive: 0x3a2a00 })); siegel.position.set(-1.2, -tief + .04, 6.8); siegel.castShadow = true; grubeG.add(siegel);
-        box(.7, .5, .7, mat(0x7b7e80, .8), -1.2, -tief + .25 - .26, 6.8, grubeG);   // Schachtring
-        const wasser = new THREE.Mesh(new THREE.PlaneGeometry(gx1 - gx0 - .05, gz1 - gz0 - .05), mat(0x5c6e64, .1, .3, { transparent: true, opacity: .85 })); wasser.rotation.x = -Math.PI / 2; wasser.position.set((gx0 + gx1) / 2, -.75, (gz0 + gz1) / 2); wasser.name = 'grubenwasser'; grubeG.add(wasser);
+        const siegel = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .05, 24), mat(0xd4af37, .2, .9, { emissive: 0x5a4200 })); siegel.position.set(-2.6, -tief + .3, 4.6); siegel.castShadow = true; grubeG.add(siegel);
+        // alter Schacht: Betonring am Grund, das Siegel liegt obenauf (unter Wasser)
+        const ring = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .28, 20, 1, true), mat(0x7b7e80, .85, 0, { side: THREE.DoubleSide })); ring.position.set(-2.6, -tief + .14, 4.6); grubeG.add(ring);
+        const wasser = new THREE.Mesh(new THREE.PlaneGeometry(gx1 - gx0 - .05, gz1 - gz0 - .05), mat(0x5c6e64, .1, .3, { transparent: true, opacity: .85 })); wasser.rotation.x = -Math.PI / 2; wasser.position.set((gx0 + gx1) / 2, -.55, (gz0 + gz1) / 2); wasser.name = 'grubenwasser'; grubeG.add(wasser);
         // die alte Zuleitung zum Becken quer durch die Grube, mit Leck
         const leitungG = new THREE.Group(); leitungG.name = 'leitung'; bs.add(leitungG);
-        const leitung = rohr([[gx0 - .2, -.55, 4.6], [gx1 + .2, -.55, 5.2]], .11, mat(0x6a6f73, .5, .6), leitungG);
-        const lk = new THREE.Mesh(new THREE.BoxGeometry(gx1 - gx0 + .4, .6, .8), new THREE.MeshBasicMaterial({ visible: false })); lk.position.set((gx0 + gx1) / 2, -.55, 4.9); lk.rotation.y = -.085; leitungG.add(lk);
-        const strahl = new THREE.Group(); strahl.position.set(.6, -.45, 4.95); strahl.name = 'strahl'; bs.add(strahl);
+        const leitung = rohr([[gx0 - .2, -.3, 4.9], [gx1 + .2, -.3, 5.5]], .11, mat(0x6a6f73, .5, .6), leitungG);
+        const lk = new THREE.Mesh(new THREE.BoxGeometry(gx1 - gx0 + .4, .6, .8), new THREE.MeshBasicMaterial({ visible: false })); lk.position.set((gx0 + gx1) / 2, -.3, 5.2); lk.rotation.y = -.085; leitungG.add(lk);
+        const strahl = new THREE.Group(); strahl.position.set(.6, -.22, 5.25); strahl.name = 'strahl'; bs.add(strahl);
         for (let i = 0; i < 9; i++) { const t = new THREE.Mesh(new THREE.SphereGeometry(.05 + i * .01, 8, 6), mat(0xd8ecf5, .1, 0, { transparent: true, opacity: .7 })); t.position.set(i * .06, Math.sin(i / 3) * .3, i * .05); strahl.add(t); }
         // abgeräumtes Pflaster auf einer Palette, Pumpe mit Schlauch
         box(1.2, .14, 1.0, mat(0xb08a5a, .8), -6.4, .07, 5.2, bs);
@@ -334,7 +335,12 @@ export function eingangHallenbad(eltern, { baustelle = false, welt = false } = {
         box(.6, .5, .45, mat(0xd35400, .6), 4.6, .25, 9.2, bs);
         rohr([[4.4, .2, 9.0], [3.9, .02, 8.8], [3.3, .02, 8.4], [3.0, -.5, 7.9]], .05, mat(0x1a1a1a, .7), bs);
         // Bauzaun um die Grube und vor der Tür (Lücke zum Durchgehen links)
-        bauzaun(-4.2, 2.4, -4.2, 8.8, bs); bauzaun(-4.2, 8.8, 4.0, 8.8, bs); bauzaun(4.0, 6.2, 4.0, 8.8, bs);
+        bauzaun(-4.2, 2.4, -4.2, 8.8, bs); bauzaun(-4.2, 8.8, 4.0, 8.8, bs); bauzaun(4.0, 2.4, 4.0, 8.8, bs); bauzaun(-4.2, 2.4, 1.7, 2.4, bs);
+        // Einstiegsleiter im Durchgang: von der Kante (z 2,6) schräg hinab auf die Sohle (z 4,0)
+        const einstieg = new THREE.Group(); einstieg.position.set(2.55, 0, 2.6); einstieg.rotation.x = Math.atan2(1.4, 1.75); bs.add(einstieg);
+        const alu2 = mat(0xc8ccd0, .4, .7);
+        for (const x of [-.3, .3]) { box(.06, .06, 2.4, alu2, x, -.1, 1.1, einstieg); }
+        for (let k = 0; k < 7; k++) { box(.6, .04, .04, alu2, 0, -.1, .1 + k * .32, einstieg); }
         // Leiter am Schild (hier schrauben Pinsel und Ledeiw)
         const leiter = new THREE.Group(); leiter.name = 'leiter'; bs.add(leiter);
         const leiterKippe = new THREE.Group(); leiterKippe.position.set(-.2, 0, .9); leiterKippe.rotation.x = -.28; leiter.add(leiterKippe);

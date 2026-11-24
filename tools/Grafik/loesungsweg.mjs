@@ -32,7 +32,7 @@ const REGIE = {
     helme: 'Joe und Chani tragen Bauhelme',
     leckDicht: 'Das Leck hört auf zu sprudeln',
     grubeTrocken: 'Die Grube läuft leer, unten glänzt das Siegel',
-    gegnerBaustelleWeg: 'Pinsel und Ledeiw laufen rückwärts in den Bauwagen; die Buchstaben liegen vor dem Tor',
+    gegnerBaustelleWeg: 'Pinsel und Ledeiw hauen quer über den Platz durchs Bauzaun-Tor ab; die Buchstaben liegen vor dem Tor',
     schildHeil: 'Über der Tür steht wieder „EINGANG HALLENBAD“; Leiter und Buchstaben sind weg',
     klappeAuf: 'Die Klappe der Laterne steht offen',
     abend: 'Es wird dunkel, die Fledermäuse fliegen aus',

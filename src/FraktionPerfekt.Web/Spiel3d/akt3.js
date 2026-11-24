@@ -348,29 +348,34 @@ export async function baustelle(renderer) {
         [2.9, 6.4, .35], [4.7, 7.4, .45], [13.6, 9.0, .35], [20.6, 14.6, .4]];
     const strecken = [[-8.6, 10.2, -4.9, 10.2], [-3.4, 10.8, 1.6, 10.8], [3.8, 10.2, 8.6, 10.2], [12.6, 7.4, 12.6, 10.0], [12.6, 10.0, 18, 10.4]];
     const nahStrecke = (x, z, [a, b, c, dd]) => { const vx = c - a, vz = dd - b, t = Math.max(0, Math.min(1, ((x - a) * vx + (z - b) * vz) / (vx * vx + vz * vz))); return Math.hypot(x - a - vx * t, z - b - vz * t) < .35; };
-    const freiLokal = (x, z) => {
+    const freiLokal = (x, z, offen) => {
         if (x < -15.6 || x > 21.6 || z < .45 || z > 17.4) { return false; }
         if (x > 3.6 && z < 7.4) { return false; }                     // Umkleidetrakt mit Hecke
-        if (x > -4.7 && x < 4.5 && z > 2.0 && z < 9.3) { return false; } // Grube mit Bauzaun
+        if (x > -4.7 && x < 4.5 && z > 2.0 && z < 9.3) {                // Grube mit Bauzaun: hinein nur über die Leiter im Durchgang,
+            if (!offen) { return false; }                                   // mit Helm und wenn Pinsel nicht mehr im Weg steht
+            return (x > 1.95 && x < 3.15 && z < 4.1) || (x > -3.1 && x < 3.0 && z > 3.95 && z < 4.5);
+        }
         if (x < -8.2 && z < 3.4) { return false; }                     // Hecke und Baum links
         if (x > -15.4 && x < -9.8 && z > 7.6 && z < 10.4) { return false; }   // Bauwagen
         if (kreise.some(([a, b, r]) => Math.hypot(x - a, z - b) < r)) { return false; }
         return !strecken.some((s) => nahStrecke(x, z, s));
     };
-    const frei = (x, z) => { const [a, b] = lokal(x, z); return freiLokal(a, b); };
+    const frei = (x, z, st) => { const [a, b] = lokal(x, z); return freiLokal(a, b, !!(st && st.flags.helme && (!st.flags.gegnerBaustelle || st.flags.gegnerBaustelleWeg))); };
+    // In der Grube: über die Leiter hinab (z 2,4 bis 4,0), dann auf der Sohle 1,6 m tief – das Wasser steht bauchtief
+    const tiefe = (a, b) => (a > -3.6 && a < 3.4 && b > 2.4 && b < 8.2 ? (a > 1.9 && b < 4.0 ? 1.6 * Math.min(1, (b - 2.4) / 1.6) : 1.6) : 0);
     const boden = []; scene.traverse((o) => { if (o.name === 'ground') { boden.push(o); } });
     const W = (x, z) => welt(x, z);
     const kv = (x, y, z) => ort.localToWorld(new THREE.Vector3(x, y, z));
     return {
-        scene, frei, boden, hoehe: (x, z) => (imVorplatz(x, z) ? y0 : H(x, -z)),
+        scene, frei, boden, hoehe: (x, z) => (imVorplatz(x, z) ? y0 - tiefe(...lokal(x, z)) : H(x, -z)),
         kamera: (p) => {
             const [lx, lz] = lokal(p.x, p.z), x = Math.max(-9, Math.min(14, lx));
             return { p: kv(x * .55 + 1.5, 7.6, Math.min(lz, 15) + 11.5), t: kv(x * .75 + .4, 1.5, Math.min(lz, 15) - 3.5) };
         },
         spawn: { karte: [...W(-9, 15.8), blick(Math.PI)], von_bruecke: [...W(18.6, 13.6), blick(-Math.PI / 2)] },
         hotspots: [
-            { obj: e.leitung, stand: W(-5.2, 5.0), eintraege: [{ id: 'leitung' }] },
-            { obj: e.grube, stand: W(2.6, 9.8), eintraege: [{ id: 'grube' }] },
+            { obj: e.leitung, stand: W(1.0, 4.25), eintraege: [{ id: 'leitung' }] },
+            { obj: e.grube, stand: W(-1.9, 4.25), eintraege: [{ id: 'grube' }] },
             { obj: e.wandbild, stand: W(-6.4, 1.6), eintraege: [{ id: 'wandbild' }] },
             { obj: e.schild, stand: W(2.2, 1.3), eintraege: [{ id: 'schild' }] },
             { obj: e.buchstaben, stand: W(-8.4, 14.4), eintraege: [{ id: 'buchstaben' }], klickbar: (b) => !!b.flags.gegnerBaustelleWeg && !b.flags.schildHeil },
@@ -382,21 +387,22 @@ export async function baustelle(renderer) {
         npcs: [
             { hotspot: 'bauleiter', figur: 'kemper', pos: W(-6.8, 7.6), rot: blick(.6), pose: 'stehen', stand: W(-7.2, 8.9) },
             // Aus der Ems durch das Bauzaun-Tor herein zur Leiter (Pinsel steigt hinauf, Ledeiw hält sie); später rückwärts in den Bauwagen
-            { hotspot: 'gegner', figur: 'pinsel', tempo: 2.3, pos: W(-.2, .55), rot: blick(Math.PI), pose: 'benutzen', hoch: 1.05, stand: W(-2.8, 1.4),
-                von: [W(-9, 20), W(-9, 15), W(-4.75, 11.5), W(-4.75, 1.5)], nach: [W(-4.75, 1.5), W(-4.75, 11.5), W(-10.4, 11.8), W(-11.2, 10.3)], rueckwaerts: true },
-            { hotspot: 'gegner', figur: 'ledeiw', tempo: 2.3, pos: W(.9, 1.6), rot: blick(-2.4), pose: 'stehen', stand: W(-2.8, 1.4),
-                von: [W(-9.8, 20), W(-9.8, 15.2), W(-4.75, 11.8), W(-4.75, 1.9)], nach: [W(-4.75, 1.9), W(-4.75, 11.8), W(-10.8, 12.1), W(-11.0, 10.3)], rueckwaerts: true }
+            // Ledeiw schraubt oben auf der Leiter; Pinsel versperrt den engen Durchgang zur Grube (hinten am Bauzaun). Nach Chanis
+            // Live-Story hauen beide vorwärts ab, quer über den Platz und zum Bauzaun-Tor hinaus
+            { hotspot: 'gegner', figur: 'ledeiw', tempo: 2.3, pos: W(-.2, .55), rot: blick(Math.PI), pose: 'benutzen', hoch: 1.05, stand: W(-2.8, 1.3),
+                von: [W(-9.8, 20), W(-9.8, 15.2), W(-4.75, 11.8), W(-4.75, 1.3)], nach: [W(-4.75, 1.3), W(-4.75, 11.8), W(-9.6, 15.2), W(-9.6, 21), W(-12, 26)] },
+            { hotspot: 'gegner', figur: 'pinsel', tempo: 2.3, pos: W(2.5, 1.5), rot: blick(-Math.PI / 2), pose: 'arme', stand: W(-2.8, 1.3),
+                von: [W(-9, 20), W(-9, 15), W(-4.75, 11.5), W(-4.75, 1.6), W(2.5, 1.5)], nach: [W(-4.75, 1.6), W(-4.75, 11.5), W(-8.8, 15), W(-8.8, 21), W(-11, 26.5)] }
         ],
         dinge: [
-            { obj: e.siegel, sichtbar: (b) => !!b.flags.grubeTrocken && !b.inventar.includes('siegel_judikative'), art: 'nehmen' },
+            { obj: e.siegel, sichtbar: (b) => !b.inventar.includes('siegel_judikative'), art: 'nehmen' },
             // Leiter und abgeschraubte Buchstaben gibt es erst, wenn Pinsel und Ledeiw da sind; Joe schraubt sie wieder an
             { obj: e.leiter, sichtbar: (b) => !!b.flags.gegnerBaustelle && !b.flags.schildHeil, art: 'schwinden' },
             { obj: e.buchstaben, sichtbar: (b) => !!b.flags.gegnerBaustelle && !b.flags.schildHeil, art: 'schwinden' }
         ],
         aktualisieren(z) {
             const f = z.flags;
-            e.strahl.visible = !f.leckDicht && !f.grubeTrocken;   // das Leck ist dicht …
-            e.wasser.visible = !f.grubeTrocken;                    // … dann pumpt die Grube leer
+            e.strahl.visible = !f.leckDicht && !f.grubeTrocken;   // das Leck ist dicht; das Wasser bleibt bauchtief stehen
             e.schildMat.map = f.gegnerBaustelle && !f.schildHeil ? e.schildKaputt : e.schildHeil;
         },
         helme: (z) => !!z.flags.helme,

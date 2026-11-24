@@ -275,19 +275,7 @@ _Regie: Inventar neu: Siegel der Ausführung · Nicht mehr anklickbar: Dritte La
 
 > Jetzt spielt Joe. Kartusche und Verkaufsgespräch stehen bereit.
 
-**23. Joe: Kartusche → Leckende Leitung**
-
-> Joe setzt die Kartusche an. Eine Raupe, glattgezogen mit dem Daumen. Das Leck ist dicht.
->
-> ↳ _Das Leck hört auf zu sprudeln_
->
-> Die Pumpe saugt die Grube leer. Unten glänzt etwas.
->
-> ↳ _Die Grube läuft leer, unten glänzt das Siegel_
-
-_Regie: Nicht mehr anklickbar: Leckende Leitung_
-
-**24. Joe: Verkaufsgespräch → Bauleiterin Frau Kemper**
+**23. Joe: Verkaufsgespräch → Bauleiterin Frau Kemper**
 
 > Joe: „Noch nicht dicht? Da hätte ich etwas für Sie.“ Zehn Minuten Fachgespräch über Fugen im Nassbereich.
 >
@@ -295,33 +283,47 @@ _Regie: Nicht mehr anklickbar: Leckende Leitung_
 >
 > ↳ _Joe und Chani tragen Bauhelme_
 
-**25. Joe: Benutze → Baugrube**
+**24. Figur wechseln (jetzt Chani)**
 
-> Joe steigt mit Helm in die Grube. Im alten Schacht unter dem Pflaster, direkt vor der Eingangstür: ein Siegel mit einer Waage. Das dritte Siegel!
+> Jetzt spielt Chani. Deuten und Live-Story stehen bereit.
+
+**25. Chani: Live-Story → Pinsel und Ledeiw (AfD)**
+
+> Chani hebt das Handy: „Wir sind live! Wollen Sie den Menschen etwas sagen?“
+>
+> Ledeiw springt von der Leiter, Pinsel verlässt den Durchgang – und beide hauen ab, quer über den Platz und zum Bauzaun-Tor hinaus.
+>
+> ↳ _Pinsel und Ledeiw hauen quer über den Platz durchs Bauzaun-Tor ab; die Buchstaben liegen vor dem Tor_
+>
+> Im Weglaufen ruft Pinsel über die Schulter: „Lügenpresse!“ Chani: „Ich bin Kunsthistorikerin.“ Der Durchgang zur Grube ist frei.
+
+_Regie: Neu anklickbar: Abgeschraubte Buchstaben „EINGANG“ · Nicht mehr anklickbar: Pinsel und Ledeiw (AfD)_
+
+**26. Figur wechseln (jetzt Joe)**
+
+> Jetzt spielt Joe. Kartusche und Verkaufsgespräch stehen bereit.
+
+**27. Joe: Kartusche → Leckende Leitung**
+
+> Joe steigt die Leiter in die Grube hinab. Das Wasser reicht ihm bis zum Bauchnabel. Joe: „Kalt. Sehr kalt.“
+>
+> Er setzt die Kartusche unter Wasser an: eine Raupe, glattgezogen mit dem Daumen. Das Leck ist dicht.
+>
+> ↳ _Das Leck hört auf zu sprudeln_
+>
+> Das Wasser steigt nicht mehr. Unten im alten Schacht glänzt etwas.
+
+_Regie: Nicht mehr anklickbar: Leckende Leitung_
+
+**28. Joe: Benutze → Baugrube**
+
+> Joe watet bis zum Bauchnabel durchs Wasser zum alten Schacht und taucht den Arm hinein.
+>
+> Ein Siegel mit einer Waage. Das dritte Siegel!
 >
 > ↳ _ins Inventar: Siegel des Rechts_
 
 _Regie: Inventar neu: Siegel des Rechts_
-
-**26. Figur wechseln (jetzt Chani)**
-
-> Jetzt spielt Chani. Deuten und Live-Story stehen bereit.
-
-**27. Chani: Live-Story → Pinsel und Ledeiw (AfD)**
-
-> Chani hebt das Handy: „Wir sind live! Wollen Sie den Menschen etwas sagen?“
->
-> Beide stürzen zur Kamera, drehen sich ins beste Licht – und laufen dabei rückwärts in den Bauwagen. Die Tür fällt zu.
->
-> ↳ _Pinsel und Ledeiw laufen rückwärts in den Bauwagen; die Buchstaben liegen vor dem Tor_
->
-> Von innen: „Lügenpresse!“ Chani: „Ich bin Kunsthistorikerin.“
-
-_Regie: Neu anklickbar: Abgeschraubte Buchstaben „EINGANG“ · Nicht mehr anklickbar: Pinsel und Ledeiw (AfD)_
-
-**28. Figur wechseln (jetzt Joe)**
-
-> Jetzt spielt Joe. Kartusche und Verkaufsgespräch stehen bereit.
 
 **29. Joe: Benutze → Abgeschraubte Buchstaben „EINGANG“**
 
@@ -691,19 +693,20 @@ Gegenstände, die nirgends passen, ergeben: „<Gegenstand> und <Ziel> – das p
 
 **Leckende Leitung**
 
-- _Schau an:_ Aus einer alten Leitung sprudelt Wasser in die Grube.
+- _Schau an:_ Aus einer alten Leitung unten in der Grube sprudelt Wasser. Die Grube steht schon bauchtief unter Wasser.
+- _Joe: Kartusche:_ Frau Kemper: „Ohne Helm geht keiner in die Grube!“
 - _Chani: Deuten:_ Chani: „Spätes 20. Jahrhundert, Gusseisen. Kunsthistorisch uninteressant, aber nass.“
 
 **Baugrube**
 
-- _Schau an:_ Die Grube steht unter Wasser. Unten glänzt etwas.
-- _Benutze:_ Zu nass. Erst das Leck stopfen.
+- _Schau an:_ Die Grube läuft langsam voll, das Wasser steht schon bauchtief. Unten glänzt etwas.
+- _Benutze:_ Frau Kemper: „Ohne Helm geht keiner in die Grube!“
 
 **Pinsel und Ledeiw (AfD)**
 
-- _Schau an:_ Pinsel und Ledeiw, tropfnass und auf Socken. Pinsel steht auf der Leiter und schraubt die Buchstaben vom Schild „EINGANG HALLENBAD“, Ledeiw hält die Leiter und stapelt die Buchstaben vor dem Bauzaun-Tor.
-- _Rede mit:_ Ledeiw: „‚Eingang‘ – klingt nach offenen Grenzen. Muss weg.“ ⏎ Pinsel: „‚Hallenbad‘ darf bleiben. Das ist deutsches Kulturgut. Mit Sprungturm.“
-- _Joe: Kartusche:_ Joe überlegt, sie festzukleben. Aber auf Sand hält selbst der beste Dichtstoff nicht. Berufsehre.
+- _Schau an:_ Pinsel und Ledeiw, tropfnass und auf Socken. Ledeiw steht auf der Leiter und schraubt die Buchstaben vom Schild „EINGANG HALLENBAD“, Pinsel versperrt breitbeinig den engen Durchgang hinter dem Bauzaun – den einzigen Weg in die Grube.
+- _Rede mit:_ Ledeiw: „‚Eingang‘ – klingt nach offenen Grenzen. Muss weg.“ ⏎ Pinsel: „Und hier kommt keiner durch. ‚Hallenbad‘ darf bleiben, das ist deutsches Kulturgut. Mit Sprungturm.“
+- _Joe: Kartusche:_ Joe überlegt, sie festzukleben. Aber auf nassem Pflaster hält selbst der beste Dichtstoff nicht. Berufsehre.
 - _Joe: Verkaufsgespräch:_ Joe will ihnen Dichtstoff verkaufen. „Ist da Gender drin?“, fragt Ledeiw. Gespräch beendet.
 - _Chani: Deuten:_ Chani deutet: „Sie suchen nach Bestätigung, nicht nach dem Gral. Eine Kamera würde sie ablenken.“
 
@@ -727,7 +730,7 @@ Gegenstände, die nirgends passen, ergeben: „<Gegenstand> und <Ziel> – das p
 
 **Bauzaun-Tor**
 
-- _Benutze:_ Vor dem Tor stapeln sich die abgeschraubten Buchstaben, und Ledeiw hält die Leiter quer davor.
+- _Benutze:_ Ledeiw ruft von der Leiter: „Halt! Hier geht keiner, bevor die Buchstaben gezählt sind!“
 
 ### Hof der Martin-Luther-Grundschule
 

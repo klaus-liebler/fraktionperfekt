@@ -23,7 +23,7 @@ Parteien erscheinen nur als Karikatur-Typen. Spielzeit etwa 20–40 Minuten.
 - Wer während eines offenen Textes Verben, Figuren oder Gegenstände anklickt, bekommt kurz den Hinweis „Erst zu Ende lesen“.
 - **Regie: erst der Grund, dann die Änderung.** Figuren und Dinge ändern sich erst mit der Textzeile, die den Grund nennt –
   nicht vorher und nicht erst am Ende des Textes. Figuren kommen und gehen dabei zu Fuß (Chris geht zum Ortsverein,
-  Pinsel und Ledeiw drängen sich ins Rathaus, laufen rückwärts in den Bauwagen, Helferinnen und Helfer kommen ins Finale),
+  Pinsel und Ledeiw drängen sich ins Rathaus, hauen von der Baustelle ab, Helferinnen und Helfer kommen ins Finale),
   festgeklebte Figuren rutschen an die Wand, Genommenes wandert zur Figur, Neues wächst ins Bild, und das Inventar
   füllt sich mit derselben Zeile. Siehe „Technik“.
 - Stadtplan: Station 4 ist das Hallenbad Greven (OSM-Gebäude „Hallenbad Greven“, Am Hallenbad 3); das Freibad steht ohne Nummer auf der Karte.
@@ -66,10 +66,11 @@ Ausführlich mit allen Texten und der Regie je Textzeile: [`spiel-loesungsweg.md
    geht ihr Boot unter. Ihr treibt bis unter die Radbrücke beim Hallenbad. Den Deich hinauf und an der Deichkrone auf die Brücke: dritte Laterne
    benutzen → **Siegel der Ausführung**. Es geht direkt an der Baustelle weiter.
 4. **Baustelle am Eingang des Hallenbads** (Sanierung; das Freibad ist nur beschriftet und nicht im Umbau): Vor der Tür mit dem Wandbild der
-   Grevener Bäder ist eine Grube aufgerissen; Pinsel und Ledeiw schrauben die Buchstaben von „EINGANG“ ab. **Joe:** Kartusche auf die leckende
-   Leitung (Leck dicht, die Grube läuft leer). **Joe:** Verkaufsgespräch mit Frau Kemper → Helme. Baugrube benutzen → **Siegel des Rechts**.
-   **Chani:** Live-Story bei Pinsel und Ledeiw → sie laufen rückwärts in den Bauwagen. **Joe:** die abgeschraubten Buchstaben benutzen → er
-   schraubt sie wieder an. Bauzaun-Tor.
+   Grevener Bäder ist eine Grube aufgerissen, das Wasser steht bauchtief. Ledeiw schraubt auf einer Leiter die Buchstaben von „EINGANG“ ab,
+   Pinsel versperrt den engen Durchgang zur Grube. **Joe:** Verkaufsgespräch mit Frau Kemper → Helme. **Chani:** Live-Story bei Pinsel und
+   Ledeiw → sie hauen durchs Bauzaun-Tor ab, der Durchgang ist frei. **Joe:** die Leiter hinab, bis zum Bauchnabel ins Wasser, Kartusche
+   auf die leckende Leitung → dicht. Baugrube benutzen → durchs Wasser zum alten Schacht → **Siegel des Rechts**. Die abgeschraubten Buchstaben
+   benutzen → Joe schraubt sie wieder an. Bauzaun-Tor.
 5. **Martin-Luther-Grundschule:** Schulhofuhr benutzen (bis 20:30 warten, Fledermäuse fliegen aus). Mit Lorette reden → Lastenrad (zusammengefaltet, in
    Chanis Tasche; im Gang wieder ausgeklappt). Durch den Haupteingang in den Schulflur (Klassenzimmer 1a – abends leer –, 2b mit Elternabend und
    WC), dort die Kellertür benutzen (nach 20:30 Uhr, Taschenlampe nötig).
