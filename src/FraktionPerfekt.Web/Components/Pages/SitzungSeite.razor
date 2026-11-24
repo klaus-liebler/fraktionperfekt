@@ -4,6 +4,7 @@
 @using FraktionPerfekt.Domain.Sitzungen
 @inject DialogService Dialoge
 @inject Vorgang Vorgang
+@inject TimeProvider Uhr
 
 <PageTitle>Sitzung · FraktionPerfekt</PageTitle>
 
@@ -195,7 +196,15 @@ else
                 }
                 @foreach (var b in t.Beschluesse)
                 {
-                    <div class="fp-small"><b>Beschluss:</b> @b.Text – @b.Ergebnis (@b.Stimmen)</div>
+                    @if (b.ZurueckgezogenAm is not null)
+                    {
+                        <div class="fp-small fp-muted"><s>Beschluss: @b.Text – @b.Ergebnis (@b.Stimmen)</s> zurückgezogen: @b.Korrekturgrund</div>
+                    }
+                    else
+                    {
+                        <div class="fp-small"><b>Beschluss:</b> @b.Text – @b.Ergebnis (@b.Stimmen)
+                            @if (d.Protokollieren.Erlaubt) { <button class="fp-linkbutton" title="Korrekturregel: in den ersten 30 Minuten ohne Begründung" @onclick="@(() => BeschlussZurueckziehenAsync(b))">zurückziehen</button> }</div>
+                    }
                 }
                 @foreach (var a in t.Aufgaben)
                 {
@@ -295,10 +304,12 @@ else
     private string? aufgabeTitel;
     private Guid? aufgabePerson;
     private DateTime? aufgabeFrist;
+    private Guid? benutzerId;
 
     protected override async Task OnParametersSetAsync()
     {
         reiter = ReiterParameter ?? reiter;
+        benutzerId = (await Vorgang.BenutzerAsync()).PersonId;
         personen = (await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<StammdatenDienst>().PersonenAsync())).Where(p => p.Aktiv).ToList();
         await LadenAsync();
     }
@@ -312,6 +323,17 @@ else
 
     private BeamerLink? beamerLink;
     private DateTimeOffset? beamerBis;
+
+    private async Task BeschlussZurueckziehenAsync(FraktionPerfekt.Domain.Sitzungen.Beschluss b)
+    {
+        var eigener = benutzerId is { } ich && b.ErfasstVonPersonId == ich;
+        var ohneGrund = FraktionPerfekt.Application.Gemeinsam.Korrekturregel.OhneGrund(eigener, b.ErfasstAm, Uhr.GetUtcNow());
+        if (await Dialoge.ZurueckziehenAsync("Beschluss zurückziehen?", "Der Beschluss bleibt durchgestrichen im Entwurf sichtbar und zählt nicht mehr zur Beschlusslage.",
+                !ohneGrund) is { } e)
+        {
+            await AusfuehrenAsync(s => s.BeschlussZurueckziehenAsync(b.Id, e.Grund), "Beschluss zurückgezogen.");
+        }
+    }
 
     private async Task BeamerAsync()
     {

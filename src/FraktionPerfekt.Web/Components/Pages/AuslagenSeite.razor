@@ -2,6 +2,7 @@
 @using FraktionPerfekt.Application.Finanzen
 @using FraktionPerfekt.Domain.Finanzen
 @inject Vorgang Vorgang
+@inject DialogService Dialoge
 @inject TimeProvider Uhr
 
 <PageTitle>Meine Auslagen · FraktionPerfekt</PageTitle>
@@ -44,7 +45,8 @@
             <li>@z.Auslage.Datum.ToString("dd.MM.yyyy") · <b>@z.Auslage.Zweck</b> · @z.Auslage.Betrag.ToString("C") ·
                 <StatusPille Stil="@(z.Auslage.Status switch { Auslagenstatus.Ausgezahlt => "gut", Auslagenstatus.Abgelehnt => "krit", Auslagenstatus.Freigegeben => "info", _ => "neutral" })">@z.Auslage.Status</StatusPille>
                 @if (z.Auslage.Vermerk is not null) { <span class="fp-small fp-muted">(@z.Auslage.Vermerk)</span> }
-                @if (z.Auslage.BelegSchluessel is not null) { <a class="fp-small" href="finanzen/beleg/@z.Auslage.Id" target="_blank">Beleg</a> }</li>
+                @if (z.Auslage.BelegSchluessel is not null) { <a class="fp-small" href="finanzen/beleg/@z.Auslage.Id" target="_blank">Beleg</a> }
+                @if (z.Zurueckziehen is { Erlaubt: true }) { <button class="fp-linkbutton fp-small" @onclick="@(() => ZurueckziehenAsync(z))">zurückziehen</button> }</li>
         }
     </ul>
 </section>
@@ -69,6 +71,27 @@
     {
         var ich = (await Vorgang.BenutzerAsync()).PersonId;
         meine = (await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<FinanzDienst>().AuslagenAsync())).Where(z => z.Auslage.PersonId == ich).ToList();
+    }
+
+    private async Task ZurueckziehenAsync(AuslageZeile z)
+    {
+        if (await Dialoge.ZurueckziehenAsync("Auslage zurückziehen?", $"„{z.Auslage.Zweck}“ ({z.Auslage.Betrag:C}) wird zurückgezogen; der Kassier prüft sie dann nicht mehr.",
+                !z.OhneGrund) is not { } e)
+        {
+            return;
+        }
+
+        try
+        {
+            await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<FinanzDienst>().AuslageZurueckziehenAsync(z.Auslage.Id, e.Grund));
+            (meldung, fehler) = ("Auslage zurückgezogen.", false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
     }
 
     private async Task EinreichenAsync()

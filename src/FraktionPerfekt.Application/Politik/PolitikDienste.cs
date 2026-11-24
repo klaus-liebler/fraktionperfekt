@@ -158,7 +158,7 @@ public sealed class BeschlussArchiv(IDaten daten, IStammdatenSpeicher stammdaten
             return [];
         }
 
-        var abfrage = daten.Menge<Beschluss>();
+        var abfrage = daten.Menge<Beschluss>().Where(b => b.ZurueckgezogenAm == null);
         if (quelle is { } q)
         {
             abfrage = abfrage.Where(b => b.Quelle == q);

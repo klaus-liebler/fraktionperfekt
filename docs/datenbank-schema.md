@@ -101,11 +101,11 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Anfragen](#anfragen) – 13 Spalten
 - [Antraege](#antraege) – 13 Spalten
 - [AntragFassungen](#antragfassungen) – 7 Spalten
-- [AntragKommentare](#antragkommentare) – 8 Spalten
+- [AntragKommentare](#antragkommentare) – 10 Spalten
 - [Aufgaben](#aufgaben) – 16 Spalten
 - [Auslagen](#auslagen) – 15 Spalten
 - [BeamerZugaenge](#beamerzugaenge) – 7 Spalten
-- [Beschluesse](#beschluesse) – 15 Spalten
+- [Beschluesse](#beschluesse) – 19 Spalten
 - [Besetzungsanfragen](#besetzungsanfragen) – 11 Spalten
 - [Besetzungsmeldungen](#besetzungsmeldungen) – 5 Spalten
 - [BildVerwendungen](#bildverwendungen) – 5 Spalten
@@ -307,9 +307,11 @@ Klasse: `FraktionPerfekt.Domain.Antraege.AntragKommentar`
 | AntragId | BLOB | ja | Index | G |  |
 | Erledigt | INTEGER | ja |  | G |  |
 | Fassung | INTEGER | ja |  | G |  |
+| Korrekturgrund | TEXT |  |  | G | Begründung des Zurückziehens (Korrekturregel) |
 | PersonId | BLOB | ja |  | G |  |
 | Text | TEXT | ja |  | G |  |
 | Zitat | TEXT |  |  | G |  |
+| ZurueckgezogenAm | INTEGER |  |  | G |  |
 
 Indizes: (AntragId)
 
@@ -388,9 +390,12 @@ Klasse: `FraktionPerfekt.Domain.Sitzungen.Beschluss`
 | AntragId | BLOB |  |  | G |  |
 | Datum | INTEGER | ja | Index | G |  |
 | Enthaltung | INTEGER | ja |  | G |  |
+| ErfasstAm | INTEGER |  |  | G |  |
+| ErfasstVonPersonId | BLOB |  |  | G |  |
 | Ergebnis | TEXT(40) | ja |  | G |  |
 | GremiumId | BLOB |  |  | G |  |
 | Ja | INTEGER | ja |  | G |  |
+| Korrekturgrund | TEXT |  |  | G | Begründung des Zurückziehens (Korrekturregel) |
 | Nein | INTEGER | ja |  | G |  |
 | Quelle | TEXT(40) | ja |  | G |  |
 | RisId | TEXT |  |  | G |  |
@@ -399,6 +404,7 @@ Klasse: `FraktionPerfekt.Domain.Sitzungen.Beschluss`
 | Titel | TEXT | ja |  | G |  |
 | TopId | BLOB |  |  | G |  |
 | UmfrageId | BLOB |  |  | G | Beschluss aus einer Abstimmung im Sitzungsmodus |
+| ZurueckgezogenAm | INTEGER |  |  | G |  |
 
 Indizes: (Datum)
 

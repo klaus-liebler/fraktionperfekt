@@ -1,0 +1,29 @@
+@*
+    Rückfrage mit Begründung (Korrekturregel aus SchoolCraft): nennt die Folge, verlangt nach 30 Minuten bzw. für fremde Einträge eine Begründung;
+    OK nennt, was fehlt. Öffnen über Rueckfragen.ZurueckziehenAsync.
+*@
+@inject DialogService Dialoge
+
+<p>@Frage</p>
+@if (GrundNoetig)
+{
+    <div class="fp-field">
+        <label class="fp-lbl" for="korrektur-grund">Begründung (bleibt im Protokoll)</label>
+        <RadzenTextArea id="korrektur-grund" @bind-Value="grund" Rows="3" Style="width:100%" />
+    </div>
+}
+<div class="fp-row" style="justify-content:flex-end;margin-top:12px">
+    <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialoge.Close(null))" />
+    <BegruendeterButton Text="@Ja" Freigabe="@(GrundNoetig && string.IsNullOrWhiteSpace(grund) ? Freigabe.Nein("Bitte eine Begründung eingeben.") : Freigabe.Ja)"
+                        Click="@(() => Dialoge.Close(new Ergebnis(grund)))" />
+</div>
+
+@code {
+    public sealed record Ergebnis(string? Grund);
+
+    [Parameter] public string Frage { get; set; } = "";
+    [Parameter] public string Ja { get; set; } = "Zurückziehen";
+    [Parameter] public bool GrundNoetig { get; set; }
+
+    private string? grund;
+}

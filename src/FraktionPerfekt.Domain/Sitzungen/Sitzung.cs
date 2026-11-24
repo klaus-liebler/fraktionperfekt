@@ -377,6 +377,28 @@ public sealed class Beschluss
     /// <summary>Beschluss aus einer (geheimen) Abstimmung im Sitzungsmodus.</summary>
     public Guid? UmfrageId { get; private set; }
 
+    /// <summary>Wer den Beschluss im Sitzungsmodus erfasst hat (für die Korrekturregel); leer bei RIS und Abstimmungen.</summary>
+    public Guid? ErfasstVonPersonId { get; private set; }
+
+    public DateTimeOffset? ErfasstAm { get; private set; }
+
+    /// <summary>Zurückgezogen (Korrekturregel, Storno): bleibt erhalten, zählt aber nicht mehr zur Beschlusslage.</summary>
+    public DateTimeOffset? ZurueckgezogenAm { get; private set; }
+
+    public string? Korrekturgrund { get; private set; }
+
+    public void ErfassungVermerken(Guid personId, DateTimeOffset am) => (ErfasstVonPersonId, ErfasstAm) = (personId, am);
+
+    public void Zurueckziehen(string grund, DateTimeOffset jetzt)
+    {
+        if (ZurueckgezogenAm is not null)
+        {
+            throw new InvalidOperationException("Der Beschluss ist bereits zurückgezogen.");
+        }
+
+        (ZurueckgezogenAm, Korrekturgrund) = (jetzt, grund);
+    }
+
     public string Stimmen => Ja + Nein + Enthaltung == 0 ? "ohne Zählung" : $"{Ja} ja, {Nein} nein, {Enthaltung} Enthaltung";
 
     /// <summary>Ergebnis aus den Stimmen: Mehrheit der abgegebenen Ja- gegenüber Nein-Stimmen.</summary>

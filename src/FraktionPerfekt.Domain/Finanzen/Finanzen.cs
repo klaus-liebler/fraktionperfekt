@@ -171,6 +171,9 @@ public enum Auslagenstatus
     Freigegeben,
     Abgelehnt,
     Ausgezahlt,
+
+    /// <summary>Von der einreichenden Person bzw. dem Kassier vor der Entscheidung zurückgezogen (Korrekturregel).</summary>
+    Zurueckgezogen,
 }
 
 /// <summary>Auslage (Erstattung) mit Belegfoto: einreichen → Freigabe (nie die eigene) → Auszahlung durch den Kassier.</summary>
@@ -244,6 +247,16 @@ public sealed class Auslage
 
         (Status, EntschiedenVonPersonId, Vermerk) = (freigeben ? Auslagenstatus.Freigegeben : Auslagenstatus.Abgelehnt, personId,
             string.IsNullOrWhiteSpace(vermerk) ? null : vermerk.Trim());
+    }
+
+    public void Zurueckziehen(string grund)
+    {
+        if (Status != Auslagenstatus.Eingereicht)
+        {
+            throw new InvalidOperationException("Zurückziehen lässt sich eine Auslage nur, solange nicht über sie entschieden ist.");
+        }
+
+        (Status, Vermerk) = (Auslagenstatus.Zurueckgezogen, grund);
     }
 
     public void Auszahlen(DateTimeOffset jetzt)

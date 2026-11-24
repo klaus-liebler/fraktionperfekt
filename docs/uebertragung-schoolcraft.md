@@ -189,6 +189,12 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 ### 10 30-Minuten-Korrekturregel (FA-3235)
 Eigene Einträge 30 Minuten ohne Grund berichtigen, danach mit Grund. Passt zu Protokollnotizen im Sitzungsmodus, Kommentaren, Auslagen vor Freigabe. **Nicht** für Kassenbuchungen nach Freigabe. S–M.
 
+**Umgesetzt (24.11.2026) ✅:** `Korrekturregel` (Application/Gemeinsam) wie in SchoolCraft, als Zurückziehen (Storno, Eintrag bleibt) für Beschlüsse im
+Sitzungsmodus (neu: wer/wann erfasst, zurückgezogen mit Grund; aus Beschlusslage, Protokolltext, Beamer und KI-Prüfung ausgeblendet), Kommentare an
+Anträgen und Auslagen vor der Entscheidung (Status „zurückgezogen“, Prüfaufgabe schließt sich). Baustein `GrundDialog` fragt nur nach einer Begründung,
+wenn sie nötig ist. Protokollnotizen haben schon Fassungen über den Editor und bleiben ohne Regel; Kassenbuchungen bewusst ausgenommen. Zusatzmigration
+`Korrekturregel`. Tests: `KorrekturregelTests`.
+
 ### 11 Einheitliches Anlegen per Dialog (FA-3229)
 FraktionPerfekt hat mit `GrosserDialog` schon große Editor-Dialoge; einheitlich wäre „+ … hinzufügen“ mit OK/Abbrechen und „OK nennt, was fehlt“ für kleine Objekte (Kontakt, Aufgabe, Ressource). Auf Handy-Seiten nicht. M.
 

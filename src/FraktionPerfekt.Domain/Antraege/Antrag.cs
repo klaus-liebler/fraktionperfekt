@@ -219,7 +219,22 @@ public sealed class AntragKommentar
 
     public bool Erledigt { get; private set; }
 
+    /// <summary>Zurückgezogen (Korrekturregel): Der Text bleibt erhalten, wird aber nicht mehr gezeigt.</summary>
+    public DateTimeOffset? ZurueckgezogenAm { get; private set; }
+
+    public string? Korrekturgrund { get; private set; }
+
     public void AlsErledigtMarkieren() => Erledigt = true;
+
+    public void Zurueckziehen(string grund, DateTimeOffset jetzt)
+    {
+        if (ZurueckgezogenAm is not null)
+        {
+            throw new InvalidOperationException("Der Kommentar ist bereits zurückgezogen.");
+        }
+
+        (ZurueckgezogenAm, Korrekturgrund) = (jetzt, grund);
+    }
 }
 
 public enum Vorschlagsstatus

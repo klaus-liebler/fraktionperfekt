@@ -16,7 +16,9 @@ namespace FraktionPerfekt.Application.Antraege;
 
 public sealed record AntragZeile(Antrag Antrag, string Autor, string? Gremium, int Fassungen, int OffeneVorschlaege);
 
-public sealed record KommentarZeile(AntragKommentar Kommentar, string Person);
+/// <param name="Zurueckziehen">Korrekturregel: eigene 30 Minuten ohne Begründung, danach und für den Vorstand mit Begründung.</param>
+/// <param name="OhneGrund">Zurückziehen ist noch ohne Begründung möglich.</param>
+public sealed record KommentarZeile(AntragKommentar Kommentar, string Person, Freigabe? Zurueckziehen = null, bool OhneGrund = false);
 
 public sealed record VorschlagZeile(Aenderungsvorschlag Vorschlag, string Person, Freigabe Entscheiden);
 
@@ -99,7 +101,11 @@ public sealed class AntragDienst(
         var vorschlagEntscheiden = !a.Status.TextAenderbar() ? Freigabe.Nein("Der Text ist festgeschrieben.")
             : istAutorOderVorstand ? Freigabe.Ja : Freigabe.Nein("Über Änderungsvorschläge entscheidet die Autorin/der Autor oder der Vorstand.");
         return new AntragDetail(a, namen.GetValueOrDefault(a.AutorPersonId, "?"), gremium?.Name, sitzung, fassungen,
-            kommentare.Select(k => new KommentarZeile(k, namen.GetValueOrDefault(k.PersonId, "?"))).ToList(),
+            kommentare.Select(k => new KommentarZeile(k, namen.GetValueOrDefault(k.PersonId, "?"),
+                k.ZurueckgezogenAm is not null ? Freigabe.Nein("Bereits zurückgezogen.")
+                : k.PersonId == wer.PersonId || Rechte.SitzungenSteuern(wer.Rolle).Erlaubt ? Freigabe.Ja
+                : Freigabe.Nein("Zurückziehen kann, wer den Kommentar geschrieben hat, oder der Vorstand."),
+                Korrekturregel.OhneGrund(k.PersonId == wer.PersonId, k.Am, uhr.GetUtcNow()))).ToList(),
             vorschlaege.Select(v => new VorschlagZeile(v, namen.GetValueOrDefault(v.PersonId, "?"),
                 v.Status != Vorschlagsstatus.Offen ? Freigabe.Nein("Bereits entschieden.") : vorschlagEntscheiden)).ToList(),
             a.AbstimmungId is { } u ? await umfragen.DetailAsync(u, abbruch) : null,
@@ -182,6 +188,19 @@ public sealed class AntragDienst(
         var wer = await benutzer.ErmittelnAsync(abbruch);
         var d = await DetailAsync(antragId, abbruch) ?? throw new InvalidOperationException("Antrag nicht gefunden.");
         daten.Hinzufuegen(new AntragKommentar(antragId, d.Aktuell.Nummer, wer.PersonIdPflicht, zitat, text, uhr.GetUtcNow()));
+        await daten.SpeichernAsync(abbruch);
+    }
+
+    /// <summary>Kommentar zurückziehen (Korrekturregel aus SchoolCraft): Der Text bleibt erhalten, wird aber nicht mehr gezeigt.</summary>
+    public async Task KommentarZurueckziehenAsync(Guid kommentarId, string? grund, CancellationToken abbruch = default)
+    {
+        var wer = await benutzer.ErmittelnAsync(abbruch);
+        var k = await daten.LadenAsync<AntragKommentar>(kommentarId, "Kommentar", abbruch);
+        Korrekturregel.Pruefen(k.PersonId == wer.PersonId, k.Am, uhr.GetUtcNow(), Rechte.SitzungenSteuern(wer.Rolle).Erlaubt, grund,
+            "wer den Kommentar geschrieben hat, und der Vorstand");
+        k.Zurueckziehen(Korrekturregel.Grund(grund), uhr.GetUtcNow());
+        await protokoll.ProtokollierenAsync("Antrag.KommentarZurueckgezogen", $"Kommentar von {Pseudonym.Person(k.PersonId)} zurückgezogen", nameof(Antrag), k.AntragId,
+            abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
     }
 

@@ -107,7 +107,9 @@ public static class Spalteneinstufung
                 ["Erledigt"] = (Spaltenart.Vorgang, null),
                 ["Fassung"] = (Spaltenart.Vorgang, null),
                 ["PersonId"] = (Spaltenart.Vorgang, null),
+                ["Korrekturgrund"] = (Spaltenart.Vorgang, "Begründung des Zurückziehens (Korrekturregel)"),
                 ["Text"] = (Spaltenart.Vorgang, null),
+                ["ZurueckgezogenAm"] = (Spaltenart.Vorgang, null),
                 ["Zitat"] = (Spaltenart.Vorgang, null),
             },
             ["Aufgaben"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
@@ -164,6 +166,10 @@ public static class Spalteneinstufung
                 ["Titel"] = (Spaltenart.Vorgang, null),
                 ["TopId"] = (Spaltenart.Vorgang, null),
                 ["UmfrageId"] = (Spaltenart.Vorgang, "Beschluss aus einer Abstimmung im Sitzungsmodus"),
+                ["ErfasstAm"] = (Spaltenart.Vorgang, null),
+                ["ErfasstVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["Korrekturgrund"] = (Spaltenart.Vorgang, "Begründung des Zurückziehens (Korrekturregel)"),
+                ["ZurueckgezogenAm"] = (Spaltenart.Vorgang, null),
             },
             ["Besetzungsanfragen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {

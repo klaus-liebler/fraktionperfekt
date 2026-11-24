@@ -134,7 +134,7 @@ public sealed class WikiDienst(
         }
 
         var seiten = await KiSeitenAsync(abbruch);
-        var beschluesse = (await daten.ListeAsync(daten.Menge<Beschluss>().OrderByDescending(b => b.Datum).ThenBy(b => b.Id).Take(100), abbruch))
+        var beschluesse = (await daten.ListeAsync(daten.Menge<Beschluss>().Where(b => b.ZurueckgezogenAm == null).OrderByDescending(b => b.Datum).ThenBy(b => b.Id).Take(100), abbruch))
             .Select(b => new KiBeschluss(b.Datum, b.Titel, b.Text)).ToList();
         var offen = await daten.ListeAsync(daten.Menge<WikiVorschlag>().Where(v => v.Status == Wikivorschlagsstatus.Offen).OrderBy(v => v.Id), abbruch);
         var neu = 0;

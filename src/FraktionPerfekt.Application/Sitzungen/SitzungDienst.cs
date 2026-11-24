@@ -613,11 +613,40 @@ public sealed class SitzungDienst(
         };
         var ergebnis = ja + nein + enthaltung == 0 ? Beschlussergebnis.Kenntnisnahme : Beschluss.Auswerten(ja, nein);
         var b = new Beschluss(quelle, termin.Tag, top.Titel, text, ergebnis, ja, nein, enthaltung, s.Id, top.Id, termin.GremiumId, top.AntragId);
+        b.ErfassungVermerken((await benutzer.ErmittelnAsync(abbruch)).PersonIdPflicht, uhr.GetUtcNow());
         daten.Hinzufuegen(b);
         top.AlsBehandeltMarkieren();
         await protokoll.ProtokollierenAsync("Sitzung.Beschluss", $"Beschluss zu TOP „{top.Titel}“: {ergebnis} ({b.Stimmen})", nameof(Sitzung), s.Id, abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
         return b;
+    }
+
+    /// <summary>
+    /// Beschluss zurückziehen (Korrekturregel): Wer ihn erfasst hat, 30 Minuten ohne Begründung; danach und für Vorstand, Administration und
+    /// Sitzungsleitung nur mit Begründung; nur solange das Protokoll änderbar ist. Der Beschluss bleibt als Storno erhalten.
+    /// </summary>
+    public async Task BeschlussZurueckziehenAsync(Guid beschlussId, string? grund, CancellationToken abbruch = default)
+    {
+        var b = await daten.LadenAsync<Beschluss>(beschlussId, "Beschluss", abbruch);
+        if (b.SitzungId is not { } sitzungId)
+        {
+            throw new InvalidOperationException("Beschlüsse aus dem RIS lassen sich hier nicht zurückziehen.");
+        }
+
+        var s = await daten.LadenAsync<Sitzung>(sitzungId, "Sitzung", abbruch);
+        if (!s.ProtokollAenderbar)
+        {
+            throw new InvalidOperationException("Das Protokoll ist freigegeben und unveränderlich.");
+        }
+
+        var wer = await benutzer.ErmittelnAsync(abbruch);
+        var zustaendig = Rechte.SitzungenSteuern(wer.Rolle).Erlaubt || (wer.PersonId is { } ich && (ich == s.LeitungPersonId || ich == s.ProtokollPersonId));
+        Korrekturregel.Pruefen(b.ErfasstVonPersonId is { } e && e == wer.PersonId, b.ErfasstAm, uhr.GetUtcNow(), zustaendig, grund,
+            "wer den Beschluss erfasst hat, Sitzungsleitung, Protokollführung und Vorstand");
+        b.Zurueckziehen(Korrekturregel.Grund(grund), uhr.GetUtcNow());
+        await protokoll.ProtokollierenAsync("Sitzung.BeschlussZurueckgezogen", $"Beschluss zu „{b.Titel}“ zurückgezogen: {Korrekturregel.Grund(grund)}", nameof(Sitzung), s.Id,
+            abbruch: abbruch);
+        await daten.SpeichernAsync(abbruch);
     }
 
     /// <summary>Aufgabe aus dem Protokoll an eine Person (z. B. „Klären bis nächste Sitzung“).</summary>
@@ -720,7 +749,7 @@ public sealed class SitzungDienst(
                 sb.Append(n).Append("\n\n");
             }
 
-            foreach (var b in t.Beschluesse)
+            foreach (var b in t.Beschluesse.Where(b => b.ZurueckgezogenAm is null))
             {
                 sb.Append(CultureInfo.CurrentCulture, $"**Beschluss:** {b.Text} – {b.Ergebnis} ({b.Stimmen})\n\n");
             }
@@ -751,7 +780,7 @@ public sealed class SitzungDienst(
         var sitzungen = (await daten.ListeAsync(daten.Menge<Sitzung>().Where(s => s.Status == Sitzungsstatus.Freigegeben).OrderBy(s => s.Id), abbruch)).ToDictionary(s => s.Id);
         var ids = sitzungen.Keys.ToList();
         var tops = await daten.ListeAsync(daten.Menge<Top>().Where(t => ids.Contains(t.SitzungId)).OrderBy(t => t.Id), abbruch);
-        var beschluesse = await daten.ListeAsync(daten.Menge<Beschluss>().Where(b => b.SitzungId != null && ids.Contains(b.SitzungId.Value)).OrderBy(b => b.Id), abbruch);
+        var beschluesse = await daten.ListeAsync(daten.Menge<Beschluss>().Where(b => b.SitzungId != null && ids.Contains(b.SitzungId.Value) && b.ZurueckgezogenAm == null).OrderBy(b => b.Id), abbruch);
         var treffer = new List<Protokolltreffer>();
         foreach (var t in tops)
         {

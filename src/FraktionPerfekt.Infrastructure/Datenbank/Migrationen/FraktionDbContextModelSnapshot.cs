@@ -14,7 +14,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261124221654_BeamerZugaenge";
+    public override string LastMigrationId => "20261124222858_Korrekturregel";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -621,6 +621,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int>("Fassung")
                     .HasColumnType("INTEGER");
 
+                b.Property<string>("Korrekturgrund")
+                    .HasColumnType("TEXT");
+
                 b.Property<byte[]>("PersonId")
                     .IsRequired()
                     .HasColumnType("BLOB");
@@ -631,6 +634,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<string>("Zitat")
                     .HasColumnType("TEXT");
+
+                b.Property<long?>("ZurueckgezogenAm")
+                    .HasColumnType("INTEGER");
 
                 b.HasKey("Id");
 
@@ -2267,6 +2273,12 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<int>("Enthaltung")
                     .HasColumnType("INTEGER");
 
+                b.Property<long?>("ErfasstAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("ErfasstVonPersonId")
+                    .HasColumnType("BLOB");
+
                 b.Property<string>("Ergebnis")
                     .IsRequired()
                     .HasMaxLength(40)
@@ -2277,6 +2289,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<int>("Ja")
                     .HasColumnType("INTEGER");
+
+                b.Property<string>("Korrekturgrund")
+                    .HasColumnType("TEXT");
 
                 b.Property<int>("Nein")
                     .HasColumnType("INTEGER");
@@ -2305,6 +2320,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<byte[]>("UmfrageId")
                     .HasColumnType("BLOB");
+
+                b.Property<long?>("ZurueckgezogenAm")
+                    .HasColumnType("INTEGER");
 
                 b.HasKey("Id");
 

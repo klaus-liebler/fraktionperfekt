@@ -15,7 +15,9 @@ namespace FraktionPerfekt.Application.Finanzen;
 
 public sealed record PostenZeile(Haushaltsposten Posten, decimal Ist, decimal Rest, double Anteil);
 
-public sealed record AuslageZeile(Auslage Auslage, string Person, string? Posten, Freigabe Entscheiden, Freigabe Auszahlen);
+/// <param name="Zurueckziehen">Korrekturregel: eigene Auslage 30 Minuten ohne Begründung, danach und für den Kassier mit Begründung; nur vor der Entscheidung.</param>
+public sealed record AuslageZeile(Auslage Auslage, string Person, string? Posten, Freigabe Entscheiden, Freigabe Auszahlen, Freigabe? Zurueckziehen = null,
+    bool OhneGrund = false);
 
 public sealed record Finanzuebersicht(
     Kasse Kasse,
@@ -135,7 +137,11 @@ public sealed class FinanzDienst(
                 : a.PersonId == wer.PersonId ? Freigabe.Nein("Vier-Augen-Prinzip: Die eigene Auslage gibt jemand anderes frei.")
                 : a.BelegSchluessel is null ? Freigabe.Nein("Ohne Beleg keine Erstattung.")
                 : entscheiden,
-                a.Status != Auslagenstatus.Freigegeben ? Freigabe.Nein("Erst nach der Freigabe.") : Rechte.FinanzenBuchen(wer.Rolle)))
+                a.Status != Auslagenstatus.Freigegeben ? Freigabe.Nein("Erst nach der Freigabe.") : Rechte.FinanzenBuchen(wer.Rolle),
+                a.Status != Auslagenstatus.Eingereicht ? Freigabe.Nein("Über die Auslage ist entschieden; danach nicht mehr zurückziehbar.")
+                : a.PersonId == wer.PersonId || wer.Rolle is Rolle.Kassier ? Freigabe.Ja
+                : Freigabe.Nein("Zurückziehen kann, wer eingereicht hat, oder der Kassier."),
+                Korrekturregel.OhneGrund(a.PersonId == wer.PersonId, a.EingereichtAm, uhr.GetUtcNow())))
             .ToList();
     }
 
@@ -170,6 +176,18 @@ public sealed class FinanzDienst(
         await aufgaben.AnlegenAsync($"Auslage prüfen: {a.Zweck} ({betrag.ToString("C", De)})", a.BelegSchluessel is null ? "Achtung: ohne Beleg." : null, null, Rolle.Kassier,
             AufgabenAnlass, a.Id, "finanzen", Ortszeit.Heute(uhr).AddDays(7), null, abbruch);
         return a;
+    }
+
+    /// <summary>Auslage vor der Entscheidung zurückziehen (Korrekturregel); bleibt als zurückgezogen erhalten, die Prüfaufgabe schließt sich.</summary>
+    public async Task AuslageZurueckziehenAsync(Guid id, string? grund, CancellationToken abbruch = default)
+    {
+        var wer = await benutzer.ErmittelnAsync(abbruch);
+        var a = await daten.LadenAsync<Auslage>(id, "Auslage", abbruch);
+        Korrekturregel.Pruefen(a.PersonId == wer.PersonId, a.EingereichtAm, uhr.GetUtcNow(), wer.Rolle is Rolle.Kassier, grund, "wer eingereicht hat, und der Kassier");
+        a.Zurueckziehen(Korrekturregel.Grund(grund));
+        await AufgabenSchliessenAsync(id, "zurückgezogen", abbruch);
+        await protokoll.ProtokollierenAsync("Finanzen.AuslageZurueckgezogen", "Auslage zurückgezogen", nameof(Auslage), a.Id, abbruch: abbruch);
+        await daten.SpeichernAsync(abbruch);
     }
 
     public async Task AuslageEntscheidenAsync(Guid id, bool freigeben, string? vermerk, CancellationToken abbruch = default)

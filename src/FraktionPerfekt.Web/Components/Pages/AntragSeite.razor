@@ -140,13 +140,14 @@ else
             </section>
             <section class="fp-card">
                 <h2>Kommentare</h2>
-                @foreach (var k in d.Kommentare)
+                @foreach (var k in d.Kommentare.Where(k => k.Kommentar.ZurueckgezogenAm is null))
                 {
                     <div class="fp-anfrage @(k.Kommentar.Erledigt ? "fp-muted" : null)">
                         @if (k.Kommentar.Zitat is not null) { <span class="fp-zitat">„@k.Kommentar.Zitat“</span> }
                         <span>@k.Kommentar.Text</span>
                         <span class="fp-small fp-muted">@k.Person · Fassung @k.Kommentar.Fassung · @Ortszeit.AlsOrtszeit(k.Kommentar.Am).ToString("dd.MM. HH:mm")
-                            @if (!k.Kommentar.Erledigt) { <button class="fp-linkbutton" @onclick="@(() => AusfuehrenAsync(s => s.KommentarErledigtAsync(k.Kommentar.Id), null))">erledigt</button> }</span>
+                            @if (!k.Kommentar.Erledigt) { <button class="fp-linkbutton" @onclick="@(() => AusfuehrenAsync(s => s.KommentarErledigtAsync(k.Kommentar.Id), null))">erledigt</button> }
+                            @if (k.Zurueckziehen is { Erlaubt: true }) { <button class="fp-linkbutton" title="@(k.OhneGrund ? "In den ersten 30 Minuten ohne Begründung" : "Mit Begründung (Korrekturregel)")" @onclick="@(() => KommentarZurueckziehenAsync(k))">zurückziehen</button> }</span>
                     </div>
                 }
                 <div class="fp-field"><label class="fp-lbl">Zitat (optional)</label><RadzenTextBox @bind-Value="zitat" /></div>
@@ -199,6 +200,14 @@ else
         sitzungen = (await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<AntragDienst>().PassendeSitzungenAsync(Id)))
             .Select(t => new SitzungWahl(t.Id, $"{t.Beginn:dd.MM.yyyy} {t.Titel}")).ToList();
         sitzung = d?.Antrag.SitzungTerminId;
+    }
+
+    private async Task KommentarZurueckziehenAsync(KommentarZeile k)
+    {
+        if (await Dialoge.ZurueckziehenAsync("Kommentar zurückziehen?", "Der Kommentar wird nicht mehr gezeigt; im Hintergrund bleibt er erhalten.", !k.OhneGrund) is { } e)
+        {
+            await AusfuehrenAsync(s => s.KommentarZurueckziehenAsync(k.Kommentar.Id, e.Grund), "Kommentar zurückgezogen.");
+        }
     }
 
     private async Task AusfuehrenAsync(Func<AntragDienst, Task> aktion, string? erfolg)

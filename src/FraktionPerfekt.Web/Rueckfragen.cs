@@ -29,4 +29,17 @@ public static class Rueckfragen
             await aktion();
         }
     }
+
+    /// <summary>
+    /// Zurückziehen nach der Korrekturregel: Rückfrage, bei Bedarf mit Begründung. Liefert <c>null</c> bei Abbruch, sonst das Ergebnis mit Begründung
+    /// (leer, wenn keine nötig ist).
+    /// </summary>
+    public static async Task<Components.Bausteine.GrundDialog.Ergebnis?> ZurueckziehenAsync(this DialogService dialoge, string titel, string frage, bool grundNoetig)
+    {
+        ArgumentNullException.ThrowIfNull(dialoge);
+        var antwort = await dialoge.OpenAsync<Components.Bausteine.GrundDialog>(titel,
+            new Dictionary<string, object?> { ["Frage"] = frage, ["GrundNoetig"] = grundNoetig },
+            new DialogOptions { CloseDialogOnOverlayClick = false, Width = "min(480px, 94vw)" });
+        return antwort as Components.Bausteine.GrundDialog.Ergebnis;
+    }
 }

@@ -12,6 +12,7 @@ Drehbuch für die aus SchoolCraft übernommenen Konzepte (`docs/uebertragung-sch
 | 5 | Sitzung: Beschlussfähigkeit, geheim abstimmen | Johannes Wilp, vier Mitglieder am Handy | 8 min |
 | 6 | Beamer in der Sitzung | Johannes Wilp, zweiter Rechner | 4 min |
 | 7 | Übungsinstanz | Johannes Wilp | 4 min |
+| 8 | Korrekturregel | Felix Bäumer, Dames Joud | 3 min |
 
 ## 1. Geheime Abstimmung
 
@@ -82,4 +83,14 @@ Siehe [`abnahme-3.md`](abnahme-3.md), Szene 7.
 - **Erwartung:**
   - Oben rechts steht „Übungsinstanz · Demodaten“, auf der Hilfe die Touren und „Übung zurücksetzen“ (mit Rückfrage).
   - Nach dem Zurücksetzen ist der Termin weg und die Anmeldung erscheint; die echte Instanz ist unverändert und zeigt keine Touren.
+- **Zeit:** ____ min. **Beobachtungen:**
+
+## 8. 30-Minuten-Korrekturregel (Punkt 10)
+
+- **Startpunkt:** **Meine Auslagen** (Felix Bäumer), danach **Kasse und Budget** (Dames Joud, Kassier).
+- **Aufgabe:** Reichen Sie eine Auslage ein und ziehen Sie sie sofort zurück. Reichen Sie eine zweite ein; ziehen Sie sie als Kassier zurück.
+- **Erwartung:**
+  - Das eigene Zurückziehen in den ersten 30 Minuten fragt nur nach („Zurückziehen“), ohne Begründung.
+  - Als Kassier verlangt der Dialog eine Begründung; „Zurückziehen“ ist gesperrt, bis sie eingetragen ist.
+  - Die Aufgabe „Auslage prüfen“ verschwindet aus dem Korb des Kassiers.
 - **Zeit:** ____ min. **Beobachtungen:**

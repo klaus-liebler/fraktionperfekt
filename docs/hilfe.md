@@ -174,6 +174,12 @@ Was sich nicht einfach zurücknehmen lässt – Löschen, Stornieren, Widerrufen
 ein Protokoll freigeben, eine Abstimmung abschließen, geheim abstimmen –, fragt vorher nach. Die Frage nennt, was betroffen ist und was
 folgt; die Schaltfläche heißt wie die Folge („Löschen“, „Stornieren“). **Abbrechen** oder <kbd>Esc</kbd> lässt alles, wie es ist.
 
+## Etwas falsch eingetragen?
+
+Eigene Beschlüsse im Sitzungsmodus, Kommentare an Anträgen und eingereichte Auslagen lassen sich mit **zurückziehen** zurücknehmen: in den ersten
+30 Minuten ohne Begründung, danach mit Begründung (die im Protokoll bleibt). Vorstand, Sitzungsleitung und Kassier können das für fremde Einträge,
+immer mit Begründung. Freigegebene Protokolle und Kassenbuchungen bleiben, wie sie sind.
+
 ## Für Administration und Vorstand
 
 - **Betrieb und Sicherung**: tägliche Sicherung mit Wiederherstellungstest, „Jetzt sichern“, **Impressum** pflegen

@@ -98,7 +98,7 @@ public sealed class BeamerDienst(
 
         var tops = await daten.ListeAsync(daten.Menge<Top>().Where(t => t.SitzungId == sitzungId).OrderBy(t => t.Position).ThenBy(t => t.AngelegtAm).ThenBy(t => t.Id), abbruch);
         var topIds = tops.Select(t => t.Id).ToList();
-        var beschluesse = await daten.ListeAsync(daten.Menge<Beschluss>().Where(b => b.SitzungId == sitzungId).OrderBy(b => b.Id), abbruch);
+        var beschluesse = await daten.ListeAsync(daten.Menge<Beschluss>().Where(b => b.SitzungId == sitzungId && b.ZurueckgezogenAm == null).OrderBy(b => b.Id), abbruch);
         var laufend = s.Status == Sitzungsstatus.Laufend ? tops.FirstOrDefault(t => t.Status == Topstatus.Geplant)?.Id : null;
         var nummer = 0;
         var beamerTops = tops.Where(t => t.Status != Topstatus.Zusammengelegt)
