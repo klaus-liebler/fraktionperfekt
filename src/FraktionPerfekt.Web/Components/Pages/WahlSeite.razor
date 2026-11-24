@@ -1,0 +1,165 @@
+@page "/wahlen/{Id:guid}"
+@using FraktionPerfekt.Application.Abstimmungen
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Abstimmungen
+@inject Vorgang Vorgang
+@inject DialogService Dialoge
+@inject TimeProvider Uhr
+
+<PageTitle>Wahl · FraktionPerfekt</PageTitle>
+
+<a class="fp-zurueck" href="wahlen">← Wahlen und Ämter</a>
+
+@if (d is null)
+{
+    <p class="fp-muted">Lade …</p>
+}
+else
+{
+    <div class="fp-head">
+        <div>
+            <h1>@d.Wahl.Titel @if (d.Wahl.Geheim) { <StatusPille Stil="info">geheim</StatusPille> }</h1>
+            <p class="fp-sub">@(d.Gremium is null ? "" : $"{d.Gremium} · ")Amtszeit @d.Wahl.AmtAb.ToString("dd.MM.yyyy")@(d.Wahl.AmtBis is { } b ? $" bis {b:dd.MM.yyyy}" : "")</p>
+        </div>
+    </div>
+
+    @if (meldung is not null)
+    {
+        <div class="fp-alert @(fehler ? "fp-crit" : "fp-info")" role="status">@meldung</div>
+    }
+
+    @if (d.NaechsteSchritte.Count > 0)
+    {
+        <NaechsteSchritte Schritte="d.NaechsteSchritte" />
+    }
+
+    <div class="fp-split">
+        <section class="fp-card">
+            <h2>Kandidaturen</h2>
+            @if (d.Kandidaturen.Count == 0)
+            {
+                <p class="fp-muted">Noch niemand.</p>
+            }
+            @foreach (var k in d.Kandidaturen)
+            {
+                <div class="fp-row">
+                    <span class="fp-grow"><a href="personen/@k.Kandidatur.PersonId">@k.Name</a></span>
+                    <BegruendeterButton Text="Zurückziehen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@k.Zurueckziehen"
+                                        Click="@(() => Dialoge.WennBestaetigtAsync($"Die Kandidatur von {k.Name} wird zurückgezogen.", "Kandidatur zurückziehen?", "Zurückziehen",
+                                            () => AusfuehrenAsync(s => s.KandidaturZurueckziehenAsync(k.Kandidatur.Id), "Kandidatur zurückgezogen.")))" />
+                </div>
+            }
+            <div class="fp-row" style="margin-top:10px">
+                <BegruendeterButton Text="Ich kandidiere" Icon="how_to_reg" Freigabe="@d.Kandidieren" Click="@(() => AusfuehrenAsync(s => s.KandidaturAsync(Id, benutzer!.PersonIdPflicht), "Kandidatur eingetragen."))" />
+            </div>
+            @if (d.KandidaturHinzufuegen.Erlaubt)
+            {
+                <div class="fp-row" style="margin-top:10px">
+                    <Personenwahl TItem="PersonZeile" @bind-Value="vorschlag" Data="@personen" Suchtext="@(p => p.Name)" TextProperty="Sortiername" Placeholder="Person vorschlagen …" AriaLabel="Kandidatur vorschlagen" Style="width:240px" />
+                    <BegruendeterButton Text="Vorschlagen" Size="ButtonSize.Small" Freigabe="@(vorschlag is null ? Freigabe.Nein("Bitte eine Person wählen.") : Freigabe.Ja)"
+                                        Click="@(() => AusfuehrenAsync(s => s.KandidaturAsync(Id, vorschlag!.Value), "Kandidatur eingetragen."))" />
+                </div>
+            }
+        </section>
+        <section class="fp-card">
+            <h2>Wahlgang</h2>
+            @foreach (var g in d.Wahlgaenge)
+            {
+                <p><a href="abstimmungen/@g.Umfrage.Id">@(g.Stichwahl ? "Stichwahl" : $"{g.Nummer}. Wahlgang")</a>:
+                    @(g.Umfrage.Status == FraktionPerfekt.Domain.Abstimmungen.Umfragestatus.Offen ? $"läuft bis {Ortszeit.AlsOrtszeit(g.Umfrage.Frist):dd.MM. HH:mm} Uhr" : g.Umfrage.Ergebnis)</p>
+            }
+            @if (d.Wahl.Ergebnis is { } e)
+            {
+                <p><b>@e</b></p>
+            }
+            @if (d.WahlgangStarten.Erlaubt || d.Wahl.Status is Wahlstatus.Vorbereitung or Wahlstatus.Stichwahl or Wahlstatus.OhneErgebnis)
+            {
+                <div class="fp-form">
+                    <div class="fp-field"><label class="fp-lbl">Frist des Wahlgangs</label><RadzenDatePicker TValue="DateTime" @bind-Value="frist" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
+                </div>
+                <BegruendeterButton Text="@(d.Wahl.Status == Wahlstatus.Stichwahl ? "Stichwahl starten" : "Wahlgang starten")" Icon="how_to_vote" Freigabe="@d.WahlgangStarten" Click="WahlgangAsync" />
+            }
+            @if (d.Gleichstand.Count > 0)
+            {
+                <p>Gleichstand – das Los hat entschieden für:</p>
+                <div class="fp-row">
+                    @foreach (var g in d.Gleichstand)
+                    {
+                        <BegruendeterButton Text="@g.Name" Size="ButtonSize.Small" Freigabe="@d.LosErfassen"
+                                            Click="@(() => Dialoge.WennBestaetigtAsync($"Das Los hat {g.Name} bestimmt; das wird im Wahlprotokoll festgehalten.", "Losentscheid erfassen?", "Erfassen",
+                                                () => AusfuehrenAsync(s => s.LosErfassenAsync(Id, g.Id), "Losentscheid erfasst.")))" />
+                    }
+                </div>
+            }
+            @if (d.Wahl.Status == Wahlstatus.Gewaehlt)
+            {
+                <div class="fp-row" style="margin-top:10px">
+                    <BegruendeterButton Text="Wahl annehmen" Icon="check" Freigabe="@d.Annehmen"
+                                        Click="@(() => Dialoge.WennBestaetigtAsync($"Ab {d.Wahl.AmtAb:dd.MM.yyyy} gelten Amt, Rolle und Funktion; eine bisherige Amtszeit endet am Vortag.", "Wahl annehmen?", "Annehmen",
+                                            () => AusfuehrenAsync(s => s.AnnehmenAsync(Id), "Wahl angenommen. Rolle und Funktion gelten ab Beginn der Amtszeit.")))" />
+                    <BegruendeterButton Text="Nicht annehmen" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Annehmen"
+                                        Click="@(() => Dialoge.WennBestaetigtAsync("Die Wahl bleibt ohne Ergebnis; ein neuer Wahlgang ist nötig.", "Wahl nicht annehmen?", "Nicht annehmen",
+                                            () => AusfuehrenAsync(s => s.AblehnenAsync(Id), "Nicht angenommen.")))" />
+                </div>
+            }
+        </section>
+    </div>
+
+    <section class="fp-card">
+        <h2>Wahlprotokoll</h2>
+        <Markdown Text="@d.Wahlprotokoll" />
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Benutzer? benutzer;
+    private WahlDetail? d;
+    private IReadOnlyList<PersonZeile> personen = [];
+    private Guid? vorschlag;
+    private DateTime frist;
+    private string? meldung;
+    private bool fehler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        frist = Ortszeit.Jetzt(Uhr).AddDays(2).Date.AddHours(20);
+        personen = (await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<StammdatenDienst>().PersonenAsync()))
+            .Where(p => p.Aktiv && UmfrageDienst.Stimmberechtigt(Umfrageart.Wahl, p.Rollen)).ToList();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync() => d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<WahlDienst>().DetailAsync(Id));
+
+    private async Task WahlgangAsync()
+    {
+        if (d is null || !await Dialoge.BestaetigenAsync(
+                $"Gewählt wird {(d.Wahl.Geheim ? "geheim" : "offen")} bis {frist:dd.MM. HH:mm} Uhr; alle Wahlberechtigten bekommen eine Mitteilung. Kandidaturen sind danach fest.",
+                "Wahlgang starten?", "Starten"))
+        {
+            return;
+        }
+
+        await AusfuehrenAsync(s => s.WahlgangStartenAsync(Id, Ortszeit.Zeitpunkt(frist)), "Wahlgang gestartet.");
+    }
+
+    private async Task AusfuehrenAsync(Func<WahlDienst, Task> aktion, string erfolg)
+    {
+        try
+        {
+            await Vorgang.AusfuehrenAsync(s => aktion(s.GetRequiredService<WahlDienst>()));
+            (meldung, fehler) = (erfolg, false);
+            vorschlag = null;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+}

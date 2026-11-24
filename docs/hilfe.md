@@ -97,6 +97,14 @@ Bei **Neu** unter **Abstimmungen und Umfragen** und beim Start einer Fraktionsab
 - Bei weniger als **drei Stimmen** zeigt das Ergebnis keine Verteilung („zu wenige Stimmen für eine geheime Auswertung“).
   Bei Einstimmigkeit ist das Ergebnis zwangsläufig offen.
 
+### Wahlen und Ämter
+
+**Wahlen und Ämter** (Vorstand): **Wahl anlegen** → Amt (Vorsitz, Stellvertretung, Beisitz, Kassier, Sprecher:in, Benennung), Beginn der
+Amtszeit → Kandidaturen sammeln (**Ich kandidiere** oder Vorschlag durch den Vorstand) → **Wahlgang starten** (standardmäßig geheim). Wer die
+Mehrheit der gültigen Stimmen hat, ist gewählt; sonst folgt eine **Stichwahl**, bei Gleichstand entscheidet das Los. Die gewählte Person klickt
+**Wahl annehmen** – ab Beginn der Amtszeit gelten Amt, Rolle und Funktion, die Vorgängerin bzw. der Vorgänger scheidet am Vortag aus. Unten auf
+der Seite steht das **Wahlprotokoll**; vor Ende einer Amtszeit erinnert eine Aufgabe an die Neuwahl.
+
 **Ehrliche Grenze:** Gegen den Betreiber des Servers, der die Datenbank laufend beobachtet oder Anfragen mitschneidet, schützt das nicht
 vollständig. Für Fraktionszwecke ist das angemessen; eine kryptografische Lösung wäre ein eigenes Vorhaben.
 

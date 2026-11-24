@@ -631,6 +631,44 @@ public static class Spalteneinstufung
                 ["OptionId"] = (Spaltenart.Vorgang, "gewählte Option – bewusst ohne Person und ohne Zeitpunkt"),
                 ["UmfrageId"] = (Spaltenart.Vorgang, null),
             },
+            ["Wahlen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["AmtAb"] = (Spaltenart.Vorgang, null),
+                ["AmtBis"] = (Spaltenart.Vorgang, null),
+                ["Amt"] = (Spaltenart.Vorgang, null),
+                ["AngenommenAm"] = (Spaltenart.Vorgang, null),
+                ["Bezeichnung"] = (Spaltenart.Vorgang, null),
+                ["Ergebnis"] = (Spaltenart.Beleg, "festgestelltes Wahlergebnis (eingefroren, Wahlprotokoll)"),
+                ["ErstelltAm"] = (Spaltenart.Vorgang, null),
+                ["ErstelltVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["Geheim"] = (Spaltenart.Vorgang, null),
+                ["GewaehltPersonId"] = (Spaltenart.Vorgang, null),
+                ["GremiumId"] = (Spaltenart.Vorgang, null),
+                ["Status"] = (Spaltenart.Vorgang, null),
+                ["Titel"] = (Spaltenart.Vorgang, null),
+            },
+            ["Kandidaturen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["Am"] = (Spaltenart.Vorgang, null),
+                ["PersonId"] = (Spaltenart.Vorgang, null),
+                ["VorgeschlagenVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["WahlId"] = (Spaltenart.Vorgang, null),
+                ["ZurueckgezogenAm"] = (Spaltenart.Vorgang, null),
+            },
+            ["Amtszeiten"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Beleg, "Schlüssel (Zeilen-Id)"),
+                ["Amt"] = (Spaltenart.Beleg, null),
+                ["Bezeichnung"] = (Spaltenart.Beleg, null),
+                ["Bis"] = (Spaltenart.Beleg, "letzter Tag; endet früher, wenn jemand anderes gewählt wird"),
+                ["GremiumId"] = (Spaltenart.Beleg, null),
+                ["NeuwahlErinnertAm"] = (Spaltenart.Vorgang, null),
+                ["PersonId"] = (Spaltenart.Beleg, "Amtsinhaber:in laut angenommener Wahl (Rolle und Funktion bitemporal an der Person)"),
+                ["Von"] = (Spaltenart.Beleg, null),
+                ["WahlId"] = (Spaltenart.Beleg, null),
+            },
             ["Teilnahmen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
@@ -741,6 +779,7 @@ public static class Spalteneinstufung
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
                 ["Position"] = (Spaltenart.Vorgang, null),
                 ["Text"] = (Spaltenart.Vorgang, null),
+                ["KandidatPersonId"] = (Spaltenart.Vorgang, "bei Wahlgängen: Person, für die diese Antwort steht"),
                 ["UmfrageId"] = (Spaltenart.Vorgang, null),
                 ["Zeitpunkt"] = (Spaltenart.Vorgang, null),
             },
@@ -762,6 +801,7 @@ public static class Spalteneinstufung
                 ["QuorumProzent"] = (Spaltenart.Vorgang, null),
                 ["Status"] = (Spaltenart.Vorgang, null),
                 ["Titel"] = (Spaltenart.Vorgang, null),
+                ["WahlId"] = (Spaltenart.Vorgang, "Wahlgang dieser Wahl"),
             },
             ["Vertretungsanfragen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {

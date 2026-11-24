@@ -127,6 +127,18 @@ Ende-zu-Ende) wäre ein eigenes Vorhaben mit eigener Entscheidung.
 kann (heute: wer die Abstimmung startet, entscheidet); bei welchen Abstimmungsarten sachkundige Bürger:innen mitstimmen
 (`SachkundigeStimmenMit`, Standard: alle außer Antragsabstimmungen); Mindestzahl der Stimmen für eine geheime Auswertung (`GeheimMindeststimmen`, 3).
 
+**Wahlen und Ämter mit Amtszeit (Erweiterung von Modul 13, seit 24.11.2026, aus SchoolCraft Modul 33) ✅:** Der Vorstand legt eine Wahl an
+(Fraktionsvorsitz, 1./2. Stellvertretung, Beisitz, Schatzmeister/Kassier, Sprecher:in je Ausschuss, Benennung z. B. für einen Aufsichtsrat) mit
+Beginn und Ende der Amtszeit (Standard: Ende der Wahlperiode). Kandidieren kann jedes Ratsmitglied selbst, der Vorstand schlägt Personen vor;
+wahlberechtigt ist, wer bei Wahlgängen stimmberechtigt ist (abgeleitet, nicht gepflegt). Ein Wahlgang ist eine Abstimmung der Art „Wahl“,
+standardmäßig **geheim** nach dem Verfahren oben. Mehrheit: mehr als die Hälfte der gültigen Stimmen; bei einer Kandidatur Ja gegen Nein;
+erreicht niemand die Mehrheit, **Stichwahl** der Bestplatzierten mit einfacher Mehrheit, bei Gleichstand **Los** (der Vorstand erfasst es). Die
+gewählte Person (oder für sie der Vorstand) **nimmt die Wahl an**: Dann entsteht eine Amtszeit, Rolle (Vorstand bzw. Kassier) und Funktion gelten
+**bitemporal ab Beginn der Amtszeit** mit der Wahl als Grund, die Amtszeit der bisherigen Person endet am Vortag (ihre Rolle auch, wenn sie sie
+durch kein anderes Amt hat). Ein **Wahlprotokoll** fasst Kandidaturen, Wahlgänge, Feststellung und Annahme zusammen. Acht Wochen vor Ende einer
+Amtszeit legt die Fristenprüfung die Aufgabe „Neuwahl vorbereiten“ in den Korb des Vorstands. ⚑ Einstellungen `WahlEnthaltungenZaehlen` (nein),
+`WahlStichwahl` (ja), `WahlGeheimStandard` (ja), `WahlperiodeEnde` (31.10.2030, angenommen), `NeuwahlVorlaufTage` (56).
+
 **RIS in Greven (Sternberg SD.NET):** Adresse `greven.ratsinfomanagement.net`. SD.NET kann eine OParl-Schnittstelle bereitstellen; ob sie in Greven freigeschaltet ist, ist weiter ungeklärt. OParl liefert nur öffentliche Inhalte (Gremien, Personen, Mitgliedschaften, Sitzungen, Tagesordnungen, Vorlagen, Dateien), und zwar nur lesend. Nichtöffentliche Unterlagen gibt es nur über den persönlichen Mandatsträger-Zugang; die App verlinkt dorthin, statt sie zu kopieren. Ist OParl nicht aktiv, sind ein iCal-Export der Sitzungstermine oder eine Anfrage der Fraktion an die Verwaltung, die Schnittstelle freizuschalten, die Wege. Bis dahin werden Mandate einmalig importiert und von Hand gepflegt. Das RIS steht hinter einem Bot-Schutz, der automatisierte Zugriffe blockt (Test am 15.11.2026: 403); für den Abgleich muss die IP des Servers dort freigegeben werden.
 
 Für Kontakte und Bürgeranliegen gelten eigene Datenschutzhinweise und Löschfristen, da hier Daten von Personen außerhalb der Fraktion liegen.
@@ -201,6 +213,7 @@ Rund ein Dutzend Kernentitäten tragen alle Module; „Gremium“ und „Termin�
 | Ressource | Name, Typ, Freigabe nötig | hat Buchungen |
 | Buchung | Von, Bis, Zweck | verbindet Ressource, Person, optional Termin |
 | Antrag | Titel, Status, aktuelle Fassung | hat Fassungen, Kommentare, Abstimmungen; Ziel-Gremium |
+| Wahl / Kandidatur / Amtszeit | Amt, Amtszeit, geheim, Status, Ergebnis / Person / Person, Amt, von–bis | Wahlgänge sind Abstimmungen; Amtszeit aus angenommener Wahl, Rolle und Funktion bitemporal an der Person |
 | Abstimmung | Frage, Frist, Quorum, geheim, Ergebnis | hat Stimmberechtigte (feste Liste), Stimmen (namentlich) bzw. Stimmvermerke und Stimmzettel (geheim, ohne Verbindung); gehört zu Antrag oder frei |
 | Protokoll | Sitzung, Vorlage, TOPs, Anwesenheit, Notizen | gehört zu Termin; hat Beschlüsse und Aufgaben |
 | Kampagne | Name, Zeitraum, Status, Wahltag | hat Plakate, Gebiete, Termine, Tickets |

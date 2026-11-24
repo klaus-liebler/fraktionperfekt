@@ -138,6 +138,12 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 - **Für die Fraktion:** Wahl des Vorstands (Vorsitz, Stellvertretung, Kassier), Sprecher:innen je Ausschuss, Benennungen für Ausschüsse und Aufsichtsräte. Heute werden Vorstand und Funktionen von Hand bitemporal gepflegt.
 - **Anpassung:** baut auf Nr. 1 auf (geheimer Wahlgang). Ergebnis setzt Rolle bzw. Funktion **ab Datum** (bitemporal, mit Wahl als Grund). Mehrheitsregeln und Stichwahl aus der Fraktions-GO ⚑ als Einstellung. Ablauf der Wahlperiode (Kommunalwahl 2030) → Neuwahlen als Aufgabe.
 - **Aufwand:** M.
+- **Umgesetzt (24.11.2026) ✅:** `/wahlen` und `/wahlen/{id}`; Wahl, Kandidatur, Amtszeit (Zusatzmigration `WahlenUndAemter`), Wahlgang als
+  Abstimmung der neuen Art `Wahl` (Optionen tragen die Person), Mehrheitsregeln in `Mehrheit` (Domain), Annahme setzt Rolle/Funktion bitemporal
+  ab Datum und beendet die Vorgänger-Amtszeit, Wahlprotokoll, Fristenprüfung „Neuwahl vorbereiten“. Abweichend von SchoolCraft: ein Sitz je Wahl
+  (Benennungen mit mehreren Sitzen = mehrere Wahlen); Los wird nicht gezogen, sondern vom Vorstand erfasst; Sprecher:in/Benennung ändern keine
+  Rolle. Ämter, die vor der Einführung von Hand gepflegt wurden (Demodaten), bleiben unberührt, bis eine Wahl sie ablöst. Tests: `MehrheitTests`,
+  `WahlAblaufTests`.
 
 ### 7 Abstimmen im Sitzungsmodus
 

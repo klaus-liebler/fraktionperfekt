@@ -18,13 +18,32 @@ public sealed partial class FraktionDbContext
         Einfach<AntragFassung>(modelBuilder, "AntragFassungen", b => b.HasIndex(f => new { f.AntragId, f.Nummer }).IsUnique());
         Einfach<AntragKommentar>(modelBuilder, "AntragKommentare", b => b.HasIndex(k => k.AntragId));
         Einfach<Aenderungsvorschlag>(modelBuilder, "Aenderungsvorschlaege", b => b.HasIndex(v => v.AntragId));
-        Einfach<Umfrage>(modelBuilder, "Umfragen", b => b.HasIndex(u => u.Status));
+        Einfach<Umfrage>(modelBuilder, "Umfragen", b =>
+        {
+            b.HasIndex(u => u.Status);
+            b.HasIndex(u => u.WahlId);
+        });
         Einfach<UmfrageOption>(modelBuilder, "UmfrageOptionen", b => b.HasIndex(o => o.UmfrageId));
         Einfach<Stimme>(modelBuilder, "Stimmen", b => b.HasIndex(s => new { s.UmfrageId, s.PersonId }));
         Einfach<Stimmberechtigung>(modelBuilder, "Stimmberechtigungen", b => b.HasIndex(x => new { x.UmfrageId, x.PersonId }).IsUnique());
         // Geheime Abstimmung: Vermerk (wer, eindeutig je Person) und Stimmzettel (wie, ohne Person und Zeit; Tabelle WITHOUT ROWID, siehe Migration)
         Einfach<Stimmvermerk>(modelBuilder, "Stimmvermerke", b => b.HasIndex(x => new { x.UmfrageId, x.PersonId }).IsUnique());
         Einfach<Stimmzettel>(modelBuilder, "Stimmzettel", b => b.HasIndex(x => x.UmfrageId));
+        // Wahlen und Ämter mit Amtszeit (aus SchoolCraft Modul 33)
+        Einfach<Wahl>(modelBuilder, "Wahlen", b =>
+        {
+            b.Property(x => x.Titel).HasMaxLength(300);
+            b.Property(x => x.Bezeichnung).HasMaxLength(200);
+            b.Property(x => x.Ergebnis).HasMaxLength(2000);
+            b.HasIndex(x => x.Status);
+        });
+        Einfach<Kandidatur>(modelBuilder, "Kandidaturen", b => b.HasIndex(x => new { x.WahlId, x.PersonId }));
+        Einfach<Amtszeit>(modelBuilder, "Amtszeiten", b =>
+        {
+            b.Property(x => x.Bezeichnung).HasMaxLength(200);
+            b.HasIndex(x => x.PersonId);
+            b.HasIndex(x => x.WahlId);
+        });
         Iteration4(modelBuilder);
     }
 

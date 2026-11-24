@@ -14,7 +14,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261124214405_GeheimeAbstimmung";
+    public override string LastMigrationId => "20261124220510_WahlenUndAemter";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -143,6 +143,79 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("ObjektTyp", "ObjektId");
 
                 b.ToTable("Protokoll");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Amtszeit", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Amt")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Bezeichnung")
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<int?>("Bis")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("GremiumId")
+                    .HasColumnType("BLOB");
+
+                b.Property<long?>("NeuwahlErinnertAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<int>("Von")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("WahlId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("PersonId");
+
+                b.HasIndex("WahlId");
+
+                b.ToTable("Amtszeiten");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Kandidatur", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("VorgeschlagenVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("WahlId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<long?>("ZurueckgezogenAm")
+                    .HasColumnType("INTEGER");
+
+                b.HasKey("Id");
+
+                b.HasIndex("WahlId", "PersonId");
+
+                b.ToTable("Kandidaturen");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Stimmberechtigung", b =>
@@ -293,9 +366,14 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasColumnType("TEXT");
 
+                b.Property<byte[]>("WahlId")
+                    .HasColumnType("BLOB");
+
                 b.HasKey("Id");
 
                 b.HasIndex("Status");
+
+                b.HasIndex("WahlId");
 
                 b.ToTable("Umfragen");
             });
@@ -303,6 +381,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
         modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.UmfrageOption", b =>
             {
                 b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("KandidatPersonId")
                     .HasColumnType("BLOB");
 
                 b.Property<int>("Position")
@@ -324,6 +405,66 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("UmfrageId");
 
                 b.ToTable("UmfrageOptionen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Wahl", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Amt")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<int>("AmtAb")
+                    .HasColumnType("INTEGER");
+
+                b.Property<int?>("AmtBis")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long?>("AngenommenAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<string>("Bezeichnung")
+                    .HasMaxLength(200)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Ergebnis")
+                    .HasMaxLength(2000)
+                    .HasColumnType("TEXT");
+
+                b.Property<long>("ErstelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("ErstelltVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<bool>("Geheim")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("GewaehltPersonId")
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("GremiumId")
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("TEXT");
+
+                b.Property<string>("Titel")
+                    .IsRequired()
+                    .HasMaxLength(300)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("Status");
+
+                b.ToTable("Wahlen");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Antraege.Aenderungsvorschlag", b =>

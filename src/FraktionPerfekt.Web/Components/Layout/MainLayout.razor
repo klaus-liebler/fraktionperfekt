@@ -120,6 +120,7 @@
         new("Sitzungen", "Offene Vertretungen", "vertretungen", r => r is Rolle.Helferin ? Freigabe.Nein("Nur für Mitglieder, sachkundige Bürger:innen, Vorstand und Administration.") : Freigabe.Ja),
         new("Sitzungen", "Anträge", "antraege", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur die Kampagnen.") : Freigabe.Ja),
         new("Sitzungen", "Abstimmungen und Umfragen", "abstimmungen", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur die Kampagnen.") : Freigabe.Ja),
+        new("Sitzungen", "Wahlen und Ämter", "wahlen", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur die Kampagnen.") : Freigabe.Ja),
         new("Sitzungen", "Sitzungen und Protokolle", "sitzungen", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur die Kampagnen.") : Freigabe.Ja),
         new("Fraktion", "Gremien und Mandate", "gremien", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur Kampagnen und öffentliche Termine.") : Freigabe.Ja),
         new("Fraktion", "Personen", "personen", r => r is Rolle.Helferin ? Freigabe.Nein("Das Kampagnenteam sieht nur Kampagnen und öffentliche Termine.") : Freigabe.Ja),

@@ -97,6 +97,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Abwesenheiten](#abwesenheiten) – 7 Spalten
 - [Aenderungsvorgaenge](#aenderungsvorgaenge) – 6 Spalten
 - [Aenderungsvorschlaege](#aenderungsvorschlaege) – 10 Spalten
+- [Amtszeiten](#amtszeiten) – 9 Spalten
 - [Anfragen](#anfragen) – 13 Spalten
 - [Antraege](#antraege) – 13 Spalten
 - [AntragFassungen](#antragfassungen) – 7 Spalten
@@ -118,6 +119,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Impressum](#impressum) – 4 Spalten
 - [KalenderAbos](#kalenderabos) – 6 Spalten
 - [Kampagnen](#kampagnen) – 9 Spalten
+- [Kandidaturen](#kandidaturen) – 6 Spalten
 - [Kassenbuchungen](#kassenbuchungen) – 11 Spalten
 - [Kommentare](#kommentare) – 11 Spalten
 - [Kontakte](#kontakte) – 11 Spalten
@@ -155,11 +157,12 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [TodoVorlagen](#todovorlagen) – 2 Spalten
 - [TodoVorlagenPunkte](#todovorlagenpunkte) – 4 Spalten
 - [Tops](#tops) – 14 Spalten
-- [UmfrageOptionen](#umfrageoptionen) – 5 Spalten
-- [Umfragen](#umfragen) – 16 Spalten
+- [UmfrageOptionen](#umfrageoptionen) – 6 Spalten
+- [Umfragen](#umfragen) – 17 Spalten
 - [Vertretungsanfragen](#vertretungsanfragen) – 8 Spalten
 - [Vertretungsfaelle](#vertretungsfaelle) – 9 Spalten
 - [Vertretungskandidaten](#vertretungskandidaten) – 4 Spalten
+- [Wahlen](#wahlen) – 14 Spalten
 - [WikiSeiten](#wikiseiten) – 7 Spalten
 - [WikiVersionen](#wikiversionen) – 8 Spalten
 - [WikiVorschlaege](#wikivorschlaege) – 12 Spalten
@@ -213,6 +216,24 @@ Klasse: `FraktionPerfekt.Domain.Antraege.Aenderungsvorschlag`
 | Status | TEXT(40) | ja |  | G |  |
 
 Indizes: (AntragId)
+
+## Amtszeiten
+
+Klasse: `FraktionPerfekt.Domain.Abstimmungen.Amtszeit`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | B | Schlüssel (Zeilen-Id) |
+| Amt | TEXT(40) | ja |  | B |  |
+| Bezeichnung | TEXT(200) |  |  | B |  |
+| Bis | INTEGER |  |  | B | letzter Tag; endet früher, wenn jemand anderes gewählt wird |
+| GremiumId | BLOB |  |  | B |  |
+| NeuwahlErinnertAm | INTEGER |  |  | G |  |
+| PersonId | BLOB | ja | Index | B | Amtsinhaber:in laut angenommener Wahl (Rolle und Funktion bitemporal an der Person) |
+| Von | INTEGER | ja |  | B |  |
+| WahlId | BLOB | ja | Index | B |  |
+
+Indizes: (PersonId); (WahlId)
 
 ## Anfragen
 
@@ -604,6 +625,21 @@ Klasse: `FraktionPerfekt.Domain.Kampagnen.Kampagne`
 | Wahltag | INTEGER |  |  | G |  |
 
 Indizes: (Status)
+
+## Kandidaturen
+
+Klasse: `FraktionPerfekt.Domain.Abstimmungen.Kandidatur`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| Am | INTEGER | ja |  | G |  |
+| PersonId | BLOB | ja | Index | G |  |
+| VorgeschlagenVonPersonId | BLOB | ja |  | G |  |
+| WahlId | BLOB | ja | Index | G |  |
+| ZurueckgezogenAm | INTEGER |  |  | G |  |
+
+Indizes: (WahlId, PersonId)
 
 ## Kassenbuchungen
 
@@ -1250,6 +1286,7 @@ Klasse: `FraktionPerfekt.Domain.Abstimmungen.UmfrageOption`
 | Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
 |---|---|---|---|---|---|
 | Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| KandidatPersonId | BLOB |  |  | G | bei Wahlgängen: Person, für die diese Antwort steht |
 | Position | INTEGER | ja |  | G |  |
 | Text | TEXT | ja |  | G |  |
 | UmfrageId | BLOB | ja | Index | G |  |
@@ -1279,8 +1316,9 @@ Klasse: `FraktionPerfekt.Domain.Abstimmungen.Umfrage`
 | QuorumProzent | INTEGER | ja |  | G |  |
 | Status | TEXT(40) | ja | Index | G |  |
 | Titel | TEXT | ja |  | G |  |
+| WahlId | BLOB |  | Index | G | Wahlgang dieser Wahl |
 
-Indizes: (Status)
+Indizes: (Status); (WahlId)
 
 ## Vertretungsanfragen
 
@@ -1329,6 +1367,29 @@ Klasse: `FraktionPerfekt.Domain.Vertretung.Vertretungskandidat`
 | VertretungsfallId | BLOB | ja | → Vertretungsfaelle, eindeutig | G |  |
 
 Indizes: (PersonId); (VertretungsfallId, Position) eindeutig
+
+## Wahlen
+
+Klasse: `FraktionPerfekt.Domain.Abstimmungen.Wahl`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| Amt | TEXT(40) | ja |  | G |  |
+| AmtAb | INTEGER | ja |  | G |  |
+| AmtBis | INTEGER |  |  | G |  |
+| AngenommenAm | INTEGER |  |  | G |  |
+| Bezeichnung | TEXT(200) |  |  | G |  |
+| Ergebnis | TEXT(2000) |  |  | B | festgestelltes Wahlergebnis (eingefroren, Wahlprotokoll) |
+| ErstelltAm | INTEGER | ja |  | G |  |
+| ErstelltVonPersonId | BLOB | ja |  | G |  |
+| Geheim | INTEGER | ja |  | G |  |
+| GewaehltPersonId | BLOB |  |  | G |  |
+| GremiumId | BLOB |  |  | G |  |
+| Status | TEXT(40) | ja | Index | G |  |
+| Titel | TEXT(300) | ja |  | G |  |
+
+Indizes: (Status)
 
 ## WikiSeiten
 

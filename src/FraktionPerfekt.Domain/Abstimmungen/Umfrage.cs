@@ -15,6 +15,9 @@ public enum Umfrageart
 
     /// <summary>Terminfindung: mehrere Zeitpunkte, Mehrfachauswahl.</summary>
     Terminfindung,
+
+    /// <summary>Wahlgang einer Wahl (Kandidat:innen, ggf. Nein, Enthaltung); stimmberechtigt wie bei Antragsabstimmungen.</summary>
+    Wahl,
 }
 
 public enum Umfragestatus
@@ -34,7 +37,7 @@ public sealed class Umfrage
     }
 
     public Umfrage(string titel, string? beschreibung, Umfrageart art, DateTimeOffset frist, int quorumProzent, bool mehrfachauswahl, int berechtigte,
-        Guid erstelltVonPersonId, DateTimeOffset jetzt, Guid? antragId = null, bool geheim = false)
+        Guid erstelltVonPersonId, DateTimeOffset jetzt, Guid? antragId = null, bool geheim = false, Guid? wahlId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(titel);
         if (geheim && art == Umfrageart.Terminfindung)
@@ -61,6 +64,7 @@ public sealed class Umfrage
         ErstelltAm = jetzt;
         AntragId = antragId;
         Geheim = geheim;
+        WahlId = wahlId;
         Status = Umfragestatus.Offen;
     }
 
@@ -94,6 +98,9 @@ public sealed class Umfrage
     /// </summary>
     public bool Geheim { get; private set; }
 
+    /// <summary>Wahlgang dieser Wahl (Modul Wahlen und Ämter).</summary>
+    public Guid? WahlId { get; private set; }
+
     public Umfragestatus Status { get; private set; }
 
     public DateTimeOffset? AbgeschlossenAm { get; private set; }
@@ -126,7 +133,7 @@ public sealed class UmfrageOption
         Text = string.Empty;
     }
 
-    public UmfrageOption(Guid umfrageId, int position, string text, DateTime? zeitpunkt = null)
+    public UmfrageOption(Guid umfrageId, int position, string text, DateTime? zeitpunkt = null, Guid? kandidatPersonId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
         Id = Ids.Neu();
@@ -134,6 +141,7 @@ public sealed class UmfrageOption
         Position = position;
         Text = text.Trim();
         Zeitpunkt = zeitpunkt;
+        KandidatPersonId = kandidatPersonId;
     }
 
     public Guid Id { get; private set; }
@@ -146,6 +154,9 @@ public sealed class UmfrageOption
 
     /// <summary>Bei der Terminfindung: vorgeschlagener Beginn (Wanduhrzeit).</summary>
     public DateTime? Zeitpunkt { get; private set; }
+
+    /// <summary>Bei einem Wahlgang: die Person, für die diese Antwort steht.</summary>
+    public Guid? KandidatPersonId { get; private set; }
 }
 
 public sealed class Stimme

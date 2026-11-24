@@ -1,0 +1,149 @@
+@page "/wahlen"
+@using FraktionPerfekt.Application.Abstimmungen
+@using FraktionPerfekt.Application.Gemeinsam
+@using FraktionPerfekt.Application.Stammdaten
+@using FraktionPerfekt.Domain.Abstimmungen
+@inject Vorgang Vorgang
+@inject NavigationManager Navigation
+@inject TimeProvider Uhr
+
+<PageTitle>Wahlen und Ämter · FraktionPerfekt</PageTitle>
+
+<div class="fp-head">
+    <div>
+        <h1>Wahlen und Ämter</h1>
+        <p class="fp-sub">Vorstand, Kasse, Sprecher:innen und Benennungen mit Amtszeit: Kandidaturen, Wahlgang (geheim oder offen), Stichwahl, Annahme.</p>
+    </div>
+    <BegruendeterButton Text="Wahl anlegen" Icon="add" Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle)" Click="@(() => formular = true)" />
+</div>
+
+@if (meldung is not null)
+{
+    <div class="fp-alert fp-crit" role="alert">@meldung</div>
+}
+
+@if (formular)
+{
+    <section class="fp-card fp-einschub">
+        <h2>Neue Wahl</h2>
+        <div class="fp-form">
+            <div class="fp-field"><label class="fp-lbl">Amt</label>
+                <RadzenDropDown TValue="Fraktionsamt" @bind-Value="amt" Data="@Aemter" TextProperty="Text" ValueProperty="Wert" /></div>
+            @if (amt == Fraktionsamt.Sprecher)
+            {
+                <div class="fp-field"><label class="fp-lbl">Ausschuss</label>
+                    <RadzenDropDown TValue="Guid?" @bind-Value="gremium" Data="@gremien" TextProperty="Name" ValueProperty="Id" AllowClear="true" /></div>
+            }
+            @if (amt == Fraktionsamt.Benennung)
+            {
+                <div class="fp-field"><label class="fp-lbl" for="w-bez">Wofür</label><RadzenTextBox id="w-bez" @bind-Value="bezeichnung" Placeholder="z. B. Aufsichtsrat Stadtwerke" /></div>
+            }
+            <div class="fp-field"><label class="fp-lbl">Amtszeit ab</label><RadzenDatePicker TValue="DateTime" @bind-Value="ab" DateFormat="dd.MM.yyyy" /></div>
+            <div class="fp-field"><label class="fp-lbl">bis (leer = Ende der Wahlperiode)</label><RadzenDatePicker TValue="DateTime?" @bind-Value="bis" DateFormat="dd.MM.yyyy" AllowClear="true" /></div>
+        </div>
+        <label class="fp-small"><input type="checkbox" @bind="geheim" /> geheim wählen</label>
+        <div class="fp-row">
+            <BegruendeterButton Text="Anlegen" Icon="add" Freigabe="@Freigabe.Ja" Click="AnlegenAsync" />
+            <RadzenButton Text="Abbrechen" ButtonStyle="ButtonStyle.Light" Click="@(() => formular = false)" />
+        </div>
+    </section>
+}
+
+<section class="fp-card fp-tbl">
+    <h2>Wahlen</h2>
+    @if (liste.Count == 0)
+    {
+        <p class="fp-muted">Noch keine Wahlen.</p>
+    }
+    else
+    {
+        <table>
+            <thead><tr><th>Wahl</th><th>Amtszeit</th><th>Kandidaturen</th><th>Stand</th></tr></thead>
+            <tbody>
+                @foreach (var z in liste)
+                {
+                    <tr>
+                        <td><a href="wahlen/@z.Wahl.Id"><b>@z.Wahl.Titel</b></a> @if (z.Wahl.Geheim) { <StatusPille Stil="info">geheim</StatusPille> }</td>
+                        <td>@z.Wahl.AmtAb.ToString("dd.MM.yyyy")@(z.Wahl.AmtBis is { } b ? $" – {b:dd.MM.yyyy}" : "")</td>
+                        <td>@z.Kandidaturen</td>
+                        <td>@Stand(z)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section class="fp-card fp-tbl">
+    <h2>Ämter heute</h2>
+    @if (aemter.Count == 0)
+    {
+        <p class="fp-muted">Noch keine Ämter aus Wahlen. Bisher von Hand gepflegte Vorstandsrollen stehen unter Personen.</p>
+    }
+    else
+    {
+        <table>
+            <thead><tr><th>Amt</th><th>Person</th><th>Amtszeit</th></tr></thead>
+            <tbody>
+                @foreach (var a in aemter)
+                {
+                    <tr><td>@a.Amt</td><td><a href="personen/@a.Amtszeit.PersonId">@a.Person</a></td>
+                        <td>@a.Amtszeit.Von.ToString("dd.MM.yyyy")@(a.Amtszeit.Bis is { } b ? $" – {b:dd.MM.yyyy}" : "")</td></tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private sealed record AmtWahl(Fraktionsamt Wert, string Text);
+
+    private static readonly IReadOnlyList<AmtWahl> Aemter = Enum.GetValues<Fraktionsamt>().Select(a => new AmtWahl(a, a.Anzeigename())).ToList();
+
+    private Benutzer? benutzer;
+    private IReadOnlyList<WahlZeile> liste = [];
+    private IReadOnlyList<AmtZeile> aemter = [];
+    private IReadOnlyList<GremiumZeile> gremien = [];
+    private bool formular;
+    private Fraktionsamt amt = Fraktionsamt.Vorsitz;
+    private Guid? gremium;
+    private string? bezeichnung;
+    private DateTime ab;
+    private DateTime? bis;
+    private bool geheim = true;
+    private string? meldung;
+
+    protected override async Task OnInitializedAsync()
+    {
+        benutzer = await Vorgang.BenutzerAsync();
+        ab = Ortszeit.Jetzt(Uhr).Date.AddDays(1);
+        gremien = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<StammdatenDienst>().GremienAsync());
+        liste = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WahlDienst>().ListeAsync());
+        aemter = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WahlDienst>().AemterAsync());
+    }
+
+    private static string Stand(WahlZeile z) => z.Wahl.Status switch
+    {
+        Wahlstatus.Vorbereitung => "Kandidaturen",
+        Wahlstatus.Wahlgang => "Wahlgang läuft",
+        Wahlstatus.Stichwahl => "Stichwahl steht an",
+        Wahlstatus.Los => "Gleichstand: Los",
+        Wahlstatus.Gewaehlt => $"gewählt: {z.Gewaehlt} (Annahme offen)",
+        Wahlstatus.Angenommen => $"{z.Gewaehlt} (angenommen)",
+        _ => "ohne Ergebnis",
+    };
+
+    private async Task AnlegenAsync()
+    {
+        try
+        {
+            var w = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<WahlDienst>().AnlegenAsync(amt, bezeichnung, amt == Fraktionsamt.Sprecher ? gremium : null,
+                DateOnly.FromDateTime(ab), bis is { } b ? DateOnly.FromDateTime(b) : null, geheim));
+            Navigation.NavigateTo($"wahlen/{w.Id}");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            meldung = ex.Message;
+        }
+    }
+}

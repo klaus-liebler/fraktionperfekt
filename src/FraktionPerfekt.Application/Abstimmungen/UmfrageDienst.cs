@@ -22,9 +22,11 @@ public sealed record UmfrageDetail(Umfrage Umfrage, IReadOnlyList<UmfrageOption>
     IReadOnlyList<string> Abgestimmt, Freigabe Abstimmen, Freigabe Abschliessen, IReadOnlyList<NaechsterSchritt> NaechsteSchritte, int Teilnehmende = 0,
     bool IchHabeAbgestimmt = false);
 
+/// <param name="Kandidaten">Bei Wahlgängen: Person je Antwort (gleiche Reihenfolge wie <paramref name="Optionen"/>; Nein/Enthaltung ohne Person).</param>
 /// <param name="NurPersonen">Nur diese Personen sind stimmberechtigt (z. B. die Anwesenden einer Sitzung), sofern sie nach Rolle berechtigt sind.</param>
 public sealed record NeueUmfrage(string Titel, string? Beschreibung, Umfrageart Art, DateTimeOffset Frist, int QuorumProzent, bool Mehrfachauswahl,
-    IReadOnlyList<string> Optionen, IReadOnlyList<DateTime>? Zeitpunkte = null, bool Geheim = false, IReadOnlyList<Guid>? NurPersonen = null);
+    IReadOnlyList<string> Optionen, IReadOnlyList<DateTime>? Zeitpunkte = null, bool Geheim = false, IReadOnlyList<Guid>? NurPersonen = null,
+    IReadOnlyList<Guid?>? Kandidaten = null, Guid? WahlId = null);
 
 /// <summary>
 /// Abstimmungen, Meinungsbilder, Umfragen und Terminfindung (Modul 13). Die Stimmberechtigten werden beim Start als feste Liste gespeichert.
@@ -129,14 +131,14 @@ public sealed class UmfrageDienst(
         }
 
         var u = new Umfrage(neu.Titel, neu.Beschreibung, neu.Art, neu.Frist, neu.QuorumProzent, neu.Mehrfachauswahl, berechtigt.Count, wer.PersonIdPflicht,
-            uhr.GetUtcNow(), antragId, neu.Geheim);
+            uhr.GetUtcNow(), antragId, neu.Geheim, neu.WahlId);
         daten.Hinzufuegen(u);
         foreach (var p in berechtigt)
         {
             daten.Hinzufuegen(new Stimmberechtigung(u.Id, p.Id));
         }
 
-        var texte = neu.Art is Umfrageart.Antragsabstimmung or Umfrageart.Meinungsbild ? Umfrage.JaNeinEnthaltung : neu.Optionen;
+        IReadOnlyList<string> texte = neu.Art is Umfrageart.Antragsabstimmung or Umfrageart.Meinungsbild ? Umfrage.JaNeinEnthaltung : neu.Optionen;
         var position = 0;
         if (neu.Art == Umfrageart.Terminfindung)
         {
@@ -147,9 +149,12 @@ public sealed class UmfrageDienst(
         }
         else
         {
-            foreach (var t in texte.Where(t => !string.IsNullOrWhiteSpace(t)))
+            for (var i = 0; i < texte.Count; i++)
             {
-                daten.Hinzufuegen(new UmfrageOption(u.Id, ++position, t));
+                if (!string.IsNullOrWhiteSpace(texte[i]))
+                {
+                    daten.Hinzufuegen(new UmfrageOption(u.Id, ++position, texte[i], kandidatPersonId: neu.Kandidaten is { } k && i < k.Count ? k[i] : null));
+                }
             }
         }
 
@@ -262,7 +267,7 @@ public sealed class UmfrageDienst(
     {
         ArgumentNullException.ThrowIfNull(rollen);
         var sachkundigeMit = (regeln ?? new GeschaeftsordnungOptionen()).SachkundigeStimmenMit.Contains(art);
-        return art == Umfrageart.Antragsabstimmung
+        return art is Umfrageart.Antragsabstimmung or Umfrageart.Wahl
             ? rollen.Contains(Rolle.Mitglied) || (sachkundigeMit && rollen.Contains(Rolle.SachkundigeBuergerin))
             : rollen.Any(r => r is not Rolle.Helferin && (r is not Rolle.SachkundigeBuergerin || sachkundigeMit));
     }
@@ -305,6 +310,7 @@ public sealed class UmfrageDienst(
         => wer.Rolle is Rolle.Helferin ? "Das Kampagnenteam nimmt an Fraktionsabstimmungen nicht teil."
             : liste.Count > 0 && Stimmberechtigt(u.Art, wer.Rollen, go.Value) ? "Stimmberechtigt sind nur die Personen, die beim Start der Abstimmung festgelegt wurden."
             : u.Art == Umfrageart.Antragsabstimmung ? "Über Anträge stimmen die Ratsmitglieder der Fraktion ab (Rolle Mitglied)."
+            : u.Art == Umfrageart.Wahl ? "Wählen dürfen die Ratsmitglieder der Fraktion (Rolle Mitglied)."
             : "Bei dieser Abstimmungsart stimmen sachkundige Bürger:innen laut Geschäftsordnung nicht mit.";
 
     private async Task<IReadOnlyList<Person>> BerechtigteAsync(Umfrageart art, CancellationToken abbruch)
@@ -359,6 +365,11 @@ public sealed class UmfrageDienst(
                 Hauptschritt: true));
         }
 
+        if (u.WahlId is { } w)
+        {
+            schritte.Add(new NaechsterSchritt("Zur Wahl (Ergebnis und Annahme)", $"wahlen/{w}", Hauptschritt: true));
+        }
+
         if (u.AntragId is { } a)
         {
             schritte.Add(new NaechsterSchritt("Zum Antrag", $"antraege/{a}", Hauptschritt: e.Angenommen == true));
@@ -372,6 +383,7 @@ public sealed class UmfrageDienst(
         Umfrageart.Antragsabstimmung => "Abstimmung über Antrag",
         Umfrageart.Meinungsbild => "Meinungsbild",
         Umfrageart.Terminfindung => "Terminfindung",
+        Umfrageart.Wahl => "Wahlgang",
         _ => "Umfrage",
     };
 

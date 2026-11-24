@@ -15,4 +15,19 @@ public sealed class GeschaeftsordnungOptionen
 
     /// <summary>Bei diesen Abstimmungsarten stimmen sachkundige Bürger:innen mit (Antragsabstimmungen standardmäßig nur Ratsmitglieder). ⚑</summary>
     public Umfrageart[] SachkundigeStimmenMit { get; set; } = [Umfrageart.Meinungsbild, Umfrageart.Umfrage, Umfrageart.Terminfindung];
+
+    /// <summary>Wahlen: Enthaltungen zählen bei der Mehrheit mit (Standard: nein, Mehrheit der gültigen Stimmen ohne Enthaltungen). ⚑</summary>
+    public bool WahlEnthaltungenZaehlen { get; set; }
+
+    /// <summary>Wahlen: Erreicht im ersten Wahlgang niemand die Mehrheit, folgt eine Stichwahl der beiden Bestplatzierten. ⚑</summary>
+    public bool WahlStichwahl { get; set; } = true;
+
+    /// <summary>Wahlen: Wahlgänge standardmäßig geheim (Personenwahl). ⚑</summary>
+    public bool WahlGeheimStandard { get; set; } = true;
+
+    /// <summary>Letzter Tag der Wahlperiode (Kommunalwahl NRW 2030 angenommen) – Standardende einer Amtszeit. ⚑</summary>
+    public DateOnly WahlperiodeEnde { get; set; } = new(2030, 10, 31);
+
+    /// <summary>So viele Tage vor Ende einer Amtszeit legt die Fristenprüfung die Aufgabe „Neuwahl vorbereiten“ an.</summary>
+    public int NeuwahlVorlaufTage { get; set; } = 56;
 }
