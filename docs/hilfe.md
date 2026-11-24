@@ -83,6 +83,23 @@ ablegen; Vertagtes wandert in die nächste Einladung.
 beschlossen, eingereicht. Gemeinsam schreiben im Editor, Fassungen vergleichen, Änderungsvorschläge annehmen oder
 ablehnen; Abstimmung mit Frist und Quorum, das Ergebnis steht am Antrag.
 
+### Geheim abstimmen
+
+Bei **Neu** unter **Abstimmungen und Umfragen** und beim Start einer Fraktionsabstimmung am Antrag gibt es **geheim abstimmen**
+(nicht bei der Terminfindung). Dann gilt:
+
+- Wer stimmberechtigt ist, steht beim Start fest (Liste, „Abgestimmt haben: …“ zeigt, wer schon abgestimmt hat).
+- **Kein Zwischenstand**: Bis zum Ende sieht niemand, wie es steht – auch Vorstand und Administration nicht; sichtbar ist nur „12 von 18 haben abgestimmt“.
+- Vor dem Absenden fragt FraktionPerfekt nach („Abgegeben wird: „Ja“ …“). Die **Stimme ist endgültig** und lässt sich nicht ändern.
+- Gespeichert wird getrennt, **dass** jemand abgestimmt hat und **wie** – ohne Person, ohne Zeitpunkt, mit zufälliger Kennung. Protokoll,
+  Mitteilungen und Logs nennen nie die gewählte Antwort.
+- Das Ende kommt mit der Frist, vorzeitig durch den Vorstand oder automatisch, sobald alle abgestimmt haben.
+- Bei weniger als **drei Stimmen** zeigt das Ergebnis keine Verteilung („zu wenige Stimmen für eine geheime Auswertung“).
+  Bei Einstimmigkeit ist das Ergebnis zwangsläufig offen.
+
+**Ehrliche Grenze:** Gegen den Betreiber des Servers, der die Datenbank laufend beobachtet oder Anfragen mitschneidet, schützt das nicht
+vollständig. Für Fraktionszwecke ist das angemessen; eine kryptografische Lösung wäre ein eigenes Vorhaben.
+
 ### Raum buchen und öffentliche Termine besetzen
 
 **Räume und Ressourcen**: Belegungsplan mit Konfliktprüfung, Buchung am Termin; manche Ressourcen gibt die

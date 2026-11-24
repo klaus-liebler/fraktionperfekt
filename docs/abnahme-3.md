@@ -72,3 +72,15 @@ Ablauf und Nachgespräch wie in [`abnahme-1.md`](abnahme-1.md). Dauer etwa 30 Mi
 - **Erwartung:** Nach dem Abschluss schlagen die nächsten Schritte „Termin am … anlegen“ vor; der Kalender öffnet
   sich mit vorausgefülltem Datum und Titel.
 - **Zeit:** ____ min. **Beobachtungen:**
+
+## 7. Geheime Abstimmung
+
+- **Startpunkt:** **Abstimmungen und Umfragen** → **Neu** (Johannes Wilp, Vorstand).
+- **Aufgabe:** Starten Sie ein Meinungsbild „Benennung für den Aufsichtsrat der Stadtwerke“ mit **geheim abstimmen**. Stimmen Sie als
+  Liz Kühlert und Michael Gries ab. Schauen Sie als Vorstand nach dem Stand und schließen Sie ab.
+- **Erwartung:**
+  - Vor dem Absenden kommt eine Rückfrage mit der gewählten Antwort; danach ist die Stimme nicht mehr änderbar.
+  - Vor dem Ende steht nur „2 von … haben abgestimmt“, kein Zwischenstand – auch nicht für den Vorstand.
+  - „Jetzt abschließen“ fragt nach. Mit nur zwei Stimmen zeigt das Ergebnis „zu wenige Stimmen für eine geheime Auswertung“.
+  - Im **Protokoll** steht nur „Person #… hat abgestimmt“, nie die Antwort.
+- **Zeit:** ____ min. **Beobachtungen:**

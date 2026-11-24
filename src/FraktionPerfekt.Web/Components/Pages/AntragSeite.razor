@@ -52,7 +52,7 @@ else
             <h3>Fraktionsabstimmung</h3>
             @if (d.Abstimmung is { } u)
             {
-                <p><a href="abstimmungen/@u.Umfrage.Id">@u.Umfrage.Titel</a> · Frist @Ortszeit.AlsOrtszeit(u.Umfrage.Frist).ToString("dd.MM. HH:mm") · @u.Ergebnis.Text</p>
+                <p><a href="abstimmungen/@u.Umfrage.Id">@u.Umfrage.Titel</a> · Frist @Ortszeit.AlsOrtszeit(u.Umfrage.Frist).ToString("dd.MM. HH:mm") · @(u.Ergebnis?.Text ?? $"geheim, {u.Teilnehmende} von {u.Umfrage.Berechtigte} haben abgestimmt")</p>
             }
             else
             {
@@ -60,6 +60,9 @@ else
                     <div class="fp-field"><label class="fp-lbl">Frist</label><RadzenDatePicker TValue="DateTime" @bind-Value="frist" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
                     <div class="fp-field"><label class="fp-lbl">Quorum (% der Ratsmitglieder)</label><RadzenNumeric TValue="int" @bind-Value="quorum" Min="0" Max="100" /></div>
                 </div>
+                <label class="fp-small" title="Kein Zwischenstand, Stimme endgültig, niemand kann sehen, wer wie gestimmt hat (⚑ Geschäftsordnung: auf Verlangen eines Mitglieds)">
+                    <input type="checkbox" @bind="geheim" /> geheim abstimmen
+                </label>
                 <BegruendeterButton Text="Fraktionsabstimmung starten" Icon="how_to_vote" Freigabe="@d.AbstimmungStarten" Click="AbstimmungAsync" />
             }
         }
@@ -179,6 +182,7 @@ else
     private string? kommentar;
     private DateTime frist;
     private int quorum = 50;
+    private bool geheim;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -231,7 +235,7 @@ else
     {
         try
         {
-            var e = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<AntragDienst>().AbstimmungStartenAsync(Id, Ortszeit.Zeitpunkt(frist), quorum));
+            var e = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<AntragDienst>().AbstimmungStartenAsync(Id, Ortszeit.Zeitpunkt(frist), quorum, geheim));
             (meldung, fehler, schritte) = (e.Meldung, false, e.NaechsteSchritte);
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)

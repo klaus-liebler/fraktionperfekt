@@ -74,7 +74,7 @@ public sealed class AntragAblaufTests
         await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
         detail = (await u.InAsync(d => A(d).DetailAsync(antrag.Id)))!;
         detail.Antrag.Status.ShouldBe(Antragsstatus.Beschlossen);
-        detail.Abstimmung!.Ergebnis.Text.ShouldStartWith("Angenommen: 13 ja, 1 nein");
+        detail.Abstimmung!.Ergebnis!.Text.ShouldStartWith("Angenommen: 13 ja, 1 nein");
         var beschluesse = await u.InAsync(d => d.GetRequiredService<IDaten>().ListeAsync(d.GetRequiredService<IDaten>().Menge<Beschluss>().Where(b => b.AntragId == antrag.Id)));
         beschluesse.ShouldHaveSingleItem().Ergebnis.ShouldBe(Beschlussergebnis.Angenommen);
 

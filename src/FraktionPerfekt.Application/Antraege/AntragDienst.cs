@@ -228,7 +228,8 @@ public sealed class AntragDienst(
         await daten.SpeichernAsync(abbruch);
     }
 
-    public async Task<Antragsergebnis> AbstimmungStartenAsync(Guid antragId, DateTimeOffset frist, int quorumProzent, CancellationToken abbruch = default)
+    /// <param name="geheim">Geheime Abstimmung (z. B. auf Verlangen eines Mitglieds, ⚑ Geschäftsordnung): kein Zwischenstand, Stimme endgültig.</param>
+    public async Task<Antragsergebnis> AbstimmungStartenAsync(Guid antragId, DateTimeOffset frist, int quorumProzent, bool geheim = false, CancellationToken abbruch = default)
     {
         var d = await DetailAsync(antragId, abbruch) ?? throw new InvalidOperationException("Antrag nicht gefunden.");
         if (d.AbstimmungStarten is { Erlaubt: false } nein)
@@ -237,10 +238,10 @@ public sealed class AntragDienst(
         }
 
         var u = await umfragen.AnlegenAsync(new NeueUmfrage($"Antrag: {d.Antrag.Titel}", $"Abgestimmt wird Fassung {d.Aktuell.Nummer}.", Umfrageart.Antragsabstimmung,
-            frist, quorumProzent, false, []), antragId, abbruch);
+            frist, quorumProzent, false, [], Geheim: geheim), antragId, abbruch);
         (await daten.LadenAsync<Antrag>(antragId, "Antrag", abbruch)).AbstimmungZuordnen(u.Id, uhr.GetUtcNow());
         await daten.SpeichernAsync(abbruch);
-        return new Antragsergebnis($"Fraktionsabstimmung gestartet (Frist {Ortszeit.AlsOrtszeit(frist):dd.MM. HH:mm} Uhr, Quorum {quorumProzent} %).",
+        return new Antragsergebnis($"{(geheim ? "Geheime " : "")}Fraktionsabstimmung gestartet (Frist {Ortszeit.AlsOrtszeit(frist):dd.MM. HH:mm} Uhr, Quorum {quorumProzent} %).",
             [new NaechsterSchritt("Zur Abstimmung", $"abstimmungen/{u.Id}", Hauptschritt: true)]);
     }
 

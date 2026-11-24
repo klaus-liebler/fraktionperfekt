@@ -3,6 +3,7 @@
 @using FraktionPerfekt.Application.Gemeinsam
 @using FraktionPerfekt.Domain.Abstimmungen
 @inject Vorgang Vorgang
+@inject DialogService Dialoge
 
 <PageTitle>Abstimmung · FraktionPerfekt</PageTitle>
 
@@ -16,7 +17,7 @@ else
 {
     <div class="fp-head">
         <div>
-            <h1>@d.Umfrage.Titel</h1>
+            <h1>@d.Umfrage.Titel @if (d.Umfrage.Geheim) { <StatusPille Stil="info">geheim</StatusPille> }</h1>
             <p class="fp-sub">Frist @Ortszeit.AlsOrtszeit(d.Umfrage.Frist).ToString("dddd, dd.MM.yyyy, HH:mm") Uhr@(d.Umfrage.QuorumProzent > 0 ? $" · Quorum {d.Umfrage.QuorumProzent} %" : "")
                 @(d.Umfrage.Beschreibung is null ? "" : $" · {d.Umfrage.Beschreibung}")</p>
         </div>
@@ -36,29 +37,55 @@ else
     <div class="fp-split">
         <section class="fp-card">
             <h2>@(d.Umfrage.Mehrfachauswahl ? "Auswahl (mehrere möglich)" : "Stimme")</h2>
-            @foreach (var o in d.Optionen)
+            @if (d.Umfrage.Geheim && d.IchHabeAbgestimmt)
             {
-                <label class="fp-option @(auswahl.Contains(o.Id) ? "sel" : null)">
-                    <input type="@(d.Umfrage.Mehrfachauswahl ? "checkbox" : "radio")" name="wahl" checked="@auswahl.Contains(o.Id)" disabled="@(!d.Abstimmen.Erlaubt)"
-                           @onchange="@(() => Umschalten(o.Id))" />
-                    <span class="fp-grow">@o.Text</span>
-                </label>
+                <p class="fp-alert fp-info">Die Stimme ist abgegeben. Wie abgestimmt wurde, ist nirgends mit der Person verbunden – auch nicht für den Vorstand oder die Administration.</p>
             }
-            <BegruendeterButton Text="@(d.MeineStimmen.Count > 0 ? "Stimme ändern" : "Abstimmen")" Icon="how_to_vote"
-                                Freigabe="@d.Abstimmen.Und(() => auswahl.Count == 0 ? Freigabe.Nein("Bitte eine Antwort wählen.") : Freigabe.Ja)" Click="AbstimmenAsync" />
-            <p class="fp-small fp-muted">Stimmen sind bis zur Frist änderbar. Im Protokoll steht nur, dass abgestimmt wurde, nicht wie.</p>
+            else
+            {
+                @foreach (var o in d.Optionen)
+                {
+                    <label class="fp-option @(auswahl.Contains(o.Id) ? "sel" : null)">
+                        <input type="@(d.Umfrage.Mehrfachauswahl ? "checkbox" : "radio")" name="wahl" checked="@auswahl.Contains(o.Id)" disabled="@(!d.Abstimmen.Erlaubt)"
+                               @onchange="@(() => Umschalten(o.Id))" />
+                        <span class="fp-grow">@o.Text</span>
+                    </label>
+                }
+                <BegruendeterButton Text="@(d.MeineStimmen.Count > 0 ? "Stimme ändern" : d.Umfrage.Geheim ? "Geheim abstimmen" : "Abstimmen")" Icon="how_to_vote"
+                                    Freigabe="@d.Abstimmen.Und(() => auswahl.Count == 0 ? Freigabe.Nein("Bitte eine Antwort wählen.") : Freigabe.Ja)" Click="AbstimmenAsync" />
+            }
+            @if (d.Umfrage.Geheim)
+            {
+                <p class="fp-small fp-muted">Geheime Abstimmung: Gespeichert wird getrennt, <em>dass</em> jemand abgestimmt hat und <em>wie</em> (ohne Person, ohne Zeitpunkt).
+                    Kein Zwischenstand vor dem Ende, die Stimme ist endgültig. Das Ende kommt mit der Frist, vorzeitig durch den Vorstand oder sobald alle abgestimmt haben.</p>
+            }
+            else
+            {
+                <p class="fp-small fp-muted">Stimmen sind bis zur Frist änderbar. Im Protokoll steht nur, dass abgestimmt wurde, nicht wie.</p>
+            }
         </section>
         <section class="fp-card">
-            <h2>Zwischenstand</h2>
-            <p>@d.Ergebnis.Text</p>
-            <div class="fp-balken">
-                @{ var max = Math.Max(1, d.Ergebnis.Optionen.Max(o => o.Stimmen)); }
-                @foreach (var o in d.Ergebnis.Optionen)
+            @if (d.Ergebnis is not { } e)
+            {
+                <h2>Beteiligung</h2>
+                <p><b>@d.Teilnehmende von @d.Umfrage.Berechtigte</b> haben abgestimmt. Ein Zwischenstand wird bei geheimen Abstimmungen nicht gezeigt.</p>
+            }
+            else
+            {
+                <h2>@(d.Umfrage.Status == Umfragestatus.Abgeschlossen ? "Ergebnis" : "Zwischenstand")</h2>
+                <p>@e.Text</p>
+                @if (!e.ZuWenigeStimmen)
                 {
-                    <Balken Name="@o.Text" Wert="@o.Stimmen" Maximum="@max" Anzeige="@o.Stimmen.ToString("N0")" />
+                    <div class="fp-balken">
+                        @{ var max = Math.Max(1, e.Optionen.Max(o => o.Stimmen)); }
+                        @foreach (var o in e.Optionen)
+                        {
+                            <Balken Name="@o.Text" Wert="@o.Stimmen" Maximum="@max" Anzeige="@o.Stimmen.ToString("N0")" />
+                        }
+                    </div>
                 }
-            </div>
-            <p class="fp-small fp-muted">Abgestimmt haben: @string.Join(", ", d.Abgestimmt)</p>
+            }
+            <p class="fp-small fp-muted">Abgestimmt haben: @(d.Abgestimmt.Count == 0 ? "noch niemand" : string.Join(", ", d.Abgestimmt))</p>
         </section>
     </div>
 }
@@ -94,11 +121,21 @@ else
 
     private async Task AbstimmenAsync()
     {
+        if (d is { Umfrage.Geheim: true })
+        {
+            var gewaehlt = string.Join(", ", d.Optionen.Where(o => auswahl.Contains(o.Id)).Select(o => $"„{o.Text}“"));
+            if (!await Dialoge.BestaetigenAsync($"Abgegeben wird: {gewaehlt}. In einer geheimen Abstimmung ist die Stimme endgültig und lässt sich nicht mehr ändern.",
+                    "Stimme endgültig abgeben?", "Stimme abgeben"))
+            {
+                return;
+            }
+        }
+
         try
         {
             var gewaehlt = auswahl.ToList();
             await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<UmfrageDienst>().AbstimmenAsync(Id, gewaehlt));
-            (meldung, fehler) = ("Stimme gespeichert.", false);
+            (meldung, fehler) = (d is { Umfrage.Geheim: true } ? "Stimme abgegeben." : "Stimme gespeichert.", false);
         }
         catch (InvalidOperationException ex)
         {
@@ -110,6 +147,13 @@ else
 
     private async Task AbschliessenAsync()
     {
+        if (d is null || !await Dialoge.BestaetigenAsync(
+                $"„{d.Umfrage.Titel}“ wird vor der Frist beendet; danach kann niemand mehr abstimmen ({d.Teilnehmende} von {d.Umfrage.Berechtigte} haben abgestimmt).",
+                "Abstimmung jetzt abschließen?", "Abschließen"))
+        {
+            return;
+        }
+
         try
         {
             var e = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<UmfrageDienst>().AbschliessenAsync(Id));

@@ -32,6 +32,12 @@
             <div class="fp-field"><label class="fp-lbl">Frist</label><RadzenDatePicker TValue="DateTime" @bind-Value="frist" ShowTime="true" DateFormat="dd.MM.yyyy HH:mm" /></div>
             <div class="fp-field"><label class="fp-lbl">Quorum (%)</label><RadzenNumeric TValue="int" @bind-Value="quorum" Min="0" Max="100" /></div>
         </div>
+        @if (art != Umfrageart.Terminfindung)
+        {
+            <label class="fp-small" title="Kein Zwischenstand, Stimme endgültig, niemand kann sehen, wer wie gestimmt hat (⚑ Geschäftsordnung)">
+                <input type="checkbox" @bind="geheim" /> geheim abstimmen
+            </label>
+        }
         @if (art == Umfrageart.Umfrage)
         {
             <div class="fp-field"><label class="fp-lbl">Antworten (eine je Zeile)</label><RadzenTextArea @bind-Value="optionen" Rows="4" /></div>
@@ -61,7 +67,7 @@
             @foreach (var z in liste)
             {
                 <tr>
-                    <td><a href="abstimmungen/@z.Umfrage.Id"><b>@z.Umfrage.Titel</b></a> @if (!z.IchHabeAbgestimmt && z.Umfrage.Offen(Uhr.GetUtcNow())) { <StatusPille Stil="warn">noch nicht abgestimmt</StatusPille> }</td>
+                    <td><a href="abstimmungen/@z.Umfrage.Id"><b>@z.Umfrage.Titel</b></a> @if (z.Umfrage.Geheim) { <StatusPille Stil="info">geheim</StatusPille> } @if (!z.IchHabeAbgestimmt && z.Umfrage.Offen(Uhr.GetUtcNow())) { <StatusPille Stil="warn">noch nicht abgestimmt</StatusPille> }</td>
                     <td>@Arten.First(a => a.Wert == z.Umfrage.Art).Text</td>
                     <td>@Ortszeit.AlsOrtszeit(z.Umfrage.Frist).ToString("dd.MM. HH:mm")</td>
                     <td>@z.Teilnehmende von @z.Umfrage.Berechtigte</td>
@@ -88,6 +94,7 @@
     private string? titel;
     private string? optionen;
     private bool mehrfach;
+    private bool geheim;
     private DateTime frist;
     private DateTime vorschlag;
     private int quorum;
@@ -107,7 +114,8 @@
         try
         {
             var neu = new NeueUmfrage(titel!, null, art == Umfrageart.Antragsabstimmung ? Umfrageart.Meinungsbild : art, Ortszeit.Zeitpunkt(frist), quorum, mehrfach,
-                (optionen ?? string.Empty).Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), zeitpunkte);
+                (optionen ?? string.Empty).Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), zeitpunkte,
+                Geheim: geheim && art != Umfrageart.Terminfindung);
             var u = await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<UmfrageDienst>().AnlegenAsync(neu));
             Navigation.NavigateTo($"abstimmungen/{u.Id}");
         }

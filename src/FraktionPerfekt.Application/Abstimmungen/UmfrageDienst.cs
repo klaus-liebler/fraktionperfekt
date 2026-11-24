@@ -8,22 +8,29 @@ using FraktionPerfekt.Domain.Antraege;
 using FraktionPerfekt.Domain.Gemeinsam;
 using FraktionPerfekt.Domain.Personen;
 using FraktionPerfekt.Domain.Sitzungen;
+using Microsoft.Extensions.Options;
 using Person = FraktionPerfekt.Domain.Personen.Person;
 
 namespace FraktionPerfekt.Application.Abstimmungen;
 
 public sealed record UmfrageZeile(Umfrage Umfrage, int Teilnehmende, bool IchHabeAbgestimmt);
 
-public sealed record UmfrageDetail(Umfrage Umfrage, IReadOnlyList<UmfrageOption> Optionen, IReadOnlyList<Guid> MeineStimmen, Umfrageergebnis Ergebnis,
-    IReadOnlyList<string> Abgestimmt, Freigabe Abstimmen, Freigabe Abschliessen, IReadOnlyList<NaechsterSchritt> NaechsteSchritte);
+/// <param name="Ergebnis">Ergebnis bzw. Zwischenstand; <c>null</c> bei einer geheimen Abstimmung, solange sie läuft (kein Zwischenstand).</param>
+/// <param name="MeineStimmen">Eigene Auswahl bei namentlichen Abstimmungen; bei geheimen immer leer (die Zuordnung gibt es nicht).</param>
+/// <param name="Teilnehmende">Wie viele schon abgestimmt haben.</param>
+public sealed record UmfrageDetail(Umfrage Umfrage, IReadOnlyList<UmfrageOption> Optionen, IReadOnlyList<Guid> MeineStimmen, Umfrageergebnis? Ergebnis,
+    IReadOnlyList<string> Abgestimmt, Freigabe Abstimmen, Freigabe Abschliessen, IReadOnlyList<NaechsterSchritt> NaechsteSchritte, int Teilnehmende = 0,
+    bool IchHabeAbgestimmt = false);
 
+/// <param name="NurPersonen">Nur diese Personen sind stimmberechtigt (z. B. die Anwesenden einer Sitzung), sofern sie nach Rolle berechtigt sind.</param>
 public sealed record NeueUmfrage(string Titel, string? Beschreibung, Umfrageart Art, DateTimeOffset Frist, int QuorumProzent, bool Mehrfachauswahl,
-    IReadOnlyList<string> Optionen, IReadOnlyList<DateTime>? Zeitpunkte = null);
+    IReadOnlyList<string> Optionen, IReadOnlyList<DateTime>? Zeitpunkte = null, bool Geheim = false, IReadOnlyList<Guid>? NurPersonen = null);
 
 /// <summary>
-/// Abstimmungen, Meinungsbilder, Umfragen und Terminfindung (Modul 13). Stimmen sind bis zur Frist änderbar; danach (oder
-/// vorher durch die Erstellerin/den Vorstand) wird abgeschlossen. Antragsabstimmungen setzen den Antragsstatus und legen
-/// einen Fraktionsbeschluss für die Beschlusslage an.
+/// Abstimmungen, Meinungsbilder, Umfragen und Terminfindung (Modul 13). Die Stimmberechtigten werden beim Start als feste Liste gespeichert.
+/// Namentlich: Stimmen sind bis zur Frist änderbar, der Zwischenstand ist sichtbar. Geheim: Stimmvermerk (wer) und Stimmzettel (wie) getrennt
+/// ohne Verbindung, kein Zwischenstand, die Stimme ist endgültig, Ende automatisch, sobald alle abgestimmt haben. Abgeschlossen wird zur Frist,
+/// vorher durch die Erstellerin/den Ersteller oder den Vorstand. Antragsabstimmungen setzen den Antragsstatus und legen einen Fraktionsbeschluss an.
 /// </summary>
 public sealed class UmfrageDienst(
     IDaten daten,
@@ -31,6 +38,7 @@ public sealed class UmfrageDienst(
     PostausgangDienst postausgang,
     IAuditProtokoll protokoll,
     IAktuellerBenutzer benutzer,
+    IOptions<GeschaeftsordnungOptionen> go,
     TimeProvider uhr)
 {
     public async Task<IReadOnlyList<UmfrageZeile>> ListeAsync(CancellationToken abbruch = default)
@@ -41,9 +49,10 @@ public sealed class UmfrageDienst(
             return []; // Wie im Menü: Das Kampagnenteam sieht nur die Kampagnen (auch nicht über die direkte Adresse).
         }
         var umfragen = await daten.ListeAsync(daten.Menge<Umfrage>().OrderByDescending(u => u.ErstelltAm).ThenBy(u => u.Id), abbruch);
-        var stimmen = await daten.ListeAsync(daten.Menge<Stimme>().OrderBy(s => s.Id), abbruch);
-        return umfragen.Select(u => new UmfrageZeile(u, stimmen.Where(s => s.UmfrageId == u.Id).Select(s => s.PersonId).Distinct().Count(),
-            stimmen.Any(s => s.UmfrageId == u.Id && s.PersonId == wer.PersonId))).ToList();
+        var stimmen = await daten.ListeAsync(daten.Menge<Stimme>().OrderBy(s => s.Id).Select(s => new Teilnahme(s.UmfrageId, s.PersonId)), abbruch);
+        var vermerke = await daten.ListeAsync(daten.Menge<Stimmvermerk>().OrderBy(v => v.Id).Select(v => new Teilnahme(v.UmfrageId, v.PersonId)), abbruch);
+        var teilnahmen = stimmen.Concat(vermerke).Distinct().ToLookup(t => t.UmfrageId, t => t.PersonId);
+        return umfragen.Select(u => new UmfrageZeile(u, teilnahmen[u.Id].Count(), wer.PersonId is { } ich && teilnahmen[u.Id].Contains(ich))).ToList();
     }
 
     /// <summary>Offene Abstimmungen, bei denen die angemeldete Person stimmberechtigt ist und noch nicht abgestimmt hat (Startseite).</summary>
@@ -51,7 +60,16 @@ public sealed class UmfrageDienst(
     {
         var wer = await benutzer.ErmittelnAsync(abbruch);
         var jetzt = uhr.GetUtcNow();
-        return (await ListeAsync(abbruch)).Where(z => z.Umfrage.Offen(jetzt) && !z.IchHabeAbgestimmt && Stimmberechtigt(z.Umfrage.Art, wer.Rollen)).ToList();
+        var offen = (await ListeAsync(abbruch)).Where(z => z.Umfrage.Offen(jetzt) && !z.IchHabeAbgestimmt).ToList();
+        if (offen.Count == 0)
+        {
+            return offen;
+        }
+
+        var ids = offen.Select(z => z.Umfrage.Id).ToList();
+        var listen = (await daten.ListeAsync(daten.Menge<Stimmberechtigung>().Where(b => ids.Contains(b.UmfrageId)).OrderBy(b => b.Id), abbruch))
+            .ToLookup(b => b.UmfrageId, b => b.PersonId);
+        return offen.Where(z => Berechtigt(z.Umfrage, listen[z.Umfrage.Id].ToList(), wer)).ToList();
     }
 
     public async Task<UmfrageDetail?> DetailAsync(Guid id, CancellationToken abbruch = default)
@@ -67,21 +85,27 @@ public sealed class UmfrageDienst(
         }
 
         var optionen = await OptionenAsync(id, abbruch);
-        var stimmen = await StimmenAsync(id, abbruch);
+        var abgestimmt = await AbgestimmtAsync(u, abbruch);
+        var liste = await BerechtigtenlisteAsync(id, abbruch);
         var namen = (await stammdaten.PersonenAsync(abbruch)).ToDictionary(p => p.Id, p => p.Anzeigename);
         var jetzt = uhr.GetUtcNow();
-        var ergebnis = Auswertung.Auswerten(u, optionen, stimmen);
-        var abstimmen = !u.Offen(jetzt) ? Freigabe.Nein(u.Status == Umfragestatus.Abgeschlossen ? "Die Abstimmung ist abgeschlossen." : "Die Frist ist abgelaufen.")
-            : !Stimmberechtigt(u.Art, wer.Rollen) ? Freigabe.Nein(u.Art == Umfrageart.Antragsabstimmung
-                ? "Über Anträge stimmen die Ratsmitglieder der Fraktion ab (Rolle Mitglied)."
-                : "Das Kampagnenteam nimmt an Fraktionsabstimmungen nicht teil.")
+        var abgeschlossen = u.Status == Umfragestatus.Abgeschlossen;
+        // Geheim: kein Zwischenstand – die Stimmzettel werden erst nach dem Ende gezählt.
+        var ergebnis = u.Geheim && !abgeschlossen ? null : await ErgebnisAsync(u, optionen, abbruch);
+        var ich = wer.PersonId is { } p && abgestimmt.Contains(p);
+        var abstimmen = !u.Offen(jetzt) ? Freigabe.Nein(abgeschlossen ? "Die Abstimmung ist abgeschlossen." : "Die Frist ist abgelaufen.")
+            : !Berechtigt(u, liste, wer) ? Freigabe.Nein(Nichtberechtigt(u, liste, wer))
+            : u.Geheim && ich ? Freigabe.Nein("Die Stimme ist abgegeben. In einer geheimen Abstimmung ist sie endgültig.")
             : Freigabe.Ja;
-        var abschliessen = u.Status == Umfragestatus.Abgeschlossen ? Freigabe.Nein("Bereits abgeschlossen.")
+        var abschliessen = abgeschlossen ? Freigabe.Nein("Bereits abgeschlossen.")
             : wer.PersonId == u.ErstelltVonPersonId || Rechte.SitzungenSteuern(wer.Rolle).Erlaubt ? Freigabe.Ja
             : Freigabe.Nein("Abschließen kann, wer die Abstimmung gestartet hat, oder der Vorstand.");
-        return new UmfrageDetail(u, optionen, stimmen.Where(s => s.PersonId == wer.PersonId).Select(s => s.OptionId).ToList(), ergebnis,
-            stimmen.Select(s => s.PersonId).Distinct().Select(p => namen.GetValueOrDefault(p, "?")).Order(StringComparer.CurrentCulture).ToList(),
-            abstimmen, abschliessen, Folgeschritte(u, ergebnis));
+        IReadOnlyList<Guid> meine = u.Geheim || wer.PersonId is not { } ichId
+            ? []
+            : (await StimmenAsync(id, abbruch)).Where(s => s.PersonId == ichId).Select(s => s.OptionId).ToList();
+        return new UmfrageDetail(u, optionen, meine, ergebnis,
+            abgestimmt.Select(x => namen.GetValueOrDefault(x, "?")).Order(StringComparer.CurrentCulture).ToList(),
+            abstimmen, abschliessen, ergebnis is null ? [] : Folgeschritte(u, ergebnis), abgestimmt.Count, ich);
     }
 
     public async Task<Umfrage> AnlegenAsync(NeueUmfrage neu, Guid? antragId = null, CancellationToken abbruch = default)
@@ -93,10 +117,25 @@ public sealed class UmfrageDienst(
             throw new InvalidOperationException("Das Kampagnenteam startet keine Fraktionsabstimmungen.");
         }
 
-        var berechtigt = await BerechtigteAsync(neu.Art, abbruch);
+        if (neu.Geheim && neu.Art == Umfrageart.Terminfindung)
+        {
+            throw new InvalidOperationException("Eine Terminfindung kann nicht geheim sein.");
+        }
+
+        var berechtigt = (await BerechtigteAsync(neu.Art, abbruch)).Where(p => neu.NurPersonen is null || neu.NurPersonen.Contains(p.Id)).ToList();
+        if (berechtigt.Count == 0)
+        {
+            throw new InvalidOperationException("Niemand wäre bei dieser Abstimmung stimmberechtigt.");
+        }
+
         var u = new Umfrage(neu.Titel, neu.Beschreibung, neu.Art, neu.Frist, neu.QuorumProzent, neu.Mehrfachauswahl, berechtigt.Count, wer.PersonIdPflicht,
-            uhr.GetUtcNow(), antragId);
+            uhr.GetUtcNow(), antragId, neu.Geheim);
         daten.Hinzufuegen(u);
+        foreach (var p in berechtigt)
+        {
+            daten.Hinzufuegen(new Stimmberechtigung(u.Id, p.Id));
+        }
+
         var texte = neu.Art is Umfrageart.Antragsabstimmung or Umfrageart.Meinungsbild ? Umfrage.JaNeinEnthaltung : neu.Optionen;
         var position = 0;
         if (neu.Art == Umfrageart.Terminfindung)
@@ -119,19 +158,23 @@ public sealed class UmfrageDienst(
             throw new InvalidOperationException("Bitte mindestens zwei Antwortmöglichkeiten angeben.");
         }
 
+        var geheim = neu.Geheim ? "Geheime " : "";
         foreach (var p in berechtigt.Where(p => p.Id != wer.PersonId))
         {
-            await postausgang.PushEinreihenAsync(p, Art(neu.Art) + ": " + neu.Titel,
+            await postausgang.PushEinreihenAsync(p, geheim + Art(neu.Art) + ": " + neu.Titel,
                 $"Bitte bis {Ortszeit.AlsOrtszeit(neu.Frist):dd.MM. HH:mm} Uhr abstimmen.", $"abstimmungen/{u.Id}", "Abstimmen", abbruch);
         }
 
-        await protokoll.ProtokollierenAsync("Umfrage.Gestartet", $"{Art(neu.Art)} gestartet ({berechtigt.Count} Berechtigte, Quorum {neu.QuorumProzent} %)",
+        await protokoll.ProtokollierenAsync("Umfrage.Gestartet", $"{geheim}{Art(neu.Art)} gestartet ({berechtigt.Count} Berechtigte, Quorum {neu.QuorumProzent} %)",
             nameof(Umfrage), u.Id, abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
         return u;
     }
 
-    /// <summary>Stimme abgeben oder ändern (ersetzt die bisherige Auswahl der Person).</summary>
+    /// <summary>
+    /// Stimme abgeben. Namentlich: ersetzt die bisherige Auswahl der Person. Geheim: Stimmvermerk und Stimmzettel in einem Speichervorgang
+    /// (eine Transaktion), danach nicht mehr änderbar; haben alle Stimmberechtigten abgestimmt, endet die Abstimmung sofort.
+    /// </summary>
     public async Task AbstimmenAsync(Guid umfrageId, IReadOnlyCollection<Guid> optionIds, CancellationToken abbruch = default)
     {
         ArgumentNullException.ThrowIfNull(optionIds);
@@ -153,19 +196,36 @@ public sealed class UmfrageDienst(
         }
 
         var personId = wer.PersonIdPflicht;
-        foreach (var alt in await daten.ListeAsync(daten.Menge<Stimme>().Where(s => s.UmfrageId == umfrageId && s.PersonId == personId).OrderBy(s => s.Id), abbruch))
+        if (detail.Umfrage.Geheim)
         {
-            daten.Entfernen(alt);
+            // Wer (Vermerk) und wie (Stimmzettel mit zufälliger Id, ohne Person und Zeit) – in einem Speichervorgang, aber ohne Verbindung.
+            daten.Hinzufuegen(new Stimmvermerk(umfrageId, personId, uhr.GetUtcNow()));
+            foreach (var o in optionIds.Distinct())
+            {
+                daten.Hinzufuegen(new Stimmzettel(umfrageId, o));
+            }
+        }
+        else
+        {
+            foreach (var alt in await daten.ListeAsync(daten.Menge<Stimme>().Where(s => s.UmfrageId == umfrageId && s.PersonId == personId).OrderBy(s => s.Id), abbruch))
+            {
+                daten.Entfernen(alt);
+            }
+
+            foreach (var o in optionIds.Distinct())
+            {
+                daten.Hinzufuegen(new Stimme(umfrageId, o, personId, uhr.GetUtcNow()));
+            }
         }
 
-        foreach (var o in optionIds.Distinct())
-        {
-            daten.Hinzufuegen(new Stimme(umfrageId, o, personId, uhr.GetUtcNow()));
-        }
-
-        // Geheim: im Protokoll steht nur, dass abgestimmt wurde, nicht wie.
+        // Protokoll, Logs und Push nennen nie die gewählte Option – nur, dass abgestimmt wurde.
         await protokoll.ProtokollierenAsync("Umfrage.Abgestimmt", $"{Pseudonym.Person(personId)} hat abgestimmt", nameof(Umfrage), umfrageId, abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
+
+        if (detail.Umfrage.Geheim && detail.Teilnehmende + 1 >= detail.Umfrage.Berechtigte)
+        {
+            await AbschliessenInternAsync(umfrageId, "alle Stimmberechtigten haben abgestimmt", abbruch);
+        }
     }
 
     public async Task<Umfrageergebnis> AbschliessenAsync(Guid umfrageId, CancellationToken abbruch = default)
@@ -177,8 +237,45 @@ public sealed class UmfrageDienst(
             throw new InvalidOperationException(nein.Begruendung);
         }
 
+        return await AbschliessenInternAsync(umfrageId, null, abbruch);
+    }
+
+    /// <summary>Fristenprüfung: abgelaufene Abstimmungen automatisch abschließen.</summary>
+    public async Task<int> FristenPruefenAsync(CancellationToken abbruch = default)
+    {
+        var jetzt = uhr.GetUtcNow();
+        var faellig = (await daten.ListeAsync(daten.Menge<Umfrage>().Where(u => u.Status == Umfragestatus.Offen).OrderBy(u => u.Id), abbruch))
+            .Where(u => u.Frist <= jetzt).ToList();
+        foreach (var u in faellig)
+        {
+            await AbschliessenInternAsync(u.Id, "Frist abgelaufen", abbruch);
+        }
+
+        return faellig.Count;
+    }
+
+    /// <summary>
+    /// Stimmberechtigt nach Rolle: Antragsabstimmungen die Ratsmitglieder (Rolle Mitglied), sonst alle außer dem Kampagnenteam; sachkundige
+    /// Bürger:innen nur bei den Arten, die die Geschäftsordnung vorsieht (⚑ Einstellung <see cref="GeschaeftsordnungOptionen.SachkundigeStimmenMit"/>).
+    /// </summary>
+    public static bool Stimmberechtigt(Umfrageart art, IReadOnlyList<Rolle> rollen, GeschaeftsordnungOptionen? regeln = null)
+    {
+        ArgumentNullException.ThrowIfNull(rollen);
+        var sachkundigeMit = (regeln ?? new GeschaeftsordnungOptionen()).SachkundigeStimmenMit.Contains(art);
+        return art == Umfrageart.Antragsabstimmung
+            ? rollen.Contains(Rolle.Mitglied) || (sachkundigeMit && rollen.Contains(Rolle.SachkundigeBuergerin))
+            : rollen.Any(r => r is not Rolle.Helferin && (r is not Rolle.SachkundigeBuergerin || sachkundigeMit));
+    }
+
+    private async Task<Umfrageergebnis> AbschliessenInternAsync(Guid umfrageId, string? anlass, CancellationToken abbruch)
+    {
         var u = await daten.LadenAsync<Umfrage>(umfrageId, "Abstimmung", abbruch);
-        var ergebnis = detail.Ergebnis;
+        if (u.Status == Umfragestatus.Abgeschlossen)
+        {
+            throw new InvalidOperationException("Die Abstimmung ist bereits abgeschlossen.");
+        }
+
+        var ergebnis = await ErgebnisAsync(u, await OptionenAsync(umfrageId, abbruch), abbruch);
         u.Abschliessen(ergebnis, uhr.GetUtcNow());
         if (u.AntragId is { } antragId && await daten.FindenAsync<Antrag>(antragId, abbruch) is { Status: Antragsstatus.InAbstimmung } antrag)
         {
@@ -193,37 +290,60 @@ public sealed class UmfrageDienst(
             }
         }
 
-        await protokoll.ProtokollierenAsync("Umfrage.Abgeschlossen", $"Abgeschlossen: {ergebnis.Text}", nameof(Umfrage), u.Id, abbruch: abbruch);
+        await protokoll.ProtokollierenAsync("Umfrage.Abgeschlossen", $"Abgeschlossen{(anlass is null ? "" : $" ({anlass})")}: {ergebnis.Text}", nameof(Umfrage), u.Id,
+            abbruch: abbruch);
         await daten.SpeichernAsync(abbruch);
         return ergebnis;
     }
 
-    /// <summary>Fristenprüfung: abgelaufene Abstimmungen automatisch abschließen.</summary>
-    public async Task<int> FristenPruefenAsync(CancellationToken abbruch = default)
-    {
-        var jetzt = uhr.GetUtcNow();
-        var faellig = (await daten.ListeAsync(daten.Menge<Umfrage>().Where(u => u.Status == Umfragestatus.Offen).OrderBy(u => u.Id), abbruch))
-            .Where(u => u.Frist <= jetzt).ToList();
-        foreach (var u in faellig)
-        {
-            await AbschliessenAsync(u.Id, abbruch);
-        }
+    /// <summary>Berechtigt ist, wer auf der beim Start gespeicherten Liste steht; ältere Abstimmungen ohne Liste prüfen die Rolle.</summary>
+    private bool Berechtigt(Umfrage u, IReadOnlyList<Guid> liste, Benutzer wer)
+        => wer.Rolle is not Rolle.Helferin
+           && (liste.Count > 0 ? wer.PersonId is { } p && liste.Contains(p) : Stimmberechtigt(u.Art, wer.Rollen, go.Value));
 
-        return faellig.Count;
-    }
-
-    public static bool Stimmberechtigt(Umfrageart art, IReadOnlyList<Rolle> rollen)
-    {
-        ArgumentNullException.ThrowIfNull(rollen);
-        return art == Umfrageart.Antragsabstimmung ? rollen.Contains(Rolle.Mitglied) : rollen.Any(r => r != Rolle.Helferin);
-    }
+    private string Nichtberechtigt(Umfrage u, IReadOnlyList<Guid> liste, Benutzer wer)
+        => wer.Rolle is Rolle.Helferin ? "Das Kampagnenteam nimmt an Fraktionsabstimmungen nicht teil."
+            : liste.Count > 0 && Stimmberechtigt(u.Art, wer.Rollen, go.Value) ? "Stimmberechtigt sind nur die Personen, die beim Start der Abstimmung festgelegt wurden."
+            : u.Art == Umfrageart.Antragsabstimmung ? "Über Anträge stimmen die Ratsmitglieder der Fraktion ab (Rolle Mitglied)."
+            : "Bei dieser Abstimmungsart stimmen sachkundige Bürger:innen laut Geschäftsordnung nicht mit.";
 
     private async Task<IReadOnlyList<Person>> BerechtigteAsync(Umfrageart art, CancellationToken abbruch)
     {
         var heute = Ortszeit.Heute(uhr);
         var jetzt = uhr.GetUtcNow();
-        return (await stammdaten.PersonenAsync(abbruch)).Where(p => p.Aktiv && Stimmberechtigt(art, p.RollenAm(heute, jetzt))).ToList();
+        return (await stammdaten.PersonenAsync(abbruch)).Where(p => p.Aktiv && Stimmberechtigt(art, p.RollenAm(heute, jetzt), go.Value)).ToList();
     }
+
+    private Task<List<Stimmvermerk>> VermerkeAsync(Guid id, CancellationToken abbruch)
+        => daten.ListeAsync(daten.Menge<Stimmvermerk>().Where(v => v.UmfrageId == id).OrderBy(v => v.Id), abbruch);
+
+    /// <summary>Feste Liste der Stimmberechtigten (leer bei Abstimmungen, die vor der Einführung der Liste gestartet wurden).</summary>
+    private async Task<IReadOnlyList<Guid>> BerechtigtenlisteAsync(Guid id, CancellationToken abbruch)
+        => (await daten.ListeAsync(daten.Menge<Stimmberechtigung>().Where(b => b.UmfrageId == id).OrderBy(b => b.Id), abbruch)).Select(b => b.PersonId).ToList();
+
+    /// <summary>Personen, die abgestimmt haben: bei geheimen Abstimmungen aus den Stimmvermerken, sonst aus den Stimmen.</summary>
+    private async Task<IReadOnlyList<Guid>> AbgestimmtAsync(Umfrage u, CancellationToken abbruch)
+        => u.Geheim
+            ? (await VermerkeAsync(u.Id, abbruch)).Select(v => v.PersonId).ToList()
+            : (await StimmenAsync(u.Id, abbruch)).Select(s => s.PersonId).Distinct().ToList();
+
+    /// <summary>
+    /// Vollständiges Ergebnis. Bei geheimen Abstimmungen werden nur hier die Stimmzettel gezählt – ohne Bezug zu Personen; aufgerufen nur für
+    /// abgeschlossene Abstimmungen und beim Abschließen.
+    /// </summary>
+    private async Task<Umfrageergebnis> ErgebnisAsync(Umfrage u, IReadOnlyList<UmfrageOption> optionen, CancellationToken abbruch)
+    {
+        if (!u.Geheim)
+        {
+            return Auswertung.Auswerten(u, optionen, await StimmenAsync(u.Id, abbruch));
+        }
+
+        var teilnehmende = await daten.AnzahlAsync(daten.Menge<Stimmvermerk>().Where(v => v.UmfrageId == u.Id), abbruch);
+        var zettel = await daten.ListeAsync(daten.Menge<Stimmzettel>().Where(z => z.UmfrageId == u.Id).OrderBy(z => z.Id).Select(z => z.OptionId), abbruch);
+        return Auswertung.Auswerten(u, optionen, teilnehmende, zettel.GroupBy(o => o).ToDictionary(g => g.Key, g => g.Count()), go.Value.GeheimMindeststimmen);
+    }
+
+    private sealed record Teilnahme(Guid UmfrageId, Guid PersonId);
 
     private static List<NaechsterSchritt> Folgeschritte(Umfrage u, Umfrageergebnis e)
     {

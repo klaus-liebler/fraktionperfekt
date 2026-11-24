@@ -3,7 +3,7 @@
 > **Führende Version.** Dieses Dokument im Repository ist maßgeblich; das frühere Claude-Dokument (Stand 15.11.2026) ist nur noch
 > Archiv. Der ursprüngliche Export steht unverändert in der Git-Historie (Commit „Konzept ins Repository übernommen“).
 >
-> **Stand: 17.11.2026** · ursprünglich 15.11.2026 · @Klaus
+> **Stand: 24.11.2026** · ursprünglich 15.11.2026 · @Klaus
 >
 > Kennzeichnung: ✅ umgesetzt · ◐ teilweise bzw. als Mock/Vorbereitung · ⏳ noch nicht umgesetzt
 
@@ -101,13 +101,31 @@ Zeitraum, Beschreibung, Status (Planung, aktiv, abgeschlossen) und optional eine
 | 10 | RIS-Anbindung (OParl) | Gremien, Sitzungen, Tagesordnungen, Vorlagen und Beschlüsse aus dem Ratsinformationssystem regelmäßig abgleichen; Vorlagen direkt an Protokoll und Antrag verknüpfen | 1 | ◐ OParl-Adapter und nächtlicher Abgleich vorhanden, im Betrieb Mock mit Grevener Gremien |
 | 11 | Mandatsübersicht | Wer sitzt in welchem Gremium, ordentlich oder Stellvertretung; **wird aus dem RIS synchronisiert** und nur um fraktionsinterne Angaben ergänzt (z. B. Rang der Vertretung, Sprecherrolle) | 1 | ✅ bitemporal; Abgleich wie Modul 10 |
 | 12 | Aufgaben und Zuständigkeiten | Aufgaben aus Protokollen, Anträgen und Anliegen; Zuständige, Frist, Erinnerung; Themenpaten pro Politikfeld | 1 | ✅ |
-| 13 | Abstimmungen, Umfragen, Terminfindung | Schnelle Meinungsbilder, Umfragen und Terminfindung (wie Doodle) innerhalb der Fraktion | 2 | ✅ |
+| 13 | Abstimmungen, Umfragen, Terminfindung | Schnelle Meinungsbilder, Umfragen und Terminfindung (wie Doodle) innerhalb der Fraktion; **geheime Abstimmung** (siehe unten) | 2 | ✅ |
 | 14 | Anfragen an die Verwaltung | Gestellte Anfragen mit Frist verfolgen, Antwort ablegen, Erinnerung bei Überschreitung | 2 | ✅ |
 | 15 | Beschlusslage-Archiv | Was hat Rat oder Ausschuss wann beschlossen, was hat die Fraktion beschlossen; durchsuchbar, aus RIS und eigenen Protokollen gespeist | 2 | ✅ (RIS-Teil wie Modul 10) |
 | 16 | Kontakte | Vereine, Verwaltung, Presse, Initiativen; Ansprechpartner pro Thema, letzte Kontakte | 2 | ✅ |
 | 17 | Bürgeranliegen | Eingang per Formular oder E-Mail, Zuweisung an zuständiges Mitglied, Status bis zur Antwort | 3 | ✅ (Löschfrist für Name/Kontakt) |
 | 18 | Pressearbeit | Redaktionskalender, Entwürfe von Pressemitteilungen und Social-Media-Beiträgen mit Freigabe, Pressespiegel | 3 | ✅ (vier Augen) |
 | 19 | Finanzen | Budget der Fraktion, Spenden, Auslagen mit Belegfoto vom Handy und Freigabe zur Erstattung durch den Schatzmeister/Kassier; Kassenbericht | 3 | ✅ Fraktions- und Wahlkampfkasse getrennt |
+
+**Geheime Abstimmung (Modul 13, seit 24.11.2026, aus SchoolCraft FA-3304 entwickelt) ✅:** Antragsabstimmung, Meinungsbild und Umfrage
+können **geheim** laufen (Terminfindung nie). Die Stimmberechtigten werden beim Start als feste Liste gespeichert (jetzt bei allen
+Abstimmungen). Gespeichert wird getrennt: `Stimmvermerke` (Abstimmung, Person, Zeitpunkt; eindeutig je Person) und `Stimmzettel`
+(Abstimmung, Option) **ohne Person und ohne Zeitpunkt**, beide im selben Speichervorgang (eine Transaktion). Stimmzettel haben eine
+**zufällige Id (UUIDv4)** statt der zeitlich sortierbaren UUIDv7 und liegen in einer Tabelle `WITHOUT ROWID`, damit weder Id noch Lage in der
+Datei die Reihenfolge der Stimmabgabe verraten; ein Architekturtest sichert das ab. Kein Zwischenstand vor dem Ende, die Stimme ist endgültig
+(Rückfrage vor dem Absenden), das Ende kommt zur Frist, durch den Vorstand oder automatisch, sobald alle abgestimmt haben. Unter einer
+Mindestzahl von Stimmen (Standard 3) wird keine Verteilung gezeigt. Protokoll, Logs und Push nennen nie die Option. Offene (namentliche)
+Abstimmungen bleiben wie bisher: Zwischenstand sichtbar, Stimme bis zur Frist änderbar.
+
+**Ehrliche Grenze:** Gegen den Betreiber des Servers, der die Datenbank laufend beobachtet oder Anfragen mitschneidet, schützt das nicht
+vollständig (er könnte zwischen zwei Stimmabgaben vergleichen). Für Fraktionszwecke angemessen; eine kryptografische Lösung (blinde Signaturen,
+Ende-zu-Ende) wäre ein eigenes Vorhaben mit eigener Entscheidung.
+
+**⚑ Geschäftsordnung prüfen** (Einstellungen im Abschnitt `Geschaeftsordnung`, Annahmen): ob ein einzelnes Mitglied geheime Abstimmung verlangen
+kann (heute: wer die Abstimmung startet, entscheidet); bei welchen Abstimmungsarten sachkundige Bürger:innen mitstimmen
+(`SachkundigeStimmenMit`, Standard: alle außer Antragsabstimmungen); Mindestzahl der Stimmen für eine geheime Auswertung (`GeheimMindeststimmen`, 3).
 
 **RIS in Greven (Sternberg SD.NET):** Adresse `greven.ratsinfomanagement.net`. SD.NET kann eine OParl-Schnittstelle bereitstellen; ob sie in Greven freigeschaltet ist, ist weiter ungeklärt. OParl liefert nur öffentliche Inhalte (Gremien, Personen, Mitgliedschaften, Sitzungen, Tagesordnungen, Vorlagen, Dateien), und zwar nur lesend. Nichtöffentliche Unterlagen gibt es nur über den persönlichen Mandatsträger-Zugang; die App verlinkt dorthin, statt sie zu kopieren. Ist OParl nicht aktiv, sind ein iCal-Export der Sitzungstermine oder eine Anfrage der Fraktion an die Verwaltung, die Schnittstelle freizuschalten, die Wege. Bis dahin werden Mandate einmalig importiert und von Hand gepflegt. Das RIS steht hinter einem Bot-Schutz, der automatisierte Zugriffe blockt (Test am 15.11.2026: 403); für den Abgleich muss die IP des Servers dort freigegeben werden.
 
@@ -176,7 +194,7 @@ Rund ein Dutzend Kernentitäten tragen alle Module; „Gremium“ und „Termin�
 | Ressource | Name, Typ, Freigabe nötig | hat Buchungen |
 | Buchung | Von, Bis, Zweck | verbindet Ressource, Person, optional Termin |
 | Antrag | Titel, Status, aktuelle Fassung | hat Fassungen, Kommentare, Abstimmungen; Ziel-Gremium |
-| Abstimmung | Frage, Frist, Quorum, Ergebnis | hat Stimmen; gehört zu Antrag oder frei |
+| Abstimmung | Frage, Frist, Quorum, geheim, Ergebnis | hat Stimmberechtigte (feste Liste), Stimmen (namentlich) bzw. Stimmvermerke und Stimmzettel (geheim, ohne Verbindung); gehört zu Antrag oder frei |
 | Protokoll | Sitzung, Vorlage, TOPs, Anwesenheit, Notizen | gehört zu Termin; hat Beschlüsse und Aufgaben |
 | Kampagne | Name, Zeitraum, Status, Wahltag | hat Plakate, Gebiete, Termine, Tickets |
 | Plakat | Koordinaten, Motiv, Status, Foto, erfasst von | gehört zu Kampagne |

@@ -141,7 +141,10 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [Sitzungen](#sitzungen) – 14 Spalten
 - [Sitzungsanwesenheiten](#sitzungsanwesenheiten) – 4 Spalten
 - [Spenden](#spenden) – 9 Spalten
+- [Stimmberechtigungen](#stimmberechtigungen) – 3 Spalten
 - [Stimmen](#stimmen) – 5 Spalten
+- [Stimmvermerke](#stimmvermerke) – 4 Spalten
+- [Stimmzettel](#stimmzettel) – 3 Spalten
 - [Teilnahmen](#teilnahmen) – 6 Spalten
 - [TerminErinnerungen](#terminerinnerungen) – 4 Spalten
 - [TerminTodos](#termintodos) – 7 Spalten
@@ -153,7 +156,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [TodoVorlagenPunkte](#todovorlagenpunkte) – 4 Spalten
 - [Tops](#tops) – 14 Spalten
 - [UmfrageOptionen](#umfrageoptionen) – 5 Spalten
-- [Umfragen](#umfragen) – 15 Spalten
+- [Umfragen](#umfragen) – 16 Spalten
 - [Vertretungsanfragen](#vertretungsanfragen) – 8 Spalten
 - [Vertretungsfaelle](#vertretungsfaelle) – 9 Spalten
 - [Vertretungskandidaten](#vertretungskandidaten) – 4 Spalten
@@ -1028,6 +1031,18 @@ Klasse: `FraktionPerfekt.Domain.Finanzen.Spende` – Spendenbeleg: Spender und A
 | Spender | TEXT |  |  | B | Spender wie auf der Quittung (eingefroren, GoBD) |
 | Zweck | TEXT | ja |  | B |  |
 
+## Stimmberechtigungen
+
+Klasse: `FraktionPerfekt.Domain.Abstimmungen.Stimmberechtigung`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | B | Schlüssel (Zeilen-Id) |
+| PersonId | BLOB | ja | eindeutig | B | stimmberechtigte Person, beim Start der Abstimmung festgelegt (Wählerverzeichnis, eingefroren) |
+| UmfrageId | BLOB | ja | eindeutig | B |  |
+
+Indizes: (UmfrageId, PersonId) eindeutig
+
 ## Stimmen
 
 Klasse: `FraktionPerfekt.Domain.Abstimmungen.Stimme`
@@ -1041,6 +1056,31 @@ Klasse: `FraktionPerfekt.Domain.Abstimmungen.Stimme`
 | UmfrageId | BLOB | ja | Index | G |  |
 
 Indizes: (UmfrageId, PersonId)
+
+## Stimmvermerke
+
+Klasse: `FraktionPerfekt.Domain.Abstimmungen.Stimmvermerk` – Geheime Abstimmung: dass eine Person abgestimmt hat – ohne Option
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| Am | INTEGER | ja |  | G |  |
+| PersonId | BLOB | ja | eindeutig | G | hat abgestimmt (geheim: ohne Option, ohne Verweis auf den Stimmzettel) |
+| UmfrageId | BLOB | ja | eindeutig | G |  |
+
+Indizes: (UmfrageId, PersonId) eindeutig
+
+## Stimmzettel
+
+Klasse: `FraktionPerfekt.Domain.Abstimmungen.Stimmzettel` – Geheime Abstimmung: wie abgestimmt wurde – ohne Person, ohne Zeitpunkt, zufällige Id, Tabelle WITHOUT ROWID (Architekturtest)
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | zufällige Id (UUIDv4, nicht zeitlich sortierbar), Tabelle WITHOUT ROWID |
+| OptionId | BLOB | ja |  | G | gewählte Option – bewusst ohne Person und ohne Zeitpunkt |
+| UmfrageId | BLOB | ja | Index | G |  |
+
+Indizes: (UmfrageId)
 
 ## Teilnahmen
 
@@ -1233,6 +1273,7 @@ Klasse: `FraktionPerfekt.Domain.Abstimmungen.Umfrage`
 | ErstelltAm | INTEGER | ja |  | G |  |
 | ErstelltVonPersonId | BLOB | ja |  | G |  |
 | Frist | INTEGER | ja |  | G |  |
+| Geheim | INTEGER | ja |  | G | geheime Abstimmung: Stimmvermerk und Stimmzettel getrennt |
 | GewinnerOptionId | BLOB |  |  | G |  |
 | Mehrfachauswahl | INTEGER | ja |  | G |  |
 | QuorumProzent | INTEGER | ja |  | G |  |

@@ -11,6 +11,7 @@ public static class Registrierung
     public static IServiceCollection AddFraktionAnwendung(this IServiceCollection dienste, IConfiguration konfiguration)
     {
         dienste.Configure<FraktionOptionen>(konfiguration.GetSection(FraktionOptionen.Abschnitt));
+        dienste.Configure<GeschaeftsordnungOptionen>(konfiguration.GetSection(GeschaeftsordnungOptionen.Abschnitt));
         // Mandanten (Datenbank-Regel 6): je Mandant eigene Datenbank; Auswahl je Bereich (Anfrage), Standard = erster Mandant
         var mandanten = MandantOptionen.Lesen(konfiguration);
         Ortszeit.Festlegen(mandanten[0].Zeitzone);

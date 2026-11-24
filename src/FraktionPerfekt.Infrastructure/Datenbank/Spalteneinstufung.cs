@@ -612,6 +612,25 @@ public static class Spalteneinstufung
                 ["PersonId"] = (Spaltenart.Vorgang, null),
                 ["UmfrageId"] = (Spaltenart.Vorgang, null),
             },
+            ["Stimmberechtigungen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Beleg, "Schlüssel (Zeilen-Id)"),
+                ["PersonId"] = (Spaltenart.Beleg, "stimmberechtigte Person, beim Start der Abstimmung festgelegt (Wählerverzeichnis, eingefroren)"),
+                ["UmfrageId"] = (Spaltenart.Beleg, null),
+            },
+            ["Stimmvermerke"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["Am"] = (Spaltenart.Vorgang, null),
+                ["PersonId"] = (Spaltenart.Vorgang, "hat abgestimmt (geheim: ohne Option, ohne Verweis auf den Stimmzettel)"),
+                ["UmfrageId"] = (Spaltenart.Vorgang, null),
+            },
+            ["Stimmzettel"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "zufällige Id (UUIDv4, nicht zeitlich sortierbar), Tabelle WITHOUT ROWID"),
+                ["OptionId"] = (Spaltenart.Vorgang, "gewählte Option – bewusst ohne Person und ohne Zeitpunkt"),
+                ["UmfrageId"] = (Spaltenart.Vorgang, null),
+            },
             ["Teilnahmen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
@@ -738,6 +757,7 @@ public static class Spalteneinstufung
                 ["ErstelltVonPersonId"] = (Spaltenart.Vorgang, null),
                 ["Frist"] = (Spaltenart.Vorgang, null),
                 ["GewinnerOptionId"] = (Spaltenart.Vorgang, null),
+                ["Geheim"] = (Spaltenart.Vorgang, "geheime Abstimmung: Stimmvermerk und Stimmzettel getrennt"),
                 ["Mehrfachauswahl"] = (Spaltenart.Vorgang, null),
                 ["QuorumProzent"] = (Spaltenart.Vorgang, null),
                 ["Status"] = (Spaltenart.Vorgang, null),
@@ -840,5 +860,7 @@ public static class Spalteneinstufung
         ["Spenden"] = "Spendenbeleg: Spender und Anschrift wie auf der Quittung (eingefroren, GoBD)",
         ["Kassenbuchungen"] = "Kassenbuch: Buchungen (eingefroren, GoBD)",
         ["Auslagen"] = "Auslagenbeleg mit Datei (eingefroren nach Auszahlung)",
+        ["Stimmzettel"] = "Geheime Abstimmung: wie abgestimmt wurde – ohne Person, ohne Zeitpunkt, zufällige Id, Tabelle WITHOUT ROWID (Architekturtest)",
+        ["Stimmvermerke"] = "Geheime Abstimmung: dass eine Person abgestimmt hat – ohne Option",
     };
 }

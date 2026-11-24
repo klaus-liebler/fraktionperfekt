@@ -21,6 +21,10 @@ public sealed partial class FraktionDbContext
         Einfach<Umfrage>(modelBuilder, "Umfragen", b => b.HasIndex(u => u.Status));
         Einfach<UmfrageOption>(modelBuilder, "UmfrageOptionen", b => b.HasIndex(o => o.UmfrageId));
         Einfach<Stimme>(modelBuilder, "Stimmen", b => b.HasIndex(s => new { s.UmfrageId, s.PersonId }));
+        Einfach<Stimmberechtigung>(modelBuilder, "Stimmberechtigungen", b => b.HasIndex(x => new { x.UmfrageId, x.PersonId }).IsUnique());
+        // Geheime Abstimmung: Vermerk (wer, eindeutig je Person) und Stimmzettel (wie, ohne Person und Zeit; Tabelle WITHOUT ROWID, siehe Migration)
+        Einfach<Stimmvermerk>(modelBuilder, "Stimmvermerke", b => b.HasIndex(x => new { x.UmfrageId, x.PersonId }).IsUnique());
+        Einfach<Stimmzettel>(modelBuilder, "Stimmzettel", b => b.HasIndex(x => x.UmfrageId));
         Iteration4(modelBuilder);
     }
 

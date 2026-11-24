@@ -2,6 +2,7 @@ using System.Text;
 using FraktionPerfekt.Infrastructure.Datenbank;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FraktionPerfekt.Infrastructure.Tests;
 
@@ -69,6 +70,31 @@ public sealed class DatenbankArchitekturTests
         }
 
         funde.Except(Uebergang).ShouldBeEmpty("Statistik- bzw. Namensspalte neben einem Personenverweis ohne begründete Ausnahme");
+    }
+
+    /// <summary>
+    /// Geheime Abstimmung (FA-3304 „getrennt gespeichert, kein Rückschluss“): Der Stimmzettel hat weder eine Person noch einen Zeitpunkt, seine Id
+    /// ist zufällig und die Tabelle ohne rowid; keine andere Tabelle verbindet eine Option mit einer Person außer den namentlichen Stimmen.
+    /// </summary>
+    [Fact]
+    public async Task Geheime_Stimmzettel_ohne_Person_ohne_Zeit_ohne_rowid()
+    {
+        using (var db = Kontext())
+        {
+            var zettel = Modell(db).Single(t => t.Tabelle == "Stimmzettel").Spalten.Select(p => p.GetColumnName()).Order(StringComparer.Ordinal).ToList();
+            zettel.ShouldBe(["Id", "OptionId", "UmfrageId"]);
+            var verbinden = Modell(db).Where(t => t.Spalten.Any(p => p.GetColumnName() == "OptionId") && t.Spalten.Any(p => p.GetColumnName().EndsWith("PersonId", StringComparison.Ordinal)))
+                .Select(t => t.Tabelle).ToList();
+            verbinden.ShouldBe(["Stimmen"], "Nur namentliche Stimmen dürfen Option und Person verbinden");
+            Modell(db).Single(t => t.Tabelle == "Stimmvermerke").Spalten.ShouldNotContain(p => p.GetColumnName().Contains("Option", StringComparison.Ordinal));
+        }
+
+        await using var u = await TestUmgebung.ErzeugenAsync();
+        var sql = await u.InAsync(d => d.GetRequiredService<FraktionDbContext>().Database
+            .SqlQueryRaw<string>("SELECT sql AS Value FROM sqlite_master WHERE type = 'table' AND name = 'Stimmzettel'").ToListAsync());
+        sql.ShouldHaveSingleItem().ShouldContain("WITHOUT ROWID");
+        Domain.Abstimmungen.Stimmzettel Neu() => new(Guid.CreateVersion7(), Guid.CreateVersion7());
+        Enumerable.Range(0, 20).Select(_ => Neu().Id).ShouldAllBe(id => id.Version == 4);
     }
 
     [Fact]

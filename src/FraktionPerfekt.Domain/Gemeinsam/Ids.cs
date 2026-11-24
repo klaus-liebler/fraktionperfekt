@@ -10,6 +10,12 @@ public static class Ids
 
     public static Guid Neu() => Erzeuger.Value?.Invoke() ?? Guid.CreateVersion7();
 
+    /// <summary>
+    /// Zufällige Id (UUIDv4) ohne Zeitanteil – nur für Stimmzettel geheimer Abstimmungen, deren Reihenfolge nichts verraten darf. Bewusst
+    /// auch in Tests nicht deterministisch.
+    /// </summary>
+    public static Guid Zufaellig() => Guid.NewGuid();
+
     /// <summary>Für die Dauer des Bereichs (und nur im aktuellen asynchronen Ablauf) einen eigenen Erzeuger verwenden.</summary>
     public static IDisposable Verwenden(Func<Guid> erzeuger)
     {

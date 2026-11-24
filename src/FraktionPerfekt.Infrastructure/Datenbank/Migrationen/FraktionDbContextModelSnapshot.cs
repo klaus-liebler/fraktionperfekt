@@ -14,7 +14,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261117114400_HilfeImpressumKommentare";
+    public override string LastMigrationId => "20261124214405_GeheimeAbstimmung";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -145,6 +145,27 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("Protokoll");
             });
 
+        modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Stimmberechtigung", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("UmfrageId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("UmfrageId", "PersonId")
+                    .IsUnique();
+
+                b.ToTable("Stimmberechtigungen");
+            });
+
         modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Stimme", b =>
             {
                 b.Property<byte[]>("Id")
@@ -170,6 +191,50 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("UmfrageId", "PersonId");
 
                 b.ToTable("Stimmen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Stimmvermerk", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<long>("Am")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("PersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("UmfrageId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("UmfrageId", "PersonId")
+                    .IsUnique();
+
+                b.ToTable("Stimmvermerke");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Stimmzettel", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("OptionId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("UmfrageId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.HasKey("Id");
+
+                b.HasIndex("UmfrageId");
+
+                b.ToTable("Stimmzettel");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Abstimmungen.Umfrage", b =>
@@ -205,6 +270,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("BLOB");
 
                 b.Property<long>("Frist")
+                    .HasColumnType("INTEGER");
+
+                b.Property<bool>("Geheim")
                     .HasColumnType("INTEGER");
 
                 b.Property<byte[]>("GewinnerOptionId")
