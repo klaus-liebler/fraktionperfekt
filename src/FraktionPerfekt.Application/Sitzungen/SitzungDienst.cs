@@ -234,7 +234,8 @@ public sealed class SitzungDienst(
                 : "Notizen und Beschlüsse werden erst im Sitzungsmodus erfasst („Sitzung beginnen“).")) : NurLeitung,
             steuert ? (s.Status == Sitzungsstatus.Laufend ? Freigabe.Ja : Freigabe.Nein("Nur eine laufende Sitzung kann beendet werden.")) : NurLeitung,
             FreigebenFreigabe(s, wer),
-            s.Art == Sitzungsart.Gremienprotokoll ? null : await BeschlussfaehigkeitAsync(s, termin, abbruch),
+            s.Art == Sitzungsart.Gremienprotokoll || s.Status is Sitzungsstatus.Vorbereitung or Sitzungsstatus.Eingeladen ? null
+                : await BeschlussfaehigkeitAsync(s, termin, abbruch),
             await AbstimmungenAsync(topIds, abbruch),
             !steuert ? NurLeitung
                 : s.Status != Sitzungsstatus.Laufend ? Freigabe.Nein("Geheim abgestimmt wird in der laufenden Sitzung.")

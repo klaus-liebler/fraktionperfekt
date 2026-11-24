@@ -225,8 +225,21 @@ Schulspezifisches (Stundenplan, Klassenbuch, Zeugnisse, Familienmodell, Aufnahme
 „Heute“ hat Ein-Tipp-Aktionen, Arbeit läuft überwiegend am Handy), Schlüsselverwaltung, Massenaktionen mit Vier-Augen-Freigabe (Pressefreigabe hat schon
 vier Augen), Signatur ausgehender Dokumente (Anträge gehen über das RIS bzw. die Verwaltung), SmartStatistics.
 
+## Rückfluss nach SchoolCraft (Vorschlag, dort noch nichts geändert)
+
+- **FA-3304 geheime Wahl digital:** Verfahren aus Punkt 1 übernehmen – Stimmvermerk (wer) und Stimmzettel (wie) getrennt in einem Speichervorgang,
+  Stimmzettel mit UUIDv4 als Schlüssel in einer Tabelle `WITHOUT ROWID` (in SchoolCraft prüfen, ob die Datenbank das gleich abbildet), feste
+  Liste der Wahlberechtigten beim Start, kein Zwischenstand, Stimme endgültig mit Rückfrage, Ende automatisch, wenn alle abgestimmt haben,
+  Mindestzahl für die Auswertung, Architekturtest „keine Tabelle verbindet Option und Person“, ehrliche Grenze in Hilfe und Spezifikation.
+- **Wahlgang als Abstimmungsart** mit Optionen, die die Person tragen, und Mehrheitsregeln als reine Funktion (`Mehrheit`) – passt zur Präsenzwahl
+  mit Erfassung in SchoolCraft (Modul 33) als zweiter Weg neben „Stimmzettel auszählen und erfassen“.
+- **Sitzungsabstimmung nur für Anwesende** (Punkt 7) für Konferenzen und Schulkonferenz; **Beamer-Link je Sitzung** als leichte Variante der
+  Info-Monitore.
+- Kleinigkeiten: `Rueckfragen.WennBestaetigtAsync`, `GrundDialog` (Begründung nur, wenn die Korrekturregel sie verlangt), `Personenwahl` als
+  Radzen-Auswahl mit `Unscharf` statt eigener Vorschlagsliste, Testmuster „jede folgenreiche Schaltfläche fragt nach“.
+
 ## Nächster Schritt
 
-Klaus wählt die Punkte aus. Je Punkt: Konzept (`docs/konzept.md`) und Hilfe im selben Commit, Tests (Rechte, Grenzfälle), Browserprüfung inkl. 390 px,
+Punkte 1 bis 12 sind umgesetzt (siehe „Umgesetzt“ je Punkt, Drehbuch `docs/abnahme-9.md`). Offen: 13 und 14 (nicht freigegeben). Je Punkt galt: Konzept (`docs/konzept.md`) und Hilfe im selben Commit, Tests (Rechte, Grenzfälle), Browserprüfung inkl. 390 px,
 Schemaänderungen nur als zusätzliche Migration. Lokal auf `main` committen, kein Push ohne Freigabe. Was dabei neu entsteht (geheime Abstimmung),
 wird anschließend nach SchoolCraft (FA-3304) zurückgespielt.

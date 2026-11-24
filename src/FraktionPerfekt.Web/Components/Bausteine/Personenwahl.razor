@@ -25,9 +25,18 @@
     [Parameter] public string? AriaLabel { get; set; }
 
     private IEnumerable<TItem> gefiltert = [];
+    private IEnumerable<TItem>? bisherigeDaten;
     private string filter = "";
 
-    protected override void OnParametersSet() => Filtern();
+    // Nur neu filtern, wenn sich die Daten ändern – eine neue Liste bei jedem Rendern bringt die Auswahl der Radzen-Liste durcheinander.
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(bisherigeDaten, Data))
+        {
+            bisherigeDaten = Data;
+            Filtern();
+        }
+    }
 
     private void Laden(LoadDataArgs args)
     {
@@ -40,8 +49,6 @@
 
     private async Task GeaendertAsync(Guid? wert)
     {
-        filter = "";
-        Filtern();
         Value = wert;
         await ValueChanged.InvokeAsync(wert);
     }
