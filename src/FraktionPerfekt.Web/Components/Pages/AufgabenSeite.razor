@@ -39,8 +39,8 @@
     </div>
     <div class="fp-form">
         <div class="fp-field"><label class="fp-lbl" for="pate-feld">Politikfeld</label><RadzenTextBox id="pate-feld" @bind-Value="feld" /></div>
-        <div class="fp-field"><label class="fp-lbl">Pate/Patin</label><RadzenDropDown TValue="Guid?" @bind-Value="pate" Data="@personen" TextProperty="Sortiername" ValueProperty="Id" AllowFiltering="true" /></div>
-        <div class="fp-field"><label class="fp-lbl">Vertretung</label><RadzenDropDown TValue="Guid?" @bind-Value="vertretung" Data="@personen" TextProperty="Sortiername" ValueProperty="Id" AllowClear="true" AllowFiltering="true" /></div>
+        <div class="fp-field"><label class="fp-lbl">Pate/Patin</label><Personenwahl TItem="PersonZeile" @bind-Value="pate" Data="@personen" Suchtext="@(p => p.Name)" TextProperty="Sortiername" AriaLabel="Pate/Patin" /></div>
+        <div class="fp-field"><label class="fp-lbl">Vertretung</label><Personenwahl TItem="PersonZeile" @bind-Value="vertretung" Data="@personen" Suchtext="@(p => p.Name)" TextProperty="Sortiername" AllowClear="true" AriaLabel="Vertretung" /></div>
     </div>
     <BegruendeterButton Text="Themenpate speichern" Size="ButtonSize.Small"
                         Freigabe="@Rechte.SitzungenSteuern(benutzer?.Rolle).Und(() => string.IsNullOrWhiteSpace(feld) || pate is null ? Freigabe.Nein("Politikfeld und Person wählen.") : Freigabe.Ja)"

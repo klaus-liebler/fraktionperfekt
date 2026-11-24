@@ -1,0 +1,48 @@
+@*
+    Auswahl einer Person mit fehlertoleranter Filterung (aus SchoolCraft FA-3227): Tippen filtert nach Unscharf – Umlaute (ä = ae), ß/ss,
+    Akzente, Präfixe und kleine Tippfehler („Nienteidt“ findet Nientiedt, „Kuehlert“ findet Kühlert); beste Treffer zuerst.
+*@
+@typeparam TItem
+@using FraktionPerfekt.Domain.Gemeinsam
+
+<RadzenDropDown TValue="Guid?" Value="@Value" ValueChanged="@GeaendertAsync" Data="@gefiltert" TextProperty="@TextProperty" ValueProperty="@ValueProperty"
+                AllowFiltering="true" LoadData="@Laden" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Placeholder="@Placeholder"
+                AllowClear="@AllowClear" Style="@Style" aria-label="@AriaLabel" />
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<TItem> Data { get; set; } = [];
+
+    /// <summary>Text, gegen den gesucht wird (z. B. „Titel Vorname Nachname“).</summary>
+    [Parameter, EditorRequired] public Func<TItem, string> Suchtext { get; set; } = _ => "";
+
+    [Parameter] public string TextProperty { get; set; } = "Anzeigename";
+    [Parameter] public string ValueProperty { get; set; } = "Id";
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public EventCallback<Guid?> ValueChanged { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public bool AllowClear { get; set; }
+    [Parameter] public string? Style { get; set; }
+    [Parameter] public string? AriaLabel { get; set; }
+
+    private IEnumerable<TItem> gefiltert = [];
+    private string filter = "";
+
+    protected override void OnParametersSet() => Filtern();
+
+    private void Laden(LoadDataArgs args)
+    {
+        filter = args.Filter ?? "";
+        Filtern();
+    }
+
+    private void Filtern()
+        => gefiltert = string.IsNullOrWhiteSpace(filter) ? Data.ToList() : Unscharf.Ordnen(filter, Data, Suchtext, 30);
+
+    private async Task GeaendertAsync(Guid? wert)
+    {
+        filter = "";
+        Filtern();
+        Value = wert;
+        await ValueChanged.InvokeAsync(wert);
+    }
+}

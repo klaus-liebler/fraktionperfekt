@@ -55,8 +55,8 @@
                 <div class="fp-row">
                     @if (z.Zuweisen.Erlaubt)
                     {
-                        <RadzenDropDown TValue="Guid?" Value="@(wahl.GetValueOrDefault(a.Id) ?? z.VorschlagPersonId)" Change="@(v => wahl[a.Id] = (Guid?)v)" Data="@personen" TextProperty="Anzeigename" ValueProperty="Id"
-                                        Placeholder="Person wählen" Style="width:220px" aria-label="Zuständige Person" />
+                        <Personenwahl TItem="Person" Value="@(wahl.GetValueOrDefault(a.Id) ?? z.VorschlagPersonId)" ValueChanged="@(v => wahl[a.Id] = v)" Data="@personen" Suchtext="@(p => p.Anzeigename)"
+                                      Placeholder="Person wählen" Style="width:220px" AriaLabel="Zuständige Person" />
                     }
                     <BegruendeterButton Text="@(z.VorschlagPersonId is not null && wahl.GetValueOrDefault(a.Id) is null ? $"Zuweisen (Themenpate {z.Vorschlag})" : "Zuweisen")" Size="ButtonSize.Small"
                                         Freigabe="@(z.Zuweisen.Erlaubt && (wahl.GetValueOrDefault(a.Id) ?? z.VorschlagPersonId) is null ? Freigabe.Nein("Bitte eine Person wählen.") : z.Zuweisen)"

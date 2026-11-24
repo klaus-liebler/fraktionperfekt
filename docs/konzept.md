@@ -176,6 +176,9 @@ Die App soll sich wie eine native App anfühlen und ohne Schulung nutzbar sein. 
 | eine Kampagne angelegt ist | Termin anlegen, Gebiete anlegen, Kampagne auf „aktiv“ setzen |
 | der Wahltag einer Kampagne vorbei ist | Plakate abhängen (Abhängliste am Handy) |
 
+**Fehlertolerante Suche** (aus SchoolCraft, seit 24.11.2026) ✅: Personen, Kontakte und Namen in Bürgeranliegen werden wie getippt gefunden
+(Groß/klein, ä = ae, ß = ss, Akzente, Präfixe, ein Tippfehler, ab acht Buchstaben zwei), in der globalen Suche und in jeder Personenauswahl.
+
 Die Vorschläge sind feste Regeln, keine KI; das macht sie vorhersehbar. Eine KI-Unterstützung (z. B. Antragsentwurf aus Stichpunkten) kann später dazukommen.
 
 ## Datenmodell

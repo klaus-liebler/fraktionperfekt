@@ -149,3 +149,28 @@ public sealed class FeinschliffTests
         _ = typeof(KampagnenDienst);
     }
 }
+
+/// <summary>Fehlertolerante Personen- und Kontaktsuche (Übertragung SchoolCraft, Punkt 4).</summary>
+public sealed class UnscharfeSucheTests
+{
+    [Fact]
+    public async Task Globale_Suche_und_Kontakte_finden_trotz_Tippfehlern_und_Umlauten()
+    {
+        await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
+        var suche = (string q) => u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Suche.SucheDienst>().SuchenAsync(q));
+        (await suche("Nienteidt")).ShouldContain(t => t.Bereich == "Personen" && t.Titel.Contains("Nientiedt", StringComparison.Ordinal));
+        (await suche("Kuehlert")).ShouldContain(t => t.Bereich == "Personen" && t.Titel.Contains("Kühlert", StringComparison.Ordinal));
+        (await suche("Klaus")).Where(t => t.Bereich == "Personen").Select(t => t.Titel).ShouldContain(t => t.Contains("Liebler", StringComparison.Ordinal));
+
+        var kontakte = u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Politik.KontaktDienst>().ListeAsync(null));
+        var erster = (await kontakte).First().Kontakt.Name;
+        var vertippt = erster.Length > 5 ? erster[..2] + erster[3] + erster[2] + erster[4..] : erster;   // zwei Buchstaben vertauscht
+        (await u.InAsync(d => d.GetRequiredService<FraktionPerfekt.Application.Politik.KontaktDienst>().ListeAsync(vertippt)))
+            .ShouldContain(z => z.Kontakt.Name == erster);
+
+        // Kampagnenteam findet keine Personen (Rechte des Moduls bleiben)
+        await u.AnmeldenAsync("fbaeumer");
+        (await suche("Kuehlert")).ShouldNotContain(t => t.Bereich == "Personen");
+    }
+}

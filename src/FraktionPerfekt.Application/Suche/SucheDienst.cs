@@ -4,6 +4,7 @@ using FraktionPerfekt.Application.Sicherheit;
 using FraktionPerfekt.Application.Termine;
 using FraktionPerfekt.Application.Wissen;
 using FraktionPerfekt.Domain.Antraege;
+using FraktionPerfekt.Domain.Gemeinsam;
 using FraktionPerfekt.Domain.Personen;
 using FraktionPerfekt.Domain.Wissen;
 
@@ -53,7 +54,8 @@ public sealed class SucheDienst(
 
         if (!helfer)
         {
-            Hinzu((await stammdaten.PersonenAsync(abbruch)).Where(p => p.Aktiv && Passt(p.Vorname, p.Nachname, p.Anzeigename))
+            // Personen fehlertolerant (Umlaute, Tippfehler, Präfix: „Nienteidt“, „Kuehlert“), beste Treffer zuerst
+            Hinzu(Unscharf.Ordnen(anfrage!, (await stammdaten.PersonenAsync(abbruch)).Where(p => p.Aktiv), p => $"{p.Titel} {p.Vorname} {p.Nachname}", JeBereich)
                 .Select(p => new Suchergebnis("Personen", p.Anzeigename, null, $"personen/{p.Id}")));
             Hinzu((await stammdaten.GremienAsync(abbruch)).Where(g => g.Aktiv && Passt(g.Name, g.Kurzname))
                 .Select(g => new Suchergebnis("Gremien", g.Name, g.Kurzname, $"gremien/{g.Id}")));
@@ -64,7 +66,7 @@ public sealed class SucheDienst(
                     $"beschluesse?q={Uri.EscapeDataString(anfrage!)}")));
             Hinzu((await anfragen.ListeAsync(abbruch)).Where(z => Passt(z.Anfrage.Titel, z.Anfrage.Text, z.Anfrage.Thema))
                 .Select(z => new Suchergebnis("Anfragen", z.Anfrage.Titel, z.Anfrage.Status.ToString(), "anfragen")));
-            Hinzu((await anliegen.ListeAsync(abbruch)).Where(z => Passt(z.Anliegen.Betreff, z.Anliegen.Text, z.Anliegen.Thema))
+            Hinzu((await anliegen.ListeAsync(abbruch)).Where(z => Passt(z.Anliegen.Betreff, z.Anliegen.Text, z.Anliegen.Thema) || Unscharf.Passt(anfrage!, z.Anliegen.Name))
                 .Select(z => new Suchergebnis("Bürgeranliegen", z.Anliegen.Betreff, z.Anliegen.Status.ToString(), "anliegen")));
             Hinzu((await presse.MitteilungenAsync(abbruch)).Where(z => Passt(z.Mitteilung.Titel, z.Mitteilung.Text, z.Mitteilung.Thema))
                 .Select(z => new Suchergebnis("Presse", z.Mitteilung.Titel, z.Mitteilung.Status.ToString(), "presse")));

@@ -28,8 +28,8 @@
                     <BegruendeterButton Text="Übernehmen" Size="ButtonSize.ExtraSmall" Freigabe="@z.Uebernehmen" Click="@(() => Aktion.InvokeAsync((s => s.UebernehmenAsync(a.Id), "Übernommen.")))" />
                     <BegruendeterButton Text="Erledigt" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Erledigen" Click="@(() => Aktion.InvokeAsync((s => s.ErledigenAsync(a.Id, vermerk.GetValueOrDefault(a.Id)), "Erledigt.")))" />
                     <BegruendeterButton Text="Zurück in den Korb" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.ZurueckInKorb" Click="@(() => Aktion.InvokeAsync((s => s.ZurueckInKorbAsync(a.Id), "Zurück im Korb.")))" />
-                    <RadzenDropDown TValue="Guid?" Data="@Personen" TextProperty="Sortiername" ValueProperty="Id" Placeholder="zuweisen an …" AllowFiltering="true" Style="width:180px"
-                                    Change="@(v => v is Guid p ? Aktion.InvokeAsync((s => s.ZuweisenAsync(a.Id, p), "Zugewiesen (Push an die Person).")) : Task.CompletedTask)" />
+                    <Personenwahl TItem="PersonZeile" Data="@Personen" Suchtext="@(p => p.Name)" TextProperty="Sortiername" Placeholder="zuweisen an …" Style="width:180px"
+                                  AriaLabel="Aufgabe zuweisen an" ValueChanged="@(v => v is Guid p ? Aktion.InvokeAsync((s => s.ZuweisenAsync(a.Id, p), "Zugewiesen (Push an die Person).")) : Task.CompletedTask)" />
                     <RadzenTextBox Placeholder="Vermerk" Style="width:160px" Change="@((string v) => vermerk[a.Id] = v)" />
                 </div>
             }

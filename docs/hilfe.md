@@ -123,6 +123,12 @@ zahlt aus.
 **Kalender-Abo und Push**: persönlichen Abo-Link erzeugen und in der Kalender-App hinzufügen (ein neuer Link sperrt den
 alten); Push-Mitteilungen einschalten.
 
+## Suchen
+
+Die Suche oben findet Personen, Kontakte und Bürgeranliegen auch bei Tippfehlern und Umlauten: „Nienteidt“ findet Nientiedt,
+„Kuehlert“ findet Kühlert, „Waschko“ findet Waschkowitz-Biggeleben. Dasselbe gilt beim Zuweisen von Aufgaben und Anliegen und bei
+Themenpaten: In der Auswahl einfach den Namen tippen. Jeder Bereich zeigt nur, was im jeweiligen Modul sichtbar ist.
+
 ## Rückfragen
 
 Was sich nicht einfach zurücknehmen lässt – Löschen, Stornieren, Widerrufen, Zurückziehen, eine Vertretung absagen, eine Sitzung beenden,

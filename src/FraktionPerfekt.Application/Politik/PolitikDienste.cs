@@ -4,6 +4,7 @@ using FraktionPerfekt.Application.Oberflaeche;
 using FraktionPerfekt.Application.Postausgang;
 using FraktionPerfekt.Application.Protokoll;
 using FraktionPerfekt.Application.Sicherheit;
+using FraktionPerfekt.Domain.Gemeinsam;
 using FraktionPerfekt.Domain.Aufgaben;
 using FraktionPerfekt.Domain.Personen;
 using FraktionPerfekt.Domain.Politik;
@@ -191,9 +192,10 @@ public sealed class KontaktDienst(IDaten daten, IAuditProtokoll protokoll, IAktu
             return [];
         }
 
-        var woerter = (suche ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return (await daten.ListeAsync(daten.Menge<Kontakt>().OrderBy(k => k.Name).ThenBy(k => k.Id), abbruch))
-            .Where(k => woerter.All(w => $"{k.Name} {k.Organisation} {k.Funktion} {k.Themen}".Contains(w, StringComparison.CurrentCultureIgnoreCase)))
+        // Fehlertolerant (aus SchoolCraft): Umlaute, Tippfehler, Präfixe; beste Treffer zuerst
+        var alle = await daten.ListeAsync(daten.Menge<Kontakt>().OrderBy(k => k.Name).ThenBy(k => k.Id), abbruch);
+        static string Text(Kontakt k) => $"{k.Name} {k.Organisation} {k.Funktion} {k.Themen}";
+        return (string.IsNullOrWhiteSpace(suche) ? alle : Unscharf.Ordnen(suche, alle, Text, int.MaxValue))
             .Select(k => new KontaktZeile(k, k.AngelegtVonPersonId == wer.PersonId || wer.Rolle is Rolle.Administration
                 ? Freigabe.Ja
                 : Freigabe.Nein("Löschen kann, wer angelegt hat, oder die Geschäftsführung.")))

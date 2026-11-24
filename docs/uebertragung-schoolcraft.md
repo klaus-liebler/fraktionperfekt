@@ -111,6 +111,10 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 - **FraktionPerfekt heute:** Suche per `Contains` – „Nienteidt“ oder „Kuehlert“ finden nichts. Betroffen: Personen, Kontakte, Bürgeranliegen, Zuweisung von Aufgaben und Themenpaten.
 - **Anpassung:** einfacher als in VibeVHS: Personen und Kontakte liegen ohnehin im Speicher, also `Unscharf` direkt übernehmen, kein SQL-Umbau.
 - **Aufwand:** S.
+- **Umgesetzt (24.11.2026) ✅:** `Unscharf.cs` unverändert nach `Domain/Gemeinsam` übernommen. Globale Suche (Personen sortiert nach Bewertung,
+  Bürgeranliegen auch über den Namen), Kontaktsuche (ganze Zeile unscharf, beste zuerst) und ein Baustein `Personenwahl` (Radzen-Auswahl mit
+  unscharfem Filter) für Aufgabe zuweisen, Themenpate/Vertretung und Bürgeranliegen zuweisen. Statt des SchoolCraft-Bausteins mit eigener
+  Vorschlagsliste die vorhandene Radzen-Auswahl mit `LoadData`. Tests: `UnscharfTests`, `UnscharfeSucheTests`.
 
 ### 5 Tastenkürzel als `<kbd>` (FA-3236)
 
