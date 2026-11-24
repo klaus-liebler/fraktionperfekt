@@ -41,10 +41,10 @@ internal static class Sicherheitsheader
     }
 
     /// <summary>Ohne Anmeldung erreichbar: hier greift das Rate-Limit je Adresse.</summary>
-    public static readonly string[] OeffentlichePfade = ["/anmelden", "/kalender/abo"];
+    public static readonly string[] OeffentlichePfade = ["/anmelden", "/kalender/abo", "/beamer"];
 
     /// <summary>Seiten mit Personendaten, Abwesenheiten oder Protokoll: nie im Browser- oder Proxy-Cache ablegen.</summary>
-    private static readonly string[] OhneCache = ["/personen", "/abwesenheit", "/vertretungen", "/protokoll", "/postausgang", "/kalender/abo", "/handy", "/betrieb"];
+    private static readonly string[] OhneCache = ["/personen", "/abwesenheit", "/vertretungen", "/protokoll", "/postausgang", "/kalender/abo", "/handy", "/betrieb", "/beamer"];
 
     public static IApplicationBuilder UseSicherheitsheader(this IApplicationBuilder app)
         => app.Use(async (kontext, weiter) =>

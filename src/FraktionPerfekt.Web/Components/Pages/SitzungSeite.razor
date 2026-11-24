@@ -116,6 +116,30 @@ else
                     <BegruendeterButton Text="Sitzung beenden" Icon="stop" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Beenden" Click="@(() => Dialoge.WennBestaetigtAsync("Die Sitzung wird beendet; Anwesenheit, Notizen und Beschlüsse gehen als Entwurf ins Protokoll.", "Sitzung beenden?", "Beenden", () => AusfuehrenAsync(s => s.BeendenAsync(Id), "Sitzung beendet. Das Protokoll liegt als Entwurf vor.", "protokoll")))" />
                 </div>
             </div>
+            <details>
+                <summary>Beamer</summary>
+                <p class="fp-small">Der Beamer zeigt ohne Anmeldung Tagesordnung, laufenden TOP, Beschlussfähigkeit und Abstimmungsergebnisse – keine Notizen,
+                    Unterlagen oder Namen. Die Adresse ist geheim, gilt bis zum Ende des Sitzungstags und lässt sich sperren; ein neuer Link sperrt den alten.</p>
+                @if (beamerLink is { } link)
+                {
+                    <p class="fp-small"><b>Adresse für den Beamer</b> (nur jetzt sichtbar, gültig bis @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(link.GueltigBis).ToString("dd.MM. HH:mm") Uhr):</p>
+                    <input class="fp-input" readonly value="@link.Adresse" data-markieren style="width:100%" aria-label="Adresse für den Beamer" />
+                }
+                else if (beamerBis is { } bis)
+                {
+                    <p class="fp-small">Ein Beamer-Link ist gültig bis @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(bis).ToString("dd.MM. HH:mm") Uhr.</p>
+                }
+                <div class="fp-row">
+                    <BegruendeterButton Text="Beamer-Link erzeugen" Icon="cast" Size="ButtonSize.Small" Freigabe="@d.Bearbeiten"
+                                        Click="@(() => Dialoge.WennBestaetigtAsync(beamerBis is null ? "Es entsteht eine geheime Adresse für den Beamer." : "Es entsteht eine neue Adresse; der bisherige Beamer-Link funktioniert dann nicht mehr.", "Beamer-Link erzeugen?", "Erzeugen", BeamerAsync))" />
+                    <a class="fp-link" href="beamer/vorschau/@d.Sitzung.Id" target="_blank" rel="noopener">Vorschau</a>
+                    @if (beamerBis is not null)
+                    {
+                        <BegruendeterButton Text="Beamer-Link sperren" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Bearbeiten"
+                                            Click="@(() => Dialoge.WennBestaetigtAsync("Der Beamer zeigt danach nichts mehr an.", "Beamer-Link sperren?", "Sperren", BeamerSperrenAsync))" />
+                    }
+                </div>
+            </details>
             <h3>Anwesenheit</h3>
             @if (d.Beschlussfaehigkeit is { } bf)
             {
@@ -161,6 +185,7 @@ else
                         @if (ab.Umfrage.Status == FraktionPerfekt.Domain.Abstimmungen.Umfragestatus.Offen)
                         {
                             <span>@ab.Teilnehmende von @ab.Umfrage.Berechtigte haben abgestimmt (Frist @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(ab.Umfrage.Frist).ToString("HH:mm") Uhr). </span>
+                            <a href="beamer/vorschau/@d.Sitzung.Id" target="_blank" rel="noopener">Stand wie auf dem Beamer</a>
                         }
                         else
                         {
@@ -282,6 +307,33 @@ else
     {
         d = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<SitzungDienst>().DetailAsync(Id));
         protokolltext = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<SitzungDienst>().ProtokolltextAsync(Id));
+        beamerBis = d is { Bearbeiten.Erlaubt: true } ? await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BeamerDienst>().GueltigBisAsync(Id)) : null;
+    }
+
+    private BeamerLink? beamerLink;
+    private DateTimeOffset? beamerBis;
+
+    private async Task BeamerAsync()
+    {
+        try
+        {
+            beamerLink = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BeamerDienst>().LinkErzeugenAsync(Id));
+            (meldung, fehler) = ("Beamer-Link erzeugt. Adresse am Beamer öffnen; sie wird nur jetzt angezeigt.", false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            (meldung, fehler) = (ex.Message, true);
+        }
+
+        await LadenAsync();
+    }
+
+    private async Task BeamerSperrenAsync()
+    {
+        await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<BeamerDienst>().SperrenAsync(Id));
+        beamerLink = null;
+        (meldung, fehler) = ("Beamer-Link gesperrt.", false);
+        await LadenAsync();
     }
 
     private async Task AusfuehrenAsync(Func<SitzungDienst, Task> aktion, string? erfolg = null, string? danachReiter = null)

@@ -101,6 +101,10 @@ public sealed partial class AppStartTests : IAsyncLifetime
         // Ohne Anmeldung: Umleitung zur Anmeldung; Kalender-Abo mit falschem Token: 404.
         (await http.GetStringAsync("", abbruch)).ShouldContain("Testanmeldung");
         (await http.GetAsync("kalender/abo/falsch.ics", abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        var beamer = await http.GetAsync("beamer/falsch", abbruch); // ohne Anmeldung erreichbar, aber nur mit gültigem Token
+        beamer.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await beamer.Content.ReadAsStringAsync(abbruch)).ShouldContain("gilt nicht");
+        beamer.Headers.CacheControl!.NoStore.ShouldBeTrue();
         (await http.GetAsync("manifest.webmanifest", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetAsync("sw.js", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await http.GetAsync("offline.html", abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);

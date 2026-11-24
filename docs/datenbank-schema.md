@@ -104,6 +104,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [AntragKommentare](#antragkommentare) – 8 Spalten
 - [Aufgaben](#aufgaben) – 16 Spalten
 - [Auslagen](#auslagen) – 15 Spalten
+- [BeamerZugaenge](#beamerzugaenge) – 7 Spalten
 - [Beschluesse](#beschluesse) – 15 Spalten
 - [Besetzungsanfragen](#besetzungsanfragen) – 11 Spalten
 - [Besetzungsmeldungen](#besetzungsmeldungen) – 5 Spalten
@@ -360,6 +361,22 @@ Klasse: `FraktionPerfekt.Domain.Finanzen.Auslage` – Auslagenbeleg mit Datei (e
 | Zweck | TEXT | ja |  | B |  |
 
 Indizes: (Status)
+
+## BeamerZugaenge
+
+Klasse: `FraktionPerfekt.Domain.Sitzungen.BeamerZugang`
+
+| Spalte | Typ | Pflicht | Schlüssel/Verweis | Einstufung | Bedeutung |
+|---|---|---|---|---|---|
+| Id | BLOB | ja | PK | G | Schlüssel (Zeilen-Id) |
+| ErstelltAm | INTEGER | ja |  | G |  |
+| ErstelltVonPersonId | BLOB | ja |  | G |  |
+| GesperrtAm | INTEGER |  |  | G |  |
+| GueltigBis | INTEGER | ja |  | G |  |
+| SitzungId | BLOB | ja | Index | G |  |
+| TokenHash | TEXT(64) | ja | eindeutig | G | SHA-256 des Beamer-Tokens (das Token selbst wird nicht gespeichert) |
+
+Indizes: (SitzungId); (TokenHash) eindeutig
 
 ## Beschluesse
 

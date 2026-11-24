@@ -164,6 +164,10 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 - **Für die Fraktion:** Beamer in der Fraktionssitzung zeigt Tagesordnung, laufenden TOP und das Ergebnis einer Abstimmung, sobald sie beendet ist – ohne dass jemand am Beamer angemeldet sein muss. Ein Monitor im Fraktionsbüro ist eher nicht nötig.
 - **Anpassung:** nur Inhalte der laufenden Sitzung, keine nichtöffentlichen Unterlagen, keine Abwesenheitsgründe.
 - **Aufwand:** S–M.
+- **Umgesetzt (24.11.2026) ✅:** `BeamerZugang` (Prüfwert, gültig bis, gesperrt; Zusatzmigration `BeamerZugaenge`), `BeamerDienst`, Endpunkte
+  `/beamer/{token}` (ohne Anmeldung, Rate-Limit, `no-store`, `noindex`) und `/beamer/vorschau/{sitzungId}`. Abweichend von SchoolCraft: statt
+  Echtzeit über SignalR/`monitor.js` lädt die schlichte Seite alle zehn Sekunden neu (kein Skript nötig); statt 30-Minuten-Vorschau-Token eine
+  Vorschau für Angemeldete; ein Link je Sitzung statt dauerhafter Monitore. Tests: `BeamerTests`, Webtest auf ungültigen Token.
 
 ### 9 Übungsinstanzen über die Mandanten (FK-14)
 

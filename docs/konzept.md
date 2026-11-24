@@ -95,6 +95,10 @@ Zeitraum, Beschreibung, Status (Planung, aktiv, abgeschlossen) und optional eine
   Stimmberechtigte (nicht bei Gremienprotokollen, dort zählt das ganze Gremium); **„Geheim abstimmen“** startet je TOP ein geheimes Meinungsbild nur für
   die Anwesenden mit kurzer Frist (⚑ `SitzungAbstimmungMinuten`, 10) – alle stimmen am Handy, das Ergebnis wird automatisch Beschluss des TOP; Rückfall
   **Stimmzettel auszählen und erfassen** (Vermerk im Beschluss).
+- ✅ **Beamer-Ansicht** (seit 24.11.2026, aus SchoolCraft „Info-Monitore“): Aus dem Sitzungsmodus erzeugt der Vorstand eine geheime Adresse für den
+  Beamer (`/beamer/…`, ohne Anmeldung, nur der SHA-256-Prüfwert wird gespeichert, ein neuer Link sperrt den alten, gültig bis zum Ende des Sitzungstags,
+  sperrbar, Rate-Limit). Der Beamer zeigt Tagesordnung, laufenden TOP, Beschlussfähigkeit, laufende Abstimmungen („12 von 18 haben abgestimmt“) und
+  Ergebnisse, lädt sich alle zehn Sekunden neu – keine Notizen, Unterlagen, Namen oder Abwesenheitsgründe. Vorschau für Angemeldete mit Sitzungsrechten.
 - Vorgegeben, aber flexibel: TOPs umsortieren, einfügen, vertagen oder zusammenlegen; Vertagtes wandert in die nächste Einladung.
 - Nach der Sitzung: Protokoll als Entwurf, Freigabe durch Sitzungsleitung, Versand und Ablage; Beschlussliste und offene Aufgaben sind fraktionsweit durchsuchbar.
 - Dieselbe Protokoll-Engine dient auch den eigenen Ausschussprotokollen (Modul 7), nur mit anderer Vorlage.

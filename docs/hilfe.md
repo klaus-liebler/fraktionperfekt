@@ -84,6 +84,12 @@ Beschlusses passt FraktionPerfekt auf, dass nicht mehr Stimmen eingetragen werde
 Frage eingeben → starten → alle Anwesenden bekommen die Frage aufs Handy und stimmen geheim ab; sobald alle abgestimmt haben (oder nach zehn Minuten),
 steht das Ergebnis als Beschluss im Protokoll. Ohne Handys: Stimmzettel austeilen, auszählen und beim Beschluss **geheim mit Stimmzetteln** ankreuzen.
 
+### Beamer in der Sitzung
+
+Im Sitzungsmodus unter **Beamer** → **Beamer-Link erzeugen**: Die angezeigte Adresse am Rechner des Beamers öffnen (eine Anmeldung ist dort nicht
+nötig). Der Beamer zeigt Tagesordnung, laufenden TOP und Abstimmungsergebnisse und aktualisiert sich selbst. Die Adresse ist nur einmal sichtbar,
+gilt bis zum Ende des Sitzungstags und lässt sich jederzeit **sperren**. **Vorschau** zeigt dasselbe im eigenen Browser.
+
 ### Antrag schreiben und abstimmen
 
 **Antrag starten** → Titel, Ziel-Gremium, Politikfeld → **Anlegen**. Der Antrag durchläuft Idee, Entwurf, in Abstimmung,

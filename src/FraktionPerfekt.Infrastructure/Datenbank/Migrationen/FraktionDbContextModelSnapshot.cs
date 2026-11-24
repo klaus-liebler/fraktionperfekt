@@ -14,7 +14,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261124221123_Sitzungsabstimmung";
+    public override string LastMigrationId => "20261124221654_BeamerZugaenge";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -2214,6 +2214,43 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id");
 
                 b.ToTable("Ressourcen");
+            });
+
+        modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.BeamerZugang", b =>
+            {
+                b.Property<byte[]>("Id")
+                    .HasColumnType("BLOB");
+
+                b.Property<long>("ErstelltAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("ErstelltVonPersonId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<long?>("GesperrtAm")
+                    .HasColumnType("INTEGER");
+
+                b.Property<long>("GueltigBis")
+                    .HasColumnType("INTEGER");
+
+                b.Property<byte[]>("SitzungId")
+                    .IsRequired()
+                    .HasColumnType("BLOB");
+
+                b.Property<string>("TokenHash")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("TEXT");
+
+                b.HasKey("Id");
+
+                b.HasIndex("SitzungId");
+
+                b.HasIndex("TokenHash")
+                    .IsUnique();
+
+                b.ToTable("BeamerZugaenge");
             });
 
         modelBuilder.Entity("FraktionPerfekt.Domain.Sitzungen.Beschluss", b =>

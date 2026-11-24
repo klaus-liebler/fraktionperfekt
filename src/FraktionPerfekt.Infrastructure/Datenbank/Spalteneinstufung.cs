@@ -632,6 +632,16 @@ public static class Spalteneinstufung
                 ["OptionId"] = (Spaltenart.Vorgang, "gewählte Option – bewusst ohne Person und ohne Zeitpunkt"),
                 ["UmfrageId"] = (Spaltenart.Vorgang, null),
             },
+            ["BeamerZugaenge"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
+            {
+                ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),
+                ["ErstelltAm"] = (Spaltenart.Vorgang, null),
+                ["ErstelltVonPersonId"] = (Spaltenart.Vorgang, null),
+                ["GesperrtAm"] = (Spaltenart.Vorgang, null),
+                ["GueltigBis"] = (Spaltenart.Vorgang, null),
+                ["SitzungId"] = (Spaltenart.Vorgang, null),
+                ["TokenHash"] = (Spaltenart.Vorgang, "SHA-256 des Beamer-Tokens (das Token selbst wird nicht gespeichert)"),
+            },
             ["Wahlen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
                 ["Id"] = (Spaltenart.Vorgang, "Schlüssel (Zeilen-Id)"),

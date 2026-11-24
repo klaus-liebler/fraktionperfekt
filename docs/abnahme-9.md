@@ -10,6 +10,7 @@ Drehbuch für die aus SchoolCraft übernommenen Konzepte (`docs/uebertragung-sch
 | 3 | Alles-Suche, unscharfe Namen | Liz Kühlert, Johannes Wilp | 4 min |
 | 4 | Wahl der Fraktionsvorsitzenden mit Stichwahl | Johannes Wilp, Liz Kühlert, Michael Gries, drei weitere | 10 min |
 | 5 | Sitzung: Beschlussfähigkeit, geheim abstimmen | Johannes Wilp, vier Mitglieder am Handy | 8 min |
+| 6 | Beamer in der Sitzung | Johannes Wilp, zweiter Rechner | 4 min |
 
 ## 1. Geheime Abstimmung
 
@@ -59,4 +60,15 @@ Siehe [`abnahme-3.md`](abnahme-3.md), Szene 7.
   - Oben steht „Nicht beschlussfähig: 4 von 18 Stimmberechtigten anwesend“.
   - 5 Ja-Stimmen werden abgewiesen („nur 4 anwesende Stimmberechtigte“).
   - Nach der vierten Stimme steht das Ergebnis als Beschluss am TOP („Geheim abgestimmt …“); Abwesende konnten nicht abstimmen.
+- **Zeit:** ____ min. **Beobachtungen:**
+
+## 6. Beamer-Ansicht (Punkt 8)
+
+- **Startpunkt:** laufende Fraktionssitzung → **Beamer** (Johannes Wilp).
+- **Aufgabe:** Erzeugen Sie einen Beamer-Link und öffnen Sie ihn in einem privaten Fenster (ohne Anmeldung). Markieren Sie einen TOP als behandelt,
+  starten Sie eine geheime Abstimmung. Erzeugen Sie danach einen neuen Link und rufen Sie den alten erneut auf; sperren Sie den neuen.
+- **Erwartung:**
+  - Der Beamer zeigt Tagesordnung, „← jetzt“ am laufenden TOP, die Beschlussfähigkeit und „x von y haben abgestimmt“; keine Notizen, keine Namen.
+  - Nach spätestens zehn Sekunden ist der neue Stand zu sehen; nach dem Ende der Abstimmung steht das Ergebnis da.
+  - Der alte Link zeigt „Dieser Beamer-Link gilt nicht (mehr)“, ebenso der gesperrte.
 - **Zeit:** ____ min. **Beobachtungen:**

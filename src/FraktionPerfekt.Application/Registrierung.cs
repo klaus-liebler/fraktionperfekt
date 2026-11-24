@@ -39,6 +39,7 @@ public static class Registrierung
         dienste.AddScoped<Termine.BesetzungDienst>();
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Abstimmungen", d.GetRequiredService<Abstimmungen.UmfrageDienst>().FristenPruefenAsync));
         dienste.AddScoped<Abstimmungen.WahlDienst>();
+        dienste.AddScoped<Sitzungen.BeamerDienst>();
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Sitzungsabstimmungen", d.GetRequiredService<Sitzungen.SitzungDienst>().AbstimmungenUebernehmenAsync));
         dienste.AddScoped<IFristenpruefung>(d => new Fristenpruefung("Wahlen", d.GetRequiredService<Abstimmungen.WahlDienst>().FristenPruefenAsync));
         dienste.AddScoped<Wissen.DateiDienst>();
