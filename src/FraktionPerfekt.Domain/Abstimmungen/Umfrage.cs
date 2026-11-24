@@ -37,7 +37,7 @@ public sealed class Umfrage
     }
 
     public Umfrage(string titel, string? beschreibung, Umfrageart art, DateTimeOffset frist, int quorumProzent, bool mehrfachauswahl, int berechtigte,
-        Guid erstelltVonPersonId, DateTimeOffset jetzt, Guid? antragId = null, bool geheim = false, Guid? wahlId = null)
+        Guid erstelltVonPersonId, DateTimeOffset jetzt, Guid? antragId = null, bool geheim = false, Guid? wahlId = null, Guid? topId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(titel);
         if (geheim && art == Umfrageart.Terminfindung)
@@ -65,6 +65,7 @@ public sealed class Umfrage
         AntragId = antragId;
         Geheim = geheim;
         WahlId = wahlId;
+        TopId = topId;
         Status = Umfragestatus.Offen;
     }
 
@@ -100,6 +101,9 @@ public sealed class Umfrage
 
     /// <summary>Wahlgang dieser Wahl (Modul Wahlen und Ämter).</summary>
     public Guid? WahlId { get; private set; }
+
+    /// <summary>Abstimmung im Sitzungsmodus zu diesem TOP (nur die Anwesenden); das Ergebnis wird Beschluss im Protokoll.</summary>
+    public Guid? TopId { get; private set; }
 
     public Umfragestatus Status { get; private set; }
 

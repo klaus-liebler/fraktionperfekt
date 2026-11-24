@@ -117,6 +117,10 @@ else
                 </div>
             </div>
             <h3>Anwesenheit</h3>
+            @if (d.Beschlussfaehigkeit is { } bf)
+            {
+                <div class="fp-alert @(bf.Beschlussfaehig ? "fp-info" : "fp-crit")" role="status">@bf.Text</div>
+            }
             <div class="fp-list">
                 @foreach (var a in d.Anwesenheit)
                 {
@@ -150,6 +154,20 @@ else
                     <BegruendeterButton Text="Notiz speichern" Size="ButtonSize.Small" Freigabe="@d.Protokollieren"
                                         Click="@(() => AusfuehrenAsync(s => s.NotizSetzenAsync(t.Top.Id, notizen.GetValueOrDefault(t.Top.Id) ?? t.Top.Notiz, true), "Notiz gespeichert."))" />
                 </div>
+                @foreach (var ab in (d.Abstimmungen ?? []).Where(a => a.TopId == t.Top.Id))
+                {
+                    <div class="fp-small">
+                        <b>Geheime Abstimmung:</b> <a href="abstimmungen/@ab.Umfrage.Id">@ab.Umfrage.Titel</a> –
+                        @if (ab.Umfrage.Status == FraktionPerfekt.Domain.Abstimmungen.Umfragestatus.Offen)
+                        {
+                            <span>@ab.Teilnehmende von @ab.Umfrage.Berechtigte haben abgestimmt (Frist @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(ab.Umfrage.Frist).ToString("HH:mm") Uhr). </span>
+                        }
+                        else
+                        {
+                            <span>@ab.Umfrage.Ergebnis</span>
+                        }
+                    </div>
+                }
                 @foreach (var b in t.Beschluesse)
                 {
                     <div class="fp-small"><b>Beschluss:</b> @b.Text – @b.Ergebnis (@b.Stimmen)</div>
@@ -168,8 +186,26 @@ else
                             <div class="fp-field"><label class="fp-lbl">Nein</label><RadzenNumeric TValue="int" @bind-Value="nein" Min="0" /></div>
                             <div class="fp-field"><label class="fp-lbl">Enthaltung</label><RadzenNumeric TValue="int" @bind-Value="enthaltung" Min="0" /></div>
                         </div>
+                        <label class="fp-small" title="Rückfall ohne Handys: Stimmzettel austeilen, auszählen und hier erfassen">
+                            <input type="checkbox" @bind="stimmzettel" /> geheim mit Stimmzetteln abgestimmt und ausgezählt
+                        </label>
+                        @if (d.Beschlussfaehigkeit is { } bf2)
+                        {
+                            <p class="fp-small fp-muted">Höchstens @bf2.Anwesend Stimmen (anwesende Stimmberechtigte).</p>
+                        }
                         <RadzenButton Text="Beschluss speichern" Size="ButtonSize.Small" Disabled="@string.IsNullOrWhiteSpace(beschlussText)"
-                                      Click="@(() => AusfuehrenAsync(s => s.BeschlussErfassenAsync(t.Top.Id, beschlussText!, ja, nein, enthaltung), "Beschluss erfasst."))" />
+                                      Click="@(() => AusfuehrenAsync(s => s.BeschlussErfassenAsync(t.Top.Id, beschlussText!, ja, nein, enthaltung, stimmzettel), "Beschluss erfasst."))" />
+                    </details>
+                    <details>
+                        <summary>Geheim abstimmen (alle Anwesenden am Handy)</summary>
+                        <p class="fp-small">Nur die als anwesend erfassten Stimmberechtigten stimmen ab, Ja/Nein/Enthaltung, geheim, Frist wenige Minuten. Das Ergebnis wird Beschluss dieses TOP.</p>
+                        <div class="fp-form">
+                            <div class="fp-field fp-grow"><label class="fp-lbl">Frage</label><RadzenTextBox @bind-Value="geheimFrage" Placeholder="z. B. Zustimmung zur Vorlage" /></div>
+                        </div>
+                        <BegruendeterButton Text="Geheim abstimmen" Icon="how_to_vote" Size="ButtonSize.Small"
+                                            Freigabe="@((d.GeheimAbstimmen ?? Freigabe.Ja).Und(() => string.IsNullOrWhiteSpace(geheimFrage) ? Freigabe.Nein("Bitte die Frage eingeben.") : Freigabe.Ja))"
+                                            Click="@(() => Dialoge.WennBestaetigtAsync($"Alle {d.Beschlussfaehigkeit?.Anwesend} anwesenden Stimmberechtigten bekommen die Frage aufs Handy und stimmen geheim ab.", "Geheime Abstimmung starten?", "Starten",
+                                                () => AusfuehrenAsync(s => s.GeheimAbstimmenAsync(t.Top.Id, geheimFrage!), "Abstimmung läuft – alle Anwesenden stimmen jetzt am Handy ab.")))" />
                     </details>
                     <details>
                         <summary>Aufgabe zuweisen</summary>
@@ -229,6 +265,8 @@ else
     private int ja;
     private int nein;
     private int enthaltung;
+    private bool stimmzettel;
+    private string? geheimFrage;
     private string? aufgabeTitel;
     private Guid? aufgabePerson;
     private DateTime? aufgabeFrist;

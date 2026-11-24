@@ -90,6 +90,11 @@ Zeitraum, Beschreibung, Status (Planung, aktiv, abgeschlossen) und optional eine
 - Einladung mit Tagesordnung aus einer Vorlage (feste TOPs wie „Bericht Vorstand“, „Vorbereitung Ratssitzung“, „Verschiedenes“); Mitglieder können bis zu einer Frist TOPs anmelden.
 - Versand per E-Mail und im Kalender, mit Zu-/Absage; Unterlagen und anstehende Anträge hängen automatisch an.
 - Sitzungsmodus für die Protokollführung: Anwesenheit abhaken, TOP für TOP mitschreiben, Beschlüsse und Abstimmungsergebnisse als eigene Einträge erfassen, Aufgaben direkt Personen zuweisen.
+- ✅ Abstimmen im Sitzungsmodus (seit 24.11.2026, aus SchoolCraft): **Beschlussfähigkeit** aus der Anwesenheit (anwesende Stimmberechtigte im Verhältnis zur
+  ⚑ Quote `BeschlussfaehigMehrAlsProzent`, Standard: mehr als die Hälfte); **Plausibilität**: Ja + Nein + Enthaltung höchstens so viele wie anwesende
+  Stimmberechtigte (nicht bei Gremienprotokollen, dort zählt das ganze Gremium); **„Geheim abstimmen“** startet je TOP ein geheimes Meinungsbild nur für
+  die Anwesenden mit kurzer Frist (⚑ `SitzungAbstimmungMinuten`, 10) – alle stimmen am Handy, das Ergebnis wird automatisch Beschluss des TOP; Rückfall
+  **Stimmzettel auszählen und erfassen** (Vermerk im Beschluss).
 - Vorgegeben, aber flexibel: TOPs umsortieren, einfügen, vertagen oder zusammenlegen; Vertagtes wandert in die nächste Einladung.
 - Nach der Sitzung: Protokoll als Entwurf, Freigabe durch Sitzungsleitung, Versand und Ablage; Beschlussliste und offene Aufgaben sind fraktionsweit durchsuchbar.
 - Dieselbe Protokoll-Engine dient auch den eigenen Ausschussprotokollen (Modul 7), nur mit anderer Vorlage.

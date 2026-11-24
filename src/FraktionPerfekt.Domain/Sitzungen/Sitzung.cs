@@ -321,7 +321,7 @@ public sealed class Beschluss
     }
 
     public Beschluss(Beschlussquelle quelle, DateOnly datum, string titel, string text, Beschlussergebnis ergebnis, int ja, int nein, int enthaltung,
-        Guid? sitzungId = null, Guid? topId = null, Guid? gremiumId = null, Guid? antragId = null, string? risId = null)
+        Guid? sitzungId = null, Guid? topId = null, Guid? gremiumId = null, Guid? antragId = null, string? risId = null, Guid? umfrageId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(titel);
         if (ja < 0 || nein < 0 || enthaltung < 0)
@@ -343,6 +343,7 @@ public sealed class Beschluss
         GremiumId = gremiumId;
         AntragId = antragId;
         RisId = risId;
+        UmfrageId = umfrageId;
     }
 
     public Guid Id { get; private set; }
@@ -372,6 +373,9 @@ public sealed class Beschluss
     public Guid? AntragId { get; private set; }
 
     public string? RisId { get; private set; }
+
+    /// <summary>Beschluss aus einer (geheimen) Abstimmung im Sitzungsmodus.</summary>
+    public Guid? UmfrageId { get; private set; }
 
     public string Stimmen => Ja + Nein + Enthaltung == 0 ? "ohne Zählung" : $"{Ja} ja, {Nein} nein, {Enthaltung} Enthaltung";
 

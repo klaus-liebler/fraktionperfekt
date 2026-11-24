@@ -14,7 +14,7 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261124220510_WahlenUndAemter";
+    public override string LastMigrationId => "20261124221123_Sitzungsabstimmung";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -365,6 +365,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                 b.Property<string>("Titel")
                     .IsRequired()
                     .HasColumnType("TEXT");
+
+                b.Property<byte[]>("TopId")
+                    .HasColumnType("BLOB");
 
                 b.Property<byte[]>("WahlId")
                     .HasColumnType("BLOB");
@@ -2261,6 +2264,9 @@ partial class FraktionDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("TEXT");
 
                 b.Property<byte[]>("TopId")
+                    .HasColumnType("BLOB");
+
+                b.Property<byte[]>("UmfrageId")
                     .HasColumnType("BLOB");
 
                 b.HasKey("Id");

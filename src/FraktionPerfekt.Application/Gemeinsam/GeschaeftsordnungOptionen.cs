@@ -16,6 +16,12 @@ public sealed class GeschaeftsordnungOptionen
     /// <summary>Bei diesen Abstimmungsarten stimmen sachkundige Bürger:innen mit (Antragsabstimmungen standardmäßig nur Ratsmitglieder). ⚑</summary>
     public Umfrageart[] SachkundigeStimmenMit { get; set; } = [Umfrageart.Meinungsbild, Umfrageart.Umfrage, Umfrageart.Terminfindung];
 
+    /// <summary>Beschlussfähig, wenn mehr als dieser Anteil (Prozent) der Stimmberechtigten anwesend ist (Standard: mehr als die Hälfte). ⚑</summary>
+    public int BeschlussfaehigMehrAlsProzent { get; set; } = 50;
+
+    /// <summary>Frist einer geheimen Abstimmung im Sitzungsmodus in Minuten (alle stimmen gleichzeitig am Handy). ⚑</summary>
+    public int SitzungAbstimmungMinuten { get; set; } = 10;
+
     /// <summary>Wahlen: Enthaltungen zählen bei der Mehrheit mit (Standard: nein, Mehrheit der gültigen Stimmen ohne Enthaltungen). ⚑</summary>
     public bool WahlEnthaltungenZaehlen { get; set; }
 

@@ -38,7 +38,16 @@ public sealed record SitzungDetail(
     Freigabe Beginnen,
     Freigabe Protokollieren,
     Freigabe Beenden,
-    Freigabe Freigeben);
+    Freigabe Freigeben,
+    Beschlussfaehigkeit? Beschlussfaehigkeit = null,
+    IReadOnlyList<Sitzungsabstimmung>? Abstimmungen = null,
+    Freigabe? GeheimAbstimmen = null);
+
+/// <summary>Beschlussfähigkeit einer eigenen Sitzung aus der Anwesenheit (⚑ Quote der Geschäftsordnung).</summary>
+public sealed record Beschlussfaehigkeit(int Stimmberechtigte, int Anwesend, bool Beschlussfaehig, string Text);
+
+/// <summary>Abstimmung im Sitzungsmodus (nur die Anwesenden, am Handy) zu einem TOP.</summary>
+public sealed record Sitzungsabstimmung(Domain.Abstimmungen.Umfrage Umfrage, Guid TopId, int Teilnehmende);
 
 public sealed record Sitzungsergebnis(string Meldung, IReadOnlyList<NaechsterSchritt> NaechsteSchritte);
 
@@ -58,7 +67,9 @@ public sealed class SitzungDienst(
     IAuditProtokoll protokoll,
     IAktuellerBenutzer benutzer,
     IOptions<FraktionOptionen> optionen,
-    TimeProvider uhr)
+    TimeProvider uhr,
+    Abstimmungen.UmfrageDienst umfragen,
+    IOptions<GeschaeftsordnungOptionen> go)
 {
     public const string AufgabenAnlass = "Protokoll";
 
@@ -187,6 +198,11 @@ public sealed class SitzungDienst(
             return null;
         }
 
+        if (s.ProtokollAenderbar)
+        {
+            await AbstimmungenUebernehmenAsync(s, abbruch);
+        }
+
         var personen = (await stammdaten.PersonenAsync(abbruch)).ToDictionary(p => p.Id);
         // Namen zum Stand des Sitzungstags (Protokolle zeigen, wie die Person damals hieß)
         var sitzungstag = DateOnly.FromDateTime(termin.Beginn);
@@ -217,7 +233,134 @@ public sealed class SitzungDienst(
                 ? "Das Protokoll ist freigegeben und unveränderlich."
                 : "Notizen und Beschlüsse werden erst im Sitzungsmodus erfasst („Sitzung beginnen“).")) : NurLeitung,
             steuert ? (s.Status == Sitzungsstatus.Laufend ? Freigabe.Ja : Freigabe.Nein("Nur eine laufende Sitzung kann beendet werden.")) : NurLeitung,
-            FreigebenFreigabe(s, wer));
+            FreigebenFreigabe(s, wer),
+            s.Art == Sitzungsart.Gremienprotokoll ? null : await BeschlussfaehigkeitAsync(s, termin, abbruch),
+            await AbstimmungenAsync(topIds, abbruch),
+            !steuert ? NurLeitung
+                : s.Status != Sitzungsstatus.Laufend ? Freigabe.Nein("Geheim abgestimmt wird in der laufenden Sitzung.")
+                : s.Art == Sitzungsart.Gremienprotokoll ? Freigabe.Nein("In Rat und Ausschuss stimmt die Fraktion nicht allein ab; hier nur Ergebnisse erfassen.")
+                : Freigabe.Ja);
+    }
+
+    /// <summary>
+    /// Beschlussfähigkeit: stimmberechtigt sind die Eingeladenen mit Stimmrecht (wie bei Antragsabstimmungen, Rolle Mitglied); beschlussfähig, wenn
+    /// mehr als <see cref="GeschaeftsordnungOptionen.BeschlussfaehigMehrAlsProzent"/> % von ihnen anwesend sind (⚑ Geschäftsordnung).
+    /// </summary>
+    public async Task<Beschlussfaehigkeit> BeschlussfaehigkeitAsync(Sitzung s, Termin termin, CancellationToken abbruch = default)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        ArgumentNullException.ThrowIfNull(termin);
+        var berechtigt = await AnwesendeStimmberechtigteAsync(s, termin, nurAnwesende: false, abbruch);
+        var anwesend = (await AnwesendeStimmberechtigteAsync(s, termin, nurAnwesende: true, abbruch)).Count;
+        var quote = go.Value.BeschlussfaehigMehrAlsProzent;
+        var ja = anwesend * 100 > quote * berechtigt.Count;
+        return new Beschlussfaehigkeit(berechtigt.Count, anwesend, ja,
+            $"{(ja ? "Beschlussfähig" : "Nicht beschlussfähig")}: {anwesend} von {berechtigt.Count} Stimmberechtigten anwesend (nötig: mehr als {quote} %).");
+    }
+
+    /// <summary>
+    /// Geheim abstimmen im Sitzungsmodus (Übertragung SchoolCraft): Meinungsbild nach dem geheimen Verfahren nur für die anwesenden
+    /// Stimmberechtigten mit kurzer Frist; alle stimmen am Handy, das Ergebnis wird als Beschluss des TOP ins Protokoll übernommen.
+    /// </summary>
+    public async Task<Domain.Abstimmungen.Umfrage> GeheimAbstimmenAsync(Guid topId, string frage, CancellationToken abbruch = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(frage);
+        var top = await daten.LadenAsync<Top>(topId, "TOP", abbruch);
+        var d = await DetailAsync(top.SitzungId, abbruch) ?? throw new InvalidOperationException("Sitzung nicht gefunden.");
+        if (d.GeheimAbstimmen is { Erlaubt: false } nein)
+        {
+            throw new InvalidOperationException(nein.Begruendung);
+        }
+
+        if (d.Abstimmungen?.Any(a => a.Umfrage.Status == Domain.Abstimmungen.Umfragestatus.Offen) == true)
+        {
+            throw new InvalidOperationException("Es läuft schon eine Abstimmung; bitte erst abschließen.");
+        }
+
+        var anwesende = await AnwesendeStimmberechtigteAsync(d.Sitzung, d.Termin, nurAnwesende: true, abbruch);
+        if (anwesende.Count == 0)
+        {
+            throw new InvalidOperationException("Niemand mit Stimmrecht ist als anwesend erfasst.");
+        }
+
+        var nummer = d.Tops.First(t => t.Top.Id == topId).Nummer;
+        return await umfragen.AnlegenAsync(new Abstimmungen.NeueUmfrage($"TOP {nummer}: {frage.Trim()}", $"Geheime Abstimmung in der Sitzung „{d.Termin.Titel}“",
+            Domain.Abstimmungen.Umfrageart.Meinungsbild, uhr.GetUtcNow().AddMinutes(go.Value.SitzungAbstimmungMinuten), 0, false, [], Geheim: true,
+            NurPersonen: anwesende.Select(p => p.Id).ToList(), TopId: topId), abbruch: abbruch);
+    }
+
+    /// <summary>Fristenprüfung: beendete Abstimmungen im Sitzungsmodus als Beschluss übernehmen.</summary>
+    public async Task<int> AbstimmungenUebernehmenAsync(CancellationToken abbruch = default)
+    {
+        var n = 0;
+        foreach (var s in await daten.ListeAsync(daten.Menge<Sitzung>().Where(x => x.Status == Sitzungsstatus.Laufend || x.Status == Sitzungsstatus.Entwurf).OrderBy(x => x.Id), abbruch))
+        {
+            n += await AbstimmungenUebernehmenAsync(s, abbruch);
+        }
+
+        return n;
+    }
+
+    private async Task<int> AbstimmungenUebernehmenAsync(Sitzung s, CancellationToken abbruch)
+    {
+        var tops = (await TopsAsync(s.Id, abbruch)).ToDictionary(t => t.Id);
+        var ids = tops.Keys.ToList();
+        var fertig = await daten.ListeAsync(daten.Menge<Domain.Abstimmungen.Umfrage>()
+            .Where(u => u.TopId != null && ids.Contains(u.TopId.Value) && u.Status == Domain.Abstimmungen.Umfragestatus.Abgeschlossen).OrderBy(u => u.Id), abbruch);
+        var schon = (await daten.ListeAsync(daten.Menge<Beschluss>().Where(b => b.SitzungId == s.Id && b.UmfrageId != null).OrderBy(b => b.Id), abbruch))
+            .Select(b => b.UmfrageId!.Value).ToHashSet();
+        var neu = fertig.Where(u => !schon.Contains(u.Id)).ToList();
+        if (neu.Count == 0 || await termine.TerminAsync(s.TerminId, abbruch) is not { } termin)
+        {
+            return 0;
+        }
+
+        foreach (var u in neu)
+        {
+            var e = (await umfragen.DetailAsync(u.Id, abbruch))?.Ergebnis;
+            int Zahl(string t) => e?.Optionen.FirstOrDefault(o => o.Text == t)?.Stimmen ?? 0;
+            var top = tops[u.TopId!.Value];
+            var (ja, nein, enth) = (Zahl("Ja"), Zahl("Nein"), Zahl("Enthaltung"));
+            daten.Hinzufuegen(new Beschluss(Beschlussquelle.Fraktion, termin.Tag, top.Titel, $"{u.Titel.Split(": ", 2)[^1]} – {e?.Text ?? u.Ergebnis}",
+                e?.Angenommen == true ? Beschlussergebnis.Angenommen : Beschlussergebnis.Abgelehnt, ja, nein, enth, s.Id, top.Id, termin.GremiumId, top.AntragId,
+                umfrageId: u.Id));
+            top.AlsBehandeltMarkieren();
+            await protokoll.ProtokollierenAsync("Sitzung.Beschluss", $"Beschluss aus geheimer Abstimmung zu TOP „{top.Titel}“ übernommen", nameof(Sitzung), s.Id,
+                abbruch: abbruch);
+        }
+
+        await daten.SpeichernAsync(abbruch);
+        return neu.Count;
+    }
+
+    private async Task<IReadOnlyList<Sitzungsabstimmung>> AbstimmungenAsync(IReadOnlyList<Guid> topIds, CancellationToken abbruch)
+    {
+        var liste = await daten.ListeAsync(daten.Menge<Domain.Abstimmungen.Umfrage>().Where(u => u.TopId != null && topIds.Contains(u.TopId.Value))
+            .OrderBy(u => u.ErstelltAm).ThenBy(u => u.Id), abbruch);
+        var ergebnis = new List<Sitzungsabstimmung>();
+        foreach (var u in liste)
+        {
+            ergebnis.Add(new Sitzungsabstimmung(u, u.TopId!.Value, (await umfragen.DetailAsync(u.Id, abbruch))?.Teilnehmende ?? 0));
+        }
+
+        return ergebnis;
+    }
+
+    /// <summary>Stimmberechtigte der Sitzung (Eingeladene mit Stimmrecht), auf Wunsch nur die als anwesend erfassten.</summary>
+    private async Task<IReadOnlyList<Person>> AnwesendeStimmberechtigteAsync(Sitzung s, Termin termin, bool nurAnwesende, CancellationToken abbruch)
+    {
+        var heute = Ortszeit.Heute(uhr);
+        var jetzt = uhr.GetUtcNow();
+        var berechtigt = (await TeilnehmendeAsync(s, termin, abbruch))
+            .Where(p => Abstimmungen.UmfrageDienst.Stimmberechtigt(Domain.Abstimmungen.Umfrageart.Antragsabstimmung, p.RollenAm(heute, jetzt), go.Value)).ToList();
+        if (!nurAnwesende)
+        {
+            return berechtigt;
+        }
+
+        var anwesend = (await daten.ListeAsync(daten.Menge<Sitzungsanwesenheit>().Where(a => a.SitzungId == s.Id && a.Status == Anwesenheitsstatus.Anwesend)
+            .OrderBy(a => a.Id), abbruch)).Select(a => a.PersonId).ToHashSet();
+        return berechtigt.Where(p => anwesend.Contains(p.Id)).ToList();
     }
 
     public Freigabe FreigebenFreigabe(Sitzung s, Benutzer wer)
@@ -438,12 +581,30 @@ public sealed class SitzungDienst(
         await bilder.VerwendungenAbgleichenAsync("Sitzung", s.Id, notiz, abbruch);
     }
 
-    public async Task<Beschluss> BeschlussErfassenAsync(Guid topId, string text, int ja, int nein, int enthaltung, CancellationToken abbruch = default)
+    /// <param name="stimmzettel">Geheim mit Stimmzetteln abgestimmt und ausgezählt (Rückfall ohne Handys); wird im Beschluss vermerkt.</param>
+    public async Task<Beschluss> BeschlussErfassenAsync(Guid topId, string text, int ja, int nein, int enthaltung, bool stimmzettel = false,
+        CancellationToken abbruch = default)
     {
         var top = await daten.LadenAsync<Top>(topId, "TOP", abbruch);
         var s = await daten.LadenAsync<Sitzung>(top.SitzungId, "Sitzung", abbruch);
         await ProtokollierenPruefenAsync(s, abbruch);
         var termin = await termine.TerminAsync(s.TerminId, abbruch) ?? throw new InvalidOperationException("Termin nicht gefunden.");
+        if (s.Art != Sitzungsart.Gremienprotokoll && ja + nein + enthaltung > 0)
+        {
+            // Plausibilität: nicht mehr Stimmen als anwesende Stimmberechtigte
+            var anwesend = (await AnwesendeStimmberechtigteAsync(s, termin, nurAnwesende: true, abbruch)).Count;
+            if (ja + nein + enthaltung > anwesend)
+            {
+                throw new InvalidOperationException(
+                    $"{ja + nein + enthaltung} Stimmen, aber nur {anwesend} anwesende Stimmberechtigte. Bitte Zählung oder Anwesenheit prüfen.");
+            }
+        }
+
+        if (stimmzettel)
+        {
+            text = $"{text.Trim()} (geheim mit Stimmzetteln abgestimmt)";
+        }
+
         var quelle = s.Art switch
         {
             Sitzungsart.Gremienprotokoll when termin.Art == Terminart.Ratssitzung => Beschlussquelle.Rat,

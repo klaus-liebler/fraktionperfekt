@@ -26,7 +26,7 @@ public sealed record UmfrageDetail(Umfrage Umfrage, IReadOnlyList<UmfrageOption>
 /// <param name="NurPersonen">Nur diese Personen sind stimmberechtigt (z. B. die Anwesenden einer Sitzung), sofern sie nach Rolle berechtigt sind.</param>
 public sealed record NeueUmfrage(string Titel, string? Beschreibung, Umfrageart Art, DateTimeOffset Frist, int QuorumProzent, bool Mehrfachauswahl,
     IReadOnlyList<string> Optionen, IReadOnlyList<DateTime>? Zeitpunkte = null, bool Geheim = false, IReadOnlyList<Guid>? NurPersonen = null,
-    IReadOnlyList<Guid?>? Kandidaten = null, Guid? WahlId = null);
+    IReadOnlyList<Guid?>? Kandidaten = null, Guid? WahlId = null, Guid? TopId = null);
 
 /// <summary>
 /// Abstimmungen, Meinungsbilder, Umfragen und Terminfindung (Modul 13). Die Stimmberechtigten werden beim Start als feste Liste gespeichert.
@@ -131,7 +131,7 @@ public sealed class UmfrageDienst(
         }
 
         var u = new Umfrage(neu.Titel, neu.Beschreibung, neu.Art, neu.Frist, neu.QuorumProzent, neu.Mehrfachauswahl, berechtigt.Count, wer.PersonIdPflicht,
-            uhr.GetUtcNow(), antragId, neu.Geheim, neu.WahlId);
+            uhr.GetUtcNow(), antragId, neu.Geheim, neu.WahlId, neu.TopId);
         daten.Hinzufuegen(u);
         foreach (var p in berechtigt)
         {

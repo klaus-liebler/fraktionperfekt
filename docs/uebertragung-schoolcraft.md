@@ -151,6 +151,12 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 - **FraktionPerfekt heute:** Beschlüsse im Sitzungsmodus mit frei eingetippten Zahlen; Anwesenheit ist erfasst, wird aber nicht gegen die Stimmen geprüft.
 - **Übernehmen:** Beschlussfähigkeit aus Anwesenheit und GO-Quote ⚑ anzeigen; Ja + Nein + Enthaltung ≤ anwesende Stimmberechtigte; Schaltfläche „Geheim abstimmen“ startet eine Abstimmung nach Nr. 1 nur für die Anwesenden mit kurzer Frist (alle stimmen am Handy), Ergebnis landet als Beschluss im Protokoll; Rückfall „Stimmzettel auszählen und erfassen“.
 - **Aufwand:** S–M (mit Nr. 1).
+- **Umgesetzt (24.11.2026) ✅:** Beschlussfähigkeit (Fraktionssitzung und Arbeitskreis; stimmberechtigt wie bei Antragsabstimmungen), Plausibilität beim
+  Beschluss, „Geheim abstimmen“ je TOP (Meinungsbild, geheim, nur Anwesende, Frist aus der GO-Einstellung), Übernahme des Ergebnisses als Beschluss
+  (beim Öffnen der Sitzung und per Fristenprüfung, genau einmal; neue Spalten `Umfragen.TopId`, `Beschluesse.UmfrageId`, Zusatzmigration
+  `Sitzungsabstimmung`), Rückfall „Stimmzettel“ als Kästchen beim Beschluss. Nicht: Beschluss trotz fehlender Beschlussfähigkeit sperren (nur Anzeige,
+  da die GO meist eine Feststellung auf Antrag verlangt ⚑); Wahlgänge in der Sitzung laufen über Wahlen und Ämter (Dienst kann auf Anwesende
+  beschränken, eigene Schaltfläche in der Sitzung fehlt noch). Tests: `SitzungAbstimmungTests`, erweiterter `SitzungAblaufTests`.
 
 ### 8 Beamer- und Monitoransicht der Sitzung
 

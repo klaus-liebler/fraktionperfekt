@@ -73,6 +73,16 @@ public sealed class SitzungAblaufTests
         var schulTop = detail.Tops.Single(t => t.Top.Titel == "Bericht des Vorstands").Top;
         var rathausTop = detail.Tops.Single(t => t.Top.Titel.StartsWith("Rathausstraße", StringComparison.Ordinal)).Top;
         await u.InAsync(d => Dienst(d).NotizSetzenAsync(schulTop.Id, "Schulwegeprüfung zur Grundschulplanung angeregt.", true));
+        // Plausibilität: nicht mehr Stimmen als anwesende Stimmberechtigte (bisher nur Liz Kühlert anwesend)
+        (await Should.ThrowAsync<InvalidOperationException>(() => u.InAsync(d => Dienst(d).BeschlussErfassenAsync(schulTop.Id, "zu viele", 10, 1, 1))))
+            .Message.ShouldContain("nur 1 anwesende Stimmberechtigte");
+        detail.Beschlussfaehigkeit!.Beschlussfaehig.ShouldBeFalse();
+        foreach (var a in detail.Anwesenheit)
+        {
+            await u.InAsync(d => Dienst(d).AnwesenheitSetzenAsync(sitzung.Id, a.PersonId, Anwesenheitsstatus.Anwesend));
+        }
+
+        (await u.InAsync(d => Dienst(d).DetailAsync(sitzung.Id)))!.Beschlussfaehigkeit!.Text.ShouldStartWith("Beschlussfähig: 18 von 18");
         var beschluss = await u.InAsync(d => Dienst(d).BeschlussErfassenAsync(schulTop.Id, "Schulwegeprüfung beantragen", 10, 1, 1));
         beschluss.Ergebnis.ShouldBe(Beschlussergebnis.Angenommen);
         var anna = await u.InAsync(d => d.GetRequiredService<IStammdatenSpeicher>().PersonNachKennungAsync("lkuehlert"));

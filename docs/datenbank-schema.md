@@ -104,7 +104,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [AntragKommentare](#antragkommentare) – 8 Spalten
 - [Aufgaben](#aufgaben) – 16 Spalten
 - [Auslagen](#auslagen) – 15 Spalten
-- [Beschluesse](#beschluesse) – 14 Spalten
+- [Beschluesse](#beschluesse) – 15 Spalten
 - [Besetzungsanfragen](#besetzungsanfragen) – 11 Spalten
 - [Besetzungsmeldungen](#besetzungsmeldungen) – 5 Spalten
 - [BildVerwendungen](#bildverwendungen) – 5 Spalten
@@ -158,7 +158,7 @@ Empfänger einer versandten Mail oder Spender auf der Quittung).
 - [TodoVorlagenPunkte](#todovorlagenpunkte) – 4 Spalten
 - [Tops](#tops) – 14 Spalten
 - [UmfrageOptionen](#umfrageoptionen) – 6 Spalten
-- [Umfragen](#umfragen) – 17 Spalten
+- [Umfragen](#umfragen) – 18 Spalten
 - [Vertretungsanfragen](#vertretungsanfragen) – 8 Spalten
 - [Vertretungsfaelle](#vertretungsfaelle) – 9 Spalten
 - [Vertretungskandidaten](#vertretungskandidaten) – 4 Spalten
@@ -381,6 +381,7 @@ Klasse: `FraktionPerfekt.Domain.Sitzungen.Beschluss`
 | Text | TEXT | ja |  | G |  |
 | Titel | TEXT | ja |  | G |  |
 | TopId | BLOB |  |  | G |  |
+| UmfrageId | BLOB |  |  | G | Beschluss aus einer Abstimmung im Sitzungsmodus |
 
 Indizes: (Datum)
 
@@ -1316,6 +1317,7 @@ Klasse: `FraktionPerfekt.Domain.Abstimmungen.Umfrage`
 | QuorumProzent | INTEGER | ja |  | G |  |
 | Status | TEXT(40) | ja | Index | G |  |
 | Titel | TEXT | ja |  | G |  |
+| TopId | BLOB |  |  | G | Abstimmung im Sitzungsmodus zu diesem TOP |
 | WahlId | BLOB |  | Index | G | Wahlgang dieser Wahl |
 
 Indizes: (Status); (WahlId)

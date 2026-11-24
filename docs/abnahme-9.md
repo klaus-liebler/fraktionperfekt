@@ -9,6 +9,7 @@ Drehbuch für die aus SchoolCraft übernommenen Konzepte (`docs/uebertragung-sch
 | 2 | Rückfragen vor Folgenreichem | Dames Joud | 3 min |
 | 3 | Alles-Suche, unscharfe Namen | Liz Kühlert, Johannes Wilp | 4 min |
 | 4 | Wahl der Fraktionsvorsitzenden mit Stichwahl | Johannes Wilp, Liz Kühlert, Michael Gries, drei weitere | 10 min |
+| 5 | Sitzung: Beschlussfähigkeit, geheim abstimmen | Johannes Wilp, vier Mitglieder am Handy | 8 min |
 
 ## 1. Geheime Abstimmung
 
@@ -47,4 +48,15 @@ Siehe [`abnahme-3.md`](abnahme-3.md), Szene 7.
   - Nach dem ersten Wahlgang steht „Stichwahl zwischen …“, nach der Stichwahl „Gewählt in der Stichwahl: Liz Kühlert“.
   - Nach der Annahme: unter **Personen → Liz Kühlert** Rolle Vorstand und Funktion „Fraktionsvorsitz“ ab dem gewählten Datum (Uhr-Symbol: Grund „Wahl …“).
   - Das Wahlprotokoll nennt Kandidaturen, beide Wahlgänge, Feststellung und Annahme.
+- **Zeit:** ____ min. **Beobachtungen:**
+
+## 5. Abstimmen im Sitzungsmodus (Punkt 7)
+
+- **Startpunkt:** **Sitzungen und Protokolle** → nächste Fraktionssitzung → **Sitzung beginnen** (Johannes Wilp).
+- **Aufgabe:** Setzen Sie vier Mitglieder auf „Anwesend“, alle anderen auf „Entschuldigt“. Erfassen Sie einen Beschluss mit 5 Ja-Stimmen. Starten Sie
+  dann am selben TOP **Geheim abstimmen** und lassen Sie die vier am Handy abstimmen.
+- **Erwartung:**
+  - Oben steht „Nicht beschlussfähig: 4 von 18 Stimmberechtigten anwesend“.
+  - 5 Ja-Stimmen werden abgewiesen („nur 4 anwesende Stimmberechtigte“).
+  - Nach der vierten Stimme steht das Ergebnis als Beschluss am TOP („Geheim abgestimmt …“); Abwesende konnten nicht abstimmen.
 - **Zeit:** ____ min. **Beobachtungen:**

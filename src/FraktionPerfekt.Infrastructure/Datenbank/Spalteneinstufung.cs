@@ -163,6 +163,7 @@ public static class Spalteneinstufung
                 ["Text"] = (Spaltenart.Vorgang, null),
                 ["Titel"] = (Spaltenart.Vorgang, null),
                 ["TopId"] = (Spaltenart.Vorgang, null),
+                ["UmfrageId"] = (Spaltenart.Vorgang, "Beschluss aus einer Abstimmung im Sitzungsmodus"),
             },
             ["Besetzungsanfragen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {
@@ -802,6 +803,7 @@ public static class Spalteneinstufung
                 ["Status"] = (Spaltenart.Vorgang, null),
                 ["Titel"] = (Spaltenart.Vorgang, null),
                 ["WahlId"] = (Spaltenart.Vorgang, "Wahlgang dieser Wahl"),
+                ["TopId"] = (Spaltenart.Vorgang, "Abstimmung im Sitzungsmodus zu diesem TOP"),
             },
             ["Vertretungsanfragen"] = new Dictionary<string, (Spaltenart, string?)>(StringComparer.Ordinal)
             {

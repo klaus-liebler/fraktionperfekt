@@ -77,6 +77,13 @@ Anträge → einladen; als Folgeschritt **Raum buchen**. In der Sitzung: Anwesen
 Beschlüsse und Abstimmungsergebnisse erfassen, Aufgaben direkt Personen zuweisen. Danach Protokoll freigeben und als PDF
 ablegen; Vertagtes wandert in die nächste Einladung.
 
+### Abstimmen in der Sitzung
+
+Im **Sitzungsmodus** steht über der Anwesenheit, ob die Sitzung **beschlussfähig** ist („10 von 18 Stimmberechtigten anwesend“). Beim Erfassen eines
+Beschlusses passt FraktionPerfekt auf, dass nicht mehr Stimmen eingetragen werden, als Stimmberechtigte anwesend sind. **Geheim abstimmen** am TOP:
+Frage eingeben → starten → alle Anwesenden bekommen die Frage aufs Handy und stimmen geheim ab; sobald alle abgestimmt haben (oder nach zehn Minuten),
+steht das Ergebnis als Beschluss im Protokoll. Ohne Handys: Stimmzettel austeilen, auszählen und beim Beschluss **geheim mit Stimmzetteln** ankreuzen.
+
 ### Antrag schreiben und abstimmen
 
 **Antrag starten** → Titel, Ziel-Gremium, Politikfeld → **Anlegen**. Der Antrag durchläuft Idee, Entwurf, in Abstimmung,
