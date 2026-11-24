@@ -123,6 +123,12 @@ zahlt aus.
 **Kalender-Abo und Push**: persönlichen Abo-Link erzeugen und in der Kalender-App hinzufügen (ein neuer Link sperrt den
 alten); Push-Mitteilungen einschalten.
 
+## Rückfragen
+
+Was sich nicht einfach zurücknehmen lässt – Löschen, Stornieren, Widerrufen, Zurückziehen, eine Vertretung absagen, eine Sitzung beenden,
+ein Protokoll freigeben, eine Abstimmung abschließen, geheim abstimmen –, fragt vorher nach. Die Frage nennt, was betroffen ist und was
+folgt; die Schaltfläche heißt wie die Folge („Löschen“, „Stornieren“). **Abbrechen** oder <kbd>Esc</kbd> lässt alles, wie es ist.
+
 ## Für Administration und Vorstand
 
 - **Betrieb und Sicherung**: tägliche Sicherung mit Wiederherstellungstest, „Jetzt sichern“, **Impressum** pflegen

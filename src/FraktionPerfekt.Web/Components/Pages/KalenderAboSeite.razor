@@ -3,6 +3,7 @@
 @using FraktionPerfekt.Domain.Termine
 @using FraktionPerfekt.Application.Postausgang
 @inject Vorgang Vorgang
+@inject DialogService Dialoge
 
 <PageTitle>Kalender und Push · FraktionPerfekt</PageTitle>
 
@@ -118,6 +119,12 @@
 
     private async Task WiderrufenAsync(Guid id)
     {
+        if (!await Dialoge.BestaetigenAsync("Der Abo-Link funktioniert danach nicht mehr; Kalender-Apps, die ihn nutzen, bekommen keine Termine mehr.",
+                "Kalender-Abo widerrufen?", "Widerrufen"))
+        {
+            return;
+        }
+
         await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KalenderDienst>().AboWiderrufenAsync(id));
         neu = null;
         await LadenAsync();

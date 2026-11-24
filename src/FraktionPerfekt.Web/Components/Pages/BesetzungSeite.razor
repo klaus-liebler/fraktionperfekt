@@ -3,6 +3,7 @@
 @using FraktionPerfekt.Application.Gemeinsam
 @using FraktionPerfekt.Application.Termine
 @using FraktionPerfekt.Domain.Termine
+@inject DialogService Dialoge
 @inject Vorgang Vorgang
 @inject NavigationManager Navigation
 @inject TimeProvider Uhr
@@ -45,7 +46,7 @@
         @if (d.Anfrage.Hinweis is not null) { <p class="fp-small">@d.Anfrage.Hinweis</p> }
         <div class="fp-row">
             <BegruendeterButton Text="Ich gehe hin" Icon="front_hand" Freigabe="@d.InteresseMelden" Click="InteresseAsync" />
-            <BegruendeterButton Text="Doch nicht" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Zurueckziehen" Click="@(() => AusfuehrenAsync(s => s.ZurueckziehenAsync(d.Anfrage.Id), "Zurückgezogen; wer auf der Warteliste steht, rückt nach."))" />
+            <BegruendeterButton Text="Doch nicht" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Zurueckziehen" Click="@(() => Dialoge.WennBestaetigtAsync("Die Meldung wird zurückgezogen; der Platz geht an die nächste Person auf der Warteliste.", "Doch nicht teilnehmen?", "Zurückziehen", () => AusfuehrenAsync(s => s.ZurueckziehenAsync(d.Anfrage.Id), "Zurückgezogen; wer auf der Warteliste steht, rückt nach.")))" />
         </div>
         <div class="fp-list">
             @foreach (var m in d.Meldungen)

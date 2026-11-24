@@ -1,6 +1,7 @@
 @using FraktionPerfekt.Application.Gemeinsam
 @using FraktionPerfekt.Application.Wissen
 @inject Vorgang Vorgang
+@inject DialogService Dialoge
 
 @* Anhänge an Antrag, Sitzung (Protokoll) oder Termin; liegen in der Dateiablage im passenden Ordner. *@
 <section class="fp-card">
@@ -21,7 +22,7 @@
                 <span class="fp-small fp-muted">· @(z.Datei.Groesse / 1024) KB · @z.HochgeladenVon · @Ortszeit.AlsOrtszeit(z.Datei.Am).ToString("dd.MM.yyyy")</span>
                 @if (z.Loeschen.Erlaubt)
                 {
-                    <button class="fp-linkbutton fp-small" @onclick="@(() => LoeschenAsync(z.Datei.Id))">löschen</button>
+                    <button class="fp-linkbutton fp-small" @onclick="@(() => LoeschenAsync(z.Datei.Id, z.Datei.Name))">löschen</button>
                 }
             </li>
         }
@@ -71,8 +72,13 @@
         await LadenAsync();
     }
 
-    private async Task LoeschenAsync(Guid id)
+    private async Task LoeschenAsync(Guid id, string name)
     {
+        if (!await Dialoge.LoeschenAsync($"Anhang „{name}“", "Er verschwindet aus der Dateiablage."))
+        {
+            return;
+        }
+
         try
         {
             await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().LoeschenAsync(id));

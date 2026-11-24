@@ -10,7 +10,7 @@ Architektur, Leitlinien und Bausteine folgen **VibeVHS** (`C:\repos\vibevhs`).
 | Dokument | Link |
 |---|---|
 | Konzept (führend) | [`docs/konzept.md`](docs/konzept.md) – maßgeblich; das frühere Claude-Dokument (https://claude.ai/artifact/F6Ln4qK4YndXtGJrB8F7Mb) ist nur noch Archiv |
-| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md), [`docs/abnahme-4.md`](docs/abnahme-4.md), [`5`](docs/abnahme-5.md), [`6`](docs/abnahme-6.md), [`7`](docs/abnahme-7.md), [`8`](docs/abnahme-8.md); **Gesamt:** [`docs/abnahme-gesamt.md`](docs/abnahme-gesamt.md) |
+| Abnahme (Klick-Drehbücher) | [`docs/abnahme-1.md`](docs/abnahme-1.md), [`docs/abnahme-2.md`](docs/abnahme-2.md), [`docs/abnahme-3.md`](docs/abnahme-3.md), [`docs/abnahme-4.md`](docs/abnahme-4.md), [`5`](docs/abnahme-5.md), [`6`](docs/abnahme-6.md), [`7`](docs/abnahme-7.md), [`8`](docs/abnahme-8.md), [`9`](docs/abnahme-9.md); **Gesamt:** [`docs/abnahme-gesamt.md`](docs/abnahme-gesamt.md) |
 | Betrieb, Sicherung, Wiederherstellung | [`docs/betrieb.md`](docs/betrieb.md) |
 | Sicherheit (OWASP-Checkliste) | [`docs/sicherheit.md`](docs/sicherheit.md) |
 | Hilfe zur Bedienung (auch in der App unter `/hilfe`) | [`docs/hilfe.md`](docs/hilfe.md) |
@@ -114,6 +114,11 @@ solche Abfrage ab (`Abfragewarnungen.Konfigurieren`), im Betrieb wird sie protok
 - **Protokoll nur mit Pseudonymen:** „Person #ABCD1234“ statt Namen; Abwesenheitsgründe erscheinen nie in Protokoll oder
   Nachrichten und sind nur für die Person selbst und die Administration sichtbar.
 - **Eindeutige Sortierung** bei begrenzten Abfragen (siehe oben).
+- **Rückfrage vor Folgenreichem** (aus SchoolCraft FA-3230): Löschen, Stornieren, Widerrufen, Zurückziehen, Absagen einer
+  Vertretung, Sitzung beenden, Protokoll freigeben, Abstimmung abschließen und die geheime Stimmabgabe fragen vorher nach –
+  die Frage nennt Objekt und Folge, die Schaltfläche heißt wie die Folge, ein Klick daneben schließt nicht
+  (`Rueckfragen.cs`, Radzen `DialogService`). Auf den statischen Handy-Seiten übernimmt das `data-rueckfrage` in
+  `verhalten.js` (Browser-Rückfrage, CSP ohne Inline-Skript). Ein Test prüft alle Schaltflächen (`RueckfrageTests`).
 
 ## Aus VibeVHS übernommen (Betrieb und Sicherheit)
 

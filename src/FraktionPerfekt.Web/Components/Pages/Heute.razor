@@ -3,6 +3,7 @@
 @using FraktionPerfekt.Application.Termine
 @using FraktionPerfekt.Application.Vertretung
 @using FraktionPerfekt.Domain.Termine
+@inject DialogService Dialoge
 @inject Vorgang Vorgang
 @inject NavigationManager Navigation
 
@@ -53,7 +54,7 @@ else
                         <div class="fp-small fp-muted">für @a.Vertretene · bitte antworten bis @FraktionPerfekt.Application.Gemeinsam.Ortszeit.AlsOrtszeit(a.Frist).ToString("dd.MM., HH:mm") Uhr</div>
                         <div class="fp-row">
                             <RadzenButton Text="Ich vertrete" Icon="check" Size="ButtonSize.Small" Click="@(() => VertretungAntwortenAsync(a.AnfrageId, true))" />
-                            <RadzenButton Text="Kann nicht" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => VertretungAntwortenAsync(a.AnfrageId, false))" />
+                            <RadzenButton Text="Kann nicht" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Dialoge.WennBestaetigtAsync("Die Anfrage geht dann an die nächste Stellvertretung.", "Vertretung absagen?", "Absagen", () => VertretungAntwortenAsync(a.AnfrageId, false)))" />
                             <a class="fp-link" href="termine/@a.Termin.Id">Details</a>
                         </div>
                     </div>

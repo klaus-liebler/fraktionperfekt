@@ -36,7 +36,7 @@
                 <AntiforgeryToken />
                 <input type="hidden" name="status" value="Abgehaengt" />
                 <input type="hidden" name="zurueck" value="handy/plakat?abhaengen=1" />
-                <button type="submit" class="fp-btn fp-btn-haupt">Abgehängt</button>
+                <button type="submit" class="fp-btn fp-btn-haupt" data-rueckfrage="Plakat als abgehängt markieren? Es verschwindet aus der Abhängliste.">Abgehängt</button>
             </form>
         </article>
     }
@@ -83,7 +83,7 @@ else
                 <input type="hidden" name="zurueck" value="handy/plakat" />
                 <button type="submit" name="status" value="Haengt" class="fp-btn">hängt</button>
                 <button type="submit" name="status" value="Beschaedigt" class="fp-btn">beschädigt</button>
-                <button type="submit" name="status" value="Abgehaengt" class="fp-btn">abgehängt</button>
+                <button type="submit" name="status" value="Abgehaengt" class="fp-btn" data-rueckfrage="Plakat als abgehängt markieren? Es verschwindet aus der Abhängliste.">abgehängt</button>
             </form>
         </article>
     }

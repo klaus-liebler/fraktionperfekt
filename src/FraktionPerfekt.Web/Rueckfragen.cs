@@ -19,4 +19,14 @@ public static class Rueckfragen
     /// <summary>„… löschen?“ mit Hinweis auf die Folge.</summary>
     public static Task<bool> LoeschenAsync(this DialogService dialoge, string was, string? folge = null)
         => dialoge.BestaetigenAsync($"{was} wird gelöscht.{(folge is null ? "" : " " + folge)}", $"{was} löschen?", "Löschen");
+
+    /// <summary>Führt <paramref name="aktion"/> nur nach Bestätigung aus (für Schaltflächen, die direkt eine Aktion auslösen).</summary>
+    public static async Task WennBestaetigtAsync(this DialogService dialoge, string frage, string titel, string ja, Func<Task> aktion)
+    {
+        ArgumentNullException.ThrowIfNull(aktion);
+        if (await dialoge.BestaetigenAsync(frage, titel, ja))
+        {
+            await aktion();
+        }
+    }
 }

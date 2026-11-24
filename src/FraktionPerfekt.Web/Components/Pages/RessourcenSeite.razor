@@ -2,6 +2,7 @@
 @using FraktionPerfekt.Application.Gemeinsam
 @using FraktionPerfekt.Application.Ressourcen
 @using FraktionPerfekt.Domain.Ressourcen
+@inject DialogService Dialoge
 @inject Vorgang Vorgang
 @inject TimeProvider Uhr
 
@@ -87,7 +88,7 @@
                                     </span>
                                     @if (z.Stornieren.Erlaubt)
                                     {
-                                        <button class="fp-linkbutton fp-small" @onclick="@(() => AusfuehrenAsync(s => s.StornierenAsync(z.Buchung.Id), "Storniert."))">stornieren</button>
+                                        <button class="fp-linkbutton fp-small" @onclick="@(() => Dialoge.WennBestaetigtAsync($"Die Buchung „{z.Buchung.Zweck}“ wird storniert; die Ressource ist dann wieder frei.", "Buchung stornieren?", "Stornieren", () => AusfuehrenAsync(s => s.StornierenAsync(z.Buchung.Id), "Storniert.")))">stornieren</button>
                                     }
                                 }
                             </td>

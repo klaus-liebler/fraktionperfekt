@@ -2,6 +2,7 @@
 @using FraktionPerfekt.Application.Politik
 @using FraktionPerfekt.Domain.Politik
 @inject Vorgang Vorgang
+@inject DialogService Dialoge
 
 <PageTitle>Kontakte · FraktionPerfekt</PageTitle>
 
@@ -57,7 +58,7 @@
                         <td class="fp-small">@k.Themen</td>
                         <td>
                             <button class="fp-linkbutton fp-small" @onclick="@(() => Bearbeiten(k))">bearbeiten</button>
-                            <BegruendeterButton Text="Löschen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Loeschen" Click="@(() => LoeschenAsync(k.Id))" />
+                            <BegruendeterButton Text="Löschen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Loeschen" Click="@(() => LoeschenAsync(k.Id, k.Name))" />
                         </td>
                     </tr>
                 }
@@ -100,8 +101,13 @@
         await LadenAsync();
     }
 
-    private async Task LoeschenAsync(Guid kontaktId)
+    private async Task LoeschenAsync(Guid kontaktId, string name)
     {
+        if (!await Dialoge.LoeschenAsync($"Kontakt „{name}“"))
+        {
+            return;
+        }
+
         try
         {
             await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<KontaktDienst>().LoeschenAsync(kontaktId));

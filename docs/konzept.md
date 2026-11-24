@@ -219,6 +219,10 @@ Eine eigene Web-App für die fraktionsspezifische Logik; Dateien perspektivisch 
 - **Nichts wird überschrieben:** Personenangaben, Mandate, Mitgliedschaften und Rollen sind bitemporal (gültig von/bis, erfasst/ersetzt, je Änderung ein Änderungsvorgang); Anträge, Wiki-Seiten und Protokolle haben Fassungen.
 - **Protokoll mit Pseudonymen,** Aufgabenkörbe je Rolle mit Übernehmen/Zuweisen/Eskalation, Abwesenheit mit Vertretung.
 - **Kalender-Abo mit widerrufbarem Token** (nur als Hash gespeichert), mobile Seiten statisch gerendert.
+- **Rückfrage vor Folgenreichem** (aus SchoolCraft, seit 24.11.2026): Löschen, Stornieren, Widerrufen, Zurückziehen, Absagen einer Vertretung,
+  Sitzung beenden, Protokoll freigeben, Abstimmung abschließen und geheime Stimmabgabe erst nach Rückfrage, die Objekt und Folge nennt; am
+  Rechner als Dialog, auf den statischen Handy-Seiten per `data-rueckfrage`. Ein-Tipp-Antworten, die sich ändern lassen (Zusage/Absage zu
+  einem Termin), fragen bewusst nicht nach.
 
 | Baustein | Umsetzung | Stand |
 | --- | --- | --- |

@@ -3,6 +3,7 @@
 @using FraktionPerfekt.Application.Gemeinsam
 @using FraktionPerfekt.Application.Vertretung
 @inject Vorgang Vorgang
+@inject DialogService Dialoge
 @inject NavigationManager Navigation
 @inject TimeProvider Uhr
 
@@ -210,6 +211,12 @@ else
 
     private async Task ZurueckziehenAsync()
     {
+        if (!await Dialoge.BestaetigenAsync("Die Abwesenheit wird zurückgezogen; offene Vertretungsanfragen dazu werden abgebrochen und die Gefragten benachrichtigt.",
+                "Abwesenheit zurückziehen?", "Zurückziehen"))
+        {
+            return;
+        }
+
         if (ergebnis is null)
         {
             return;

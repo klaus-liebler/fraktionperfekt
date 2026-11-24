@@ -2,6 +2,7 @@
 @using FraktionPerfekt.Application.Sitzungen
 @using FraktionPerfekt.Application.Stammdaten
 @using FraktionPerfekt.Domain.Sitzungen
+@inject DialogService Dialoge
 @inject Vorgang Vorgang
 
 <PageTitle>Sitzung · FraktionPerfekt</PageTitle>
@@ -112,7 +113,7 @@ else
                 <h2>Sitzungsmodus</h2>
                 <div class="fp-row">
                     <BegruendeterButton Text="Sitzung beginnen" Icon="play_arrow" Freigabe="@d.Beginnen" Click="@(() => AusfuehrenAsync(s => s.BeginnenAsync(Id), "Sitzung läuft. Anwesenheit ist aus den Rückmeldungen vorbelegt."))" />
-                    <BegruendeterButton Text="Sitzung beenden" Icon="stop" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Beenden" Click="@(() => AusfuehrenAsync(s => s.BeendenAsync(Id), "Sitzung beendet. Das Protokoll liegt als Entwurf vor.", "protokoll"))" />
+                    <BegruendeterButton Text="Sitzung beenden" Icon="stop" ButtonStyle="ButtonStyle.Light" Freigabe="@d.Beenden" Click="@(() => Dialoge.WennBestaetigtAsync("Die Sitzung wird beendet; Anwesenheit, Notizen und Beschlüsse gehen als Entwurf ins Protokoll.", "Sitzung beenden?", "Beenden", () => AusfuehrenAsync(s => s.BeendenAsync(Id), "Sitzung beendet. Das Protokoll liegt als Entwurf vor.", "protokoll")))" />
                 </div>
             </div>
             <h3>Anwesenheit</h3>
@@ -287,6 +288,11 @@ else
 
     private async Task FreigebenAsync()
     {
+        if (!await Dialoge.BestaetigenAsync("Das Protokoll wird freigegeben und an alle Eingeladenen verschickt; danach ist es unveränderlich.", "Protokoll freigeben und versenden?", "Freigeben und versenden"))
+        {
+            return;
+        }
+
         try
         {
             var e = await Vorgang.AusfuehrenAsync(s => s.GetRequiredService<SitzungDienst>().FreigebenAsync(Id));

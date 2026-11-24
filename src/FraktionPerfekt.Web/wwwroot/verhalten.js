@@ -10,6 +10,11 @@ document.addEventListener('click', (e) => {
     const markieren = e.target.closest && e.target.closest('[data-markieren]');
     if (markieren && typeof markieren.select === 'function') { markieren.select(); }
 });
+//   data-rueckfrage        Klick fragt vor einer folgenreichen Aktion nach (statische Handy-Seiten ohne Dialog-Baustein); „Abbrechen“ sendet nichts
+document.addEventListener('click', (e) => {
+    const knopf = e.target.closest && e.target.closest('[data-rueckfrage]');
+    if (knopf && !window.confirm(knopf.getAttribute('data-rueckfrage'))) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 //   data-standort          Klick ermittelt den Standort (GPS) und füllt die Felder name="breite"/"laenge" im selben Formular
 document.addEventListener('click', (e) => {
     const knopf = e.target.closest && e.target.closest('[data-standort]');

@@ -1,6 +1,7 @@
 @page "/kampagnen"
 @using FraktionPerfekt.Application.Kampagnen
 @using FraktionPerfekt.Domain.Kampagnen
+@inject DialogService Dialoge
 @inject Vorgang Vorgang
 @inject NavigationManager Navigation
 
@@ -55,7 +56,7 @@
             {
                 <div class="fp-row">
                     <RadzenButton Text="Bearbeiten" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => VorlageBearbeiten(v))" />
-                    <RadzenButton Text="Löschen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => AusfuehrenAsync(s => s.VorlageLoeschenAsync(v.Vorlage.Id), "Vorlage gelöscht."))" />
+                    <RadzenButton Text="Löschen" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialoge.WennBestaetigtAsync($"ToDo-Vorlage „{v.Vorlage.Name}“ wird gelöscht; ToDos, die schon daraus erzeugt wurden, bleiben.", "Vorlage löschen?", "Löschen", () => AusfuehrenAsync(s => s.VorlageLoeschenAsync(v.Vorlage.Id), "Vorlage gelöscht.")))" />
                 </div>
             }
         </details>

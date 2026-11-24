@@ -2,6 +2,7 @@
 @using FraktionPerfekt.Application.Gemeinsam
 @using FraktionPerfekt.Application.Kampagnen
 @using FraktionPerfekt.Domain.Kampagnen
+@inject DialogService Dialoge
 @inject Vorgang Vorgang
 @inject IJSRuntime JS
 
@@ -198,7 +199,7 @@ else
                                     }
                                     <RadzenDropDown TValue="Guid?" Value="@todo.ZustaendigPersonId" Data="@personen" TextProperty="Anzeigename" ValueProperty="Id" AllowClear="true"
                                                     Placeholder="zuständig" Style="width:170px" aria-label="Zuständig" Change="@(v => TodoAsync(t.Id, s => s.TodoZuweisenAsync(todo.Id, (Guid?)v)))" />
-                                    <button class="fp-linkbutton fp-small" title="ToDo löschen" @onclick="@(() => TodoAsync(t.Id, s => s.TodoLoeschenAsync(todo.Id)))">entfernen</button>
+                                    <button class="fp-linkbutton fp-small" title="ToDo löschen" @onclick="@(() => Dialoge.WennBestaetigtAsync($"ToDo „{todo.Text}“ wird gelöscht.", "ToDo löschen?", "Löschen", () => TodoAsync(t.Id, s => s.TodoLoeschenAsync(todo.Id))))">entfernen</button>
                                 </li>
                             }
                         </ul>

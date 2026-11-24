@@ -2,6 +2,7 @@
 @using FraktionPerfekt.Application.Gemeinsam
 @using FraktionPerfekt.Application.Wissen
 @inject Vorgang Vorgang
+@inject DialogService Dialoge
 
 <PageTitle>Dateien · FraktionPerfekt</PageTitle>
 
@@ -53,7 +54,7 @@
                                 <td>@z.HochgeladenVon</td>
                                 <td>@Ortszeit.AlsOrtszeit(z.Datei.Am).ToString("dd.MM.yyyy HH:mm")</td>
                                 <td>@BezugLink(z)</td>
-                                <td><BegruendeterButton Text="Löschen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Loeschen" Click="@(() => LoeschenAsync(z.Datei.Id))" /></td>
+                                <td><BegruendeterButton Text="Löschen" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Freigabe="@z.Loeschen" Click="@(() => LoeschenAsync(z.Datei.Id, z.Datei.Name))" /></td>
                             </tr>
                         }
                     </tbody>
@@ -133,8 +134,13 @@
         await LadenAsync();
     }
 
-    private async Task LoeschenAsync(Guid id)
+    private async Task LoeschenAsync(Guid id, string name)
     {
+        if (!await Dialoge.LoeschenAsync($"Datei „{name}“", "Sie verschwindet aus der Dateiablage, auch dort, wo sie angehängt war."))
+        {
+            return;
+        }
+
         try
         {
             await Vorgang.AusfuehrenAsync(d => d.GetRequiredService<DateiDienst>().LoeschenAsync(id));

@@ -92,6 +92,11 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 - **FraktionPerfekt heute:** keine Rückfrage, z. B. „Löschen“ bei Dateien, Kontakten und in den Kampagnen; ebenso folgenreiche Klicks wie Abstimmung abschließen, Antrag zurückziehen, Vertretung absagen.
 - **Anpassung:** Auf den **statisch gerenderten Handy-Seiten** gibt es keinen Dialog – dort ein zweiter Schritt über `verhalten.js` (data-Attribut, CSP ohne Inline-Skript) oder eine kurze Bestätigungsseite. Als Leitlinie in die README und ins Konzept.
 - **Aufwand:** S.
+- **Umgesetzt (24.11.2026) ✅:** `Rueckfragen.cs` (wie SchoolCraft, dazu `WennBestaetigtAsync`) an Anhängen, Dateien, Kontakten, ToDo-Vorlagen,
+  ToDos, Buchungen (stornieren), Kalender-Abo (widerrufen), Abwesenheit (zurückziehen), Terminbesetzung („Doch nicht“), Vertretung absagen
+  („Kann nicht“), Sitzung beenden, Protokoll freigeben, Antrag zurückziehen, Abstimmung abschließen. Handy: `data-rueckfrage` (Browser-Rückfrage
+  `confirm`, keine eigene Bestätigungsseite) bei „Kann nicht“ und „abgehängt“. Bewusst ohne Rückfrage: Zusage/Absage zu Terminen (änderbar,
+  Ein-Tipp-Antwort). Leitlinie in README und Konzept, Test `RueckfrageTests` prüft alle Schaltflächen.
 
 ### 3 Alles-Suche verbessern (FA-3231)
 

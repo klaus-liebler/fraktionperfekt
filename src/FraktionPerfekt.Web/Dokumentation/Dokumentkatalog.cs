@@ -41,6 +41,8 @@ public sealed class Dokumentkatalog
         new("doku/abnahme-6", "Abnahme 6 – Anfragen, Beschlüsse, Anliegen, Presse", GruppeTechnik, "abnahme-6.md", "Klick-Drehbuch"),
         new("doku/abnahme-7", "Abnahme 7 – Kampagnen und Finanzen", GruppeTechnik, "abnahme-7.md", "Klick-Drehbuch"),
         new("doku/abnahme-8", "Abnahme 8 – Feinschliff", GruppeTechnik, "abnahme-8.md", "Klick-Drehbuch"),
+        new("doku/abnahme-9", "Abnahme 9 – Aus SchoolCraft übernommen", GruppeTechnik, "abnahme-9.md", "Klick-Drehbuch: geheime Abstimmung, Rückfragen, Suche, Wahlen, Sitzung, Beamer, Übung"),
+        new("doku/uebertragung-schoolcraft", "Übertragung aus SchoolCraft", GruppeTechnik, "uebertragung-schoolcraft.md", "Priorisierte Kandidaten mit Umsetzungsstand"),
         new("doku/kampagnen", "Kampagnen", GruppeTechnik, "kampagnen.md", "Plakate, Gebiete, Termine, ToDo-Listen"),
         new("doku/wiki-editor", "Wiki-Editor", GruppeTechnik, "wiki-editor.md", "Bearbeiten, Bilder, Vorschläge der KI"),
         new("doku/betrieb", "Betrieb", GruppeTechnik, "betrieb.md", "Sicherung, Wiederherstellung"),
