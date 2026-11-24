@@ -104,6 +104,10 @@ Antragsabstimmung mit weniger als 3 Stimmen gilt als nicht angenommen (Antrag �
 - **Übernehmen:** Vorschläge beim Tippen, <kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd>, <kbd>Strg</kbd>+<kbd>K</kbd>, Treffer auf **Funktionen** („Abwesenheit melden“, „Abstimmung starten“, „Auslage einreichen“) – Funktionen nur, wenn die Rolle sie darf.
 - **Anpassung:** Auf dem Handy bleibt die Suchseite; die Vorschläge nur am Rechner. Grenze acht Treffer je Bereich bleibt.
 - **Aufwand:** S–M.
+- **Umgesetzt (24.11.2026) ✅:** `suche.js` + `GET /suche/vorschlaege` (JSON, angemeldet, `no-store`): Vorschläge ab zwei Zeichen nach 150 ms,
+  je Bereich drei, insgesamt vierzehn, Funktionen zuerst; <kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd> <kbd>Esc</kbd>, <kbd>Strg</kbd>+<kbd>K</kbd> von
+  überall. `Funktionskatalog` (17 Funktionen mit Stichwörtern, Recht wie Menü/Schnellaktionen) auch auf der Suchseite. Nur am Rechner
+  (`min-width: 768px` und feiner Zeiger); auf dem Handy bleibt `/suche`. Tests: `AllesSucheTests`, Webtest auf `/suche/vorschlaege`.
 
 ### 4 Fehlertolerante Personen- und Kontaktsuche (FA-3227/3228)
 

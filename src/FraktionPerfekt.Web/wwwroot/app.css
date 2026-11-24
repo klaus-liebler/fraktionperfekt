@@ -534,3 +534,16 @@ a.fp-kampagne h2 { margin: 0; }
 .fp-tourenliste li > div { flex: 1 1 320px; min-width: 0; }
 .fp-tourenliste li button { flex: 0 0 auto; }
 @media (prefers-reduced-motion: reduce) { #fp-tour-ring { transition: none; } }
+
+/* Alles-Suche: Vorschläge beim Tippen (suche.js), nur am Rechner */
+.fp-kopfsuche { position: relative; }
+.fp-vorschlaege { position: absolute; top: calc(100% + 4px); left: 0; z-index: 50; width: min(440px, 90vw); max-height: 70vh; overflow-y: auto;
+    background: var(--fp-surface); border: 1px solid var(--fp-line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, .14); padding: 6px 0; }
+.fp-vorschlag-bereich { padding: 6px 12px 2px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--fp-muted); }
+.fp-vorschlag { display: flex; flex-direction: column; padding: 6px 12px; color: inherit; text-decoration: none; }
+.fp-vorschlag small { color: var(--fp-muted); }
+.fp-vorschlag:hover, .fp-vorschlag[aria-selected=true] { background: var(--fp-accent-weak); }
+.fp-vorschlag-leer, .fp-vorschlag-hinweis { padding: 6px 12px; font-size: 12px; color: var(--fp-muted); }
+.fp-vorschlag-hinweis { border-top: 1px solid var(--fp-line); margin-top: 4px; }
+kbd { display: inline-block; min-width: 1.4em; padding: 0 5px; border: 1px solid var(--fp-line); border-bottom-width: 2px; border-radius: 4px;
+    background: var(--fp-surface-2); font: 600 .85em/1.5 var(--fp-font); text-align: center; color: inherit; }

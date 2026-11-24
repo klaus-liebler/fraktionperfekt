@@ -32,6 +32,12 @@ public sealed class SucheDienst(
 {
     public const int JeBereich = 8;
 
+    public const string BereichFunktionen = "Funktionen";
+
+    /// <summary>Vorschläge beim Tippen (Kopfzeile am Rechner): je Bereich höchstens drei, insgesamt höchstens vierzehn, Funktionen zuerst.</summary>
+    public async Task<IReadOnlyList<Suchergebnis>> VorschlaegeAsync(string? anfrage, CancellationToken abbruch = default)
+        => (await SuchenAsync(anfrage, abbruch)).GroupBy(t => t.Bereich).SelectMany(g => g.Take(3)).Take(14).ToList();
+
     public async Task<IReadOnlyList<Suchergebnis>> SuchenAsync(string? anfrage, CancellationToken abbruch = default)
     {
         var woerter = (anfrage ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Where(w => w.Length >= 2).ToArray();
@@ -46,6 +52,9 @@ public sealed class SucheDienst(
         var heute = Ortszeit.Heute(uhr);
         var treffer = new List<Suchergebnis>();
         void Hinzu(IEnumerable<Suchergebnis> e) => treffer.AddRange(e.Take(JeBereich));
+
+        // Funktionen („Abwesenheit melden“) nur, wenn die aktive Rolle sie darf
+        Hinzu(Funktionskatalog.Suchen(anfrage, wer.Rolle).Select(f => new Suchergebnis(BereichFunktionen, f.Titel, null, f.Ziel)));
 
         Hinzu((await kalender.TermineAsync(heute.AddDays(-365), heute.AddDays(365), abbruch: abbruch))
             .Where(z => Passt(z.Termin.Titel, z.Termin.Ort, z.Termin.Beschreibung, z.GremiumKurz))

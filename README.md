@@ -243,7 +243,8 @@ vor dem Echtbetrieb ausschalten oder überarbeiten (`docs/konzept.md`, „Vor de
 - **Folgeschritte**: Jede Aktion, die jemand anderes erledigen muss, legt eine Aufgabe mit Frist in den passenden Korb
   und schließt sie automatisch, sobald es erledigt ist (Übersicht in `docs/abnahme-gesamt.md`).
 - **Globale Suche** in der Kopfzeile (`/suche`): Termine, Personen, Gremien, Anträge, Beschlüsse, Anfragen, Anliegen,
-  Presse, Kontakte, Wiki, Dateien – mit den Rechten des jeweiligen Moduls.
+  Presse, Kontakte, Wiki, Dateien – mit den Rechten des jeweiligen Moduls. Seit 24.11.2026 (aus SchoolCraft): Vorschläge beim
+  Tippen mit Funktionen, Pfeiltasten und Strg+K am Rechner (`suche.js`, `/suche/vorschlaege`), fehlertolerant für Namen.
 - **PWA**: Service Worker (`wwwroot/sw.js`) hält die App-Hülle vor (Stil, Logo, Leaflet), Seiten kommen immer frisch
   vom Server, ohne Netz erscheint `offline.html`. App-Shortcuts: Heute, Abwesenheit, Plakat, Auslage, Suche.
 - **Web Push (VAPID)** als echter Adapter neben dem Mock: `Push:Art=WebPush`. Verschlüsselung nach RFC 8291

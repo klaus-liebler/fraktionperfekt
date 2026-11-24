@@ -132,6 +132,13 @@ public sealed partial class AppStartTests : IAsyncLifetime
         }), abbruch);
         antwort.IsSuccessStatusCode.ShouldBeTrue();
 
+        // Alles-Suche: Vorschläge als JSON, Funktionen nur mit Recht (Kassier darf keine Fraktionssitzung einladen), unscharf.
+        var vorschlaege = await http.GetStringAsync("suche/vorschlaege?q=abwesen", abbruch);
+        vorschlaege.ShouldContain("\"bereich\":\"Funktionen\"");
+        vorschlaege.ShouldContain("Abwesenheit melden");
+        (await http.GetStringAsync("suche/vorschlaege?q=Fraktionssitzung%20einladen", abbruch)).ShouldNotContain("\"ziel\":\"sitzungen\"");
+        (await http.GetStringAsync("suche/vorschlaege?q=Kuehlert", abbruch)).ShouldContain("Kühlert");
+
         // Alle Hauptseiten laden (vorgerendert, Status 200).
         foreach (var seite in new[] { "", "kalender", "kalender-abo", "abwesenheit", "vertretungen", "gremien", "personen", "handy", "handy/abwesenheit", "sitzungen", "aufgaben", "antraege", "abstimmungen", "ressourcen", "besetzung", "wahlkampf", "auslagen", "handy/plakat", "handy/auslage", "anfragen", "beschluesse", "anliegen", "presse", "kontakte", "suche?q=Haushalt", "wiki", "wiki/vorschlaege", "wiki/seite/Fraktionssitzung", "dateien", "hilfe", "dokumentation", "impressum" })
         {

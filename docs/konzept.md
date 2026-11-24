@@ -176,6 +176,10 @@ Die App soll sich wie eine native App anfühlen und ohne Schulung nutzbar sein. 
 | eine Kampagne angelegt ist | Termin anlegen, Gebiete anlegen, Kampagne auf „aktiv“ setzen |
 | der Wahltag einer Kampagne vorbei ist | Plakate abhängen (Abhängliste am Handy) |
 
+**Alles-Suche** (aus SchoolCraft, seit 24.11.2026) ✅: Die Suche in der Kopfzeile schlägt am Rechner beim Tippen Treffer und **Funktionen** vor
+(„Abwesenheit melden“, „Abstimmung starten“, „Auslage einreichen“ – nur, was die aktive Rolle darf), mit Pfeiltasten und <kbd>Strg</kbd>+<kbd>K</kbd>;
+jeder Bereich sucht mit den Rechten seines Moduls, höchstens acht Treffer je Bereich (Vorschläge: drei). Auf dem Handy bleibt die Suchseite.
+
 **Fehlertolerante Suche** (aus SchoolCraft, seit 24.11.2026) ✅: Personen, Kontakte und Namen in Bürgeranliegen werden wie getippt gefunden
 (Groß/klein, ä = ae, ß = ss, Akzente, Präfixe, ein Tippfehler, ab acht Buchstaben zwei), in der globalen Suche und in jeder Personenauswahl.
 

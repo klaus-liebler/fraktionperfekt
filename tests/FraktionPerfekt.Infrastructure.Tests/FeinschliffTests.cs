@@ -174,3 +174,30 @@ public sealed class UnscharfeSucheTests
         (await suche("Kuehlert")).ShouldNotContain(t => t.Bereich == "Personen");
     }
 }
+
+/// <summary>Alles-Suche mit Funktionen (Übertragung SchoolCraft, Punkt 3): nur, was die aktive Rolle darf.</summary>
+public sealed class AllesSucheTests
+{
+    [Fact]
+    public async Task Funktionen_nur_mit_Recht_und_Vorschlaege_begrenzt()
+    {
+        await using var u = await TestUmgebung.ErzeugenAsync(mitDemodaten: true);
+        Task<IReadOnlyList<Suchergebnis>> Vorschlaege(string q) => u.InAsync(d => d.GetRequiredService<SucheDienst>().VorschlaegeAsync(q));
+
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
+        (await Vorschlaege("sitzung einladen")).ShouldContain(t => t.Bereich == SucheDienst.BereichFunktionen && t.Ziel == "sitzungen");
+        await u.AnmeldenAsync("lkuehlert");
+        (await Vorschlaege("sitzung einladen")).ShouldNotContain(t => t.Bereich == SucheDienst.BereichFunktionen && t.Ziel == "sitzungen");
+        (await Vorschlaege("urlaub")).ShouldContain(t => t.Titel == "Abwesenheit melden");
+        await u.AnmeldenAsync("fbaeumer");
+        var helfer = await Vorschlaege("abstimmung");
+        helfer.ShouldNotContain(t => t.Titel == "Abstimmung starten");
+        (await Vorschlaege("urlaub")).ShouldNotContain(t => t.Titel == "Abwesenheit melden"); // Kampagnenteam hat keine Gremiensitze
+
+        await u.AnmeldenAsync("jwilp", Rolle.Vorstand);
+        var viele = await Vorschlaege("Haushalt");
+        viele.Count.ShouldBeLessThanOrEqualTo(14);
+        viele.GroupBy(t => t.Bereich).ShouldAllBe(g => g.Count() <= 3);
+        (await Vorschlaege("a")).ShouldBeEmpty();
+    }
+}

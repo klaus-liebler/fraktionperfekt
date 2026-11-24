@@ -125,6 +125,11 @@ alten); Push-Mitteilungen einschalten.
 
 ## Suchen
 
+Am Rechner springt <kbd>Strg</kbd>+<kbd>K</kbd> (Mac: <kbd>⌘</kbd>+<kbd>K</kbd>) von überall ins Suchfeld. Beim Tippen erscheinen Vorschläge:
+oben **Funktionen** („abwes“ → **Abwesenheit melden**, „urlaub“, „beleg“ → **Auslage einreichen**), darunter Personen, Termine, Anträge und mehr.
+<kbd>↑</kbd> <kbd>↓</kbd> wählen, <kbd>Enter</kbd> öffnet, <kbd>Esc</kbd> schließt; <kbd>Enter</kbd> ohne Auswahl zeigt alle Treffer. Funktionen
+erscheinen nur, wenn die aktive Rolle sie darf. Auf dem Handy führt die Suche direkt zur Trefferseite.
+
 Die Suche oben findet Personen, Kontakte und Bürgeranliegen auch bei Tippfehlern und Umlauten: „Nienteidt“ findet Nientiedt,
 „Kuehlert“ findet Kühlert, „Waschko“ findet Waschkowitz-Biggeleben. Dasselbe gilt beim Zuweisen von Aufgaben und Anliegen und bei
 Themenpaten: In der Auswahl einfach den Namen tippen. Jeder Bereich zeigt nur, was im jeweiligen Modul sichtbar ist.
